@@ -9,7 +9,6 @@ import '../services/export_service.dart';
 import '../services/import_service.dart';
 import '../services/media_backup_service.dart';
 import '../services/database_service.dart';
-import 'json_editor_screen.dart';
 import '../models/series.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -753,48 +752,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   LocalizationService.translate('reset_database_desc', lang),
                 ),
                 onTap: () => _handleResetDatabase(context, lang, provider),
-              ),
-              const Divider(),
-              // Developer Options
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Text(
-                  'Developer Options',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_note),
-                title: const Text('Edit Glossary JSON'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => JsonEditorScreen(
-                        filePath: 'assets/jkd-glossary.json',
-                        title: 'Edit Glossary JSON',
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_note),
-                title: const Text('Edit Series JSON'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => JsonEditorScreen(
-                        filePath: 'assets/jkd-series.json',
-                        title: 'Edit Series JSON',
-                      ),
-                    ),
-                  );
-                },
               ),
               const Divider(),
               const Padding(
