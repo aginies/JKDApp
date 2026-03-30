@@ -675,7 +675,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/icon/jfgf.png', width: 20, height: 20),
+                    Image.asset('assets/icon/jfgf.png', width: 30, height: 30),
                     const SizedBox(width: 8),
                     const Text('Jun Fan Gung Fu'),
                   ],
@@ -685,7 +685,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/icon/jfkb.png', width: 20, height: 20),
+                    Image.asset('assets/icon/jfkb.png', width: 30, height: 30),
                     const SizedBox(width: 8),
                     const Text('Jun Fan Kick Boxing'),
                   ],
@@ -695,7 +695,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/icon/kali.png', width: 20, height: 20),
+                    Image.asset('assets/icon/kali.png', width: 30, height: 30),
                     const SizedBox(width: 8),
                     const Text('Kali'),
                   ],
