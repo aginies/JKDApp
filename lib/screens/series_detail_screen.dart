@@ -1864,7 +1864,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       ),
       onPressed: () => setS(() {
         _activateGlossaryItem(id);
-        _pendingLevel = l;
+        // Toggle: if already selected, deselect (set to empty string)
+        _pendingLevel = sel ? '' : l;
       }),
       child: Row(
         mainAxisSize: MainAxisSize.min,
