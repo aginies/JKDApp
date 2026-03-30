@@ -151,9 +151,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   ),
                   IconButton(
                     icon: const Icon(
+                      Icons.photo_library,
+                      color: Colors.green,
+                    ),
+                    tooltip: 'Select from files',
+                    onPressed: () async {
+                      final file = await _mediaService.pickAndSaveImage(
+                        galleryPath,
+                        category,
+                        moveName,
+                      );
+                      if (file != null) setModalState(() {});
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(
                       Icons.add_a_photo,
                       color: Colors.blueAccent,
                     ),
+                    tooltip: 'Take photo',
                     onPressed: () async {
                       final file = await _mediaService.captureAndSaveImage(
                         galleryPath,
