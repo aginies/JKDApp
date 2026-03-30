@@ -108,6 +108,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
+    for (final controller in _glossaryScrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
