@@ -23,7 +23,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -77,6 +77,47 @@ class DatabaseService {
           'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
         );
       } catch (_) {}
+    }
+    if (oldVersion < 9) {
+      // Populate missing glossary_ids and counter_glossary_ids for existing moves
+      final allMoves = await db.query('series_moves');
+      for (var move in allMoves) {
+        Map<String, dynamic> updates = {};
+
+        if (move['glossary_id'] == null && move['name'] != null) {
+          final results = await db.query(
+            'glossary',
+            where: 'name = ?',
+            whereArgs: [move['name']],
+            limit: 1,
+          );
+          if (results.isNotEmpty) {
+            updates['glossary_id'] = results.first['id'];
+          }
+        }
+
+        if (move['counter_glossary_id'] == null &&
+            move['counter_name'] != null) {
+          final results = await db.query(
+            'glossary',
+            where: 'name = ?',
+            whereArgs: [move['counter_name']],
+            limit: 1,
+          );
+          if (results.isNotEmpty) {
+            updates['counter_glossary_id'] = results.first['id'];
+          }
+        }
+
+        if (updates.isNotEmpty) {
+          await db.update(
+            'series_moves',
+            updates,
+            where: 'id = ?',
+            whereArgs: [move['id']],
+          );
+        }
+      }
     }
   }
 

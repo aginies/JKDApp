@@ -57,6 +57,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   int? _editingComboItemIndex;
   bool _isEditingCounter = false;
   bool _isPickerOpen = false;
+  final Map<String, ScrollController> _glossaryScrollControllers = {};
 
   final Map<String, String> _methodDefinitions = {
     'SDA':
@@ -751,14 +752,29 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             GestureDetector(
                               onTap: () async {
                                 int? gid = m.glossaryId;
+                                // Robust fallback: try category match first, then global match
                                 if (gid == null) {
-                                  // Fallback to name matching
-                                  final items = await DatabaseService()
-                                      .getGlossaryByCategory(m.category);
-                                  final match = items.firstWhere(
-                                    (i) => i['name'] == m.name,
+                                  final db = DatabaseService();
+                                  var items = await db.getGlossaryByCategory(
+                                    m.category,
+                                  );
+                                  var match = items.firstWhere(
+                                    (i) =>
+                                        i['name'].toString().toLowerCase() ==
+                                        m.name.toLowerCase(),
                                     orElse: () => {},
                                   );
+
+                                  if (match.isEmpty) {
+                                    final all = await db.getGlossary();
+                                    match = all.firstWhere(
+                                      (i) =>
+                                          i['name'].toString().toLowerCase() ==
+                                          m.name.toLowerCase(),
+                                      orElse: () => {},
+                                    );
+                                  }
+
                                   if (match.isNotEmpty) {
                                     gid = match['id'];
                                   }
@@ -963,7 +979,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     String lang, {
     int? initialIndex,
   }) {
-    final scrollController = ScrollController();
+    final scrollController =
+        _glossaryScrollControllers.putIfAbsent(cat, () => ScrollController());
 
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
@@ -976,13 +993,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         if (initialIndex != null && initialIndex != -1) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (scrollController.hasClients) {
-              // Estimate height: Card height is approx 120-150px depending on translation/workflow
-              // Using jumpTo for immediate positioning
-              double offset = initialIndex * 100.0;
+              double offset = initialIndex * 120.0; // Adjusted estimate
               if (offset > scrollController.position.maxScrollExtent) {
                 offset = scrollController.position.maxScrollExtent;
               }
-              scrollController.jumpTo(offset);
+              // For index 0, we explicitly jump to top
+              if (initialIndex == 0) {
+                scrollController.jumpTo(0.0);
+              } else {
+                scrollController.jumpTo(offset);
+              }
             }
           });
         }
@@ -996,15 +1016,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final isF = _selectedFeintsInPicker[id] ?? false;
             final spec = _selectedSpecialsInPicker[id];
-            final isE =
-                _editingComboItemIndex != null &&
-                (!_isEditingCounter
-                    ? _currentCombo[_editingComboItemIndex!].glossaryId == id
-                    : (_currentCombo[_editingComboItemIndex!].counterName ==
-                              item['name'] &&
-                          _currentCombo[_editingComboItemIndex!]
-                                  .counterCategory ==
-                              cat));
+            final isE = _pendingActionItemId == id;
             final String pL = item['possible_level'] ?? 'H,M,L';
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),
