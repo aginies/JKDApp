@@ -56,6 +56,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   int? _targetSeriesIndex;
   int? _editingComboItemIndex;
   bool _isEditingCounter = false;
+  bool _isPickerOpen = false;
 
   final Map<String, String> _methodDefinitions = {
     'SDA':
@@ -282,18 +283,28 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   void _startVoiceInput() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    final text = await VoiceInputDialog.show(context, _voiceService, lang);
-    if (text != null && text.trim().isNotEmpty) {
-      _processVoiceInput(text);
+    final result = await VoiceInputDialog.show(context, _voiceService, lang);
+    if (result != null && result.trim().isNotEmpty) {
+      _processVoiceInput(result);
     }
   }
 
-  void _processVoiceInput(String text) {
-    if (text.trim().isEmpty) return;
-    List<Move> parsed = _voiceService.parseSentenceToCombo(text);
+  void _processVoiceInput(String input) {
+    if (input.trim().isEmpty) return;
+    List<Move> parsed = [];
+    try {
+      final decoded = json.decode(input);
+      if (decoded is List) {
+        parsed = decoded.map((m) => Move.fromMap(m)).toList();
+      }
+    } catch (_) {
+      // If not JSON, it might be raw text from a legacy caller or error
+      parsed = _voiceService.parseSentenceToCombo(input);
+    }
+
     if (parsed.isEmpty) return;
     setState(() {
-      if (Navigator.canPop(context)) {
+      if (_isPickerOpen) {
         _currentCombo.addAll(parsed);
       } else {
         if (parsed.length == 1) {
@@ -317,7 +328,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _editingSeriesIndex = seriesIndex;
     _targetSeriesIndex = seriesIndex;
     _editingComboItemIndex = null;
-    showModalBottomSheet(
+    setState(() => _isPickerOpen = true);
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
@@ -428,6 +440,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         ),
       ),
     );
+    setState(() => _isPickerOpen = false);
   }
 
   void _resetPickerState() {
@@ -795,23 +808,33 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             if (m.counterName != null)
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
+                                    final cat = m.counterCategory ?? '';
+                                    final items = await DatabaseService()
+                                        .getGlossaryByCategory(cat);
+                                    final match = items.firstWhere(
+                                      (i) => i['name'] == m.counterName,
+                                      orElse: () => {},
+                                    );
+
                                     setS(() {
                                       _editingComboItemIndex = idx;
                                       _isEditingCounter = true;
-                                      if (m.counterName != null) {
-                                        // We don't have glossaryId for counter in Move model easily accessible here
-                                        // but we can search for it or just set states if we had it.
-                                        // Actually, let's just set the states if we can.
-                                        _pendingActionItemId =
-                                            null; // Reset to force re-selection or we could try to find it.
+                                      if (match.isNotEmpty) {
+                                        final gid = match['id'];
+                                        _selectedSidesInPicker[gid] =
+                                            m.counterSide ?? '';
+                                        _selectedSpecialsInPicker[gid] =
+                                            m.counterSpecialAction;
+                                        _pendingActionItemId = gid;
+                                        _pendingLevel = m.counterLevel;
                                       }
                                     });
                                     final t =
                                         MoveDisplayWidgets.getTabIndexForCategory(
-                                          m.counterCategory ?? '',
+                                          cat,
                                         );
-                                    if (t != -1) {
+                                    if (t != -1 && ctx.mounted) {
                                       DefaultTabController.of(ctx).animateTo(t);
                                     }
                                   },

@@ -19,6 +19,13 @@ class GlossaryEntry {
   });
 }
 
+class MoveOption {
+  final Move move;
+  final double score;
+
+  MoveOption({required this.move, required this.score});
+}
+
 class VoiceParsingService {
   final SpeechToText _speechToText = SpeechToText();
   final List<GlossaryEntry> _glossary = [];
@@ -209,26 +216,160 @@ class VoiceParsingService {
     return requestedLevel;
   }
 
+  List<List<MoveOption>> parseSentenceToOptions(String sentence) {
+    if (sentence.trim().isEmpty) return [];
+
+    String normalized = sentence.toLowerCase().replaceAll(
+      RegExp(r'[^\w\sàâäéèêëîïôöùûüç]'),
+      '',
+    );
+
+    List<String> moveSegments = _splitByKeywords(normalized, _nextKeywords);
+    List<List<MoveOption>> results = [];
+
+    for (String segment in moveSegments) {
+      if (segment.trim().isEmpty) continue;
+
+      List<String> attackAndCounter = _splitByKeywords(
+        segment,
+        _answerKeywords,
+        limit: 2,
+      );
+
+      String attackPhrase = attackAndCounter[0];
+      String counterPhrase = attackAndCounter.length > 1
+          ? attackAndCounter[1]
+          : '';
+
+      ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
+      var topAttacks = findTopMatches(attackAttrs.remainingText);
+
+      if (topAttacks.isEmpty) continue;
+
+      List<MoveOption> segmentOptions = [];
+
+      for (var attackEntry in topAttacks) {
+        String? cName;
+        String? cCategory;
+        String? cSide;
+        String? cLevel;
+
+        if (counterPhrase.trim().isNotEmpty) {
+          ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
+          var topCounters = findTopMatches(counterAttrs.remainingText);
+
+          if (topCounters.isNotEmpty) {
+            var matchedCounter = topCounters.first.entry;
+            cName = matchedCounter.name;
+            cCategory = matchedCounter.category;
+            cSide = counterAttrs.side.isNotEmpty ? counterAttrs.side : null;
+            cLevel = _resolveLevel(
+              counterAttrs.level,
+              matchedCounter.restrictedLevel,
+            );
+            if (cLevel.isEmpty) {
+              cLevel = _resolveLevel(
+                attackAttrs.level,
+                attackEntry.entry.restrictedLevel,
+              );
+            }
+          }
+        }
+
+        segmentOptions.add(
+          MoveOption(
+            move: Move(
+              name: attackEntry.entry.name,
+              category: attackEntry.entry.category,
+              translations: attackEntry.entry.translations,
+              side: attackAttrs.side,
+              level: _resolveLevel(
+                attackAttrs.level,
+                attackEntry.entry.restrictedLevel,
+              ),
+              repetitions: 1,
+              counterName: cName,
+              counterCategory: cCategory,
+              counterSide: cSide,
+              counterLevel: cLevel,
+            ),
+            score: attackEntry.score,
+          ),
+        );
+      }
+      results.add(segmentOptions);
+    }
+    return results;
+  }
+
+  List<({GlossaryEntry entry, double score})> findTopMatches(String text) {
+    if (text.trim().isEmpty) return [];
+
+    List<({GlossaryEntry entry, double score})> scores = [];
+
+    for (var entry in _glossary) {
+      double scoreEn = StringSimilarity.compareTwoStrings(
+        text,
+        entry.name.toLowerCase(),
+      );
+      double scoreFr = 0.0;
+      if (entry.translations['fr'] != null) {
+        scoreFr = StringSimilarity.compareTwoStrings(
+          text,
+          entry.translations['fr']!.toLowerCase(),
+        );
+      }
+      double scoreOther = 0.0;
+      if (entry.translations['en'] != null) {
+        scoreOther = StringSimilarity.compareTwoStrings(
+          text,
+          entry.translations['en']!.toLowerCase(),
+        );
+      }
+
+      double maxScore = [
+        scoreEn,
+        scoreFr,
+        scoreOther,
+      ].reduce((a, b) => a > b ? a : b);
+
+      if (maxScore > 0.3) {
+        scores.add((entry: entry, score: maxScore));
+      }
+    }
+
+    scores.sort((a, b) => b.score.compareTo(a.score));
+
+    // If best score is very high (> 0.8), return only it
+    if (scores.isNotEmpty && scores.first.score > 0.8) {
+      return [scores.first];
+    }
+
+    // Otherwise return top 3
+    return scores.take(3).toList();
+  }
+
   List<String> _splitByKeywords(
     String input,
     List<String> keywords, {
     int? limit,
   }) {
-    // Build a regex to match any of the keywords as isolated words
     String pattern = r'\b(' + keywords.join('|') + r')\b';
-    List<String> parts = input.split(RegExp(pattern));
+    final regExp = RegExp(pattern);
 
-    if (limit != null && parts.length > limit) {
-      // Re-join the rest if we have a limit (e.g. only split on first "answer")
-      String first = parts[0];
-      String rest = parts
-          .sublist(1)
-          .join(
-            ' ',
-          ); // We lose the exact keyword, which is fine, it was just a separator
-      return [first, rest];
+    if (limit == 2) {
+      final match = regExp.firstMatch(input);
+      if (match != null) {
+        return [
+          input.substring(0, match.start).trim(),
+          input.substring(match.end).trim(),
+        ];
+      }
+      return [input];
     }
-    return parts;
+
+    List<String> parts = input.split(regExp);
+    return parts.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
   }
 
   ParsedAttributes _extractAttributes(String phrase) {
