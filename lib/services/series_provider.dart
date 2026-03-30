@@ -29,6 +29,9 @@ class SeriesProvider with ChangeNotifier {
     _init();
   }
 
+  @visibleForTesting
+  SeriesProvider.empty();
+
   Future<void> _init() async {
     final prefs = await _dbService.getSettings();
     

@@ -2197,10 +2197,10 @@ class _MarqueeWidgetState extends State<MarqueeWidget> {
   }
 
   void scroll() async {
-    while (scrollController.hasClients) {
-      if (scrollController.position.maxScrollExtent > 0) {
+    while (mounted && scrollController.hasClients) {
+      if (scrollController.hasClients && scrollController.position.maxScrollExtent > 0) {
         await Future.delayed(widget.pauseDuration);
-        if (scrollController.hasClients && scrollController.position.maxScrollExtent > 0) {
+        if (mounted && scrollController.hasClients && scrollController.position.maxScrollExtent > 0) {
           await scrollController.animateTo(
             scrollController.position.maxScrollExtent,
             duration: widget.animationDuration,
@@ -2208,7 +2208,7 @@ class _MarqueeWidgetState extends State<MarqueeWidget> {
           );
         }
         await Future.delayed(widget.pauseDuration);
-        if (scrollController.hasClients) {
+        if (mounted && scrollController.hasClients) {
           await scrollController.animateTo(
             0.0,
             duration: widget.backDuration,
