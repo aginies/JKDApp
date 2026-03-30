@@ -340,7 +340,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                       ),
                     ),
                   ),
-                  _buildRecordingControls(setModalState, lang),
+                  _buildRecordingControls(context, setModalState, lang),
                   const Divider(),
                   Expanded(child: _buildVoiceNotesList(setModalState, lang)),
                 ],
@@ -352,7 +352,11 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  Widget _buildRecordingControls(StateSetter setModalState, String lang) {
+  Widget _buildRecordingControls(
+    BuildContext context,
+    StateSetter setModalState,
+    String lang,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Column(
@@ -362,7 +366,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             icon: const Icon(Icons.radio_button_checked, color: Colors.red),
             onPressed: () async {
               final path = await _voiceNoteService.startRecording();
-              if (path != null) {
+              if (path != null && context.mounted) {
                 _showRecordingDialog(context, lang, path, setModalState);
               }
             },
@@ -419,7 +423,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     }
 
     final nameController = TextEditingController(text: uniqueName);
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     showDialog(
       context: context,

@@ -87,7 +87,7 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(8),
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               child: Text(
                 _error!,
                 style: const TextStyle(color: Colors.red, fontSize: 12),

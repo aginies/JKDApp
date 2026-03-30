@@ -35,72 +35,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return AlertDialog(
               title: Text(LocalizationService.translate('export_title', lang)),
               content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RadioListTile<String>(
-                      title: Text(
-                        LocalizationService.translate('export_category', lang),
-                      ),
-                      value: 'category',
-                      groupValue: exportType,
-                      onChanged: (val) =>
-                          setModalState(() => exportType = val!),
-                    ),
-                    if (exportType == 'category')
-                      Padding(
-                        padding: const EdgeInsets.only(left: 32.0),
-                        child: DropdownButton<String>(
-                          value: selectedCategory,
-                          isExpanded: true,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Jun Fan Gung Fu',
-                              child: Text('Jun Fan Gung Fu'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Jun Fan Kick Boxing',
-                              child: Text('Jun Fan Kick Boxing'),
-                            ),
-                          ],
-                          onChanged: (val) =>
-                              setModalState(() => selectedCategory = val!),
-                        ),
-                      ),
-                    RadioListTile<String>(
-                      title: Text(
-                        LocalizationService.translate('export_single', lang),
-                      ),
-                      value: 'single',
-                      groupValue: exportType,
-                      onChanged: (val) =>
-                          setModalState(() => exportType = val!),
-                    ),
-                    if (exportType == 'single')
-                      Padding(
-                        padding: const EdgeInsets.only(left: 32.0),
-                        child: DropdownButton<JkdSeries>(
-                          value: selectedSeries,
-                          isExpanded: true,
-                          hint: Text(
-                            LocalizationService.translate(
-                              'select_series',
-                              lang,
-                            ),
+                child: RadioGroup<String>(
+                  groupValue: exportType,
+                  onChanged: (val) => setModalState(() => exportType = val!),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RadioListTile<String>(
+                        title: Text(
+                          LocalizationService.translate(
+                            'export_category',
+                            lang,
                           ),
-                          items: allSeries
-                              .map(
-                                (s) => DropdownMenuItem(
-                                  value: s,
-                                  child: Text(s.title),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (val) =>
-                              setModalState(() => selectedSeries = val),
                         ),
+                        value: 'category',
                       ),
-                  ],
+                      if (exportType == 'category')
+                        Padding(
+                          padding: const EdgeInsets.only(left: 32.0),
+                          child: DropdownButton<String>(
+                            value: selectedCategory,
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Jun Fan Gung Fu',
+                                child: Text('Jun Fan Gung Fu'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Jun Fan Kick Boxing',
+                                child: Text('Jun Fan Kick Boxing'),
+                              ),
+                            ],
+                            onChanged: (val) =>
+                                setModalState(() => selectedCategory = val!),
+                          ),
+                        ),
+                      RadioListTile<String>(
+                        title: Text(
+                          LocalizationService.translate('export_single', lang),
+                        ),
+                        value: 'single',
+                      ),
+                      if (exportType == 'single')
+                        Padding(
+                          padding: const EdgeInsets.only(left: 32.0),
+                          child: DropdownButton<JkdSeries>(
+                            value: selectedSeries,
+                            isExpanded: true,
+                            hint: Text(
+                              LocalizationService.translate(
+                                'select_series',
+                                lang,
+                              ),
+                            ),
+                            items: allSeries
+                                .map(
+                                  (s) => DropdownMenuItem(
+                                    value: s,
+                                    child: Text(s.title),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setModalState(() => selectedSeries = val),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -171,13 +172,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (context.mounted) {
       if (success) {
         await Provider.of<SeriesProvider>(context, listen: false).loadSeries();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              LocalizationService.translate('import_success', lang),
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                LocalizationService.translate('import_success', lang),
+              ),
             ),
-          ),
-        );
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

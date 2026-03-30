@@ -1566,7 +1566,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         _activateGlossaryItem(id);
         onP();
       },
-      backgroundColor: sel ? c : c.withOpacity(0.15),
+      backgroundColor: sel ? c : c.withValues(alpha: 0.15),
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1785,7 +1785,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 child: Card(
                   margin: EdgeInsets.zero,
                   color: _trainingController.currentIndex == i
-                      ? Colors.green.withOpacity(0.3)
+                      ? Colors.green.withValues(alpha: 0.3)
                       : null,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -1849,8 +1849,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       _moves[i].specialAction!,
                                       style: const TextStyle(fontSize: 9),
                                     ),
-                                    backgroundColor: Colors.purple.withOpacity(
-                                      0.3,
+                                    backgroundColor: Colors.purple.withValues(
+                                      alpha: 0.3,
                                     ),
                                     padding: EdgeInsets.zero,
                                     materialTapTargetSize:
@@ -1953,7 +1953,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                     ),
                                                   ),
                                                   backgroundColor: Colors.purple
-                                                      .withOpacity(0.2),
+                                                      .withValues(alpha: 0.2),
                                                   padding: EdgeInsets.zero,
                                                   materialTapTargetSize:
                                                       MaterialTapTargetSize
@@ -2084,7 +2084,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                           style: const TextStyle(fontSize: 8),
                                         ),
                                         backgroundColor: Colors.purple
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                         padding: EdgeInsets.zero,
                                         materialTapTargetSize:
                                             MaterialTapTargetSize.shrinkWrap,
@@ -2201,6 +2201,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   void _pickSpecialForMove(int id, StateSetter setS) async {
     final specs = await DatabaseService().getGlossaryByCategory('special');
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -2407,8 +2408,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         ],
       ),
       selected: isS,
-      selectedColor: c.withOpacity(0.7),
-      backgroundColor: c.withOpacity(0.15),
+      selectedColor: c.withValues(alpha: 0.7),
+      backgroundColor: c.withValues(alpha: 0.15),
       onSelected: (selected) {
         setS(() {
           _activateGlossaryItem(id);
@@ -2497,10 +2498,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               onSelected: (value) {
                 if (value == 'edit') {
                   setState(() => _isEditing = true);
-                } else if (value == 'print')
+                } else if (value == 'print') {
                   PdfService.exportSeriesToPdf(widget.series!, lang);
-                else if (value == 'export')
+                } else if (value == 'export') {
                   _handleExportJson();
+                }
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
@@ -2546,7 +2548,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

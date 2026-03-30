@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/series.dart';
 import 'database_service.dart';
@@ -35,7 +36,7 @@ class ExportService {
 
       return file.path;
     } catch (e) {
-      print('Export error: $e');
+      debugPrint('Export error: $e');
       return null;
     }
   }
@@ -58,7 +59,7 @@ class ExportService {
 
       return file.path;
     } catch (e) {
-      print('Glossary export error: $e');
+      debugPrint('Glossary export error: $e');
       return null;
     }
   }

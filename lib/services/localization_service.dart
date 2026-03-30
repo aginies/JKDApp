@@ -186,7 +186,6 @@ class LocalizationService {
       'voice_recognition': 'Reconnaissance vocale (Expérimental)',
       'voice_notes': 'Notes Vocales',
       'record': 'Enregistrer',
-      'stop': 'Arrêter',
       'play': 'Jouer',
       'rename': 'Renommer',
       'delete': 'Supprimer',

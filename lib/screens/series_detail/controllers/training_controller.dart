@@ -102,7 +102,7 @@ class TrainingController {
               }
             });
             return AlertDialog(
-              backgroundColor: Colors.black.withOpacity(0.8),
+              backgroundColor: Colors.black.withValues(alpha: 0.8),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

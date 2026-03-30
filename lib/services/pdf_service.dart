@@ -63,7 +63,7 @@ class PdfService {
               ),
               pw.Text(
                 series.notes,
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                   fontSize: 10,
                   fontStyle: pw.FontStyle.italic,
                 ),
