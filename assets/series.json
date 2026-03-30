@@ -1,0 +1,31 @@
+[
+  {
+    "title": "22 Coups de poings",
+    "moves": [
+      {"name": "Jab", "side": "L"},
+      {"name": "Cross", "side": "R"},
+      {"name": "Body Hook", "side": "R"},
+      {"name": "Body Hook", "side": "L"},
+      {"name": "Uppercut", "side": "R"},
+      {"name": "Uppercut", "side": "L"},
+      {"name": "Hook", "side": "R"},
+      {"name": "Hook", "side": "L"},
+      {"name": "Body Jab", "side": "L"},
+      {"name": "Body Cross", "side": "R"},
+      {"name": "Swing", "side": "R"},
+      {"name": "Swing", "side": "L"},
+      {"name": "OverHead", "side": "R"},
+      {"name": "Uppercut", "side": "L"},
+      {"name": "OverHead", "side": "L"},
+      {"name": "Uppercut", "side": "R"},
+      {"name": "Qua Chuie / cross", "side": "R"},
+      {"name": "Qua Chuie / Jab", "side": "L"},
+      {"name": "Frappes Marteau", "side": ""},
+      {"name": "Frappes Marteau", "side": ""},
+      {"name": "overhead poing avant", "side": "L"},
+      {"name": "overhead poing arrière", "side": "L"},
+      {"name": "overhead poing avant", "side": "R"},
+      {"name": "overhead poing arrière", "side": "L"}
+    ]
+  }
+]
