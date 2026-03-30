@@ -280,7 +280,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             height: MediaQuery.of(context).size.height * 0.95,
             child: Column(
               children: [
-                _buildComboPreview(setS, Provider.of<SeriesProvider>(context).language),
+                _buildComboPreview(setS, Provider.of<SeriesProvider>(context).language, Provider.of<SeriesProvider>(context).voiceEnabled),
                 TabBar(
                   isScrollable: true,
                   tabs: [
@@ -421,7 +421,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  Widget _buildComboPreview(StateSetter setS, String lang) {
+  Widget _buildComboPreview(StateSetter setS, String lang, bool voiceEnabled) {
     final double h = _currentCombo.any((m) => m.category == 'special') ? 198 : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
@@ -469,11 +469,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
+                      if (voiceEnabled && _editingSeriesIndex == null) ...[
                         IconButton(
                           icon: const Icon(Icons.help_outline, color: Colors.blueAccent, size: 18),
                           onPressed: () {
-                            final lang = Provider.of<SeriesProvider>(context, listen: false).language;
                             VoiceHelpDialog.show(context, lang);
                           },
                           visualDensity: VisualDensity.compact,

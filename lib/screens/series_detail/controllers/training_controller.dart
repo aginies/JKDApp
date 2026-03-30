@@ -229,7 +229,19 @@ class TrainingController {
 
   void dispose() {
     _timer?.cancel();
-    stopTts();
-    _tts.stop();
+    // Fire-and-forget async stop, with platform check to avoid plugin errors
+    if (!Platform.isLinux) {
+      _tts.stop().catchError((e) {
+        print("TTS stop warning: $e");
+        return null;
+      });
+    } else {
+      // On Linux, try to stop spd-say
+      try {
+        Process.run('spd-say', ['-S']);
+      } catch (e) {
+        print("spd-say stop warning: $e");
+      }
+    }
   }
 }
