@@ -2281,11 +2281,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   List<Widget> _buildMoveListTiles(String lang) {
+    // Calculate display numbers excluding 'move' category items
+    int displayNumber = 0;
+    final List<int> displayNumbers = [];
+    for (int i = 0; i < _moves.length; i++) {
+      if (_moves[i].category != 'move') {
+        displayNumber++;
+        displayNumbers.add(displayNumber);
+      } else {
+        displayNumbers.add(0); // 0 means no number for move items
+      }
+    }
+
     return [
       for (int i = 0; i < _moves.length; i++)
         Padding(
           key: ValueKey(_moves[i].uKey),
-          padding: const EdgeInsets.only(left: 15.0, bottom: 8.0),
+          padding: EdgeInsets.only(
+            left: _moves[i].category == 'move' ? 0.0 : 15.0,
+            bottom: 8.0,
+          ),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -2410,6 +2425,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   final sub = entry.value;
                                   final bool isSingle =
                                       _moves[i].subMoves.length == 1;
+
+                                  // Calculate display number for submoves (skip 'move' category)
+                                  int subDisplayNumber = 0;
+                                  for (int j = 0; j <= subIdx; j++) {
+                                    if (_moves[i].subMoves[j].category != 'move') {
+                                      subDisplayNumber++;
+                                    }
+                                  }
+                                  final bool isMove = sub.category == 'move';
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6.0),
                                     child: Column(
@@ -2432,9 +2456,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                   size: 18,
                                                   color: Colors.grey,
                                                 )
-                                              else
+                                              else if (!isMove)
                                                 Text(
-                                                  '${subIdx + 1}.',
+                                                  '$subDisplayNumber.',
                                                   style: const TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.bold,
@@ -2692,25 +2716,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                left: -15,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: CircleAvatar(
-                    radius: 15,
-                    backgroundColor: Colors.redAccent,
-                    child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              if (displayNumbers[i] > 0)
+                Positioned(
+                  left: -15,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: CircleAvatar(
+                      radius: 15,
+                      backgroundColor: Colors.redAccent,
+                      child: Text(
+                        '${displayNumbers[i]}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
