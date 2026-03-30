@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -8,6 +9,16 @@ import '../models/series.dart';
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static Database? _database;
+
+  // List of series JSON files to load from assets (all are trusted system series)
+  // To add a new series file:
+  // 1. Place the jkd-series-*.json file in the assets/ directory
+  // 2. Add the filename to this list
+  // The file will be automatically loaded and seeded into the database
+  static const List<String> _seriesFiles = [
+    'assets/jkd-series-punches.json',
+    'assets/jkd-series-4-counts.json',
+  ];
 
   factory DatabaseService() => _instance;
 
@@ -186,52 +197,66 @@ class DatabaseService {
   }
 
   Future<void> _seedSeries(Database db) async {
-    final String seriesResponse = await rootBundle.loadString(
-      'assets/jkd-series.json',
-    );
-    final List<dynamic> seriesData = json.decode(seriesResponse);
-    for (var s in seriesData) {
+    // Load all series files from the list (all are trusted system series)
+    final List<dynamic> allSeriesData = [];
+
+    for (final seriesFile in _seriesFiles) {
+      try {
+        final String response = await rootBundle.loadString(seriesFile);
+        final List<dynamic> fileData = json.decode(response);
+        allSeriesData.addAll(fileData);
+      } catch (e) {
+        debugPrint('Error loading series file $seriesFile: $e');
+      }
+    }
+
+    for (var s in allSeriesData) {
       int seriesId = await db.insert('series', {
         'title': s['title'],
-        'category': 'Jun Fan Gung Fu',
-        'type': 'Attack',
-        'attack_method': null,
-        'notes': 'Initial seed data',
-        'is_system': 1,
+        'category': s['category'] ?? 'Jun Fan Gung Fu',
+        'type': s['type'] ?? 'Attack',
+        'attack_method': s['attack_method'],
+        'notes': s['notes'] ?? 'Initial seed data',
+        'is_system': s['is_system'] ?? 1,
       });
 
-      for (int i = 0; i < s['moves'].length; i++) {
-        var move = s['moves'][i];
+      final moves = s['moves'] as List<dynamic>;
+      for (int i = 0; i < moves.length; i++) {
+        var move = moves[i];
 
-        // Try to find glossary ID by name matching
-        final glossaryResults = await db.query(
-          'glossary',
-          where: 'name = ?',
-          whereArgs: [move['name']],
-          limit: 1,
-        );
+        // Try to find glossary ID by name matching (for simple moves)
         int? gid;
-        if (glossaryResults.isNotEmpty) {
-          gid = glossaryResults.first['id'] as int?;
+        if (move['glossary_id'] != null) {
+          gid = move['glossary_id'];
+        } else if (move['name'] != null && !move['name'].toString().startsWith('Combo:')) {
+          final glossaryResults = await db.query(
+            'glossary',
+            where: 'name = ?',
+            whereArgs: [move['name']],
+            limit: 1,
+          );
+          if (glossaryResults.isNotEmpty) {
+            gid = glossaryResults.first['id'] as int?;
+          }
         }
 
         await db.insert('series_moves', {
           'series_id': seriesId,
           'glossary_id': gid,
           'name': move['name'],
-          'category': 'punch',
+          'category': move['category'] ?? 'punch',
           'side': move['side'] ?? '',
-          'level': '',
-          'is_feint': 0,
-          'special_action': null,
-          'translations': json.encode({}),
-          'repetitions': 1,
-          'counter_name': null,
-          'counter_category': null,
-          'counter_side': null,
-          'counter_level': null,
-          'counter_special_action': null,
-          'sub_moves_json': null,
+          'level': move['level'] ?? '',
+          'is_feint': move['is_feint'] ?? 0,
+          'special_action': move['special_action'],
+          'translations': move['translations'] ?? json.encode({}),
+          'repetitions': move['repetitions'] ?? 1,
+          'counter_name': move['counter_name'],
+          'counter_category': move['counter_category'],
+          'counter_side': move['counter_side'],
+          'counter_level': move['counter_level'],
+          'counter_special_action': move['counter_special_action'],
+          'sub_moves_json': move['sub_moves_json'],
           'position': i,
         });
       }
