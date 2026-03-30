@@ -23,7 +23,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -67,6 +67,10 @@ class DatabaseService {
         );
       } catch (_) {}
     }
+    if (oldVersion < 7) {
+      await db.delete('glossary');
+      await _seedGlossary(db);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -103,20 +107,22 @@ class DatabaseService {
       'CREATE TABLE voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)',
     );
 
-    await _seedData(db);
+    await _seedGlossary(db);
+    await _seedSeries(db);
   }
 
-  Future<void> _seedData(Database db) async {
+  Future<void> _seedGlossary(Database db) async {
     final String glossaryResponse = await rootBundle.loadString(
       'assets/glossary.json',
     );
     final Map<String, dynamic> glossaryData = json.decode(glossaryResponse);
 
     int globalPosition = 0;
-    glossaryData.forEach((category, items) {
+    for (var category in glossaryData.keys) {
+      final items = glossaryData[category];
       if (items is List) {
         for (var item in items) {
-          db.insert('glossary', {
+          await db.insert('glossary', {
             'name': item['name'],
             'category': category,
             'translations': json.encode(item['translations']),
@@ -128,8 +134,10 @@ class DatabaseService {
           });
         }
       }
-    });
+    }
+  }
 
+  Future<void> _seedSeries(Database db) async {
     final String seriesResponse = await rootBundle.loadString(
       'assets/series.json',
     );

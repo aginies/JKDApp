@@ -59,7 +59,15 @@ class VoiceParsingService {
 
   Future<void> _loadGlossary() async {
     _glossary.clear();
-    final categories = ['punch', 'kick', 'packs', 'trapping', 'special'];
+    final categories = [
+      'punch',
+      'kick',
+      'packs',
+      'trapping',
+      'special',
+      'general',
+      'other',
+    ];
     for (String cat in categories) {
       final items = await DatabaseService().getGlossaryByCategory(cat);
       for (var item in items) {

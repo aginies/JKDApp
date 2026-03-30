@@ -800,10 +800,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       _editingComboItemIndex = idx;
                                       _isEditingCounter = true;
                                       if (m.counterName != null) {
-                                        // We don't have glossaryId for counter in Move model easily accessible here 
+                                        // We don't have glossaryId for counter in Move model easily accessible here
                                         // but we can search for it or just set states if we had it.
                                         // Actually, let's just set the states if we can.
-                                        _pendingActionItemId = null; // Reset to force re-selection or we could try to find it.
+                                        _pendingActionItemId =
+                                            null; // Reset to force re-selection or we could try to find it.
                                       }
                                     });
                                     final t =
@@ -907,13 +908,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final isF = _selectedFeintsInPicker[id] ?? false;
             final spec = _selectedSpecialsInPicker[id];
-            final isE = _editingComboItemIndex != null &&
+            final isE =
+                _editingComboItemIndex != null &&
                 (!_isEditingCounter
                     ? _currentCombo[_editingComboItemIndex!].glossaryId == id
                     : (_currentCombo[_editingComboItemIndex!].counterName ==
-                            item['name'] &&
-                        _currentCombo[_editingComboItemIndex!].counterCategory ==
-                            cat));
+                              item['name'] &&
+                          _currentCombo[_editingComboItemIndex!]
+                                  .counterCategory ==
+                              cat));
             final String pL = item['possible_level'] ?? 'H,M,L';
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),
@@ -1412,13 +1415,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: const Size(0, 36),
               ),
-    onPressed: () {
+              onPressed: () {
                 setS(() {
-                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterName: isCustom
+                          ? _customMoveController.text
+                          : it['name'],
                       counterCategory: cat,
                       counterSide: sd,
                       counterLevel: lv,
@@ -1505,11 +1512,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterName: isCustom
+                          ? _customMoveController.text
+                          : it['name'],
                       counterCategory: cat,
                       counterSide: sd,
                       counterLevel: lv,
