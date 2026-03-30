@@ -25,7 +25,8 @@ function show_help() {
     echo "  update_deps       - Update flutter dependencies (pub get)"
     echo "  format_code       - Format all dart files"
     echo "  format_check      - Check if dart files are formatted"
-    echo "  quality_checks    - Run format check and analyze"
+    echo "  run_tests         - Run flutter tests"
+    echo "  quality_checks    - Run format check, analyze and tests"
     echo "  build_apk         - Build release APK"
     echo "  build_macos       - Build release macOS (macOS only)"
     echo "  build_windows     - Build release Windows (Windows only)"
@@ -70,10 +71,16 @@ function format_check() {
     $DART_PATH format --output=none --set-exit-if-changed . || { echo "[ERROR] Code not formatted. Run './build_and_verify.sh format_code'."; exit 1; }
 }
 
+function run_tests() {
+    echo "[INFO] Running tests..."
+    $FLUTTER_PATH test || { echo "[ERROR] Tests failed. Fix issues before building."; exit 1; }
+}
+
 function quality_checks() {
     format_check
     echo "[INFO] Running static analysis..."
     $FLUTTER_PATH analyze || { echo "[ERROR] Analysis failed. Fix issues before building."; exit 1; }
+    run_tests
     echo "[SUCCESS] Quality checks passed."
 }
 
