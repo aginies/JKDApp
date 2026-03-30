@@ -150,10 +150,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
-                      Icons.photo_library,
-                      color: Colors.green,
-                    ),
+                    icon: const Icon(Icons.photo_library, color: Colors.green),
                     tooltip: 'Select from files',
                     onPressed: () async {
                       final file = await _mediaService.pickAndSaveImage(
@@ -260,10 +257,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   itemBuilder: (context, index) {
                     return Center(
                       child: InteractiveViewer(
-                        child: Image.file(
-                          images[index],
-                          fit: BoxFit.contain,
-                        ),
+                        child: Image.file(images[index], fit: BoxFit.contain),
                       ),
                     );
                   },
@@ -272,7 +266,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   top: 16,
                   right: 16,
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -2849,9 +2847,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                alignment: WrapAlignment.start,
+                spacing: 8,
                 children: [
-                  Text('${LocalizationService.translate('category', lang)}: '),
                   ChoiceChip(
                     label: const Text('Jun Fan Gung Fu'),
                     selected: _selectedCategory == 'Jun Fan Gung Fu',
@@ -2861,7 +2860,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       }
                     },
                   ),
-                  const SizedBox(width: 8),
                   ChoiceChip(
                     label: const Text('Jun Fan Kick Boxing'),
                     selected: _selectedCategory == 'Jun Fan Kick Boxing',
@@ -2876,9 +2874,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                alignment: WrapAlignment.start,
+                spacing: 8,
                 children: [
-                  Text('${LocalizationService.translate('type', lang)}: '),
                   ChoiceChip(
                     label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
                     selected: _selectedType == 'Attack',
@@ -2886,7 +2885,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       if (val) setState(() => _selectedType = 'Attack');
                     },
                   ),
-                  const SizedBox(width: 8),
                   ChoiceChip(
                     label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
                     selected: _selectedType == 'Defense',
@@ -2901,31 +2899,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${LocalizationService.translate('method_of_attack', lang)}: ',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: _methodDefinitions.keys
-                            .map(
-                              (method) => Tooltip(
-                                message: _methodDefinitions[method]!,
-                                child: ChoiceChip(
-                                  label: Text(method),
-                                  selected: _selectedMethod == method,
-                                  onSelected: (val) => setState(
-                                    () => _selectedMethod = val ? method : null,
-                                  ),
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: _methodDefinitions.keys
+                          .map(
+                            (method) => Tooltip(
+                              message: _methodDefinitions[method]!,
+                              child: ChoiceChip(
+                                label: Text(method),
+                                selected: _selectedMethod == method,
+                                onSelected: (val) => setState(
+                                  () => _selectedMethod = val ? method : null,
                                 ),
                               ),
-                            )
-                            .toList(),
-                      ),
+                            ),
+                          )
+                          .toList(),
                     ),
                     const SizedBox(height: 8),
                   ],
@@ -2952,9 +2943,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               height: 48,
               child: Row(
                 children: [
-                  const Expanded(
-                    child: Divider(),
-                  ),
+                  const Expanded(child: Divider()),
                   if (_isEditing) ...[
                     const SizedBox(width: 8),
                     Consumer<SeriesProvider>(
@@ -2966,7 +2955,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               heroTag: 'voice_btn',
                               onPressed: _startVoiceInput,
                               backgroundColor: Colors.redAccent,
-                              child: const Icon(Icons.mic, size: 20, color: Colors.white),
+                              child: const Icon(
+                                Icons.mic,
+                                size: 20,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(width: 8),
                           ],

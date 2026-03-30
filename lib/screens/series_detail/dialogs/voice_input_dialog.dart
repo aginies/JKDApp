@@ -549,7 +549,9 @@ class VoiceInputDialog {
                                                         }),
                                                         backgroundColor:
                                                             isSelected
-                                                            ? Colors.indigo.shade800
+                                                            ? Colors
+                                                                  .indigo
+                                                                  .shade800
                                                             : Colors.indigo
                                                                   .withValues(
                                                                     alpha: 0.1,

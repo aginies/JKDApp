@@ -13,8 +13,8 @@ class MoveDisplayWidgets {
     IconData id = level.toLowerCase() == 'high'
         ? Icons.north_east
         : (level.toLowerCase() == 'low'
-            ? Icons.south_east
-            : Icons.arrow_forward);
+              ? Icons.south_east
+              : Icons.arrow_forward);
     return Container(
       padding: EdgeInsets.all(mini ? 5 : 6),
       decoration: BoxDecoration(
