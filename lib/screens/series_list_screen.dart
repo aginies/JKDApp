@@ -573,13 +573,43 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
+  void _confirmClone(
+    BuildContext context,
+    SeriesProvider provider,
+    JkdSeries series,
+  ) {
+    final lang = provider.language;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '${LocalizationService.translate('clone', lang)} "${series.title}"?',
+        ),
+        content: Text(LocalizationService.translate('confirm_clone', lang)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          TextButton(
+            onPressed: () {
+              provider.cloneSeries(series);
+              Navigator.pop(context);
+            },
+            child: Text(LocalizationService.translate('clone', lang)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SeriesProvider>(context);
     final lang = provider.language;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           leading: Padding(
@@ -642,6 +672,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             tabs: [
               Tab(text: 'Jun Fan Gung Fu'),
               Tab(text: 'Jun Fan Kick Boxing'),
+              Tab(text: 'Kali'),
             ],
           ),
         ),
@@ -649,6 +680,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
           children: [
             _buildSeriesList(provider, 'Jun Fan Gung Fu', lang),
             _buildSeriesList(provider, 'Jun Fan Kick Boxing', lang),
+            _buildSeriesList(provider, 'Kali', lang),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -687,37 +719,59 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         final series = filtered[index];
         return Card(
           margin: const EdgeInsets.all(8.0),
-          child: ListTile(
-            leading: Icon(
-              series.isSystem ? Icons.verified : Icons.person,
-              color: series.isSystem ? Colors.blueAccent : Colors.orangeAccent,
-            ),
-            title: Text(series.title),
-            subtitle: Text(
-              '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.copy, color: Colors.blueGrey),
-                  onPressed: () => provider.cloneSeries(series),
-                  tooltip: LocalizationService.translate('clone', lang),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _confirmDelete(context, provider, series),
-                ),
-              ],
-            ),
+          clipBehavior: Clip.antiAlias, // Ensures the ripple is contained
+          child: InkWell(
+            // Wrap with InkWell for explicit ripple effect
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => SeriesDetailScreen(series: series),
+                PageRouteBuilder(
+                  transitionDuration: const Duration(milliseconds: 300),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      SeriesDetailScreen(series: series),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(
+                          1.0,
+                          0.0,
+                        ); // Slides in from the right
+                        const end = Offset.zero;
+                        final tween = Tween(begin: begin, end: end);
+                        final offsetAnimation = animation.drive(tween);
+                        return SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        );
+                      },
                 ),
               );
             },
+            child: ListTile(
+              leading: Icon(
+                series.isSystem ? Icons.verified : Icons.person,
+                color: series.isSystem
+                    ? Colors.blueAccent
+                    : Colors.orangeAccent,
+              ),
+              title: Text(series.title),
+              subtitle: Text(
+                '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.copy, color: Colors.blueGrey),
+                    onPressed: () => _confirmClone(context, provider, series),
+                    tooltip: LocalizationService.translate('clone', lang),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _confirmDelete(context, provider, series),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },

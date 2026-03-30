@@ -330,7 +330,38 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     } else {
       await provider.updateSeries(series);
     }
-    if (mounted) Navigator.pop(context);
+
+    if (mounted) {
+      // Show a temporary success dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 60,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                LocalizationService.translate(
+                  widget.series == null ? 'series_added' : 'series_updated',
+                  provider.language,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Dismiss the dialog and pop the screen after a short delay
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   void _showTrainingOptions() async {
@@ -2868,6 +2899,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         setState(
                           () => _selectedCategory = 'Jun Fan Kick Boxing',
                         );
+                      }
+                    },
+                  ),
+                  ChoiceChip(
+                    label: const Text('Kali'),
+                    selected: _selectedCategory == 'Kali',
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _selectedCategory = 'Kali');
                       }
                     },
                   ),

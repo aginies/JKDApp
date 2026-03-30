@@ -80,7 +80,7 @@ class JkdApp extends StatelessWidget {
     }
 
     return MaterialApp(
-      title: 'Jeet Kune Do Notes',
+      title: 'JKD',
       theme: theme,
       darkTheme: darkTheme,
       themeMode: mode,

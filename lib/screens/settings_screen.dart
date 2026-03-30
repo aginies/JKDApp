@@ -8,6 +8,8 @@ import '../services/localization_service.dart';
 import '../services/export_service.dart';
 import '../services/import_service.dart';
 import '../services/media_backup_service.dart';
+import '../services/database_service.dart';
+import 'json_editor_screen.dart';
 import '../models/series.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -64,6 +66,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               DropdownMenuItem(
                                 value: 'Jun Fan Kick Boxing',
                                 child: Text('Jun Fan Kick Boxing'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Kali',
+                                child: Text('Kali'),
                               ),
                             ],
                             onChanged: (val) =>
@@ -474,6 +480,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _handleResetDatabase(
+    BuildContext context,
+    String lang,
+    SeriesProvider provider,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          LocalizationService.translate('reset_db_title', lang),
+          style: const TextStyle(color: Colors.red),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              LocalizationService.translate('reset_db_warning', lang),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              LocalizationService.translate('reset_db_confirm', lang),
+              style: const TextStyle(fontSize: 12, color: Colors.red),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(LocalizationService.translate('reset_database', lang)),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      try {
+        await DatabaseService().resetDatabase();
+
+        // Reload series from the reset database
+        await provider.loadSeries();
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                LocalizationService.translate('reset_db_success', lang),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${LocalizationService.translate('error', lang)}: $e',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SeriesProvider>(
@@ -662,10 +744,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _handleMediaRestore(context, lang, provider.galleryPath),
               ),
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.restore, color: Colors.red),
+                title: Text(
+                  LocalizationService.translate('reset_database', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('reset_database_desc', lang),
+                ),
+                onTap: () => _handleResetDatabase(context, lang, provider),
+              ),
+              const Divider(),
+              // Developer Options
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Text(
+                  'Developer Options',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit_note),
+                title: const Text('Edit Glossary JSON'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JsonEditorScreen(
+                        filePath: 'assets/jkd-glossary.json',
+                        title: 'Edit Glossary JSON',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit_note),
+                title: const Text('Edit Series JSON'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => JsonEditorScreen(
+                        filePath: 'assets/jkd-series.json',
+                        title: 'Edit Series JSON',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
-                  'Jeet Kune Do Notes v1.0',
+                  'JKD v1.0',
                   style: TextStyle(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),

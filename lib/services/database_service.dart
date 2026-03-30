@@ -21,12 +21,11 @@ class DatabaseService {
     'assets/jkd-series-4-counts.json',
     'assets/jkd-series-5-counts.json',
     'assets/jkd-series-6-counts.json',
-    'jkd-series-contre-jab-cross.json',
-    'jkd-series-contre-jab-hook.json',
-    'jkd-series-kicks.json',
-    'jkd-series-loyda-jfk.json',
-    'jkd-series-punches.json',
-    'jkd-series-trapping-base.json',
+    'assets/jkd-series-contre-jab-cross.json',
+    'assets/jkd-series-contre-jab-hook.json',
+    'assets/jkd-series-kicks.json',
+    'assets/jkd-series-loyda-jfk.json',
+    'assets/jkd-series-trapping-base.json',
   ];
 
   factory DatabaseService() => _instance;
@@ -237,7 +236,8 @@ class DatabaseService {
         int? gid;
         if (move['glossary_id'] != null) {
           gid = move['glossary_id'];
-        } else if (move['name'] != null && !move['name'].toString().startsWith('Combo:')) {
+        } else if (move['name'] != null &&
+            !move['name'].toString().startsWith('Combo:')) {
           final glossaryResults = await db.query(
             'glossary',
             where: 'name = ?',
@@ -400,5 +400,20 @@ class DatabaseService {
   Future<void> deleteVoiceRecord(int id) async {
     final db = await database;
     await db.delete('voice_records', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> resetDatabase() async {
+    // Close existing database connection
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+
+    // Delete the database file
+    final String path = join(await getDatabasesPath(), 'jkd_notes.db');
+    await deleteDatabase(path);
+
+    // Re-initialize the database (will trigger onCreate)
+    _database = await _initDatabase();
   }
 }

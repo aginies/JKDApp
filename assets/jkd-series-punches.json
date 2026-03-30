@@ -20,10 +20,8 @@
       {"name": "Uppercut", "side": "R"},
       {"name": "Qua Chuie / cross", "side": "R"},
       {"name": "Qua Chuie / Jab", "side": "L"},
-      {"name": "Frappes Marteau", "side": ""},
-      {"name": "Frappes Marteau", "side": ""},
-      {"name": "overhead poing avant", "side": "L"},
-      {"name": "overhead poing arrière", "side": "L"},
+      {"name": "Frappes Marteau", "side": "R"},
+      {"name": "Frappes Marteau", "side": "L"},
       {"name": "overhead poing avant", "side": "R"},
       {"name": "overhead poing arrière", "side": "L"}
     ]

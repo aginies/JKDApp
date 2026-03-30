@@ -1,19 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/series_provider.dart';
-import '../services/localization_service.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
 
 class JsonEditorScreen extends StatefulWidget {
+  final String filePath;
   final String title;
-  final String initialJson;
-  final Future<void> Function(String) onSave;
 
   const JsonEditorScreen({
     super.key,
+    required this.filePath,
     required this.title,
-    required this.initialJson,
-    required this.onSave,
   });
 
   @override
@@ -27,14 +26,70 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
   @override
   void initState() {
     super.initState();
-    // Pretty print initial JSON
+    _controller = TextEditingController();
+    _loadJson();
+  }
+
+  Future<void> _loadJson() async {
     try {
-      final decoded = json.decode(widget.initialJson);
-      _controller = TextEditingController(
-        text: const JsonEncoder.withIndent('  ').convert(decoded),
+      // Check if the file exists in the app's document directory
+      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      final String fullPath = '${appDocDir.path}/${widget.filePath}';
+      final File file = File(fullPath);
+
+      String jsonString;
+      if (await file.exists()) {
+        jsonString = await file.readAsString();
+      } else {
+        // If not, load from assets
+        jsonString = await rootBundle.loadString(widget.filePath);
+      }
+
+      final decoded = json.decode(jsonString);
+      setState(() {
+        _controller.text = const JsonEncoder.withIndent('  ').convert(decoded);
+        _error = null;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading JSON: $e';
+        _controller.text = '';
+      });
+    }
+  }
+
+  Future<void> _saveJson() async {
+    try {
+      final decoded = json.decode(_controller.text); // Validate JSON
+      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      final String fullPath = '${appDocDir.path}/${widget.filePath}';
+      final File file = File(fullPath);
+
+      // Ensure the directory exists
+      if (!await file.parent.exists()) {
+        await file.parent.create(recursive: true);
+      }
+
+      await file.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(decoded),
       );
-    } catch (_) {
-      _controller = TextEditingController(text: widget.initialJson);
+      setState(() {
+        _error = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('JSON saved successfully!')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error saving JSON: $e';
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving JSON: $e')));
+      }
     }
   }
 
@@ -44,75 +99,44 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
     super.dispose();
   }
 
-  void _validateAndSave() async {
-    setState(() => _error = null);
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-
-    try {
-      json.decode(_controller.text); // Validate format
-      await widget.onSave(_controller.text);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(LocalizationService.translate('json_saved', lang)),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      setState(
-        () => _error =
-            '${LocalizationService.translate('invalid_json', lang)}: $e',
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _validateAndSave,
-            tooltip: LocalizationService.translate('save', lang),
+            onPressed: _saveJson,
+            tooltip: 'Save JSON',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (_error != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              color: Colors.red.withValues(alpha: 0.2),
-              child: Text(
-                _error!,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
               ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+            Expanded(
               child: TextField(
                 controller: _controller,
-                maxLines: null,
                 expands: true,
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 13,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'Edit JSON for ${widget.filePath}',
+                  alignLabelWithHint: true,
                 ),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '{ ... }',
-                ),
+                style: const TextStyle(fontFamily: 'monospace'),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
