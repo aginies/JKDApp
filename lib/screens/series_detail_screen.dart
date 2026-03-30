@@ -299,7 +299,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       }
     } catch (_) {
       // If not JSON, it might be raw text from a legacy caller or error
-      parsed = _voiceService.parseSentenceToCombo(input);
+      final lang =
+          Provider.of<SeriesProvider>(context, listen: false).language;
+      parsed = _voiceService.parseSentenceToCombo(input, lang);
     }
 
     if (parsed.isEmpty) return;
@@ -397,32 +399,32 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 Expanded(
                   child: TabBarView(
                     children: [
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'punch',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
                       ),
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'kick',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
                       ),
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'packs',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
                       ),
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'trapping',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
                       ),
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'special',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
                       ),
-                      _buildGlossaryList(
+                      _buildGlossaryWithScroll(
                         'other',
                         setS,
                         Provider.of<SeriesProvider>(context).language,
@@ -453,6 +455,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _targetSeriesIndex = null;
     _editingComboItemIndex = null;
     _isEditingCounter = false;
+  }
+
+  Future<int> _getInitialIndexForCategory(String cat) async {
+    if (_pendingActionItemId == null) return -1;
+    final items = await DatabaseService().getGlossaryByCategory(cat);
+    return items.indexWhere((item) => item['id'] == _pendingActionItemId);
+  }
+
+  Widget _buildGlossaryWithScroll(String cat, StateSetter setS, String lang) {
+    return FutureBuilder<int>(
+      future: _getInitialIndexForCategory(cat),
+      builder: (context, snapshot) {
+        return _buildGlossaryList(
+          cat,
+          setS,
+          lang,
+          initialIndex: snapshot.data,
+        );
+      },
+    );
   }
 
   void _activateGlossaryItem(int itemId) {
@@ -727,18 +749,30 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             GestureDetector(
-                              onTap: () {
+                              onTap: () async {
+                                int? gid = m.glossaryId;
+                                if (gid == null) {
+                                  // Fallback to name matching
+                                  final items = await DatabaseService()
+                                      .getGlossaryByCategory(m.category);
+                                  final match = items.firstWhere(
+                                    (i) => i['name'] == m.name,
+                                    orElse: () => {},
+                                  );
+                                  if (match.isNotEmpty) {
+                                    gid = match['id'];
+                                  }
+                                }
+
                                 setS(() {
                                   _editingComboItemIndex = idx;
                                   _isEditingCounter = false;
-                                  if (m.glossaryId != null) {
-                                    _selectedSidesInPicker[m.glossaryId!] =
-                                        m.side;
-                                    _selectedFeintsInPicker[m.glossaryId!] =
-                                        m.isFeint;
-                                    _selectedSpecialsInPicker[m.glossaryId!] =
+                                  if (gid != null) {
+                                    _selectedSidesInPicker[gid] = m.side;
+                                    _selectedFeintsInPicker[gid] = m.isFeint;
+                                    _selectedSpecialsInPicker[gid] =
                                         m.specialAction;
-                                    _pendingActionItemId = m.glossaryId;
+                                    _pendingActionItemId = gid;
                                     _pendingLevel = m.level;
                                   }
                                 });
@@ -746,7 +780,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     MoveDisplayWidgets.getTabIndexForCategory(
                                       m.category,
                                     );
-                                if (t != -1) {
+                                if (t != -1 && ctx.mounted) {
                                   DefaultTabController.of(ctx).animateTo(t);
                                 }
                               },
@@ -923,7 +957,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  Widget _buildGlossaryList(String cat, StateSetter setS, String lang) {
+  Widget _buildGlossaryList(
+    String cat,
+    StateSetter setS,
+    String lang, {
+    int? initialIndex,
+  }) {
+    final scrollController = ScrollController();
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
       builder: (ctx, snap) {
@@ -931,7 +972,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         final items = snap.data!;
+
+        if (initialIndex != null && initialIndex != -1) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (scrollController.hasClients) {
+              // Estimate height: Card height is approx 120-150px depending on translation/workflow
+              // Using jumpTo for immediate positioning
+              double offset = initialIndex * 100.0;
+              if (offset > scrollController.position.maxScrollExtent) {
+                offset = scrollController.position.maxScrollExtent;
+              }
+              scrollController.jumpTo(offset);
+            }
+          });
+        }
+
         return ListView.builder(
+          controller: scrollController,
           itemCount: items.length,
           itemBuilder: (ctx, idx) {
             final item = items[idx];

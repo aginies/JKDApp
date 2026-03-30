@@ -128,7 +128,7 @@ class VoiceParsingService {
   bool get isListening => _speechToText.isListening;
 
   /// Parses a spoken sentence into a list of Move objects.
-  List<Move> parseSentenceToCombo(String sentence) {
+  List<Move> parseSentenceToCombo(String sentence, String language) {
     if (sentence.trim().isEmpty) return [];
 
     // Normalize string: lowercase, remove punctuation
@@ -161,7 +161,7 @@ class VoiceParsingService {
       ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
       GlossaryEntry? matchedAttack = _findBestMatch(
         attackAttrs.remainingText,
-        allowAll: true,
+        language,
       );
 
       if (matchedAttack != null) {
@@ -173,9 +173,9 @@ class VoiceParsingService {
         // Parse Counter if it exists
         if (counterPhrase.trim().isNotEmpty) {
           ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
-          GlossaryEntry? matchedCounter = _findBestMatch(
+          var matchedCounter = _findBestMatch(
             counterAttrs.remainingText,
-            allowAll: true,
+            language,
           );
 
           if (matchedCounter != null) {
@@ -226,7 +226,10 @@ class VoiceParsingService {
     return requestedLevel;
   }
 
-  List<List<MoveOption>> parseSentenceToOptions(String sentence) {
+  List<List<MoveOption>> parseSentenceToOptions(
+    String sentence,
+    String language,
+  ) {
     if (sentence.trim().isEmpty) return [];
 
     String normalized = sentence.toLowerCase().replaceAll(
@@ -252,7 +255,7 @@ class VoiceParsingService {
           : '';
 
       ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
-      var topAttacks = findTopMatches(attackAttrs.remainingText);
+      var topAttacks = findTopMatches(attackAttrs.remainingText, language);
 
       if (topAttacks.isEmpty) continue;
 
@@ -266,7 +269,7 @@ class VoiceParsingService {
 
         if (counterPhrase.trim().isNotEmpty) {
           ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
-          var topCounters = findTopMatches(counterAttrs.remainingText);
+          var topCounters = findTopMatches(counterAttrs.remainingText, language);
 
           if (topCounters.isNotEmpty) {
             var matchedCounter = topCounters.first.entry;
@@ -312,36 +315,34 @@ class VoiceParsingService {
     return results;
   }
 
-  List<({GlossaryEntry entry, double score})> findTopMatches(String text) {
+  List<({GlossaryEntry entry, double score})> findTopMatches(
+    String text,
+    String language,
+  ) {
     if (text.trim().isEmpty) return [];
 
     List<({GlossaryEntry entry, double score})> scores = [];
 
     for (var entry in _glossary) {
-      double scoreEn = StringSimilarity.compareTwoStrings(
-        text,
-        entry.name.toLowerCase(),
+      List<double> matchScores = [];
+
+      // 1. Check Technical Name (always allowed, e.g. "Jab" even in French mode)
+      matchScores.add(
+        StringSimilarity.compareTwoStrings(text, entry.name.toLowerCase()),
       );
-      double scoreFr = 0.0;
-      if (entry.translations['fr'] != null) {
-        scoreFr = StringSimilarity.compareTwoStrings(
-          text,
-          entry.translations['fr']!.toLowerCase(),
-        );
-      }
-      double scoreOther = 0.0;
-      if (entry.translations['en'] != null) {
-        scoreOther = StringSimilarity.compareTwoStrings(
-          text,
-          entry.translations['en']!.toLowerCase(),
+
+      // 2. Check Translation for the CURRENT language only
+      // This allows saying "Direct du bras avant" if in French mode.
+      if (entry.translations[language] != null) {
+        matchScores.add(
+          StringSimilarity.compareTwoStrings(
+            text,
+            entry.translations[language]!.toLowerCase(),
+          ),
         );
       }
 
-      double maxScore = [
-        scoreEn,
-        scoreFr,
-        scoreOther,
-      ].reduce((a, b) => a > b ? a : b);
+      double maxScore = matchScores.reduce((a, b) => a > b ? a : b);
 
       if (maxScore > 0.3) {
         scores.add((entry: entry, score: maxScore));
@@ -357,6 +358,14 @@ class VoiceParsingService {
 
     // Otherwise return top 3
     return scores.take(3).toList();
+  }
+
+  GlossaryEntry? _findBestMatch(String text, String language) {
+    final top = findTopMatches(text, language);
+    if (top.isNotEmpty) {
+      return top.first.entry;
+    }
+    return null;
   }
 
   List<String> _splitByKeywords(
@@ -410,56 +419,6 @@ class VoiceParsingService {
       level: level,
       remainingText: remainingWords.join(' '),
     );
-  }
-
-  GlossaryEntry? _findBestMatch(String text, {bool allowAll = false}) {
-    if (text.trim().isEmpty) return null;
-
-    double bestScore = 0.0;
-    GlossaryEntry? bestMatch;
-
-    for (var entry in _glossary) {
-      // Check English name
-      double scoreEn = StringSimilarity.compareTwoStrings(
-        text,
-        entry.name.toLowerCase(),
-      );
-
-      // Check French translation if available
-      double scoreFr = 0.0;
-      if (entry.translations['fr'] != null) {
-        scoreFr = StringSimilarity.compareTwoStrings(
-          text,
-          entry.translations['fr']!.toLowerCase(),
-        );
-      }
-
-      // Check other translations just in case
-      double scoreOther = 0.0;
-      if (entry.translations['en'] != null) {
-        scoreOther = StringSimilarity.compareTwoStrings(
-          text,
-          entry.translations['en']!.toLowerCase(),
-        );
-      }
-
-      double maxScore = [
-        scoreEn,
-        scoreFr,
-        scoreOther,
-      ].reduce((a, b) => a > b ? a : b);
-
-      if (maxScore > bestScore) {
-        bestScore = maxScore;
-        bestMatch = entry;
-      }
-    }
-
-    // A threshold to avoid matching garbage noise. Lowered to 0.3 for better STT recognition
-    if (bestScore > 0.3) {
-      return bestMatch;
-    }
-    return null;
   }
 }
 

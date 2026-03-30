@@ -161,8 +161,22 @@ class DatabaseService {
 
       for (int i = 0; i < s['moves'].length; i++) {
         var move = s['moves'][i];
+
+        // Try to find glossary ID by name matching
+        final glossaryResults = await db.query(
+          'glossary',
+          where: 'name = ?',
+          whereArgs: [move['name']],
+          limit: 1,
+        );
+        int? gid;
+        if (glossaryResults.isNotEmpty) {
+          gid = glossaryResults.first['id'] as int?;
+        }
+
         await db.insert('series_moves', {
           'series_id': seriesId,
+          'glossary_id': gid,
           'name': move['name'],
           'category': 'punch',
           'side': move['side'] ?? '',
