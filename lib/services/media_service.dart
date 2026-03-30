@@ -38,7 +38,25 @@ class MediaService {
   ) async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
     if (photo == null) return null;
+    return _saveImage(photo, baseGalleryPath, category, moveName);
+  }
 
+  Future<File?> pickAndSaveImage(
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
+    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+    if (photo == null) return null;
+    return _saveImage(photo, baseGalleryPath, category, moveName);
+  }
+
+  Future<File?> _saveImage(
+    XFile photo,
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
     final String categoryDir = _getCategoryDirName(category);
     final String targetDirPath = p.join(baseGalleryPath, categoryDir);
     final Directory targetDir = Directory(targetDirPath);

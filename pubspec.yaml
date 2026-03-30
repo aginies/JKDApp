@@ -59,6 +59,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/glossary.json
-    - assets/series.json
+    - assets/jkd-glossary.json
+    - assets/jkd-series.json
     - assets/icon/

@@ -1933,7 +1933,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       for (int i = 0; i < _moves.length; i++)
         Padding(
           key: ValueKey(_moves[i].uKey),
-          padding: const EdgeInsets.only(left: 5.0, bottom: 8.0),
+          padding: const EdgeInsets.only(left: 15.0, bottom: 8.0),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -2645,7 +2645,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       appBar: AppBar(
         title: Row(
           children: [
@@ -2878,7 +2877,41 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               const SizedBox(height: 8),
             ],
-            const Divider(),
+            SizedBox(
+              height: 48,
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Divider(),
+                  ),
+                  if (_isEditing) ...[
+                    const SizedBox(width: 8),
+                    Consumer<SeriesProvider>(
+                      builder: (context, provider, child) => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (provider.voiceEnabled) ...[
+                            FloatingActionButton.small(
+                              heroTag: 'voice_btn',
+                              onPressed: _startVoiceInput,
+                              backgroundColor: Colors.redAccent,
+                              child: const Icon(Icons.mic, size: 20, color: Colors.white),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          FloatingActionButton.small(
+                            heroTag: 'add_btn',
+                            onPressed: () => _pickMove(),
+                            child: const Icon(Icons.add, size: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                ],
+              ),
+            ),
             Expanded(
               child: _isEditing
                   ? ReorderableListView(
@@ -2897,30 +2930,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           ],
         ),
       ),
-      floatingActionButton: _isEditing
-          ? Consumer<SeriesProvider>(
-              builder: (context, provider, child) => Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (provider.voiceEnabled) ...[
-                    FloatingActionButton(
-                      heroTag: 'voice_btn',
-                      onPressed: _startVoiceInput,
-                      backgroundColor: Colors.redAccent,
-                      child: const Icon(Icons.mic, color: Colors.white),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  FloatingActionButton(
-                    heroTag: 'add_btn',
-                    onPressed: () => _pickMove(),
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-            )
-          : null,
     );
   }
 }

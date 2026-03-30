@@ -161,7 +161,7 @@ class DatabaseService {
 
   Future<void> _seedGlossary(Database db) async {
     final String glossaryResponse = await rootBundle.loadString(
-      'assets/glossary.json',
+      'assets/jkd-glossary.json',
     );
     final Map<String, dynamic> glossaryData = json.decode(glossaryResponse);
 
@@ -187,7 +187,7 @@ class DatabaseService {
 
   Future<void> _seedSeries(Database db) async {
     final String seriesResponse = await rootBundle.loadString(
-      'assets/series.json',
+      'assets/jkd-series.json',
     );
     final List<dynamic> seriesData = json.decode(seriesResponse);
     for (var s in seriesData) {
