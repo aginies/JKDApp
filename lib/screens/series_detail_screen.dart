@@ -212,7 +212,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       itemCount: images.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
-                          onTap: () => _showFullScreenImage(images[index]),
+                          onTap: () => _showFullScreenImage(images, index),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.file(images[index], fit: BoxFit.cover),
@@ -236,24 +236,79 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  void _showFullScreenImage(File imageFile) => showDialog(
-    context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: Stack(
-        children: [
-          Image.file(imageFile),
-          Positioned(
-            right: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ],
+  void _showFullScreenImage(List<File> images, int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            int currentIndex = initialIndex;
+            final PageController pageController = PageController(
+              initialPage: initialIndex,
+            );
+
+            return Stack(
+              children: [
+                PageView.builder(
+                  controller: pageController,
+                  itemCount: images.length,
+                  onPageChanged: (index) {
+                    setState(() => currentIndex = index);
+                  },
+                  itemBuilder: (context, index) {
+                    return Center(
+                      child: InteractiveViewer(
+                        child: Image.file(
+                          images[index],
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                if (images.length > 1)
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${currentIndex + 1} / ${images.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   void _saveSeries() async {
     if (_titleController.text.isEmpty) {
