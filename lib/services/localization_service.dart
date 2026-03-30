@@ -96,6 +96,8 @@ class LocalizationService {
       'glossary_backup_desc': 'Export your entire glossary to JSON',
       'glossary_restore_desc': 'Import glossary from JSON (Overwrites current)',
       'error': 'Error',
+      'voice_help_title': 'Voice Input Help',
+      'edit': 'Edit',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -194,6 +196,8 @@ class LocalizationService {
       'glossary_backup_desc': 'Exporter tout votre glossaire en JSON',
       'glossary_restore_desc': 'Importer le glossaire (Écrase l\'actuel)',
       'error': 'Erreur',
+      'voice_help_title': 'Aide Saisie Vocale',
+      'edit': 'Modifier',
     },
   };
 

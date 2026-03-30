@@ -113,4 +113,44 @@ class Move {
       subMoves: subs,
     );
   }
+
+  Move copyWith({
+    int? id,
+    int? glossaryId,
+    String? uKey,
+    String? name,
+    String? category,
+    String? side,
+    String? level,
+    bool? isFeint,
+    String? specialAction,
+    Map<String, String>? translations,
+    int? repetitions,
+    String? counterName,
+    String? counterSide,
+    String? counterLevel,
+    String? counterSpecialAction,
+    String? counterCategory,
+    List<Move>? subMoves,
+  }) {
+    return Move(
+      id: id ?? this.id,
+      glossaryId: glossaryId ?? this.glossaryId,
+      uKey: uKey ?? this.uKey,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      side: side ?? this.side,
+      level: level ?? this.level,
+      isFeint: isFeint ?? this.isFeint,
+      specialAction: specialAction ?? this.specialAction,
+      translations: translations ?? this.translations,
+      repetitions: repetitions ?? this.repetitions,
+      counterName: counterName ?? this.counterName,
+      counterSide: counterSide ?? this.counterSide,
+      counterLevel: counterLevel ?? this.counterLevel,
+      counterSpecialAction: counterSpecialAction ?? this.counterSpecialAction,
+      counterCategory: counterCategory ?? this.counterCategory,
+      subMoves: subMoves ?? this.subMoves,
+    );
+  }
 }

@@ -227,8 +227,8 @@ class VoiceParsingService {
       }
     }
 
-    // A threshold to avoid matching garbage noise. 0.4 is a reasonable starting point for Jaro-Winkler/Dice
-    if (bestScore > 0.4) {
+    // A threshold to avoid matching garbage noise. Lowered to 0.3 for better STT recognition
+    if (bestScore > 0.3) {
       return bestMatch;
     }
     return null;

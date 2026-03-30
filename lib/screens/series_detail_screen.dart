@@ -537,6 +537,153 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         ),
       );
 
+  void _showVoiceHelp() {
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.help_outline, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text(LocalizationService.translate('voice_help_title', lang)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                lang == 'fr'
+                  ? 'Comment utiliser la saisie vocale:'
+                  : 'How to use voice input:',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              _buildHelpSection(
+                lang == 'fr' ? 'Côtés' : 'Sides',
+                lang == 'fr'
+                  ? 'gauche, droite / droit'
+                  : 'left, right',
+                Icons.swap_horiz,
+              ),
+              _buildHelpSection(
+                lang == 'fr' ? 'Niveaux' : 'Levels',
+                lang == 'fr'
+                  ? 'haut, milieu / centre, bas'
+                  : 'high, mid / middle, low',
+                Icons.height,
+              ),
+              _buildHelpSection(
+                lang == 'fr' ? 'Enchaînement' : 'Next Move',
+                lang == 'fr'
+                  ? 'suivant, ensuite, puis, et, next, then'
+                  : 'next, then',
+                Icons.arrow_forward,
+              ),
+              _buildHelpSection(
+                lang == 'fr' ? 'Riposte' : 'Counter',
+                lang == 'fr'
+                  ? 'réponse, contre, answer, counter'
+                  : 'answer, counter',
+                Icons.reply,
+              ),
+              const Divider(height: 24),
+              Text(
+                lang == 'fr' ? 'Exemples:' : 'Examples:',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              _buildExample(
+                lang == 'fr'
+                  ? '"gauche jab haut"'
+                  : '"left jab high"',
+                lang == 'fr'
+                  ? 'Jab gauche niveau haut'
+                  : 'Left high jab',
+              ),
+              _buildExample(
+                lang == 'fr'
+                  ? '"droite cross puis gauche hook"'
+                  : '"right cross then left hook"',
+                lang == 'fr'
+                  ? 'Cross droit suivi d\'un crochet gauche'
+                  : 'Right cross followed by left hook',
+              ),
+              _buildExample(
+                lang == 'fr'
+                  ? '"jab réponse pak sao"'
+                  : '"jab answer pak sao"',
+                lang == 'fr'
+                  ? 'Jab avec riposte pak sao'
+                  : 'Jab with pak sao counter',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpSection(String title, String keywords, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.blueGrey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(keywords, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExample(String voice, String meaning) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.mic, size: 14, color: Colors.green),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  voice,
+                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 18.0),
+            child: Text(
+              '→ $meaning',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _startVoiceInput() async {
     if (Platform.isLinux) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice input not supported on Linux')));
@@ -557,11 +704,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               });
             }, localeId: lang == 'fr' ? 'fr_FR' : 'en_US');
             return AlertDialog(
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.mic, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Listening...'),
+                  const Icon(Icons.mic, color: Colors.red),
+                  const SizedBox(width: 8),
+                  const Expanded(child: Text('Listening...')),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline, color: Colors.blue, size: 20),
+                    onPressed: () {
+                      _voiceService.stopListening();
+                      Navigator.pop(ctx);
+                      _showVoiceHelp();
+                    },
+                    tooltip: 'Help',
+                  ),
                 ],
               ),
               content: SizedBox(
@@ -823,14 +979,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (Provider.of<SeriesProvider>(context).voiceEnabled)
+                      if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
+                        IconButton(
+                          icon: const Icon(Icons.help_outline, color: Colors.blueAccent, size: 18),
+                          onPressed: _showVoiceHelp,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Voice Help',
+                        ),
+                        const SizedBox(width: 4),
                         IconButton(
                           icon: const Icon(Icons.mic, color: Colors.redAccent, size: 20),
                           onPressed: _startVoiceInput,
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
+                          tooltip: 'Voice Input',
                         ),
+                      ],
                       const SizedBox(width: 12),
                       if (_editingSeriesIndex != null)
                         Padding(
@@ -1975,13 +2142,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       ),
       floatingActionButton: _isEditing
           ? Column(mainAxisAlignment: MainAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-              if (Provider.of<SeriesProvider>(context).voiceEnabled)
+              if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
+                FloatingActionButton(
+                    heroTag: 'voice_help_btn',
+                    mini: true,
+                    onPressed: _showVoiceHelp,
+                    backgroundColor: Colors.blueAccent,
+                    child: const Icon(Icons.help_outline, color: Colors.white, size: 20)),
+                const SizedBox(height: 8),
                 FloatingActionButton(
                     heroTag: 'voice_btn',
                     onPressed: _startVoiceInput,
                     backgroundColor: Colors.redAccent,
                     child: const Icon(Icons.mic, color: Colors.white)),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               FloatingActionButton(heroTag: 'add_btn', onPressed: () => _pickMove(), child: const Icon(Icons.add))
             ])
           : null,

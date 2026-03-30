@@ -45,4 +45,26 @@ class JkdSeries {
       moves: moves,
     );
   }
+
+  JkdSeries copyWith({
+    int? id,
+    String? title,
+    String? category,
+    String? type,
+    String? attackMethod,
+    List<Move>? moves,
+    String? notes,
+    bool? isSystem,
+  }) {
+    return JkdSeries(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      type: type ?? this.type,
+      attackMethod: attackMethod ?? this.attackMethod,
+      moves: moves ?? this.moves,
+      notes: notes ?? this.notes,
+      isSystem: isSystem ?? this.isSystem,
+    );
+  }
 }

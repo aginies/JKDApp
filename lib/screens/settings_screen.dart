@@ -366,8 +366,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SwitchListTile(
                 secondary: const Icon(Icons.mic),
                 title: Text(LocalizationService.translate('voice_recognition', lang)),
-                value: provider.voiceEnabled,
-                onChanged: (val) => provider.setVoiceEnabled(val),
+                subtitle: Platform.isLinux
+                  ? Text(
+                      lang == 'fr'
+                        ? 'Non disponible sur Linux'
+                        : 'Not available on Linux',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    )
+                  : null,
+                value: Platform.isLinux ? false : provider.voiceEnabled,
+                onChanged: Platform.isLinux ? null : (val) => provider.setVoiceEnabled(val),
               ),
               const Divider(),
               ListTile(
