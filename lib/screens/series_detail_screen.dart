@@ -102,7 +102,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       },
       context: context,
     );
-    _trainingController.initTts();
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    _trainingController.initTts(speechRate: provider.speechRate);
   }
 
   @override
@@ -264,12 +265,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _showTrainingOptions() async {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
     final options = await TrainingOptionsDialog.show(
       context,
       lang,
       _moves.length,
       _trainingInterval,
+      provider.speechRate,
     );
 
     if (options != null) {
@@ -284,6 +287,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         interval: options.interval,
         isLooping: options.isLooping,
         language: lang,
+        speechRate: provider.speechRate,
       );
     }
   }
@@ -1929,7 +1933,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       for (int i = 0; i < _moves.length; i++)
         Padding(
           key: ValueKey(_moves[i].uKey),
-          padding: const EdgeInsets.only(left: 20.0, bottom: 8.0),
+          padding: const EdgeInsets.only(left: 5.0, bottom: 8.0),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -2718,7 +2722,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 16.0),
         child: Column(
           children: [
             if (_trainingController.isTraining)
@@ -2900,21 +2904,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (provider.voiceEnabled) ...[
-                    FloatingActionButton(
-                      heroTag: 'voice_help_btn',
-                      mini: true,
-                      onPressed: () {
-                        final lang = provider.language;
-                        VoiceHelpDialog.show(context, lang);
-                      },
-                      backgroundColor: Colors.blueAccent,
-                      child: const Icon(
-                        Icons.help_outline,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     FloatingActionButton(
                       heroTag: 'voice_btn',
                       onPressed: _startVoiceInput,

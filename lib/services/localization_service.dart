@@ -99,6 +99,7 @@ class LocalizationService {
       'voice_help_title': 'Voice Input Help',
       'edit': 'Edit',
       'hit': 'Hit',
+      'speech_rate': 'Speech Rate',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -199,6 +200,7 @@ class LocalizationService {
       'voice_help_title': 'Aide Saisie Vocale',
       'edit': 'Modifier',
       'hit': 'Attaque',
+      'speech_rate': 'Vitesse de lecture',
     },
   };
 

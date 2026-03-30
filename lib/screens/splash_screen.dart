@@ -21,13 +21,13 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    // Duration for the turn: 1s
+    // Duration for the turn: 500ms
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 500),
     );
 
-    // Full 360 rotation (0 to 1s)
+    // Full 360 rotation (0 to 0.5s)
     _rotateAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutQuart),
     );
@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigate to the main screen after the rotation finishes
-    _timer = Timer(const Duration(milliseconds: 1300), () {
+    _timer = Timer(const Duration(milliseconds: 800), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(

@@ -5,6 +5,12 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 
+class _TtsLine {
+  final String text;
+  final int delayMs;
+  _TtsLine(this.text, this.delayMs);
+}
+
 class TrainingController {
   final FlutterTts _tts;
   final Function(int) onIndexChanged;
@@ -25,11 +31,11 @@ class TrainingController {
   bool get isTraining => _isTraining;
   int get currentIndex => _currentIndex;
 
-  Future<void> initTts() async {
+  Future<void> initTts({double speechRate = 0.25}) async {
     if (Platform.isLinux) return;
     try {
       await _tts.setVolume(1.0);
-      await _tts.setSpeechRate(0.3);
+      await _tts.setSpeechRate(speechRate);
       await _tts.setPitch(1.0);
       if (Platform.isIOS || Platform.isAndroid) {
         await _tts.setSharedInstance(true);
@@ -59,11 +65,25 @@ class TrainingController {
     }
   }
 
-  Future<void> speak(String text, String language) async {
-    if (Platform.isLinux) {
-      await Process.run('spd-say', ['-l', language, text]);
-    } else {
-      await _tts.speak(text);
+  Future<void> speak(dynamic text, String language) async {
+    if (text is String) {
+      if (Platform.isLinux) {
+        await Process.run('spd-say', ['-l', language, text]);
+      } else {
+        await _tts.speak(text);
+      }
+    } else if (text is List<_TtsLine>) {
+      for (final line in text) {
+        if (!_isTraining) break;
+        if (Platform.isLinux) {
+          await Process.run('spd-say', ['-l', language, line.text]);
+        } else {
+          await _tts.speak(line.text);
+        }
+        if (line.delayMs > 0) {
+          await Future.delayed(Duration(milliseconds: line.delayMs));
+        }
+      }
     }
   }
 
@@ -82,8 +102,12 @@ class TrainingController {
     required int interval,
     required bool isLooping,
     required String language,
+    double speechRate = 0.25,
   }) async {
     await setLanguage(language);
+    if (!Platform.isLinux) {
+      await _tts.setSpeechRate(speechRate);
+    }
 
     // Countdown
     int countdown = 3;
@@ -164,7 +188,7 @@ class TrainingController {
       }
     }
 
-    await speak(_buildTtsText(moves[_currentIndex], language), language);
+    await speak(_buildTtsTextList(moves[_currentIndex], language), language);
 
     _timer = Timer(Duration(seconds: interval), () {
       if (_isTraining) {
@@ -182,9 +206,11 @@ class TrainingController {
     });
   }
 
-  String _buildTtsText(Move move, String language) {
-    StringBuffer sb = StringBuffer();
-    void addInfo(Move m) {
+  List<_TtsLine> _buildTtsTextList(Move move, String language) {
+    List<_TtsLine> lines = [];
+
+    void addMoveLines(Move m) {
+      StringBuffer sb = StringBuffer();
       if (m.side.isNotEmpty) {
         sb.write(
           '${LocalizationService.translate(m.side == 'L' ? 'left' : 'right', language)} ',
@@ -197,31 +223,38 @@ class TrainingController {
         );
       }
       if (m.specialAction != null) sb.write('${m.specialAction} ');
+
+      // If there is an answer, add the hit with 1s delay
       if (m.counterName != null) {
-        sb.write('${LocalizationService.translate('answer', language)} ');
+        lines.add(_TtsLine(sb.toString().trim(), 1000));
+        StringBuffer csb = StringBuffer();
+        csb.write('${LocalizationService.translate('answer', language)} ');
         if (m.counterSide != null) {
-          sb.write(
+          csb.write(
             '${LocalizationService.translate(m.counterSide == 'L' ? 'left' : 'right', language)} ',
           );
         }
-        sb.write('${m.counterName} ');
+        csb.write('${m.counterName} ');
         if (m.counterLevel != null) {
-          sb.write(
+          csb.write(
             '${LocalizationService.translate(m.counterLevel!.toLowerCase(), language)} ',
           );
         }
+        lines.add(_TtsLine(csb.toString().trim(), 2500));
+      } else {
+        // No answer, just the hit with combo delay
+        lines.add(_TtsLine(sb.toString().trim(), 2500));
       }
     }
 
     if (!move.isCombo) {
-      addInfo(move);
+      addMoveLines(move);
     } else {
       for (var sub in move.subMoves) {
-        addInfo(sub);
-        sb.write('. ');
+        addMoveLines(sub);
       }
     }
-    return sb.toString();
+    return lines;
   }
 
   void stop() {

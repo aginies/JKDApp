@@ -554,6 +554,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? null
                     : (val) => provider.setVoiceEnabled(val),
               ),
+              if (provider.voiceEnabled) ...[
+                ListTile(
+                  leading: const Icon(Icons.speed),
+                  title: Text(
+                    LocalizationService.translate('speech_rate', lang),
+                  ),
+                  trailing: Text(
+                    provider.speechRate.toStringAsFixed(2),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Slider(
+                    value: provider.speechRate,
+                    min: 0.1,
+                    max: 0.8,
+                    divisions: 14,
+                    onChanged: (val) => provider.setSpeechRate(val),
+                  ),
+                ),
+              ],
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.folder_open),

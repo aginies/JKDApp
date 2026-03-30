@@ -150,11 +150,16 @@ class VoiceInputDialog {
                     ).substring(0, 1),
                     side,
                     mini: true,
+                    textColor: (isSelected || onDark) ? Colors.white : null,
                   ),
                 ],
                 if (level.isNotEmpty) ...[
                   const SizedBox(width: 4),
-                  MoveDisplayWidgets.levelIcon(level, mini: true),
+                  MoveDisplayWidgets.levelIcon(
+                    level,
+                    mini: true,
+                    color: (isSelected || onDark) ? Colors.white : null,
+                  ),
                 ],
               ],
             );
@@ -544,7 +549,7 @@ class VoiceInputDialog {
                                                         }),
                                                         backgroundColor:
                                                             isSelected
-                                                            ? Colors.indigo
+                                                            ? Colors.indigo.shade800
                                                             : Colors.indigo
                                                                   .withValues(
                                                                     alpha: 0.1,

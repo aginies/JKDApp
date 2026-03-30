@@ -13,6 +13,7 @@ class SeriesProvider with ChangeNotifier {
   String _language = 'en';
   JkdThemeMode _themeMode = JkdThemeMode.system;
   bool _voiceEnabled = false;
+  double _speechRate = 0.25;
   String _searchQuery = '';
   String? _galleryPath;
 
@@ -22,6 +23,7 @@ class SeriesProvider with ChangeNotifier {
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
   bool get voiceEnabled => _voiceEnabled;
+  double get speechRate => _speechRate;
   String get searchQuery => _searchQuery;
   String? get galleryPath => _galleryPath;
 
@@ -49,6 +51,11 @@ class SeriesProvider with ChangeNotifier {
 
     // Voice
     _voiceEnabled = !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
+
+    // Speech Rate
+    if (prefs.containsKey('speech_rate')) {
+      _speechRate = double.tryParse(prefs['speech_rate']!) ?? 0.25;
+    }
 
     // Theme
     final themeStr = prefs['theme'] ?? 'system';
@@ -107,6 +114,12 @@ class SeriesProvider with ChangeNotifier {
     if (Platform.isLinux && enabled) return;
     _voiceEnabled = enabled;
     await _dbService.saveSetting('voice_enabled', enabled ? '1' : '0');
+    notifyListeners();
+  }
+
+  void setSpeechRate(double rate) async {
+    _speechRate = rate;
+    await _dbService.saveSetting('speech_rate', rate.toString());
     notifyListeners();
   }
 

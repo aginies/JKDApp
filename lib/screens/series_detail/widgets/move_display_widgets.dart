@@ -3,20 +3,29 @@ import 'package:flutter/material.dart';
 /// Common widgets for displaying move attributes
 class MoveDisplayWidgets {
   /// Level indicator icon (High/Mid/Low)
-  static Widget levelIcon(String level, {double? size, bool mini = false}) {
+  static Widget levelIcon(
+    String level, {
+    double? size,
+    bool mini = false,
+    Color? color,
+  }) {
     if (level.isEmpty) return const SizedBox.shrink();
     IconData id = level.toLowerCase() == 'high'
         ? Icons.north_east
         : (level.toLowerCase() == 'low'
-              ? Icons.south_east
-              : Icons.arrow_forward);
+            ? Icons.south_east
+            : Icons.arrow_forward);
     return Container(
       padding: EdgeInsets.all(mini ? 5 : 6),
       decoration: BoxDecoration(
         color: Colors.grey.shade700,
         shape: BoxShape.circle,
       ),
-      child: Icon(id, size: size ?? (mini ? 11 : 12), color: Colors.white),
+      child: Icon(
+        id,
+        size: size ?? (mini ? 11 : 12),
+        color: color ?? Colors.white,
+      ),
     );
   }
 
@@ -38,7 +47,12 @@ class MoveDisplayWidgets {
   );
 
   /// Side indicator circle (Left/Right)
-  static Widget sideCircle(String label, String sideCode, {bool mini = false}) {
+  static Widget sideCircle(
+    String label,
+    String sideCode, {
+    bool mini = false,
+    Color? textColor,
+  }) {
     if (sideCode.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: EdgeInsets.all(mini ? 5 : 6),
@@ -50,7 +64,7 @@ class MoveDisplayWidgets {
         label.substring(0, 1),
         style: TextStyle(
           fontSize: mini ? 11 : 12,
-          color: Colors.white,
+          color: textColor ?? Colors.white,
           fontWeight: FontWeight.bold,
         ),
       ),

@@ -6,12 +6,14 @@ class TrainingOptions {
   final int endIndex;
   final int interval;
   final bool isLooping;
+  final double speechRate;
 
   TrainingOptions({
     required this.startIndex,
     required this.endIndex,
     required this.interval,
     required this.isLooping,
+    required this.speechRate,
   });
 }
 
@@ -21,10 +23,12 @@ class TrainingOptionsDialog {
     String language,
     int movesCount,
     int currentInterval,
+    double currentSpeechRate,
   ) async {
     int trainingStartIndex = 1;
     int trainingEndIndex = movesCount;
     int trainingInterval = currentInterval;
+    double trainingSpeechRate = currentSpeechRate;
     bool isLooping = false;
 
     final result = await showModalBottomSheet<TrainingOptions>(
@@ -131,6 +135,28 @@ class TrainingOptionsDialog {
                   Text('$trainingInterval s'),
                 ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${LocalizationService.translate('speech_rate', language)}: ',
+                  ),
+                  SizedBox(
+                    width: 100,
+                    child: Slider(
+                      value: trainingSpeechRate,
+                      min: 0.1,
+                      max: 0.8,
+                      divisions: 14,
+                      label: trainingSpeechRate.toStringAsFixed(2),
+                      onChanged: (val) =>
+                          setModalState(() => trainingSpeechRate = val),
+                    ),
+                  ),
+                  Text(trainingSpeechRate.toStringAsFixed(2)),
+                ],
+              ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
@@ -141,6 +167,7 @@ class TrainingOptionsDialog {
                       endIndex: trainingEndIndex,
                       interval: trainingInterval,
                       isLooping: isLooping,
+                      speechRate: trainingSpeechRate,
                     ),
                   );
                 },
