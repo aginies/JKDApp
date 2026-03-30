@@ -1,0 +1,231 @@
+name: Build & Release JKD Notes
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write # Needed to create releases
+
+jobs:
+  test:
+    name: Run Tests and Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Static Analysis
+        run: flutter analyze
+      - name: Run Tests
+        run: flutter test
+
+  build-android:
+    name: Build Android
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Verify APK exists
+        run: |
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            echo "✅ APK built successfully"
+            ls -la build/app/outputs/flutter-apk/app-release.apk
+          else
+            echo "❌ APK not found"
+            find build -name "*.apk" -exec ls -la {} \;
+          fi
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux (AppImage)
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Linux
+        run: flutter build linux --release
+      - name: Package AppImage
+        run: |
+          # Download linuxdeploy
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          
+          # Prepare AppDir structure
+          mkdir -p AppDir/usr/bin
+          
+          # Copy binary and bundle assets
+          cp -r build/linux/x64/release/bundle/* AppDir/usr/bin/
+          
+          # Create the desktop file with name matching binary
+          cat > jkd_notes.desktop <<EOF
+          [Desktop Entry]
+          Type=Application
+          Name=JKD Notes
+          Icon=jkd_notes
+          Exec=jeet_kune_do_notes
+          Categories=Utility;
+          EOF
+          
+          # Prepare the icon
+          cp assets/icon/JKD.png jkd_notes.png
+          
+          # Use linuxdeploy to create the AppImage
+          export ARCH=x86_64
+          ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
+            --executable AppDir/usr/bin/jeet_kune_do_notes \
+            --desktop-file jkd_notes.desktop \
+            --icon-file jkd_notes.png \
+            --appdir AppDir \
+            --output appimage
+          
+          # Move result to a predictable name
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          find . -maxdepth 1 -name "JKD_Notes*.AppImage" -exec mv {} JKDNotes-v$VERSION-Linux.AppImage \;
+          find . -maxdepth 1 -name "jkd_notes*.AppImage" -exec mv {} JKDNotes-v$VERSION-Linux.AppImage \;
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release-appimage
+          path: JKDNotes-v*-Linux.AppImage
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-android, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed to push tags
+      
+      - name: Extract Version from pubspec.yaml
+        id: get_version
+        run: |
+          # Extract version line, get the value, and strip the +build part
+          RAW_VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          VERSION="v$RAW_VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
+      - name: Create and Push Tag
+        run: |
+          TAG_NAME="${{ steps.get_version.outputs.VERSION }}"
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists"
+          else
+            echo "Creating tag $TAG_NAME"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi
+
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apk
+          path: ./artifacts/android
+          
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release-appimage
+          path: ./artifacts/linux
+
+      - name: Rename Files for Release
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          # Create release directory
+          mkdir -p ./release
+          
+          # Copy and rename Android APK
+          if [ -f "./artifacts/android/app-release.apk" ]; then
+            cp "./artifacts/android/app-release.apk" "./release/JKDNotes-$VERSION-Android.apk"
+            echo "✅ Android APK copied successfully"
+          fi
+          
+          # Copy and rename Linux AppImage
+          if ls ./artifacts/linux/JKDNotes-*-Linux.AppImage 1> /dev/null 2>&1; then
+            cp ./artifacts/linux/JKDNotes-*-Linux.AppImage ./release/JKDNotes-$VERSION-Linux.AppImage
+            echo "✅ Linux AppImage copied successfully"
+          fi
+          
+          echo "=== Final release files ==="
+          ls -la ./release/
+
+      - name: Create Release Notes
+        run: |
+          # Use extracted version
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          
+          echo "# JKD Notes Release ${VERSION}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "## Features" >> release_notes.md
+          echo "- Jeet Kune Do training library and notes" >> release_notes.md
+          echo "- Multimedia support for training materials" >> release_notes.md
+          echo "- Voice notes and search" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## Downloads" >> release_notes.md
+          echo "- **Android**: Install the APK file on your Android device" >> release_notes.md
+          echo "- **Linux**: Download and run the `.AppImage` (make it executable with `chmod +x`)" >> release_notes.md
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: ${{ steps.get_version.outputs.VERSION }}
+          files: ./release/*
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          fail_on_unmatched_files: false
+          generate_release_notes: true
