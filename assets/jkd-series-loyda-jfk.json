@@ -1,0 +1,21 @@
+[
+  {
+    "title": "Loyda JFK",
+    "category": "Jun Fan Gung Fu",
+    "type": "Attack",
+    "attack_method": "SDA",
+    "notes": "Description",
+    "is_system": 1,
+    "moves": [
+      {
+        "name": "Jab",
+        "category": "punch",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": null
+      }
+    ]
+  }
+]
+
