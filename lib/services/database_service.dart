@@ -17,7 +17,10 @@ class DatabaseService {
   // The file will be automatically loaded and seeded into the database
   static const List<String> _seriesFiles = [
     'assets/jkd-series-punches.json',
+    'assets/jkd-series-3-counts.json',
     'assets/jkd-series-4-counts.json',
+    'assets/jkd-series-5-counts.json',
+    'assets/jkd-series-6-counts.json',
   ];
 
   factory DatabaseService() => _instance;
