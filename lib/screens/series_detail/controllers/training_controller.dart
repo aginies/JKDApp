@@ -68,7 +68,11 @@ class TrainingController {
   Future<void> speak(dynamic text, String language) async {
     if (text is String) {
       if (Platform.isLinux) {
-        await Process.run('spd-say', ['-l', language, text]);
+        try {
+          await Process.run('spd-say', ['-l', language, text]);
+        } catch (e) {
+          debugPrint("spd-say warning: $e");
+        }
       } else {
         await _tts.speak(text);
       }
@@ -76,7 +80,11 @@ class TrainingController {
       for (final line in text) {
         if (!_isTraining) break;
         if (Platform.isLinux) {
-          await Process.run('spd-say', ['-l', language, line.text]);
+          try {
+            await Process.run('spd-say', ['-l', language, line.text]);
+          } catch (e) {
+            debugPrint("spd-say warning: $e");
+          }
         } else {
           await _tts.speak(line.text);
         }
@@ -89,7 +97,11 @@ class TrainingController {
 
   Future<void> stopTts() async {
     if (Platform.isLinux) {
-      await Process.run('spd-say', ['-S']);
+      try {
+        await Process.run('spd-say', ['-S']);
+      } catch (e) {
+        debugPrint("spd-say stop warning: $e");
+      }
     } else {
       await _tts.stop();
     }
