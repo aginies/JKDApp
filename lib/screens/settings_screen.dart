@@ -128,12 +128,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           .where((s) => s.category == selectedCategory)
                           .toList();
                       fileName =
-                          'jkd_${selectedCategory.replaceAll(' ', '_').toLowerCase()}_series.json';
+                          'jkd-${selectedCategory.replaceAll(' ', '-').toLowerCase()}-series.json';
                     } else if (exportType == 'single' &&
                         selectedSeries != null) {
                       toExport = [selectedSeries!];
                       fileName =
-                          'jkd_series_${selectedSeries!.title.replaceAll(' ', '_').toLowerCase()}.json';
+                          'jkd-series-${selectedSeries!.title.replaceAll(' ', '-').toLowerCase()}.json';
                     }
 
                     if (toExport.isEmpty) {
@@ -753,6 +753,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onTap: () => _handleResetDatabase(context, lang, provider),
               ),
+              const Divider(),
+              // Developer Options
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Text(
+                  'Developer Options',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              SwitchListTile(
+                secondary: const Icon(Icons.developer_mode),
+                title: const Text('Developer Mode'),
+                subtitle: const Text(
+                  'Sync edits directly to project JSON files',
+                ),
+                value: provider.developerMode,
+                onChanged: (val) => provider.setDeveloperMode(val),
+              ),
+              if (provider.developerMode)
+                ListTile(
+                  leading: const Icon(Icons.folder),
+                  title: const Text('Project Path'),
+                  subtitle: Text(provider.projectPath ?? 'Not set'),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      String? selectedDirectory = await FilePicker.platform
+                          .getDirectoryPath();
+                      if (selectedDirectory != null) {
+                        provider.setProjectPath(selectedDirectory);
+                      }
+                    },
+                    child: Text(
+                      LocalizationService.translate('select_folder', lang),
+                    ),
+                  ),
+                ),
               const Divider(),
               const Padding(
                 padding: EdgeInsets.all(16.0),
