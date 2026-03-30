@@ -21,6 +21,12 @@ class DatabaseService {
     'assets/jkd-series-4-counts.json',
     'assets/jkd-series-5-counts.json',
     'assets/jkd-series-6-counts.json',
+    'jkd-series-contre-jab-cross.json',
+    'jkd-series-contre-jab-hook.json',
+    'jkd-series-kicks.json',
+    'jkd-series-loyda-jfk.json',
+    'jkd-series-punches.json',
+    'jkd-series-trapping-base.json',
   ];
 
   factory DatabaseService() => _instance;
