@@ -58,6 +58,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   bool _isEditingCounter = false;
   bool _isPickerOpen = false;
   final Map<String, ScrollController> _glossaryScrollControllers = {};
+  Timer? _scrollTimer;
 
   final Map<String, String> _methodDefinitions = {
     'SDA':
@@ -105,6 +106,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
@@ -993,20 +995,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         }
         final items = snap.data!;
 
-        if (initialIndex != null && initialIndex != -1) {
+        if (initialIndex != null && initialIndex >= 0) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (scrollController.hasClients) {
-              double offset = initialIndex * 120.0; // Adjusted estimate
-              if (offset > scrollController.position.maxScrollExtent) {
-                offset = scrollController.position.maxScrollExtent;
+            if (!mounted) return;
+            _scrollTimer?.cancel();
+            _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+              if (!mounted) return;
+              if (scrollController.hasClients &&
+                  scrollController.position.hasContentDimensions) {
+                if (initialIndex == 0) {
+                  scrollController.jumpTo(0.0);
+                } else {
+                  double offset = initialIndex * 125.0;
+                  if (offset > scrollController.position.maxScrollExtent) {
+                    offset = scrollController.position.maxScrollExtent;
+                  }
+                  scrollController.jumpTo(offset);
+                }
               }
-              // For index 0, we explicitly jump to top
-              if (initialIndex == 0) {
-                scrollController.jumpTo(0.0);
-              } else {
-                scrollController.jumpTo(offset);
-              }
-            }
+            });
           });
         }
 
@@ -1019,7 +1026,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final isF = _selectedFeintsInPicker[id] ?? false;
             final spec = _selectedSpecialsInPicker[id];
-            final isE = _pendingActionItemId == id;
+            // Expanded highlight logic: match by ID or by name/cat if ID is null (legacy)
+            final bool isE =
+                _pendingActionItemId == id ||
+                (_pendingActionItemId == null &&
+                    _editingComboItemIndex != null &&
+                    (!_isEditingCounter
+                        ? _currentCombo[_editingComboItemIndex!].name ==
+                            item['name']
+                        : _currentCombo[_editingComboItemIndex!].counterName ==
+                            item['name']) &&
+                    (!_isEditingCounter
+                        ? _currentCombo[_editingComboItemIndex!].category == cat
+                        : _currentCombo[_editingComboItemIndex!]
+                                .counterCategory ==
+                            cat));
             final String pL = item['possible_level'] ?? 'H,M,L';
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),

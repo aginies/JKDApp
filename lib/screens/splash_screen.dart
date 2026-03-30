@@ -16,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _scaleAnimation;
   late Animation<double> _rotateAnimation;
   late Animation<double> _opacityAnimation;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -44,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigate to the main screen after the rotation finishes
-    Timer(const Duration(milliseconds: 1300), () {
+    _timer = Timer(const Duration(milliseconds: 1300), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -63,6 +64,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }

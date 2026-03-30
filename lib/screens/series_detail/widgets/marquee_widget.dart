@@ -33,27 +33,29 @@ class _MarqueeWidgetState extends State<MarqueeWidget> {
   }
 
   void scroll() async {
-    while (scrollController.hasClients) {
-      if (scrollController.position.maxScrollExtent > 0) {
-        await Future.delayed(widget.pauseDuration);
-        if (scrollController.hasClients &&
-            scrollController.position.maxScrollExtent > 0) {
+    while (mounted && scrollController.hasClients) {
+      try {
+        if (scrollController.position.maxScrollExtent > 0) {
+          await Future.delayed(widget.pauseDuration);
+          if (!mounted || !scrollController.hasClients) return;
           await scrollController.animateTo(
             scrollController.position.maxScrollExtent,
             duration: widget.animationDuration,
             curve: Curves.linear,
           );
-        }
-        await Future.delayed(widget.pauseDuration);
-        if (scrollController.hasClients) {
+          await Future.delayed(widget.pauseDuration);
+          if (!mounted || !scrollController.hasClients) return;
           await scrollController.animateTo(
             0.0,
             duration: widget.backDuration,
             curve: Curves.easeOut,
           );
+        } else {
+          await Future.delayed(widget.pauseDuration);
         }
-      } else {
-        await Future.delayed(widget.pauseDuration);
+      } catch (_) {
+        // Handle cases where scrollController is disposed mid-animation
+        return;
       }
     }
   }
