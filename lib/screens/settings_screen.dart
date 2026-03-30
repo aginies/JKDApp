@@ -165,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Text(LocalizationService.translate('finish', lang)),
                 ),
               ],
-              );
+            );
           },
         );
       },

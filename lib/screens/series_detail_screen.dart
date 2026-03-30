@@ -1391,8 +1391,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 sL = pL.contains('L');
             final String pD = item['possible_direction'] ?? '';
             final bool hasDirection = pD.isNotEmpty;
-            final bool dL = pD.contains('L'),
-                dR = pD.contains('R');
             Map<String, String> tr = {};
             try {
               tr = Map<String, String>.from(json.decode(item['translations']));
