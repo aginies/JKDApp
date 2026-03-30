@@ -77,13 +77,12 @@
     {"name": "Bong Sao", "translations": {"en": "Wing arm", "fr": "Parade du coude"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Poon Sao", "translations": {"en": "Forearm winding (rotation)", "fr": "Enroulement (rotation) bras"}, "possible_level": "H,M,L", "removal": {}}
   ],
-  "special": [
+  "move": [
     {"name": "Change guard", "translations": {"en": "Change guard", "fr": "Changement de garde"}, "possible_level": "", "removal": {}},
     {"name": "Step forward", "translations": {"en": "Step forward", "fr": "Avancer"}, "possible_level": "", "removal": {}},
     {"name": "Toy Ma", "translations": {"en": "Move back", "fr": "Reculer"}, "possible_level": "", "removal": {}},
     {"name": "Toy Gerk", "translations": {"en": "Move the leg Back", "fr": "Reculer jambe en arrière"}, "possible_level": "", "removal": {}},
-    {"name": "Lateral step left", "translations": {"en": "Lateral step left", "fr": "Déplacement Latéral Gauche"}, "possible_level": "", "removal": {}},
-    {"name": "Lateral step right", "translations": {"en": "Lateral step right", "fr": "Déplacement Latéral Droite"}, "possible_level": "", "removal": {}}
+    {"name": "Lateral step", "translations": {"en": "Lateral step", "fr": "Déplacement Latéral"}, "possible_direction": "L,R", "possible_level": "", "removal": {}}
   ],
   "general": [
     {"name": "Kwoon", "translations": {"en": "School, gym", "fr": "École, gymnase"}, "possible_level": "", "removal": {}},

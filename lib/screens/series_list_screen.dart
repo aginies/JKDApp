@@ -43,7 +43,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         return Icons.front_hand;
       case 'trapping':
         return Icons.back_hand;
-      case 'special':
+      case 'move':
         return Icons.directions_run;
       case 'general':
         return Icons.info_outline;
@@ -225,8 +225,8 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                           icon: Icon(_getCategoryIcon('trapping')),
                         ),
                         Tab(
-                          text: LocalizationService.translate('special', lang),
-                          icon: Icon(_getCategoryIcon('special')),
+                          text: LocalizationService.translate('move', lang),
+                          icon: Icon(_getCategoryIcon('move')),
                         ),
                         Tab(
                           text: LocalizationService.translate('general', lang),
@@ -245,7 +245,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                           _buildGlossaryList('kick', lang),
                           _buildGlossaryList('packs', lang),
                           _buildGlossaryList('trapping', lang),
-                          _buildGlossaryList('special', lang),
+                          _buildGlossaryList('move', lang),
                           _buildGlossaryList('general', lang),
                           _buildGlossaryList('other', lang),
                         ],

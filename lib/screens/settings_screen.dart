@@ -165,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Text(LocalizationService.translate('finish', lang)),
                 ),
               ],
-            );
+              );
           },
         );
       },
@@ -743,17 +743,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _handleMediaRestore(context, lang, provider.galleryPath),
               ),
               const Divider(),
-              ListTile(
-                leading: const Icon(Icons.restore, color: Colors.red),
-                title: Text(
-                  LocalizationService.translate('reset_database', lang),
-                ),
-                subtitle: Text(
-                  LocalizationService.translate('reset_database_desc', lang),
-                ),
-                onTap: () => _handleResetDatabase(context, lang, provider),
-              ),
-              const Divider(),
               // Developer Options
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -774,7 +763,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: provider.developerMode,
                 onChanged: (val) => provider.setDeveloperMode(val),
               ),
-              if (provider.developerMode)
+              if (provider.developerMode) ...[
                 ListTile(
                   leading: const Icon(Icons.folder),
                   title: const Text('Project Path'),
@@ -792,6 +781,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
+                ListTile(
+                  leading: const Icon(Icons.restore, color: Colors.red),
+                  title: Text(
+                    LocalizationService.translate('reset_database', lang),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.translate('reset_database_desc', lang),
+                  ),
+                  onTap: () => _handleResetDatabase(context, lang, provider),
+                ),
+              ],
               const Divider(),
               const Padding(
                 padding: EdgeInsets.all(16.0),

@@ -7,7 +7,7 @@ class Move {
   final int? counterGlossaryId; // Track the source glossary item for counter
   final String uKey;
   final String name;
-  final String category; // 'punch', 'kick', 'packs', 'trapping', 'special'
+  final String category; // 'punch', 'kick', 'packs', 'trapping', 'move'
   final String side;
   final String level;
   final bool isFeint;

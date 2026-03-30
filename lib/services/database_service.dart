@@ -42,7 +42,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -138,6 +138,14 @@ class DatabaseService {
         }
       }
     }
+    if (oldVersion < 10) {
+      try {
+        await db.execute('ALTER TABLE glossary ADD COLUMN possible_direction TEXT');
+      } catch (_) {}
+      // Re-seed glossary to include possible_direction data
+      await db.delete('glossary');
+      await _seedGlossary(db);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -151,7 +159,8 @@ class DatabaseService {
         removal TEXT,
         hit_type TEXT,
         possible_type_attack TEXT,
-        possible_level TEXT
+        possible_level TEXT,
+        possible_direction TEXT
       )
     ''');
 
@@ -198,6 +207,7 @@ class DatabaseService {
             'hit_type': item['hit_type'],
             'possible_type_attack': item['possible_type_attack'],
             'possible_level': item['possible_level'] ?? 'H,M,L',
+            'possible_direction': item['possible_direction'],
           });
         }
       }

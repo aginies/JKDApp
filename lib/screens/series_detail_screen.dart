@@ -510,14 +510,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                             ),
                             Tab(
-                              text: LocalizationService.translate(
-                                'special',
-                                lang,
-                              ),
+                              text: LocalizationService.translate('move', lang),
                               icon: Icon(
                                 Icons.directions_run,
                                 color: MoveDisplayWidgets.getCategoryColor(
-                                  'special',
+                                  'move',
                                 ),
                               ),
                             ),
@@ -588,14 +585,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                             ),
                             Tab(
-                              text: LocalizationService.translate(
-                                'special',
-                                lang,
-                              ),
+                              text: LocalizationService.translate('move', lang),
                               icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('special'),
+                                MoveDisplayWidgets.getCategoryIcon('move'),
                                 color: MoveDisplayWidgets.getCategoryColor(
-                                  'special',
+                                  'move',
                                 ),
                               ),
                             ),
@@ -650,7 +644,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 lang,
                               ),
                               _buildCounterGlossaryList(
-                                'special',
+                                'move',
                                 setS,
                                 _pendingAttackMove!['item'],
                                 _pendingAttackMove!['cat'],
@@ -697,7 +691,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildGlossaryWithScroll('kick', setS, lang),
                               _buildGlossaryWithScroll('packs', setS, lang),
                               _buildGlossaryWithScroll('trapping', setS, lang),
-                              _buildGlossaryWithScroll('special', setS, lang),
+                              _buildGlossaryWithScroll('move', setS, lang),
                               _buildGlossaryWithScroll('other', setS, lang),
                               _buildCustomTextTab(setS, lang),
                             ],
@@ -820,9 +814,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   Widget _buildComboPreview(StateSetter setS, String lang, bool voiceEnabled) {
-    final double h = _currentCombo.any((m) => m.category == 'special')
-        ? 198
-        : 190;
+    final double h = _currentCombo.any((m) => m.category == 'move') ? 198 : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
       width: double.infinity,
@@ -1397,6 +1389,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),
                 sL = pL.contains('L');
+            final String pD = item['possible_direction'] ?? '';
+            final bool hasDirection = pD.isNotEmpty;
+            final bool dL = pD.contains('L'),
+                dR = pD.contains('R');
             Map<String, String> tr = {};
             try {
               tr = Map<String, String>.from(json.decode(item['translations']));
@@ -1429,7 +1425,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            cat == 'special'
+                            cat == 'move'
                                 ? (tr['en'] ?? item['name'])
                                 : item['name'],
                             style: const TextStyle(
@@ -1439,7 +1435,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         ],
                       ),
-                      if (cat != 'special' && translation.isNotEmpty)
+                      if (cat != 'move' && translation.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 40.0),
                           child: Text(
@@ -1455,7 +1451,28 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         spacing: 4,
                         runSpacing: 4,
                         children: [
-                          if (cat == 'special')
+                          if (item['possible_direction'] != null) ...[
+                            _pickerSideButton(
+                              LocalizationService.translate('left', lang),
+                              'L',
+                              side,
+                              Colors.blue,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
+                            _pickerSideButton(
+                              LocalizationService.translate('right', lang),
+                              'R',
+                              side,
+                              Colors.red,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
+                          ] else if (cat == 'move')
                             ElevatedButton(
                               onPressed: () => setS(() {
                                 _pendingActionItemId = id;
@@ -1523,7 +1540,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 label: Text(
                                   spec ??
                                       LocalizationService.translate(
-                                        'special',
+                                        'move',
                                         lang,
                                       ),
                                   style: const TextStyle(fontSize: 10),
@@ -1533,7 +1550,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             ],
                           ],
                           const SizedBox(width: 8),
-                          if (cat != 'special')
+                          if (cat != 'move' && !hasDirection)
                             Wrap(
                               spacing: 4,
                               children: [
@@ -1642,7 +1659,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      if (cat == 'special')
+                      if (cat == 'move')
                         ElevatedButton(
                           onPressed: () => _addCounterMove(
                             item,
@@ -1742,7 +1759,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 label: Text(
                                   spec ??
                                       LocalizationService.translate(
-                                        'special',
+                                        'move',
                                         lang,
                                       ),
                                   style: const TextStyle(fontSize: 10),
@@ -2729,7 +2746,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _pickSpecialForMove(int id, StateSetter setS) async {
-    final specs = await DatabaseService().getGlossaryByCategory('special');
+    final specs = await DatabaseService().getGlossaryByCategory('move');
     if (!mounted) return;
     showDialog(
       context: context,

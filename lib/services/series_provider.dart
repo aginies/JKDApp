@@ -210,11 +210,15 @@ class SeriesProvider with ChangeNotifier {
           final List<dynamic> data = json.decode(content);
           bool found = false;
           for (int i = 0; i < data.length; i++) {
-            final String jsonTitle =
-                data[i]['title'].toString().toLowerCase().trim();
+            final String jsonTitle = data[i]['title']
+                .toString()
+                .toLowerCase()
+                .trim();
             final String appTitle = series.title.toLowerCase().trim();
 
-            debugPrint('  - Comparing "[$jsonTitle]" with "[$appTitle]" in $relPath');
+            debugPrint(
+              '  - Comparing "[$jsonTitle]" with "[$appTitle]" in $relPath',
+            );
 
             if (jsonTitle == appTitle) {
               debugPrint('    MATCH FOUND! Updating series in $relPath');
@@ -246,7 +250,9 @@ class SeriesProvider with ChangeNotifier {
         }
       }
     }
-    debugPrint('FAILURE: Series "${series.title}" not found in any project JSON file.');
+    debugPrint(
+      'FAILURE: Series "${series.title}" not found in any project JSON file.',
+    );
   }
 
   bool _isValidJson(String source) {

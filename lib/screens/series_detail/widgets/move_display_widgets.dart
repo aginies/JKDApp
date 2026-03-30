@@ -82,7 +82,7 @@ class MoveDisplayWidgets {
         return Icons.front_hand;
       case 'trapping':
         return Icons.back_hand;
-      case 'special':
+      case 'move':
         return Icons.directions_run;
       case 'text':
         return Icons.text_fields;
@@ -104,7 +104,7 @@ class MoveDisplayWidgets {
         return Colors.green;
       case 'trapping':
         return Colors.blue;
-      case 'special':
+      case 'move':
         return Colors.pink;
       case 'text':
         return Colors.teal;
@@ -126,7 +126,7 @@ class MoveDisplayWidgets {
         return 2;
       case 'trapping':
         return 3;
-      case 'special':
+      case 'move':
         return 4;
       case 'other':
         return 5;
