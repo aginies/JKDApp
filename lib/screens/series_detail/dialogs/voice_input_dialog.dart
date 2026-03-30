@@ -121,11 +121,13 @@ class VoiceInputDialog {
 
           Widget renderMoveSummary(
             String name,
+            String category,
             String side,
             String level,
             bool isSelected,
             bool onDark,
           ) {
+            final catColor = MoveDisplayWidgets.getCategoryColor(category);
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -136,9 +138,7 @@ class VoiceInputDialog {
                     fontWeight: isSelected
                         ? FontWeight.bold
                         : FontWeight.normal,
-                    color: (isSelected || onDark)
-                        ? Colors.white
-                        : Colors.black87,
+                    color: (isSelected || onDark) ? Colors.white : catColor,
                   ),
                 ),
                 if (side.isNotEmpty) ...[
@@ -169,7 +169,14 @@ class VoiceInputDialog {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                renderMoveSummary(m.name, m.side, m.level, false, onDark),
+                renderMoveSummary(
+                  m.name,
+                  m.category,
+                  m.side,
+                  m.level,
+                  false,
+                  onDark,
+                ),
                 if (m.counterName != null) ...[
                   const SizedBox(width: 4),
                   Icon(
@@ -180,6 +187,7 @@ class VoiceInputDialog {
                   const SizedBox(width: 2),
                   renderMoveSummary(
                     m.counterName!,
+                    m.counterCategory ?? '',
                     m.counterSide ?? '',
                     m.counterLevel ?? '',
                     false,
@@ -216,7 +224,10 @@ class VoiceInputDialog {
                         vertical: 4,
                       ),
                       child: ListTile(
-                        leading: Icon(MoveDisplayWidgets.getCategoryIcon(cat)),
+                        leading: Icon(
+                          MoveDisplayWidgets.getCategoryIcon(cat),
+                          color: MoveDisplayWidgets.getCategoryColor(cat),
+                        ),
                         title: Text(
                           cat == 'special'
                               ? (tr['en'] ?? item['name'])
@@ -303,6 +314,9 @@ class VoiceInputDialog {
                                 ),
                                 icon: Icon(
                                   MoveDisplayWidgets.getCategoryIcon('punch'),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'punch',
+                                  ),
                                 ),
                               ),
                               Tab(
@@ -312,6 +326,9 @@ class VoiceInputDialog {
                                 ),
                                 icon: Icon(
                                   MoveDisplayWidgets.getCategoryIcon('kick'),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'kick',
+                                  ),
                                 ),
                               ),
                               Tab(
@@ -321,6 +338,9 @@ class VoiceInputDialog {
                                 ),
                                 icon: Icon(
                                   MoveDisplayWidgets.getCategoryIcon('packs'),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'packs',
+                                  ),
                                 ),
                               ),
                               Tab(
@@ -332,6 +352,9 @@ class VoiceInputDialog {
                                   MoveDisplayWidgets.getCategoryIcon(
                                     'trapping',
                                   ),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'trapping',
+                                  ),
                                 ),
                               ),
                               Tab(
@@ -341,6 +364,9 @@ class VoiceInputDialog {
                                 ),
                                 icon: Icon(
                                   MoveDisplayWidgets.getCategoryIcon('special'),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'special',
+                                  ),
                                 ),
                               ),
                               Tab(
@@ -350,11 +376,19 @@ class VoiceInputDialog {
                                 ),
                                 icon: Icon(
                                   MoveDisplayWidgets.getCategoryIcon('other'),
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'other',
+                                  ),
                                 ),
                               ),
-                              const Tab(
+                              Tab(
                                 text: 'Text',
-                                icon: Icon(Icons.text_fields),
+                                icon: Icon(
+                                  Icons.text_fields,
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    'text',
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -542,6 +576,10 @@ class VoiceInputDialog {
                                                       final isSelected =
                                                           selectedIndices[segIdx] ==
                                                           optIdx;
+                                                      final catColor =
+                                                          MoveDisplayWidgets.getCategoryColor(
+                                                            m.category,
+                                                          );
                                                       return ActionChip(
                                                         onPressed: () => setS(() {
                                                           selectedIndices[segIdx] =
@@ -549,10 +587,8 @@ class VoiceInputDialog {
                                                         }),
                                                         backgroundColor:
                                                             isSelected
-                                                            ? Colors
-                                                                  .indigo
-                                                                  .shade800
-                                                            : Colors.indigo
+                                                            ? catColor
+                                                            : catColor
                                                                   .withValues(
                                                                     alpha: 0.1,
                                                                   ),
@@ -563,6 +599,7 @@ class VoiceInputDialog {
                                                         label:
                                                             renderMoveSummary(
                                                               m.name,
+                                                              m.category,
                                                               m.side,
                                                               m.level,
                                                               isSelected,

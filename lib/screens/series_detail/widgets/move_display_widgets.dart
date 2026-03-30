@@ -93,6 +93,28 @@ class MoveDisplayWidgets {
     }
   }
 
+  /// Category color mapping
+  static Color getCategoryColor(String category) {
+    switch (category) {
+      case 'punch':
+        return Colors.purple;
+      case 'kick':
+        return Colors.red;
+      case 'packs':
+        return Colors.green;
+      case 'trapping':
+        return Colors.blue;
+      case 'special':
+        return Colors.pink;
+      case 'text':
+        return Colors.teal;
+      case 'other':
+        return Colors.blueGrey;
+      default:
+        return Colors.grey;
+    }
+  }
+
   /// Get tab index for category (used in tab navigation)
   static int getTabIndexForCategory(String category) {
     switch (category) {

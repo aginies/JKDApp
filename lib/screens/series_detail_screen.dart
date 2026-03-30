@@ -490,28 +490,48 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 'packs',
                                 lang,
                               ),
-                              icon: const Icon(Icons.front_hand),
+                              icon: Icon(
+                                Icons.front_hand,
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'packs',
+                                ),
+                              ),
                             ),
                             Tab(
                               text: LocalizationService.translate(
                                 'trapping',
                                 lang,
                               ),
-                              icon: const Icon(Icons.back_hand),
+                              icon: Icon(
+                                Icons.back_hand,
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'trapping',
+                                ),
+                              ),
                             ),
                             Tab(
                               text: LocalizationService.translate(
                                 'special',
                                 lang,
                               ),
-                              icon: const Icon(Icons.directions_run),
+                              icon: Icon(
+                                Icons.directions_run,
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'special',
+                                ),
+                              ),
                             ),
                             Tab(
                               text: LocalizationService.translate(
                                 'other',
                                 lang,
                               ),
-                              icon: const Icon(Icons.more_horiz),
+                              icon: Icon(
+                                Icons.more_horiz,
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'other',
+                                ),
+                              ),
                             ),
                             const Tab(
                               text: 'Text',
@@ -526,6 +546,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('punch'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'punch',
+                                ),
                               ),
                             ),
                             Tab(
@@ -535,6 +558,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('kick'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'kick',
+                                ),
                               ),
                             ),
                             Tab(
@@ -544,6 +570,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('packs'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'packs',
+                                ),
                               ),
                             ),
                             Tab(
@@ -553,6 +582,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('trapping'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'trapping',
+                                ),
                               ),
                             ),
                             Tab(
@@ -562,6 +594,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('special'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'special',
+                                ),
                               ),
                             ),
                             Tab(
@@ -571,11 +606,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               icon: Icon(
                                 MoveDisplayWidgets.getCategoryIcon('other'),
+                                color: MoveDisplayWidgets.getCategoryColor(
+                                  'other',
+                                ),
                               ),
                             ),
                             const Tab(
                               text: 'Text',
-                              icon: Icon(Icons.text_fields),
+                              icon: Icon(Icons.text_fields, color: Colors.teal),
                             ),
                           ],
                   ),
@@ -966,8 +1004,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide(
                                 color: sel
-                                    ? Colors.blueAccent
-                                    : Colors.orangeAccent,
+                                    ? MoveDisplayWidgets.getCategoryColor(
+                                        m.category,
+                                      )
+                                    : MoveDisplayWidgets.getCategoryColor(
+                                        m.counterCategory ?? '',
+                                      ),
                                 width: 2,
                               ),
                             )
@@ -1048,7 +1090,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                               m.category,
                                             ),
                                             size: 22,
-                                            color: Colors.grey,
+                                            color:
+                                                MoveDisplayWidgets.getCategoryColor(
+                                                  m.category,
+                                                ),
                                           ),
                                           const SizedBox(width: 4),
                                           Expanded(
@@ -1152,7 +1197,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                   m.counterCategory ?? '',
                                                 ),
                                                 size: 18,
-                                                color: Colors.orangeAccent,
+                                                color:
+                                                    MoveDisplayWidgets.getCategoryColor(
+                                                      m.counterCategory ?? '',
+                                                    ),
                                               ),
                                               const SizedBox(width: 2),
                                               Expanded(
@@ -1359,8 +1407,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               shape: isE
                   ? RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(
-                        color: Colors.blueAccent,
+                      side: BorderSide(
+                        color: MoveDisplayWidgets.getCategoryColor(cat),
                         width: 2,
                       ),
                     )
@@ -1377,7 +1425,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           Icon(
                             MoveDisplayWidgets.getCategoryIcon(cat),
                             size: 32,
-                            color: Colors.blueGrey,
+                            color: MoveDisplayWidgets.getCategoryColor(cat),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -1584,7 +1632,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           Icon(
                             MoveDisplayWidgets.getCategoryIcon(cat),
                             size: 28,
-                            color: Colors.blueGrey,
+                            color: MoveDisplayWidgets.getCategoryColor(cat),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -2284,7 +2332,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     _moves[i].category,
                                   ),
                                   size: 32,
-                                  color: Colors.blueGrey,
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    _moves[i].category,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Tooltip(
@@ -2379,7 +2429,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                   sub.category,
                                                 ),
                                                 size: 24,
-                                                color: Colors.grey,
+                                                color:
+                                                    MoveDisplayWidgets.getCategoryColor(
+                                                      sub.category,
+                                                    ),
                                               ),
                                               Text(
                                                 sub.name,
@@ -2459,7 +2512,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                       sub.counterCategory ?? '',
                                                     ),
                                                     size: 22,
-                                                    color: Colors.orangeAccent,
+                                                    color:
+                                                        MoveDisplayWidgets.getCategoryColor(
+                                                          sub.counterCategory ??
+                                                              '',
+                                                        ),
                                                   ),
                                                   Text(
                                                     sub.counterName!,
@@ -2522,7 +2579,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                         _moves[i].counterCategory ?? '',
                                       ),
                                       size: 28,
-                                      color: Colors.grey,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            _moves[i].counterCategory ?? '',
+                                          ),
                                     ),
                                     Text(
                                       _moves[i].counterName!,
