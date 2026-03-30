@@ -18,103 +18,150 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  void _showExportDialog(BuildContext context, String lang, List<JkdSeries> allSeries) {
-    String exportType = 'category'; 
+  void _showExportDialog(
+    BuildContext context,
+    String lang,
+    List<JkdSeries> allSeries,
+  ) {
+    String exportType = 'category';
     String selectedCategory = 'Jun Fan Gung Fu';
     JkdSeries? selectedSeries = allSeries.isNotEmpty ? allSeries.first : null;
 
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return AlertDialog(
-            title: Text(LocalizationService.translate('export_title', lang)),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RadioListTile<String>(
-                    title: Text(LocalizationService.translate('export_category', lang)),
-                    value: 'category',
-                    groupValue: exportType,
-                    onChanged: (val) => setModalState(() => exportType = val!),
-                  ),
-                  if (exportType == 'category')
-                    Padding(
-                      padding: const EdgeInsets.only(left: 32.0),
-                      child: DropdownButton<String>(
-                        value: selectedCategory,
-                        isExpanded: true,
-                        items: const [
-                          DropdownMenuItem(value: 'Jun Fan Gung Fu', child: Text('Jun Fan Gung Fu')),
-                          DropdownMenuItem(value: 'Jun Fan Kick Boxing', child: Text('Jun Fan Kick Boxing')),
-                        ],
-                        onChanged: (val) => setModalState(() => selectedCategory = val!),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Text(LocalizationService.translate('export_title', lang)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<String>(
+                      title: Text(
+                        LocalizationService.translate('export_category', lang),
                       ),
+                      value: 'category',
+                      groupValue: exportType,
+                      onChanged: (val) =>
+                          setModalState(() => exportType = val!),
                     ),
-                  RadioListTile<String>(
-                    title: Text(LocalizationService.translate('export_single', lang)),
-                    value: 'single',
-                    groupValue: exportType,
-                    onChanged: (val) => setModalState(() => exportType = val!),
-                  ),
-                  if (exportType == 'single')
-                    Padding(
-                      padding: const EdgeInsets.only(left: 32.0),
-                      child: DropdownButton<JkdSeries>(
-                        value: selectedSeries,
-                        isExpanded: true,
-                        hint: Text(LocalizationService.translate('select_series', lang)),
-                        items: allSeries.map((s) => DropdownMenuItem(value: s, child: Text(s.title))).toList(),
-                        onChanged: (val) => setModalState(() => selectedSeries = val),
+                    if (exportType == 'category')
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownButton<String>(
+                          value: selectedCategory,
+                          isExpanded: true,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'Jun Fan Gung Fu',
+                              child: Text('Jun Fan Gung Fu'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Jun Fan Kick Boxing',
+                              child: Text('Jun Fan Kick Boxing'),
+                            ),
+                          ],
+                          onChanged: (val) =>
+                              setModalState(() => selectedCategory = val!),
+                        ),
                       ),
+                    RadioListTile<String>(
+                      title: Text(
+                        LocalizationService.translate('export_single', lang),
+                      ),
+                      value: 'single',
+                      groupValue: exportType,
+                      onChanged: (val) =>
+                          setModalState(() => exportType = val!),
                     ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(LocalizationService.translate('cancel', lang)),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-                  if (selectedDirectory == null) return;
-
-                  List<JkdSeries> toExport = [];
-                  String fileName = 'jkd_export.json';
-
-                  if (exportType == 'category') {
-                    toExport = allSeries.where((s) => s.category == selectedCategory).toList();
-                    fileName = 'jkd_${selectedCategory.replaceAll(' ', '_').toLowerCase()}_series.json';
-                  } else if (exportType == 'single' && selectedSeries != null) {
-                    toExport = [selectedSeries!];
-                    fileName = 'jkd_series_${selectedSeries!.title.replaceAll(' ', '_').toLowerCase()}.json';
-                  }
-
-                  if (toExport.isEmpty) {
-                    if (context.mounted) Navigator.pop(context);
-                    return;
-                  }
-
-                  final path = await ExportService.exportToJson(toExport, fileName: fileName, customDirectory: selectedDirectory);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(path != null 
-                          ? '${LocalizationService.translate('export_success', lang)} $path'
-                          : LocalizationService.translate('export_error', lang)),
+                    if (exportType == 'single')
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownButton<JkdSeries>(
+                          value: selectedSeries,
+                          isExpanded: true,
+                          hint: Text(
+                            LocalizationService.translate(
+                              'select_series',
+                              lang,
+                            ),
+                          ),
+                          items: allSeries
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text(s.title),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setModalState(() => selectedSeries = val),
+                        ),
                       ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(LocalizationService.translate('cancel', lang)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    String? selectedDirectory = await FilePicker.platform
+                        .getDirectoryPath();
+                    if (selectedDirectory == null) return;
+
+                    List<JkdSeries> toExport = [];
+                    String fileName = 'jkd_export.json';
+
+                    if (exportType == 'category') {
+                      toExport = allSeries
+                          .where((s) => s.category == selectedCategory)
+                          .toList();
+                      fileName =
+                          'jkd_${selectedCategory.replaceAll(' ', '_').toLowerCase()}_series.json';
+                    } else if (exportType == 'single' &&
+                        selectedSeries != null) {
+                      toExport = [selectedSeries!];
+                      fileName =
+                          'jkd_series_${selectedSeries!.title.replaceAll(' ', '_').toLowerCase()}.json';
+                    }
+
+                    if (toExport.isEmpty) {
+                      if (context.mounted) Navigator.pop(context);
+                      return;
+                    }
+
+                    final path = await ExportService.exportToJson(
+                      toExport,
+                      fileName: fileName,
+                      customDirectory: selectedDirectory,
                     );
-                  }
-                },
-                child: Text(LocalizationService.translate('finish', lang)),
-              ),
-            ],
-          );
-        });
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            path != null
+                                ? '${LocalizationService.translate('export_success', lang)} $path'
+                                : LocalizationService.translate(
+                                    'export_error',
+                                    lang,
+                                  ),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(LocalizationService.translate('finish', lang)),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
@@ -125,11 +172,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (success) {
         await Provider.of<SeriesProvider>(context, listen: false).loadSeries();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(LocalizationService.translate('import_success', lang))),
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('import_success', lang),
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(LocalizationService.translate('import_error', lang))),
+          SnackBar(
+            content: Text(LocalizationService.translate('import_error', lang)),
+          ),
         );
       }
     }
@@ -139,7 +192,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? targetDir = await FilePicker.platform.getDirectoryPath();
     if (targetDir == null) return;
 
-    final String fileName = 'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+    final String fileName =
+        'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
 
     if (!context.mounted) return;
 
@@ -151,29 +205,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Backup Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Backup Summary:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text('Type: Glossary (JSON)', style: const TextStyle(fontSize: 12)),
             const SizedBox(height: 4),
-            Text('Target File: $fileName', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Target File: $fileName',
+              style: const TextStyle(fontSize: 12),
+            ),
             const SizedBox(height: 4),
-            Text('Target Dir: $targetDir', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Target Dir: $targetDir',
+              style: const TextStyle(fontSize: 12),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(LocalizationService.translate('cancel', lang))),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(LocalizationService.translate('finish', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(LocalizationService.translate('finish', lang)),
+          ),
         ],
       ),
     );
 
     if (proceed == true) {
-      final path = await ExportService.exportGlossaryToJson(customDirectory: targetDir);
+      final path = await ExportService.exportGlossaryToJson(
+        customDirectory: targetDir,
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(path != null 
-            ? '${LocalizationService.translate('export_success', lang)} $path'
-            : LocalizationService.translate('error', lang))),
+          SnackBar(
+            content: Text(
+              path != null
+                  ? '${LocalizationService.translate('export_success', lang)} $path'
+                  : LocalizationService.translate('error', lang),
+            ),
+          ),
         );
       }
     }
@@ -198,18 +273,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Restore Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Restore Summary:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('Source File: $fileName', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Source File: $fileName',
+              style: const TextStyle(fontSize: 12),
+            ),
             const SizedBox(height: 8),
-            const Text('Warning: This will overwrite your current glossary entries!', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
+            const Text(
+              'Warning: This will overwrite your current glossary entries!',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(LocalizationService.translate('cancel', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            onPressed: () => Navigator.pop(context, true), 
+            onPressed: () => Navigator.pop(context, true),
             child: Text(LocalizationService.translate('finish', lang)),
           ),
         ],
@@ -220,21 +311,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final success = await ImportService.importGlossary();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success 
-            ? LocalizationService.translate('import_success', lang)
-            : LocalizationService.translate('import_error', lang))),
+          SnackBar(
+            content: Text(
+              success
+                  ? LocalizationService.translate('import_success', lang)
+                  : LocalizationService.translate('import_error', lang),
+            ),
+          ),
         );
       }
     }
   }
 
-  Future<void> _handleMediaBackup(BuildContext context, String lang, String? sourcePath) async {
+  Future<void> _handleMediaBackup(
+    BuildContext context,
+    String lang,
+    String? sourcePath,
+  ) async {
     if (sourcePath == null) return;
-    
+
     String? targetDir = await FilePicker.platform.getDirectoryPath();
     if (targetDir == null) return;
 
-    final String timestamp = DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+    final String timestamp = DateFormat(
+      'yyyy-MM-dd_HH-mm',
+    ).format(DateTime.now());
     final String zipFileName = 'jkd_media_backup_$timestamp.zip';
 
     if (!context.mounted) return;
@@ -247,35 +348,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Backup Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Backup Summary:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text('Source: $sourcePath', style: const TextStyle(fontSize: 12)),
             const SizedBox(height: 4),
-            Text('Target File: $zipFileName', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Target File: $zipFileName',
+              style: const TextStyle(fontSize: 12),
+            ),
             const SizedBox(height: 4),
-            Text('Target Dir: $targetDir', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Target Dir: $targetDir',
+              style: const TextStyle(fontSize: 12),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(LocalizationService.translate('cancel', lang))),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(LocalizationService.translate('finish', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(LocalizationService.translate('finish', lang)),
+          ),
         ],
       ),
     );
 
     if (proceed == true) {
-      final path = await MediaBackupService.backupGalleryToZip(sourcePath, targetDir);
+      final path = await MediaBackupService.backupGalleryToZip(
+        sourcePath,
+        targetDir,
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(path != null 
-            ? '${LocalizationService.translate('backup_success', lang)} $path'
-            : LocalizationService.translate('error', lang))),
+          SnackBar(
+            content: Text(
+              path != null
+                  ? '${LocalizationService.translate('backup_success', lang)} $path'
+                  : LocalizationService.translate('error', lang),
+            ),
+          ),
         );
       }
     }
   }
 
-  Future<void> _handleMediaRestore(BuildContext context, String lang, String? targetPath) async {
+  Future<void> _handleMediaRestore(
+    BuildContext context,
+    String lang,
+    String? targetPath,
+  ) async {
     if (targetPath == null) return;
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -296,27 +423,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Restore Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Restore Summary:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('Archive: ${result.files.single.name}', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Archive: ${result.files.single.name}',
+              style: const TextStyle(fontSize: 12),
+            ),
             const SizedBox(height: 4),
-            Text('Destination: $targetPath', style: const TextStyle(fontSize: 12)),
+            Text(
+              'Destination: $targetPath',
+              style: const TextStyle(fontSize: 12),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(LocalizationService.translate('cancel', lang))),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(LocalizationService.translate('finish', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(LocalizationService.translate('finish', lang)),
+          ),
         ],
       ),
     );
 
     if (proceed == true) {
-      final success = await MediaBackupService.restoreGalleryFromZip(targetPath, zipPath);
+      final success = await MediaBackupService.restoreGalleryFromZip(
+        targetPath,
+        zipPath,
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success 
-            ? LocalizationService.translate('restore_success', lang)
-            : LocalizationService.translate('error', lang))),
+          SnackBar(
+            content: Text(
+              success
+                  ? LocalizationService.translate('restore_success', lang)
+                  : LocalizationService.translate('error', lang),
+            ),
+          ),
         );
       }
     }
@@ -328,9 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context, provider, child) {
         final lang = provider.language;
         return Scaffold(
-          appBar: AppBar(
-            title: Text(lang == 'fr' ? 'Paramètres' : 'Settings'),
-          ),
+          appBar: AppBar(title: Text(lang == 'fr' ? 'Paramètres' : 'Settings')),
           body: ListView(
             children: [
               ListTile(
@@ -353,10 +500,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: DropdownButton<JkdThemeMode>(
                   value: provider.themeMode,
                   items: [
-                    DropdownMenuItem(value: JkdThemeMode.system, child: Text(LocalizationService.translate('system_theme', lang))),
-                    DropdownMenuItem(value: JkdThemeMode.light, child: Text(LocalizationService.translate('light_theme', lang))),
-                    DropdownMenuItem(value: JkdThemeMode.dark, child: Text(LocalizationService.translate('dark_theme', lang))),
-                    DropdownMenuItem(value: JkdThemeMode.amoled, child: Text(LocalizationService.translate('amoled_theme', lang))),
+                    DropdownMenuItem(
+                      value: JkdThemeMode.system,
+                      child: Text(
+                        LocalizationService.translate('system_theme', lang),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: JkdThemeMode.light,
+                      child: Text(
+                        LocalizationService.translate('light_theme', lang),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: JkdThemeMode.dark,
+                      child: Text(
+                        LocalizationService.translate('dark_theme', lang),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: JkdThemeMode.amoled,
+                      child: Text(
+                        LocalizationService.translate('amoled_theme', lang),
+                      ),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) provider.setThemeMode(val);
@@ -365,70 +532,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.mic),
-                title: Text(LocalizationService.translate('voice_recognition', lang)),
+                title: Text(
+                  LocalizationService.translate('voice_recognition', lang),
+                ),
                 subtitle: Platform.isLinux
-                  ? Text(
-                      lang == 'fr'
-                        ? 'Non disponible sur Linux'
-                        : 'Not available on Linux',
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    )
-                  : null,
+                    ? Text(
+                        lang == 'fr'
+                            ? 'Non disponible sur Linux'
+                            : 'Not available on Linux',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      )
+                    : null,
                 value: Platform.isLinux ? false : provider.voiceEnabled,
-                onChanged: Platform.isLinux ? null : (val) => provider.setVoiceEnabled(val),
+                onChanged: Platform.isLinux
+                    ? null
+                    : (val) => provider.setVoiceEnabled(val),
               ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.folder_open),
-                title: Text(LocalizationService.translate('gallery_path', lang)),
+                title: Text(
+                  LocalizationService.translate('gallery_path', lang),
+                ),
                 subtitle: Text(provider.galleryPath ?? 'Not set'),
                 trailing: TextButton(
                   onPressed: () async {
-                    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+                    String? selectedDirectory = await FilePicker.platform
+                        .getDirectoryPath();
                     if (selectedDirectory != null) {
                       provider.setGalleryPath(selectedDirectory);
                     }
                   },
-                  child: Text(LocalizationService.translate('select_folder', lang)),
+                  child: Text(
+                    LocalizationService.translate('select_folder', lang),
+                  ),
                 ),
               ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.backup),
-                title: Text(LocalizationService.translate('backup_export', lang)),
-                subtitle: Text(LocalizationService.translate('export_desc', lang)),
+                title: Text(
+                  LocalizationService.translate('backup_export', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('export_desc', lang),
+                ),
                 onTap: () => _showExportDialog(context, lang, provider.series),
               ),
               ListTile(
                 leading: const Icon(Icons.file_upload),
-                title: Text(LocalizationService.translate('import_series', lang)),
-                subtitle: Text(LocalizationService.translate('import_desc', lang)),
+                title: Text(
+                  LocalizationService.translate('import_series', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('import_desc', lang),
+                ),
                 onTap: () => _handleImport(context, lang),
               ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.menu_book, color: Colors.blueAccent),
-                title: Text(LocalizationService.translate('backup_glossary', lang)),
-                subtitle: Text(LocalizationService.translate('glossary_backup_desc', lang)),
+                title: Text(
+                  LocalizationService.translate('backup_glossary', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('glossary_backup_desc', lang),
+                ),
                 onTap: () => _handleGlossaryBackup(context, lang),
               ),
               ListTile(
-                leading: const Icon(Icons.auto_stories, color: Colors.orangeAccent),
-                title: Text(LocalizationService.translate('restore_glossary', lang)),
-                subtitle: Text(LocalizationService.translate('glossary_restore_desc', lang)),
+                leading: const Icon(
+                  Icons.auto_stories,
+                  color: Colors.orangeAccent,
+                ),
+                title: Text(
+                  LocalizationService.translate('restore_glossary', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('glossary_restore_desc', lang),
+                ),
                 onTap: () => _handleGlossaryRestore(context, lang),
               ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.archive, color: Colors.orangeAccent),
-                title: Text(LocalizationService.translate('backup_images', lang)),
-                subtitle: Text(LocalizationService.translate('media_backup', lang)),
-                onTap: () => _handleMediaBackup(context, lang, provider.galleryPath),
+                title: Text(
+                  LocalizationService.translate('backup_images', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('media_backup', lang),
+                ),
+                onTap: () =>
+                    _handleMediaBackup(context, lang, provider.galleryPath),
               ),
               ListTile(
                 leading: const Icon(Icons.unarchive, color: Colors.greenAccent),
-                title: Text(LocalizationService.translate('restore_images', lang)),
-                onTap: () => _handleMediaRestore(context, lang, provider.galleryPath),
+                title: Text(
+                  LocalizationService.translate('restore_images', lang),
+                ),
+                onTap: () =>
+                    _handleMediaRestore(context, lang, provider.galleryPath),
               ),
               const Divider(),
               const Padding(

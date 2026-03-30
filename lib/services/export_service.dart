@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/series.dart';
-import '../models/move.dart';
 import 'database_service.dart';
 
 class ExportService {
-  static Future<String?> exportToJson(List<JkdSeries> seriesList, {String fileName = 'jkd_series_export.json', String? customDirectory}) async {
+  static Future<String?> exportToJson(
+    List<JkdSeries> seriesList, {
+    String fileName = 'jkd_series_export.json',
+    String? customDirectory,
+  }) async {
     try {
       final List<Map<String, dynamic>> jsonData = seriesList.map((s) {
         final map = s.toMap();
@@ -15,8 +17,10 @@ class ExportService {
         return map;
       }).toList();
 
-      final String jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
-      
+      final String jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(jsonData);
+
       String? targetPath;
       if (customDirectory != null) {
         targetPath = customDirectory;
@@ -28,7 +32,7 @@ class ExportService {
 
       final File file = File('$targetPath/$fileName');
       await file.writeAsString(jsonString);
-      
+
       return file.path;
     } catch (e) {
       print('Export error: $e');
@@ -39,12 +43,16 @@ class ExportService {
   static Future<String?> exportGlossaryToJson({String? customDirectory}) async {
     try {
       final items = await DatabaseService().getGlossary();
-      final String jsonString = const JsonEncoder.withIndent('  ').convert(items);
+      final String jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(items);
 
-      final String? targetDir = customDirectory ?? await FilePicker.platform.getDirectoryPath();
+      final String? targetDir =
+          customDirectory ?? await FilePicker.platform.getDirectoryPath();
       if (targetDir == null) return null;
 
-      final String fileName = 'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final String fileName =
+          'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
       final File file = File('$targetDir/$fileName');
       await file.writeAsString(jsonString);
 

@@ -7,7 +7,9 @@ class MoveDisplayWidgets {
     if (level.isEmpty) return const SizedBox.shrink();
     IconData id = level.toLowerCase() == 'high'
         ? Icons.north_east
-        : (level.toLowerCase() == 'low' ? Icons.south_east : Icons.arrow_forward);
+        : (level.toLowerCase() == 'low'
+              ? Icons.south_east
+              : Icons.arrow_forward);
     return Container(
       padding: EdgeInsets.all(mini ? 5 : 6),
       decoration: BoxDecoration(
@@ -20,20 +22,20 @@ class MoveDisplayWidgets {
 
   /// Draw/Feint indicator box
   static Widget drawBox({bool mini = false}) => Container(
-        padding: EdgeInsets.symmetric(horizontal: mini ? 4 : 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade800,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          'D',
-          style: TextStyle(
-            fontSize: mini ? 10 : 11,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    padding: EdgeInsets.symmetric(horizontal: mini ? 4 : 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: Colors.orange.shade800,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      'D',
+      style: TextStyle(
+        fontSize: mini ? 10 : 11,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   /// Side indicator circle (Left/Right)
   static Widget sideCircle(String label, String sideCode, {bool mini = false}) {

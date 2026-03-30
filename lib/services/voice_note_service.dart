@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,7 +21,8 @@ class VoiceNoteService {
           await dir.create(recursive: true);
         }
 
-        final String fileName = 'recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        final String fileName =
+            'recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
         final String filePath = p.join(voiceDir, fileName);
 
         const config = RecordConfig();
@@ -28,7 +30,7 @@ class VoiceNoteService {
         return filePath;
       }
     } catch (e) {
-      print('Recording error: $e');
+      debugPrint('Recording error: $e');
     }
     return null;
   }

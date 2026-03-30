@@ -58,12 +58,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   bool _isEditingCounter = false;
 
   final Map<String, String> _methodDefinitions = {
-    'SDA': 'Simple Direct Attack: A single, direct strike without preceding feints.',
-    'PIA': 'Progressive Indirect Attack: Begins with a feint to misdirect and progresses to an open line.',
-    'SIA': 'Single Indirect Attack: A single motion that changes direction mid-flight.',
-    'BTAA': 'Broken Timing Angle Attack: Varying speed and timing to disrupt defensive rhythm.',
-    'ABD': 'Attack By Drawing: Deliberately baiting the opponent into attacking to create a counter opportunity.',
-    'ABC': 'Attack By Combination: A rapid sequence of multiple strikes to overwhelm the guard.',
+    'SDA':
+        'Simple Direct Attack: A single, direct strike without preceding feints.',
+    'PIA':
+        'Progressive Indirect Attack: Begins with a feint to misdirect and progresses to an open line.',
+    'SIA':
+        'Single Indirect Attack: A single motion that changes direction mid-flight.',
+    'BTAA':
+        'Broken Timing Angle Attack: Varying speed and timing to disrupt defensive rhythm.',
+    'ABD':
+        'Attack By Drawing: Deliberately baiting the opponent into attacking to create a counter opportunity.',
+    'ABC':
+        'Attack By Combination: A rapid sequence of multiple strikes to overwhelm the guard.',
   };
 
   @override
@@ -84,9 +90,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         if (mounted) setState(() {});
       },
       onTrainingComplete: () {
-        if (mounted) setState(() {
-          _currentTrainingOptions = null;
-        });
+        if (mounted) {
+          setState(() {
+            _currentTrainingOptions = null;
+          });
+        }
       },
       context: context,
     );
@@ -101,98 +109,132 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     super.dispose();
   }
 
-  String _slugify(String text) => text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
-
+  String _slugify(String text) => text
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'^-+|-+$'), '');
 
   void _showMediaGallery(String category, String moveName) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
     final galleryPath = provider.galleryPath;
     if (galleryPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(LocalizationService.translate('gallery_path', lang))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(LocalizationService.translate('gallery_path', lang)),
+        ),
+      );
       return;
     }
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return AlertDialog(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text('$moveName - ${LocalizationService.translate('instructional_photos', lang)}')),
-                IconButton(
-                  icon: const Icon(Icons.add_a_photo, color: Colors.blueAccent),
-                  onPressed: () async {
-                    final file = await _mediaService.captureAndSaveImage(galleryPath, category, moveName);
-                    if (file != null) setModalState(() {});
-                  },
-                ),
-              ],
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 400,
-              child: FutureBuilder<List<File>>(
-                future: _mediaService.getImagesForMove(galleryPath, category, moveName),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  final images = snapshot.data ?? [];
-                  if (images.isEmpty) return Center(child: Text(LocalizationService.translate('no_images', lang)));
-                  return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$moveName - ${LocalizationService.translate('instructional_photos', lang)}',
                     ),
-                    itemCount: images.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () => _showFullScreenImage(images[index]),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(images[index], fit: BoxFit.cover),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_a_photo,
+                      color: Colors.blueAccent,
+                    ),
+                    onPressed: () async {
+                      final file = await _mediaService.captureAndSaveImage(
+                        galleryPath,
+                        category,
+                        moveName,
+                      );
+                      if (file != null) setModalState(() {});
+                    },
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: FutureBuilder<List<File>>(
+                  future: _mediaService.getImagesForMove(
+                    galleryPath,
+                    category,
+                    moveName,
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final images = snapshot.data ?? [];
+                    if (images.isEmpty) {
+                      return Center(
+                        child: Text(
+                          LocalizationService.translate('no_images', lang),
                         ),
                       );
-                    },
-                  );
-                },
+                    }
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                      itemCount: images.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () => _showFullScreenImage(images[index]),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(images[index], fit: BoxFit.cover),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(LocalizationService.translate('finish', lang)),
-              ),
-            ],
-          );
-        });
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(LocalizationService.translate('finish', lang)),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
 
   void _showFullScreenImage(File imageFile) => showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: [
-              Image.file(imageFile),
-              Positioned(
-                right: 0,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      child: Stack(
+        children: [
+          Image.file(imageFile),
+          Positioned(
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   void _saveSeries() async {
     if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a title')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a title')));
       return;
     }
     final series = JkdSeries(
@@ -238,7 +280,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     }
   }
 
-
   void _startVoiceInput() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     final text = await VoiceInputDialog.show(context, _voiceService, lang);
@@ -258,7 +299,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         if (parsed.length == 1) {
           _moves.add(parsed.first);
         } else {
-          _moves.add(Move(name: 'Combo: ${parsed.first.name} + ...', category: 'combo', subMoves: parsed));
+          _moves.add(
+            Move(
+              name: 'Combo: ${parsed.first.name} + ...',
+              category: 'combo',
+              subMoves: parsed,
+            ),
+          );
         }
       }
     });
@@ -280,32 +327,56 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             height: MediaQuery.of(context).size.height * 0.95,
             child: Column(
               children: [
-                _buildComboPreview(setS, Provider.of<SeriesProvider>(context).language, Provider.of<SeriesProvider>(context).voiceEnabled),
+                _buildComboPreview(
+                  setS,
+                  Provider.of<SeriesProvider>(context).language,
+                  Provider.of<SeriesProvider>(context).voiceEnabled,
+                ),
                 TabBar(
                   isScrollable: true,
                   tabs: [
                     Tab(
-                      text: LocalizationService.translate('punches', Provider.of<SeriesProvider>(context).language),
+                      text: LocalizationService.translate(
+                        'punches',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                       icon: Icon(MoveDisplayWidgets.getCategoryIcon('punch')),
                     ),
                     Tab(
-                      text: LocalizationService.translate('kicks', Provider.of<SeriesProvider>(context).language),
+                      text: LocalizationService.translate(
+                        'kicks',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                       icon: Icon(MoveDisplayWidgets.getCategoryIcon('kick')),
                     ),
                     Tab(
-                      text: LocalizationService.translate('packs', Provider.of<SeriesProvider>(context).language),
+                      text: LocalizationService.translate(
+                        'packs',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                       icon: Icon(MoveDisplayWidgets.getCategoryIcon('packs')),
                     ),
                     Tab(
-                      text: LocalizationService.translate('trapping', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('trapping')),
+                      text: LocalizationService.translate(
+                        'trapping',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      icon: Icon(
+                        MoveDisplayWidgets.getCategoryIcon('trapping'),
+                      ),
                     ),
                     Tab(
-                      text: LocalizationService.translate('special', Provider.of<SeriesProvider>(context).language),
+                      text: LocalizationService.translate(
+                        'special',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                       icon: Icon(MoveDisplayWidgets.getCategoryIcon('special')),
                     ),
                     Tab(
-                      text: LocalizationService.translate('other', Provider.of<SeriesProvider>(context).language),
+                      text: LocalizationService.translate(
+                        'other',
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                       icon: Icon(MoveDisplayWidgets.getCategoryIcon('other')),
                     ),
                     const Tab(text: 'Text', icon: Icon(Icons.text_fields)),
@@ -314,13 +385,40 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 Expanded(
                   child: TabBarView(
                     children: [
-                      _buildGlossaryList('punch', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildGlossaryList('kick', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildGlossaryList('packs', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildGlossaryList('trapping', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildGlossaryList('special', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildGlossaryList('other', setS, Provider.of<SeriesProvider>(context).language),
-                      _buildCustomTextTab(setS, Provider.of<SeriesProvider>(context).language),
+                      _buildGlossaryList(
+                        'punch',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildGlossaryList(
+                        'kick',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildGlossaryList(
+                        'packs',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildGlossaryList(
+                        'trapping',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildGlossaryList(
+                        'special',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildGlossaryList(
+                        'other',
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
+                      _buildCustomTextTab(
+                        setS,
+                        Provider.of<SeriesProvider>(context).language,
+                      ),
                     ],
                   ),
                 ),
@@ -422,7 +520,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   Widget _buildComboPreview(StateSetter setS, String lang, bool voiceEnabled) {
-    final double h = _currentCombo.any((m) => m.category == 'special') ? 198 : 190;
+    final double h = _currentCombo.any((m) => m.category == 'special')
+        ? 198
+        : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
       width: double.infinity,
@@ -448,19 +548,37 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         _editingSeriesIndex != null
                             ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_editingSeriesIndex! + 1}'
                             : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.blueAccent),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.blueAccent,
+                        ),
                       ),
                       if (_editingSeriesIndex != null) ...[
                         const SizedBox(width: 8),
                         DropdownButton<int>(
-                          value: _targetSeriesIndex != null ? _targetSeriesIndex! + 1 : 1,
-                          style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodyMedium?.color),
+                          value: _targetSeriesIndex != null
+                              ? _targetSeriesIndex! + 1
+                              : 1,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
+                          ),
                           isDense: true,
                           underline: const SizedBox(),
-                          items: List.generate(_moves.length, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1}')))
-                              .toList(),
+                          items: List.generate(
+                            _moves.length,
+                            (i) => DropdownMenuItem(
+                              value: i + 1,
+                              child: Text('${i + 1}'),
+                            ),
+                          ).toList(),
                           onChanged: (val) {
-                            if (val != null) setS(() => _targetSeriesIndex = val - 1);
+                            if (val != null) {
+                              setS(() => _targetSeriesIndex = val - 1);
+                            }
                           },
                         ),
                       ],
@@ -471,7 +589,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       if (voiceEnabled && _editingSeriesIndex == null) ...[
                         IconButton(
-                          icon: const Icon(Icons.help_outline, color: Colors.blueAccent, size: 18),
+                          icon: const Icon(
+                            Icons.help_outline,
+                            color: Colors.blueAccent,
+                            size: 18,
+                          ),
                           onPressed: () {
                             VoiceHelpDialog.show(context, lang);
                           },
@@ -482,7 +604,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ),
                         const SizedBox(width: 4),
                         IconButton(
-                          icon: const Icon(Icons.mic, color: Colors.redAccent, size: 20),
+                          icon: const Icon(
+                            Icons.mic,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
                           onPressed: _startVoiceInput,
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
@@ -498,13 +624,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               minimumSize: const Size(0, 26),
                             ),
                             onPressed: () => Navigator.pop(context),
                             child: Text(
                               LocalizationService.translate('cancel', lang),
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -522,9 +653,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           },
                           child: Text(
                             _editingSeriesIndex != null
-                                ? LocalizationService.translate('update_item', lang)
-                                : LocalizationService.translate('finish_combo', lang),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                ? LocalizationService.translate(
+                                    'update_item',
+                                    lang,
+                                  )
+                                : LocalizationService.translate(
+                                    'finish_combo',
+                                    lang,
+                                  ),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                     ],
@@ -550,11 +690,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 final cSel = _editingComboItemIndex == idx && _isEditingCounter;
                 return Card(
                   key: ValueKey(m.uKey),
-                  margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
                   shape: (sel || cSel)
                       ? RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: sel ? Colors.blueAccent : Colors.orangeAccent, width: 2),
+                          side: BorderSide(
+                            color: sel
+                                ? Colors.blueAccent
+                                : Colors.orangeAccent,
+                            width: 2,
+                          ),
                         )
                       : null,
                   child: Container(
@@ -571,27 +719,44 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _editingComboItemIndex = idx;
                                   _isEditingCounter = false;
                                   if (m.glossaryId != null) {
-                                    _selectedSidesInPicker[m.glossaryId!] = m.side;
-                                    _selectedFeintsInPicker[m.glossaryId!] = m.isFeint;
-                                    _selectedSpecialsInPicker[m.glossaryId!] = m.specialAction;
+                                    _selectedSidesInPicker[m.glossaryId!] =
+                                        m.side;
+                                    _selectedFeintsInPicker[m.glossaryId!] =
+                                        m.isFeint;
+                                    _selectedSpecialsInPicker[m.glossaryId!] =
+                                        m.specialAction;
                                     _pendingActionItemId = m.glossaryId;
                                     _pendingLevel = m.level;
                                   }
                                 });
-                                final t = MoveDisplayWidgets.getTabIndexForCategory(m.category);
-                                if (t != -1) DefaultTabController.of(ctx).animateTo(t);
+                                final t =
+                                    MoveDisplayWidgets.getTabIndexForCategory(
+                                      m.category,
+                                    );
+                                if (t != -1) {
+                                  DefaultTabController.of(ctx).animateTo(t);
+                                }
                               },
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(MoveDisplayWidgets.getCategoryIcon(m.category), size: 22, color: Colors.grey),
+                                      Icon(
+                                        MoveDisplayWidgets.getCategoryIcon(
+                                          m.category,
+                                        ),
+                                        size: 22,
+                                        color: Colors.grey,
+                                      ),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           '${idx + 1}. ${m.name}',
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -601,15 +766,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     children: [
                                       if (m.side.isNotEmpty)
                                         MoveDisplayWidgets.sideCircle(
-                                          LocalizationService.translate(m.side == 'L' ? 'left' : 'right', lang).substring(0, 1),
+                                          LocalizationService.translate(
+                                            m.side == 'L' ? 'left' : 'right',
+                                            lang,
+                                          ).substring(0, 1),
                                           m.side,
                                           mini: true,
                                         ),
-                                      MoveDisplayWidgets.levelIcon(m.level, size: 10, mini: true),
+                                      MoveDisplayWidgets.levelIcon(
+                                        m.level,
+                                        size: 10,
+                                        mini: true,
+                                      ),
                                       if (m.isFeint)
                                         Padding(
-                                          padding: const EdgeInsets.only(left: 4.0),
-                                          child: MoveDisplayWidgets.drawBox(mini: true),
+                                          padding: const EdgeInsets.only(
+                                            left: 4.0,
+                                          ),
+                                          child: MoveDisplayWidgets.drawBox(
+                                            mini: true,
+                                          ),
                                         ),
                                     ],
                                   ),
@@ -625,7 +801,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       _isEditingCounter = true;
                                     });
                                     _pickCounterMove(
-                                      {'id': m.glossaryId, 'name': m.name, 'translations': json.encode(m.translations)},
+                                      {
+                                        'id': m.glossaryId,
+                                        'name': m.name,
+                                        'translations': json.encode(
+                                          m.translations,
+                                        ),
+                                      },
                                       m.category,
                                       m.side,
                                       m.level,
@@ -637,12 +819,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     );
                                   },
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Divider(height: 8),
                                       Row(
                                         children: [
-                                          Icon(MoveDisplayWidgets.getCategoryIcon(m.counterCategory ?? ''), size: 18, color: Colors.orangeAccent),
+                                          Icon(
+                                            MoveDisplayWidgets.getCategoryIcon(
+                                              m.counterCategory ?? '',
+                                            ),
+                                            size: 18,
+                                            color: Colors.orangeAccent,
+                                          ),
                                           const SizedBox(width: 2),
                                           Expanded(
                                             child: Text(
@@ -650,7 +839,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.orangeAccent,
-                                                decoration: cSel ? TextDecoration.underline : null,
+                                                decoration: cSel
+                                                    ? TextDecoration.underline
+                                                    : null,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -665,7 +856,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             Center(
                               child: ReorderableDragStartListener(
                                 index: idx,
-                                child: const Icon(Icons.drag_handle, size: 16, color: Colors.grey),
+                                child: const Icon(
+                                  Icons.drag_handle,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -674,7 +869,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           right: -10,
                           top: -10,
                           child: IconButton(
-                            icon: const Icon(Icons.close, size: 14, color: Colors.red),
+                            icon: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Colors.red,
+                            ),
                             onPressed: () => setS(() {
                               _currentCombo.removeAt(idx);
                               if (_editingComboItemIndex == idx) {
@@ -700,7 +899,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
       builder: (ctx, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final items = snap.data!;
         return ListView.builder(
           itemCount: items.length,
@@ -710,9 +911,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final isF = _selectedFeintsInPicker[id] ?? false;
             final spec = _selectedSpecialsInPicker[id];
-            final isE = _editingComboItemIndex != null && _currentCombo[_editingComboItemIndex!].glossaryId == id;
+            final isE =
+                _editingComboItemIndex != null &&
+                _currentCombo[_editingComboItemIndex!].glossaryId == id;
             final String pL = item['possible_level'] ?? 'H,M,L';
-            final bool sH = pL.contains('H'), sM = pL.contains('M'), sL = pL.contains('L');
+            final bool sH = pL.contains('H'),
+                sM = pL.contains('M'),
+                sL = pL.contains('L');
             Map<String, String> tr = {};
             try {
               tr = Map<String, String>.from(json.decode(item['translations']));
@@ -722,7 +927,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               shape: isE
                   ? RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8), side: const BorderSide(color: Colors.blueAccent, width: 2))
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(
+                        color: Colors.blueAccent,
+                        width: 2,
+                      ),
+                    )
                   : null,
               child: InkWell(
                 onDoubleTap: () => _showMediaGallery(cat, item['name']),
@@ -733,16 +943,34 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(MoveDisplayWidgets.getCategoryIcon(cat), size: 32, color: Colors.blueGrey),
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(cat),
+                            size: 32,
+                            color: Colors.blueGrey,
+                          ),
                           const SizedBox(width: 8),
-                          Text(cat == 'special' ? (tr['en'] ?? item['name']) : item['name'],
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))
+                          Text(
+                            cat == 'special'
+                                ? (tr['en'] ?? item['name'])
+                                : item['name'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                       ),
                       if (cat != 'special' && translation.isNotEmpty)
                         Padding(
-                            padding: const EdgeInsets.only(left: 40.0),
-                            child: Text(translation, style: const TextStyle(fontSize: 12, color: Colors.grey))),
+                          padding: const EdgeInsets.only(left: 40.0),
+                          child: Text(
+                            translation,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 4,
@@ -750,51 +978,111 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         children: [
                           if (cat == 'special')
                             ElevatedButton(
-                                onPressed: () => setS(() {
-                                      _pendingActionItemId = id;
-                                      _pendingLevel = '';
-                                    }),
-                                child: const Text('ADD'))
+                              onPressed: () => setS(() {
+                                _pendingActionItemId = id;
+                                _pendingLevel = '';
+                              }),
+                              child: const Text('ADD'),
+                            )
                           else if (cat == 'trapping' || cat == 'packs') ...[
-                            _sideButtonWithArrow(LocalizationService.translate('left', lang), 'L', Colors.blue, () => setS(() {
-                                  _pendingActionItemId = id;
-                                  _pendingLevel = '';
-                                  _selectedSidesInPicker[id] = 'L';
-                                }), lang, id),
-                            _sideButtonWithArrow(LocalizationService.translate('right', lang), 'R', Colors.red, () => setS(() {
-                                  _pendingActionItemId = id;
-                                  _pendingLevel = '';
-                                  _selectedSidesInPicker[id] = 'R';
-                                }), lang, id)
+                            _sideButtonWithArrow(
+                              LocalizationService.translate('left', lang),
+                              'L',
+                              Colors.blue,
+                              () => setS(() {
+                                _pendingActionItemId = id;
+                                _pendingLevel = '';
+                                _selectedSidesInPicker[id] = 'L';
+                              }),
+                              lang,
+                              id,
+                            ),
+                            _sideButtonWithArrow(
+                              LocalizationService.translate('right', lang),
+                              'R',
+                              Colors.red,
+                              () => setS(() {
+                                _pendingActionItemId = id;
+                                _pendingLevel = '';
+                                _selectedSidesInPicker[id] = 'R';
+                              }),
+                              lang,
+                              id,
+                            ),
                           ] else ...[
-                            _pickerSideButton(LocalizationService.translate('left', lang), 'L', side, Colors.blue, id, setS, lang,
-                                withArrow: true),
-                            _pickerSideButton(LocalizationService.translate('right', lang), 'R', side, Colors.red, id, setS, lang,
-                                withArrow: true),
+                            _pickerSideButton(
+                              LocalizationService.translate('left', lang),
+                              'L',
+                              side,
+                              Colors.blue,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
+                            _pickerSideButton(
+                              LocalizationService.translate('right', lang),
+                              'R',
+                              side,
+                              Colors.red,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
                             if (cat == 'punch' || cat == 'kick') ...[
                               FilterChip(
-                                  label: Text(LocalizationService.translate('draw', lang), style: const TextStyle(fontSize: 10)),
-                                  selected: isF,
-                                  onSelected: (v) => setS(() => _selectedFeintsInPicker[id] = v)),
+                                label: Text(
+                                  LocalizationService.translate('draw', lang),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                selected: isF,
+                                onSelected: (v) =>
+                                    setS(() => _selectedFeintsInPicker[id] = v),
+                              ),
                               ActionChip(
-                                  label: Text(spec ?? LocalizationService.translate('special', lang),
-                                      style: const TextStyle(fontSize: 10)),
-                                  onPressed: () => _pickSpecialForMove(id, setS))
-                            ]
+                                label: Text(
+                                  spec ??
+                                      LocalizationService.translate(
+                                        'special',
+                                        lang,
+                                      ),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                onPressed: () => _pickSpecialForMove(id, setS),
+                              ),
+                            ],
                           ],
                           const SizedBox(width: 8),
                           if (cat != 'special')
-                            Wrap(spacing: 4, children: [
-                              if (sH) _levelSelectionButton('High', id, setS, lang),
-                              if (sM) _levelSelectionButton('Mid', id, setS, lang),
-                              if (sL) _levelSelectionButton('Low', id, setS, lang)
-                            ])
+                            Wrap(
+                              spacing: 4,
+                              children: [
+                                if (sH)
+                                  _levelSelectionButton('High', id, setS, lang),
+                                if (sM)
+                                  _levelSelectionButton('Mid', id, setS, lang),
+                                if (sL)
+                                  _levelSelectionButton('Low', id, setS, lang),
+                              ],
+                            ),
                         ],
                       ),
                       if (_pendingActionItemId == id)
                         Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: _buildWorkflowButtons(item, cat, side, _pendingLevel ?? '', isF, spec, tr, setS, lang))
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: _buildWorkflowButtons(
+                            item,
+                            cat,
+                            side,
+                            _pendingLevel ?? '',
+                            isF,
+                            spec,
+                            tr,
+                            setS,
+                            lang,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -823,14 +1111,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
       builder: (ctx, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         var items = snap.data!;
         if (cat == 'packs') {
           final String hit = attack['hit_type'] ?? 'both';
-          if (hit != 'both')
+          if (hit != 'both') {
             items = items
-                .where((i) => (i['possible_type_attack'] ?? 'both') == 'both' || i['possible_type_attack'] == hit)
+                .where(
+                  (i) =>
+                      (i['possible_type_attack'] ?? 'both') == 'both' ||
+                      i['possible_type_attack'] == hit,
+                )
                 .toList();
+          }
         }
         return ListView.builder(
           itemCount: items.length,
@@ -855,58 +1150,194 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(MoveDisplayWidgets.getCategoryIcon(cat), size: 28, color: Colors.blueGrey),
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(cat),
+                            size: 28,
+                            color: Colors.blueGrey,
+                          ),
                           const SizedBox(width: 8),
-                          Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold))
+                          Text(
+                            item['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       if (cat == 'special')
                         ElevatedButton(
-                            onPressed: () => _addCounterMove(item, cat, '', attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, pickerS),
-                            child: Text(LocalizationService.translate('add', lang)))
+                          onPressed: () => _addCounterMove(
+                            item,
+                            cat,
+                            '',
+                            attack,
+                            aCat,
+                            aSide,
+                            aLev,
+                            aF,
+                            aS,
+                            aTr,
+                            tr,
+                            reps,
+                            pickerS,
+                          ),
+                          child: Text(
+                            LocalizationService.translate('add', lang),
+                          ),
+                        )
                       else if (cat == 'trapping' || cat == 'packs')
-                        Wrap(spacing: 4, children: [
-                          _sideButtonWithArrow(LocalizationService.translate('left', lang), 'L', Colors.blue,
-                              () => _addCounterMove(item, cat, 'L', attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, pickerS), lang, id),
-                          _sideButtonWithArrow(
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            _sideButtonWithArrow(
+                              LocalizationService.translate('left', lang),
+                              'L',
+                              Colors.blue,
+                              () => _addCounterMove(
+                                item,
+                                cat,
+                                'L',
+                                attack,
+                                aCat,
+                                aSide,
+                                aLev,
+                                aF,
+                                aS,
+                                aTr,
+                                tr,
+                                reps,
+                                pickerS,
+                              ),
+                              lang,
+                              id,
+                            ),
+                            _sideButtonWithArrow(
                               LocalizationService.translate('right', lang),
                               'R',
                               Colors.red,
-                              () => _addCounterMove(item, cat, 'R', attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, pickerS),
+                              () => _addCounterMove(
+                                item,
+                                cat,
+                                'R',
+                                attack,
+                                aCat,
+                                aSide,
+                                aLev,
+                                aF,
+                                aS,
+                                aTr,
+                                tr,
+                                reps,
+                                pickerS,
+                              ),
                               lang,
-                              id)
-                        ])
+                              id,
+                            ),
+                          ],
+                        )
                       else
                         Wrap(
                           spacing: 4,
                           children: [
-                            _pickerSideButton(LocalizationService.translate('left', lang), 'L', side, Colors.blue, id, setS, lang,
-                                withArrow: true),
-                            _pickerSideButton(LocalizationService.translate('right', lang), 'R', side, Colors.red, id, setS, lang,
-                                withArrow: true),
+                            _pickerSideButton(
+                              LocalizationService.translate('left', lang),
+                              'L',
+                              side,
+                              Colors.blue,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
+                            _pickerSideButton(
+                              LocalizationService.translate('right', lang),
+                              'R',
+                              side,
+                              Colors.red,
+                              id,
+                              setS,
+                              lang,
+                              withArrow: true,
+                            ),
                             if (cat == 'punch' || cat == 'kick')
                               ActionChip(
-                                  label: Text(spec ?? LocalizationService.translate('special', lang),
-                                      style: const TextStyle(fontSize: 10)),
-                                  onPressed: () => _pickSpecialForMove(id, setS)),
+                                label: Text(
+                                  spec ??
+                                      LocalizationService.translate(
+                                        'special',
+                                        lang,
+                                      ),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                onPressed: () => _pickSpecialForMove(id, setS),
+                              ),
                             const SizedBox(width: 8),
-                            Wrap(spacing: 4, children: [
-                              if (pL.contains('H'))
-                                _counterLevelButton(
-                                    'High', item, cat, side, attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, spec, pickerS, lang,
-                                    withArrow: true),
-                              if (pL.contains('M'))
-                                _counterLevelButton(
-                                    'Mid', item, cat, side, attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, spec, pickerS, lang,
-                                    withArrow: true),
-                              if (pL.contains('L'))
-                                _counterLevelButton(
-                                    'Low', item, cat, side, attack, aCat, aSide, aLev, aF, aS, aTr, tr, reps, spec, pickerS, lang,
-                                    withArrow: true)
-                            ])
+                            Wrap(
+                              spacing: 4,
+                              children: [
+                                if (pL.contains('H'))
+                                  _counterLevelButton(
+                                    'High',
+                                    item,
+                                    cat,
+                                    side,
+                                    attack,
+                                    aCat,
+                                    aSide,
+                                    aLev,
+                                    aF,
+                                    aS,
+                                    aTr,
+                                    tr,
+                                    reps,
+                                    spec,
+                                    pickerS,
+                                    lang,
+                                    withArrow: true,
+                                  ),
+                                if (pL.contains('M'))
+                                  _counterLevelButton(
+                                    'Mid',
+                                    item,
+                                    cat,
+                                    side,
+                                    attack,
+                                    aCat,
+                                    aSide,
+                                    aLev,
+                                    aF,
+                                    aS,
+                                    aTr,
+                                    tr,
+                                    reps,
+                                    spec,
+                                    pickerS,
+                                    lang,
+                                    withArrow: true,
+                                  ),
+                                if (pL.contains('L'))
+                                  _counterLevelButton(
+                                    'Low',
+                                    item,
+                                    cat,
+                                    side,
+                                    attack,
+                                    aCat,
+                                    aSide,
+                                    aLev,
+                                    aF,
+                                    aS,
+                                    aTr,
+                                    tr,
+                                    reps,
+                                    spec,
+                                    pickerS,
+                                    lang,
+                                    withArrow: true,
+                                  ),
+                              ],
+                            ),
                           ],
-                        )
+                        ),
                     ],
                   ),
                 ),
@@ -918,40 +1349,75 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  Widget _levelSelectionButton(String l, int id, StateSetter setS, String lang) {
-    IconData icon = l == 'High' ? Icons.north_east : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
+  Widget _levelSelectionButton(
+    String l,
+    int id,
+    StateSetter setS,
+    String lang,
+  ) {
+    IconData icon = l == 'High'
+        ? Icons.north_east
+        : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
     final bool sel = _pendingActionItemId == id && _pendingLevel == l;
     return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            minimumSize: const Size(60, 32),
-            backgroundColor: sel ? Theme.of(context).primaryColor : null,
-            foregroundColor: sel ? Colors.white : null),
-        onPressed: () => setS(() {
-              _activateGlossaryItem(id);
-              _pendingLevel = l;
-            }),
-        child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [Text(LocalizationService.translate(l.toLowerCase(), lang).substring(0, 1), style: const TextStyle(fontSize: 11)), const SizedBox(width: 4), Icon(icon, size: 12)]));
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: const Size(60, 32),
+        backgroundColor: sel ? Theme.of(context).primaryColor : null,
+        foregroundColor: sel ? Colors.white : null,
+      ),
+      onPressed: () => setS(() {
+        _activateGlossaryItem(id);
+        _pendingLevel = l;
+      }),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            LocalizationService.translate(
+              l.toLowerCase(),
+              lang,
+            ).substring(0, 1),
+            style: const TextStyle(fontSize: 11),
+          ),
+          const SizedBox(width: 4),
+          Icon(icon, size: 12),
+        ],
+      ),
+    );
   }
 
-  Widget _buildWorkflowButtons(Map<String, dynamic> it, String cat, String sd, String lv, bool f, String? sp,
-      Map<String, String> tr, StateSetter setS, String lang,
-      {bool isCustom = false}) {
+  Widget _buildWorkflowButtons(
+    Map<String, dynamic> it,
+    String cat,
+    String sd,
+    String lv,
+    bool f,
+    String? sp,
+    Map<String, String> tr,
+    StateSetter setS,
+    String lang, {
+    bool isCustom = false,
+  }) {
     final bool isE = _editingComboItemIndex != null;
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Row(children: [
-        ElevatedButton(
-            style: ElevatedButton.styleFrom(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36)),
-            onPressed: () {
-              setS(() {
-                final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
-                final n = Move(
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () {
+                setS(() {
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
+                  final n = Move(
                     glossaryId: isCustom ? null : it['id'],
                     name: isCustom ? _customMoveController.text : it['name'],
                     category: cat,
@@ -965,42 +1431,74 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     counterCategory: ex?.counterCategory,
                     counterSide: ex?.counterSide,
                     counterLevel: ex?.counterLevel,
-                    counterSpecialAction: ex?.counterSpecialAction);
-                if (isE) {
-                  _currentCombo[_editingComboItemIndex!] = n;
-                  _editingComboItemIndex = null;
-                } else
-                  _currentCombo.add(n);
-                _pendingActionItemId = null;
-                _pendingLevel = null;
-              });
-            },
-            child: Text(isE ? LocalizationService.translate('update_item', lang) : LocalizationService.translate('next', lang),
-                style: const TextStyle(fontSize: 12))),
-        const SizedBox(width: 6),
-        ElevatedButton(
-            style: ElevatedButton.styleFrom(
+                    counterSpecialAction: ex?.counterSpecialAction,
+                  );
+                  if (isE) {
+                    _currentCombo[_editingComboItemIndex!] = n;
+                    _editingComboItemIndex = null;
+                  } else {
+                    _currentCombo.add(n);
+                  }
+                  _pendingActionItemId = null;
+                  _pendingLevel = null;
+                });
+              },
+              child: Text(
+                isE
+                    ? LocalizationService.translate('update_item', lang)
+                    : LocalizationService.translate('next', lang),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: 6),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo.shade700,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36)),
-            onPressed: () {
-              _pickCounterMove(isCustom ? {'name': _customMoveController.text, 'translations': '{}', 'hit_type': 'both'} : it,
-                  cat, sd, lv, f, sp, tr, 1, setS);
-            },
-            child: Text(LocalizationService.translate('answer', lang), style: const TextStyle(fontSize: 12)))
-      ]),
-      Row(children: [
-        ElevatedButton(
-            style: ElevatedButton.styleFrom(
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () {
+                _pickCounterMove(
+                  isCustom
+                      ? {
+                          'name': _customMoveController.text,
+                          'translations': '{}',
+                          'hit_type': 'both',
+                        }
+                      : it,
+                  cat,
+                  sd,
+                  lv,
+                  f,
+                  sp,
+                  tr,
+                  1,
+                  setS,
+                );
+              },
+              child: Text(
+                LocalizationService.translate('answer', lang),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36)),
-            onPressed: () {
-              setS(() {
-                final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
-                final n = Move(
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () {
+                setS(() {
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
+                  final n = Move(
                     glossaryId: isCustom ? null : it['id'],
                     name: isCustom ? _customMoveController.text : it['name'],
                     category: cat,
@@ -1014,90 +1512,146 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     counterCategory: ex?.counterCategory,
                     counterSide: ex?.counterSide,
                     counterLevel: ex?.counterLevel,
-                    counterSpecialAction: ex?.counterSpecialAction);
-                if (isE) _currentCombo[_editingComboItemIndex!] = n; else _currentCombo.add(n);
-              });
-              _finishAndAddCombo();
-              Navigator.pop(context);
-            },
-            child: Text(LocalizationService.translate('finish', lang), style: const TextStyle(fontSize: 12))),
-        const SizedBox(width: 6),
-        ElevatedButton(
-            style: ElevatedButton.styleFrom(
+                    counterSpecialAction: ex?.counterSpecialAction,
+                  );
+                  if (isE) {
+                    _currentCombo[_editingComboItemIndex!] = n;
+                  } else {
+                    _currentCombo.add(n);
+                  }
+                });
+                _finishAndAddCombo();
+                Navigator.pop(context);
+              },
+              child: Text(
+                LocalizationService.translate('finish', lang),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(width: 6),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36)),
-            onPressed: () => setS(() {
-                  if (isE) _editingComboItemIndex = null;
-                  _pendingActionItemId = null;
-                }),
-            child: Text(LocalizationService.translate('cancel', lang), style: const TextStyle(fontSize: 12)))
-      ])
-    ]);
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () => setS(() {
+                if (isE) _editingComboItemIndex = null;
+                _pendingActionItemId = null;
+              }),
+              child: Text(
+                LocalizationService.translate('cancel', lang),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
-  Widget _sideButtonWithArrow(String l, String sd, Color c, VoidCallback onP, String lang, int id) {
+  Widget _sideButtonWithArrow(
+    String l,
+    String sd,
+    Color c,
+    VoidCallback onP,
+    String lang,
+    int id,
+  ) {
     final icon = sd == 'L' ? Icons.arrow_back : Icons.arrow_forward;
     final bool sel = _selectedSidesInPicker[id] == sd;
     return ActionChip(
-        onPressed: () {
-          _activateGlossaryItem(id);
-          onP();
-        },
-        backgroundColor: sel ? c : c.withOpacity(0.15),
-        label: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (sd == 'L') ...[Icon(icon, size: 12, color: sel ? Colors.white : c), const SizedBox(width: 4)],
-          Text(l, style: TextStyle(fontSize: 10, color: sel ? Colors.white : c, fontWeight: FontWeight.bold)),
-          if (sd == 'R') ...[const SizedBox(width: 4), Icon(icon, size: 12, color: sel ? Colors.white : c)]
-        ]));
+      onPressed: () {
+        _activateGlossaryItem(id);
+        onP();
+      },
+      backgroundColor: sel ? c : c.withOpacity(0.15),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (sd == 'L') ...[
+            Icon(icon, size: 12, color: sel ? Colors.white : c),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            l,
+            style: TextStyle(
+              fontSize: 10,
+              color: sel ? Colors.white : c,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (sd == 'R') ...[
+            const SizedBox(width: 4),
+            Icon(icon, size: 12, color: sel ? Colors.white : c),
+          ],
+        ],
+      ),
+    );
   }
 
-  void _addCounterMove(Map<String, dynamic> c, String cat, String cs, Map<String, dynamic> at, String ac, String as, String al,
-      bool af, String? asp, Map<String, String> atr, Map<String, String> ctr, int r, StateSetter pS,
-      {String? cLevelOverride}) {
+  void _addCounterMove(
+    Map<String, dynamic> c,
+    String cat,
+    String cs,
+    Map<String, dynamic> at,
+    String ac,
+    String as,
+    String al,
+    bool af,
+    String? asp,
+    Map<String, String> atr,
+    Map<String, String> ctr,
+    int r,
+    StateSetter pS, {
+    String? cLevelOverride,
+  }) {
     pS(() {
       final isE = _editingComboItemIndex != null;
       if (isE && _isEditingCounter) {
         final ex = _currentCombo[_editingComboItemIndex!];
         _currentCombo[_editingComboItemIndex!] = Move(
-            glossaryId: ex.glossaryId,
-            name: ex.name,
-            category: ex.category,
-            translations: ex.translations,
-            side: ex.side,
-            level: ex.level,
-            isFeint: ex.isFeint,
-            specialAction: ex.specialAction,
-            repetitions: ex.repetitions,
-            counterName: c['name'],
-            counterCategory: cat,
-            counterSide: cs,
-            counterLevel: cLevelOverride ?? ex.level,
-            counterSpecialAction: null);
+          glossaryId: ex.glossaryId,
+          name: ex.name,
+          category: ex.category,
+          translations: ex.translations,
+          side: ex.side,
+          level: ex.level,
+          isFeint: ex.isFeint,
+          specialAction: ex.specialAction,
+          repetitions: ex.repetitions,
+          counterName: c['name'],
+          counterCategory: cat,
+          counterSide: cs,
+          counterLevel: cLevelOverride ?? ex.level,
+          counterSpecialAction: null,
+        );
         _editingComboItemIndex = null;
         _isEditingCounter = false;
       } else {
         final n = Move(
-            glossaryId: at['id'],
-            name: at['name'],
-            category: ac,
-            translations: atr,
-            side: as,
-            level: al,
-            isFeint: af,
-            specialAction: asp,
-            repetitions: r,
-            counterName: c['name'],
-            counterCategory: cat,
-            counterSide: cs,
-            counterLevel: cLevelOverride ?? al,
-            counterSpecialAction: null);
+          glossaryId: at['id'],
+          name: at['name'],
+          category: ac,
+          translations: atr,
+          side: as,
+          level: al,
+          isFeint: af,
+          specialAction: asp,
+          repetitions: r,
+          counterName: c['name'],
+          counterCategory: cat,
+          counterSide: cs,
+          counterLevel: cLevelOverride ?? al,
+          counterSpecialAction: null,
+        );
         if (isE) {
           _currentCombo[_editingComboItemIndex!] = n;
           _editingComboItemIndex = null;
-        } else
+        } else {
           _currentCombo.add(n);
+        }
       }
       _pendingActionItemId = null;
       _pendingLevel = null;
@@ -1106,30 +1660,62 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   Widget _counterLevelButton(
-      String l,
-      Map<String, dynamic> c,
-      String cat,
-      String cs,
-      Map<String, dynamic> at,
-      String ac,
-      String as,
-      String al,
-      bool af,
-      String? asp,
-      Map<String, String> atr,
-      Map<String, String> ctr,
-      int r,
-      String? csp,
-      StateSetter pS,
-      String lang,
-      {bool withArrow = false}) {
-    IconData icon = l == 'High' ? Icons.north_east : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
+    String l,
+    Map<String, dynamic> c,
+    String cat,
+    String cs,
+    Map<String, dynamic> at,
+    String ac,
+    String as,
+    String al,
+    bool af,
+    String? asp,
+    Map<String, String> atr,
+    Map<String, String> ctr,
+    int r,
+    String? csp,
+    StateSetter pS,
+    String lang, {
+    bool withArrow = false,
+  }) {
+    IconData icon = l == 'High'
+        ? Icons.north_east
+        : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
     return ElevatedButton(
-        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(60, 32)),
-        onPressed: () => _addCounterMove(c, cat, cs, at, ac, as, al, af, asp, atr, ctr, r, pS, cLevelOverride: l),
-        child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [Text(LocalizationService.translate(l.toLowerCase(), lang).substring(0, 1), style: const TextStyle(fontSize: 11)), if (withArrow) ...[const SizedBox(width: 4), Icon(icon, size: 12)]]));
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: const Size(60, 32),
+      ),
+      onPressed: () => _addCounterMove(
+        c,
+        cat,
+        cs,
+        at,
+        ac,
+        as,
+        al,
+        af,
+        asp,
+        atr,
+        ctr,
+        r,
+        pS,
+        cLevelOverride: l,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            LocalizationService.translate(
+              l.toLowerCase(),
+              lang,
+            ).substring(0, 1),
+            style: const TextStyle(fontSize: 11),
+          ),
+          if (withArrow) ...[const SizedBox(width: 4), Icon(icon, size: 12)],
+        ],
+      ),
+    );
   }
 
   void _finishAndAddCombo() {
@@ -1137,16 +1723,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     setState(() {
       final Move finalMove = _currentCombo.length == 1
           ? _currentCombo.first
-          : Move(name: 'Combo: ${_currentCombo.first.name} + ...', category: 'combo', subMoves: List.from(_currentCombo));
+          : Move(
+              name: 'Combo: ${_currentCombo.first.name} + ...',
+              category: 'combo',
+              subMoves: List.from(_currentCombo),
+            );
       if (_editingSeriesIndex != null) {
         _moves.removeAt(_editingSeriesIndex!);
         int target = _targetSeriesIndex ?? _editingSeriesIndex!;
-        if (target >= _moves.length)
+        if (target >= _moves.length) {
           _moves.add(finalMove);
-        else
+        } else {
           _moves.insert(target, finalMove);
-      } else
+        }
+      } else {
         _moves.add(finalMove);
+      }
       _currentCombo.clear();
       _editingSeriesIndex = null;
       _targetSeriesIndex = null;
@@ -1158,182 +1750,424 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     return [
       for (int i = 0; i < _moves.length; i++)
         Padding(
-            key: ValueKey(_moves[i].uKey),
-            padding: const EdgeInsets.only(left: 20.0, bottom: 8.0),
-            child: Stack(clipBehavior: Clip.none, children: [
+          key: ValueKey(_moves[i].uKey),
+          padding: const EdgeInsets.only(left: 20.0, bottom: 8.0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
               GestureDetector(
-                  onTap: () {
-                    final t = _moves[i].getTranslation(lang);
-                    if (t.isNotEmpty) {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('${_moves[i].name}: $t'),
-                          duration: const Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating));
-                    }
-                  },
-                  onDoubleTap: _isEditing
-                      ? () {
-                          if (_moves[i].isCombo)
-                            _pickMove(initialMoves: _moves[i].subMoves, seriesIndex: i);
-                          else
-                            _pickMove(initialMoves: [_moves[i]], seriesIndex: i);
+                onTap: () {
+                  final t = _moves[i].getTranslation(lang);
+                  if (t.isNotEmpty) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${_moves[i].name}: $t'),
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                onDoubleTap: _isEditing
+                    ? () {
+                        if (_moves[i].isCombo) {
+                          _pickMove(
+                            initialMoves: _moves[i].subMoves,
+                            seriesIndex: i,
+                          );
+                        } else {
+                          _pickMove(initialMoves: [_moves[i]], seriesIndex: i);
                         }
-                      : () => _showMediaGallery(_moves[i].category, _moves[i].name),
-                  child: Card(
-                      margin: EdgeInsets.zero,
-                      color: _trainingController.currentIndex == i ? Colors.green.withOpacity(0.3) : null,
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: ListTile(
-                            minLeadingWidth: 0,
-                            horizontalTitleGap: 12,
-                            title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Wrap(spacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                if (_moves[i].repetitions > 1)
+                      }
+                    : () =>
+                          _showMediaGallery(_moves[i].category, _moves[i].name),
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: _trainingController.currentIndex == i
+                      ? Colors.green.withOpacity(0.3)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      minLeadingWidth: 0,
+                      horizontalTitleGap: 12,
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (_moves[i].repetitions > 1)
+                                Chip(
+                                  label: Text(
+                                    'x${_moves[i].repetitions}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.blueGrey,
+                                ),
+                              if (!_moves[i].isCombo) ...[
+                                Icon(
+                                  MoveDisplayWidgets.getCategoryIcon(
+                                    _moves[i].category,
+                                  ),
+                                  size: 32,
+                                  color: Colors.blueGrey,
+                                ),
+                                const SizedBox(width: 4),
+                                Tooltip(
+                                  message: _moves[i].getTranslation(lang),
+                                  child: Text(
+                                    _moves[i].name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                MoveDisplayWidgets.sideCircle(
+                                  LocalizationService.translate(
+                                    _moves[i].side == 'L' ? 'left' : 'right',
+                                    lang,
+                                  ).substring(0, 1),
+                                  _moves[i].side,
+                                ),
+                                MoveDisplayWidgets.levelIcon(
+                                  _moves[i].level,
+                                  size: 14,
+                                ),
+                                if (_moves[i].isFeint)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 4.0),
+                                    child: MoveDisplayWidgets.drawBox(),
+                                  ),
+                                if (_moves[i].specialAction != null)
                                   Chip(
-                                      label: Text('x${_moves[i].repetitions}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                      backgroundColor: Colors.blueGrey),
-                                if (!_moves[i].isCombo) ...[
-                                  Icon(MoveDisplayWidgets.getCategoryIcon(_moves[i].category), size: 32, color: Colors.blueGrey),
-                                  const SizedBox(width: 4),
-                                  Tooltip(message: _moves[i].getTranslation(lang), child: Text(_moves[i].name, style: const TextStyle(fontWeight: FontWeight.bold))),
-                                  MoveDisplayWidgets.sideCircle(
-                                      LocalizationService.translate(_moves[i].side == 'L' ? 'left' : 'right', lang).substring(0, 1),
-                                      _moves[i].side),
-                                  MoveDisplayWidgets.levelIcon(_moves[i].level, size: 14),
-                                  if (_moves[i].isFeint) Padding(padding: const EdgeInsets.only(left: 4.0), child: MoveDisplayWidgets.drawBox()),
-                                  if (_moves[i].specialAction != null)
-                                    Chip(
-                                        label: Text(_moves[i].specialAction!, style: const TextStyle(fontSize: 9)),
-                                        backgroundColor: Colors.purple.withOpacity(0.3),
-                                        padding: EdgeInsets.zero,
-                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap)
-                                ]
-                              ]),
-                              if (_moves[i].isCombo)
-                                Padding(
-                                    padding: const EdgeInsets.only(left: 0.0, top: 4.0),
+                                    label: Text(
+                                      _moves[i].specialAction!,
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
+                                    backgroundColor: Colors.purple.withOpacity(
+                                      0.3,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                              ],
+                            ],
+                          ),
+                          if (_moves[i].isCombo)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 0.0,
+                                top: 4.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _moves[i].subMoves.asMap().entries.map((
+                                  entry,
+                                ) {
+                                  final subIdx = entry.key;
+                                  final sub = entry.value;
+                                  final bool isSingle =
+                                      _moves[i].subMoves.length == 1;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6.0),
                                     child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: _moves[i].subMoves.asMap().entries.map((entry) {
-                                          final subIdx = entry.key;
-                                          final sub = entry.value;
-                                          final bool isSingle = _moves[i].subMoves.length == 1;
-                                          return Padding(
-                                              padding: const EdgeInsets.only(bottom: 6.0),
-                                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                                InkWell(
-                                                    onDoubleTap: () => _showMediaGallery(sub.category, sub.name),
-                                                    child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                                      if (isSingle)
-                                                        const Icon(Icons.keyboard_arrow_right, size: 18, color: Colors.grey)
-                                                      else
-                                                        Text('${subIdx + 1}.',
-                                                            style: const TextStyle(
-                                                                fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                                                      Icon(MoveDisplayWidgets.getCategoryIcon(sub.category), size: 24, color: Colors.grey),
-                                                      Text(sub.name,
-                                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                                                      MoveDisplayWidgets.sideCircle(
-                                                          LocalizationService.translate(sub.side == 'L' ? 'left' : 'right', lang)
-                                                              .substring(0, 1),
-                                                          sub.side,
-                                                          mini: false),
-                                                      MoveDisplayWidgets.levelIcon(sub.level, size: 12),
-                                                      if (sub.isFeint)
-                                                        Padding(
-                                                            padding: const EdgeInsets.only(left: 4.0), child: MoveDisplayWidgets.drawBox(mini: true)),
-                                                      if (sub.specialAction != null)
-                                                        Chip(
-                                                            label: Text(sub.specialAction!, style: const TextStyle(fontSize: 10)),
-                                                            backgroundColor: Colors.purple.withOpacity(0.2),
-                                                            padding: EdgeInsets.zero,
-                                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap)
-                                                    ])),
-                                                if (sub.counterName != null)
-                                                  Padding(
-                                                      padding: const EdgeInsets.only(top: 4.0, left: 0.0),
-                                                      child: InkWell(
-                                                          onDoubleTap: () =>
-                                                              _showMediaGallery(sub.counterCategory ?? '', sub.counterName!),
-                                                          child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                                            const Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.orange),
-                                                            Icon(MoveDisplayWidgets.getCategoryIcon(sub.counterCategory ?? ''),
-                                                                size: 22, color: Colors.orangeAccent),
-                                                            Text(sub.counterName!,
-                                                                style: const TextStyle(
-                                                                    fontSize: 13,
-                                                                    color: Colors.orangeAccent,
-                                                                    fontWeight: FontWeight.w500)),
-                                                            MoveDisplayWidgets.sideCircle(
-                                                                LocalizationService.translate(
-                                                                        sub.counterSide == 'L' ? 'left' : 'right', lang)
-                                                                    .substring(0, 1),
-                                                                sub.counterSide ?? '',
-                                                                mini: true),
-                                                            MoveDisplayWidgets.levelIcon(sub.counterLevel ?? '', size: 10, mini: true)
-                                                          ])))
-                                              ]));
-                                        }).toList())),
-                              if (!_moves[i].isCombo && _moves[i].counterName != null)
-                                Padding(
-                                    padding: const EdgeInsets.only(top: 4.0, left: 0.0),
-                                    child: InkWell(
-                                        onDoubleTap: () => _showMediaGallery(_moves[i].counterCategory ?? '', _moves[i].counterName!),
-                                        child: Wrap(spacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                                          const Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.orange),
-                                          Icon(MoveDisplayWidgets.getCategoryIcon(_moves[i].counterCategory ?? ''), size: 28, color: Colors.grey),
-                                          Text('${LocalizationService.translate('answer', lang)}: ${_moves[i].counterName}',
-                                              style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w500)),
-                                          MoveDisplayWidgets.sideCircle(
-                                              LocalizationService.translate(_moves[i].counterSide == 'L' ? 'left' : 'right', lang)
-                                                  .substring(0, 1),
-                                              _moves[i].counterSide ?? '',
-                                              mini: true),
-                                          MoveDisplayWidgets.levelIcon(_moves[i].counterLevel ?? '', size: 10, mini: true),
-                                          if (_moves[i].counterSpecialAction != null)
-                                            Chip(
-                                                label: Text(_moves[i].counterSpecialAction!, style: const TextStyle(fontSize: 8)),
-                                                backgroundColor: Colors.purple.withOpacity(0.2),
-                                                padding: EdgeInsets.zero,
-                                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap)
-                                        ]))),
-                            ],),
-                            subtitle: (_moves[i].isCombo) ? null : Text(_moves[i].getTranslation(lang)),
-                            trailing: _isEditing
-                                ? Row(mainAxisSize: MainAxisSize.min, children: [
-                                    IconButton(
-                                        icon: const Icon(Icons.copy, color: Colors.blueGrey, size: 28),
-                                        onPressed: () {
-                                          setState(() {
-                                            final map = _moves[i].toMap();
-                                            map['id'] = null;
-                                            final copy = Move.fromMap(map);
-                                            _moves.insert(i + 1, copy);
-                                          });
-                                        },
-                                        tooltip: LocalizationService.translate('clone', lang)),
-                                    IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red, size: 28),
-                                        onPressed: () => _confirmDeleteItem(context, i, lang)),
-                                    const SizedBox(width: 16),
-                                    ReorderableDragStartListener(
-                                        index: i, child: const Icon(Icons.drag_handle, size: 28, color: Colors.grey))
-                                  ])
-                                : null,
-                          )))),
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        InkWell(
+                                          onDoubleTap: () => _showMediaGallery(
+                                            sub.category,
+                                            sub.name,
+                                          ),
+                                          child: Wrap(
+                                            spacing: 6,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
+                                            children: [
+                                              if (isSingle)
+                                                const Icon(
+                                                  Icons.keyboard_arrow_right,
+                                                  size: 18,
+                                                  color: Colors.grey,
+                                                )
+                                              else
+                                                Text(
+                                                  '${subIdx + 1}.',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              Icon(
+                                                MoveDisplayWidgets.getCategoryIcon(
+                                                  sub.category,
+                                                ),
+                                                size: 24,
+                                                color: Colors.grey,
+                                              ),
+                                              Text(
+                                                sub.name,
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              MoveDisplayWidgets.sideCircle(
+                                                LocalizationService.translate(
+                                                  sub.side == 'L'
+                                                      ? 'left'
+                                                      : 'right',
+                                                  lang,
+                                                ).substring(0, 1),
+                                                sub.side,
+                                                mini: false,
+                                              ),
+                                              MoveDisplayWidgets.levelIcon(
+                                                sub.level,
+                                                size: 12,
+                                              ),
+                                              if (sub.isFeint)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        left: 4.0,
+                                                      ),
+                                                  child:
+                                                      MoveDisplayWidgets.drawBox(
+                                                        mini: true,
+                                                      ),
+                                                ),
+                                              if (sub.specialAction != null)
+                                                Chip(
+                                                  label: Text(
+                                                    sub.specialAction!,
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                    ),
+                                                  ),
+                                                  backgroundColor: Colors.purple
+                                                      .withOpacity(0.2),
+                                                  padding: EdgeInsets.zero,
+                                                  materialTapTargetSize:
+                                                      MaterialTapTargetSize
+                                                          .shrinkWrap,
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (sub.counterName != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4.0,
+                                              left: 0.0,
+                                            ),
+                                            child: InkWell(
+                                              onDoubleTap: () =>
+                                                  _showMediaGallery(
+                                                    sub.counterCategory ?? '',
+                                                    sub.counterName!,
+                                                  ),
+                                              child: Wrap(
+                                                spacing: 6,
+                                                crossAxisAlignment:
+                                                    WrapCrossAlignment.center,
+                                                children: [
+                                                  const Icon(
+                                                    Icons
+                                                        .subdirectory_arrow_right,
+                                                    size: 16,
+                                                    color: Colors.orange,
+                                                  ),
+                                                  Icon(
+                                                    MoveDisplayWidgets.getCategoryIcon(
+                                                      sub.counterCategory ?? '',
+                                                    ),
+                                                    size: 22,
+                                                    color: Colors.orangeAccent,
+                                                  ),
+                                                  Text(
+                                                    sub.counterName!,
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color:
+                                                          Colors.orangeAccent,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  MoveDisplayWidgets.sideCircle(
+                                                    LocalizationService.translate(
+                                                      sub.counterSide == 'L'
+                                                          ? 'left'
+                                                          : 'right',
+                                                      lang,
+                                                    ).substring(0, 1),
+                                                    sub.counterSide ?? '',
+                                                    mini: true,
+                                                  ),
+                                                  MoveDisplayWidgets.levelIcon(
+                                                    sub.counterLevel ?? '',
+                                                    size: 10,
+                                                    mini: true,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          if (!_moves[i].isCombo &&
+                              _moves[i].counterName != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 4.0,
+                                left: 0.0,
+                              ),
+                              child: InkWell(
+                                onDoubleTap: () => _showMediaGallery(
+                                  _moves[i].counterCategory ?? '',
+                                  _moves[i].counterName!,
+                                ),
+                                child: Wrap(
+                                  spacing: 4,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.subdirectory_arrow_right,
+                                      size: 16,
+                                      color: Colors.orange,
+                                    ),
+                                    Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        _moves[i].counterCategory ?? '',
+                                      ),
+                                      size: 28,
+                                      color: Colors.grey,
+                                    ),
+                                    Text(
+                                      '${LocalizationService.translate('answer', lang)}: ${_moves[i].counterName}',
+                                      style: const TextStyle(
+                                        color: Colors.orangeAccent,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    MoveDisplayWidgets.sideCircle(
+                                      LocalizationService.translate(
+                                        _moves[i].counterSide == 'L'
+                                            ? 'left'
+                                            : 'right',
+                                        lang,
+                                      ).substring(0, 1),
+                                      _moves[i].counterSide ?? '',
+                                      mini: true,
+                                    ),
+                                    MoveDisplayWidgets.levelIcon(
+                                      _moves[i].counterLevel ?? '',
+                                      size: 10,
+                                      mini: true,
+                                    ),
+                                    if (_moves[i].counterSpecialAction != null)
+                                      Chip(
+                                        label: Text(
+                                          _moves[i].counterSpecialAction!,
+                                          style: const TextStyle(fontSize: 8),
+                                        ),
+                                        backgroundColor: Colors.purple
+                                            .withOpacity(0.2),
+                                        padding: EdgeInsets.zero,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      subtitle: (_moves[i].isCombo)
+                          ? null
+                          : Text(_moves[i].getTranslation(lang)),
+                      trailing: _isEditing
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.copy,
+                                    color: Colors.blueGrey,
+                                    size: 28,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      final map = _moves[i].toMap();
+                                      map['id'] = null;
+                                      final copy = Move.fromMap(map);
+                                      _moves.insert(i + 1, copy);
+                                    });
+                                  },
+                                  tooltip: LocalizationService.translate(
+                                    'clone',
+                                    lang,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                    size: 28,
+                                  ),
+                                  onPressed: () =>
+                                      _confirmDeleteItem(context, i, lang),
+                                ),
+                                const SizedBox(width: 16),
+                                ReorderableDragStartListener(
+                                  index: i,
+                                  child: const Icon(
+                                    Icons.drag_handle,
+                                    size: 28,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
-                  left: -15,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                      child: CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.redAccent,
-                          child: Text('${i + 1}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)))))
-            ]))
+                left: -15,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: CircleAvatar(
+                    radius: 15,
+                    backgroundColor: Colors.redAccent,
+                    child: Text(
+                      '${i + 1}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
     ];
   }
 
@@ -1342,15 +2176,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(LocalizationService.translate('delete_item', lang)),
-        content: Text(LocalizationService.translate('confirm_delete_item', lang)),
+        content: Text(
+          LocalizationService.translate('confirm_delete_item', lang),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(LocalizationService.translate('cancel', lang))),
           TextButton(
-              onPressed: () {
-                setState(() => _moves.removeAt(index));
-                Navigator.pop(context);
-              },
-              child: Text(LocalizationService.translate('finish', lang), style: const TextStyle(color: Colors.red)))
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() => _moves.removeAt(index));
+              Navigator.pop(context);
+            },
+            child: Text(
+              LocalizationService.translate('finish', lang),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
         ],
       ),
     );
@@ -1359,99 +2202,220 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   void _pickSpecialForMove(int id, StateSetter setS) async {
     final specs = await DatabaseService().getGlossaryByCategory('special');
     showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-              title: const Text('Select Special Action'),
-              content: SizedBox(
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: specs.length + 1,
-                      itemBuilder: (ctx, idx) {
-                        if (idx == 0)
-                          return ListTile(
-                              title: const Text('None'),
-                              onTap: () {
-                                setS(() => _selectedSpecialsInPicker[id] = null);
-                                Navigator.pop(ctx);
-                              });
-                        final s = specs[idx - 1];
-                        return ListTile(
-                            title: Text(s['name']),
-                            onTap: () {
-                              setS(() => _selectedSpecialsInPicker[id] = s['name']);
-                              Navigator.pop(ctx);
-                            });
-                      })),
-            ));
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Select Special Action'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: specs.length + 1,
+            itemBuilder: (ctx, idx) {
+              if (idx == 0) {
+                return ListTile(
+                  title: const Text('None'),
+                  onTap: () {
+                    setS(() => _selectedSpecialsInPicker[id] = null);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }
+              final s = specs[idx - 1];
+              return ListTile(
+                title: Text(s['name']),
+                onTap: () {
+                  setS(() => _selectedSpecialsInPicker[id] = s['name']);
+                  Navigator.pop(ctx);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   void _pickCounterMove(
-      Map<String, dynamic> at, String ac, String as, String al, bool af, String? asp, Map<String, String> atr, int r, StateSetter pS) {
+    Map<String, dynamic> at,
+    String ac,
+    String as,
+    String al,
+    bool af,
+    String? asp,
+    Map<String, String> atr,
+    int r,
+    StateSetter pS,
+  ) {
     showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (ctx) {
-          final lang = Provider.of<SeriesProvider>(context).language;
-          return StatefulBuilder(
-              builder: (ctx, setS) => DefaultTabController(
-                  length: 5,
-                  child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.95,
-                      child: Column(children: [
-                        Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(LocalizationService.translate('pick_answer', lang),
-                                style: const TextStyle(fontWeight: FontWeight.bold))),
-                        TabBar(isScrollable: true, tabs: [
-                          Tab(text: LocalizationService.translate('packs', lang), icon: Icon(Icons.front_hand)),
-                          Tab(text: LocalizationService.translate('trapping', lang), icon: Icon(Icons.back_hand)),
-                          Tab(text: LocalizationService.translate('special', lang), icon: Icon(Icons.directions_run)),
-                          Tab(text: LocalizationService.translate('other', lang), icon: Icon(Icons.more_horiz)),
-                          const Tab(text: 'Text', icon: Icon(Icons.text_fields))
-                        ]),
-                        Expanded(
-                            child: TabBarView(children: [
-                          _buildCounterGlossaryList('packs', setS, at, ac, as, al, af, asp, atr, r, pS, lang),
-                          _buildCounterGlossaryList('trapping', setS, at, ac, as, al, af, asp, atr, r, pS, lang),
-                          _buildCounterGlossaryList('special', setS, at, ac, as, al, af, asp, atr, r, pS, lang),
-                          _buildCounterGlossaryList('other', setS, at, ac, as, al, af, asp, atr, r, pS, lang),
-                          _buildCustomTextTab(setS, lang,
-                              isCounter: true,
-                              attackItem: at,
-                              attackCategory: ac,
-                              side: as,
-                              level: al,
-                              isFeint: af,
-                              special: asp,
-                              attackTranslations: atr,
-                              reps: r,
-                              pickerModalState: pS)
-                        ]))
-                      ]))));
-        });
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final lang = Provider.of<SeriesProvider>(context).language;
+        return StatefulBuilder(
+          builder: (ctx, setS) => DefaultTabController(
+            length: 5,
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.95,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      LocalizationService.translate('pick_answer', lang),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  TabBar(
+                    isScrollable: true,
+                    tabs: [
+                      Tab(
+                        text: LocalizationService.translate('packs', lang),
+                        icon: Icon(Icons.front_hand),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate('trapping', lang),
+                        icon: Icon(Icons.back_hand),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate('special', lang),
+                        icon: Icon(Icons.directions_run),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate('other', lang),
+                        icon: Icon(Icons.more_horiz),
+                      ),
+                      const Tab(text: 'Text', icon: Icon(Icons.text_fields)),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _buildCounterGlossaryList(
+                          'packs',
+                          setS,
+                          at,
+                          ac,
+                          as,
+                          al,
+                          af,
+                          asp,
+                          atr,
+                          r,
+                          pS,
+                          lang,
+                        ),
+                        _buildCounterGlossaryList(
+                          'trapping',
+                          setS,
+                          at,
+                          ac,
+                          as,
+                          al,
+                          af,
+                          asp,
+                          atr,
+                          r,
+                          pS,
+                          lang,
+                        ),
+                        _buildCounterGlossaryList(
+                          'special',
+                          setS,
+                          at,
+                          ac,
+                          as,
+                          al,
+                          af,
+                          asp,
+                          atr,
+                          r,
+                          pS,
+                          lang,
+                        ),
+                        _buildCounterGlossaryList(
+                          'other',
+                          setS,
+                          at,
+                          ac,
+                          as,
+                          al,
+                          af,
+                          asp,
+                          atr,
+                          r,
+                          pS,
+                          lang,
+                        ),
+                        _buildCustomTextTab(
+                          setS,
+                          lang,
+                          isCounter: true,
+                          attackItem: at,
+                          attackCategory: ac,
+                          side: as,
+                          level: al,
+                          isFeint: af,
+                          special: asp,
+                          attackTranslations: atr,
+                          reps: r,
+                          pickerModalState: pS,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
-
-  Widget _pickerSideButton(String label, String sd, String curr, Color c, int id, StateSetter setS, String lang,
-      {bool withArrow = false}) {
+  Widget _pickerSideButton(
+    String label,
+    String sd,
+    String curr,
+    Color c,
+    int id,
+    StateSetter setS,
+    String lang, {
+    bool withArrow = false,
+  }) {
     bool isS = curr == sd;
     final icon = sd == 'L' ? Icons.arrow_back : Icons.arrow_forward;
     return ChoiceChip(
-        label: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (withArrow && sd == 'L') ...[Icon(icon, size: 12, color: isS ? Colors.white : c), const SizedBox(width: 4)],
-          Text(label, style: TextStyle(fontSize: 10, color: isS ? Colors.white : c, fontWeight: FontWeight.bold)),
-          if (withArrow && sd == 'R') ...[const SizedBox(width: 4), Icon(icon, size: 12, color: isS ? Colors.white : c)]
-        ]),
-        selected: isS,
-        selectedColor: c.withOpacity(0.7),
-        backgroundColor: c.withOpacity(0.15),
-        onSelected: (selected) {
-          setS(() {
-            _activateGlossaryItem(id);
-            _selectedSidesInPicker[id] = selected ? sd : '';
-          });
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (withArrow && sd == 'L') ...[
+            Icon(icon, size: 12, color: isS ? Colors.white : c),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isS ? Colors.white : c,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (withArrow && sd == 'R') ...[
+            const SizedBox(width: 4),
+            Icon(icon, size: 12, color: isS ? Colors.white : c),
+          ],
+        ],
+      ),
+      selected: isS,
+      selectedColor: c.withOpacity(0.7),
+      backgroundColor: c.withOpacity(0.15),
+      onSelected: (selected) {
+        setS(() {
+          _activateGlossaryItem(id);
+          _selectedSidesInPicker[id] = selected ? sd : '';
         });
+      },
+    );
   }
 
   Future<void> _handleExportJson() async {
@@ -1461,19 +2425,36 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     final fileName = 'jkd-series-${_slugify(widget.series!.title)}.json';
     if (!mounted) return;
     final proceed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-                title: const Text('Export to JSON'),
-                content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Text('File: $fileName'), Text('Dir: $dir')]),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
-                  ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('FINISH'))
-                ]));
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export to JSON'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [Text('File: $fileName'), Text('Dir: $dir')],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('FINISH'),
+          ),
+        ],
+      ),
+    );
     if (proceed == true) {
-      final path = await ExportService.exportToJson([widget.series!], fileName: fileName, customDirectory: dir);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(path != null ? 'Success: $path' : 'Error')));
+      final path = await ExportService.exportToJson(
+        [widget.series!],
+        fileName: fileName,
+        customDirectory: dir,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(path != null ? 'Success: $path' : 'Error')),
+        );
+      }
     }
   }
 
@@ -1482,142 +2463,238 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
-          Image.asset('assets/icon/JKD.png', height: 32),
-          const SizedBox(width: 8),
-          Expanded(
+        title: Row(
+          children: [
+            Image.asset('assets/icon/JKD.png', height: 32),
+            const SizedBox(width: 8),
+            Expanded(
               child: MarqueeWidget(
                 child: Text(
-                  widget.series == null ? LocalizationService.translate('new_series', lang) : widget.series!.title,
+                  widget.series == null
+                      ? LocalizationService.translate('new_series', lang)
+                      : widget.series!.title,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ))
-        ]),
+              ),
+            ),
+          ],
+        ),
         actions: [
           if (!_isEditing && widget.series != null)
             IconButton(
-                icon: const Icon(Icons.play_circle_fill, color: Colors.greenAccent),
-                onPressed: _showTrainingOptions,
-                tooltip: LocalizationService.translate('training_mode', lang)),
+              icon: const Icon(
+                Icons.play_circle_fill,
+                color: Colors.greenAccent,
+              ),
+              onPressed: _showTrainingOptions,
+              tooltip: LocalizationService.translate('training_mode', lang),
+            ),
           if (_isEditing)
             IconButton(icon: const Icon(Icons.check), onPressed: _saveSeries)
           else if (widget.series != null)
             PopupMenuButton<String>(
               icon: const Icon(Icons.settings),
               onSelected: (value) {
-                if (value == 'edit') setState(() => _isEditing = true);
-                else if (value == 'print') PdfService.exportSeriesToPdf(widget.series!, lang);
-                else if (value == 'export') _handleExportJson();
+                if (value == 'edit') {
+                  setState(() => _isEditing = true);
+                } else if (value == 'print')
+                  PdfService.exportSeriesToPdf(widget.series!, lang);
+                else if (value == 'export')
+                  _handleExportJson();
               },
               itemBuilder: (context) => [
-                PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit), title: Text(LocalizationService.translate('edit', lang)), dense: true, contentPadding: EdgeInsets.zero)),
-                PopupMenuItem(value: 'print', child: ListTile(leading: const Icon(Icons.print), title: Text(LocalizationService.translate('export_to_pdf', lang)), dense: true, contentPadding: EdgeInsets.zero)),
-                const PopupMenuItem(value: 'export', child: ListTile(leading: Icon(Icons.save_alt), title: Text('Export to JSON'), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: Text(LocalizationService.translate('edit', lang)),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'print',
+                  child: ListTile(
+                    leading: const Icon(Icons.print),
+                    title: Text(
+                      LocalizationService.translate('export_to_pdf', lang),
+                    ),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'export',
+                  child: ListTile(
+                    leading: Icon(Icons.save_alt),
+                    title: Text('Export to JSON'),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
               ],
             ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          if (_trainingController.isTraining)
-            Container(
+        child: Column(
+          children: [
+            if (_trainingController.isTraining)
+              Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                child: Row(children: [
-                  const Icon(Icons.fitness_center, color: Colors.green),
-                  const SizedBox(width: 12),
-                  Expanded(
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.fitness_center, color: Colors.green),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Row(
                         children: [
-                          Text('TRAINING: ${_trainingController.currentIndex + 1} / ${_currentTrainingOptions?.endIndex ?? _moves.length}',
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'TRAINING: ${_trainingController.currentIndex + 1} / ${_currentTrainingOptions?.endIndex ?? _moves.length}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           if (_currentTrainingOptions?.isLooping ?? false) ...[
                             const SizedBox(width: 8),
-                            const Icon(Icons.loop, size: 16, color: Colors.green),
+                            const Icon(
+                              Icons.loop,
+                              size: 16,
+                              color: Colors.green,
+                            ),
                           ],
                         ],
-                      )),
-                  IconButton(
-                    icon: const Icon(Icons.stop, color: Colors.red),
-                    onPressed: () {
-                      _trainingController.stop();
-                      setState(() {
-                        _currentTrainingOptions = null;
-                      });
-                    },
-                  )
-                ])),
-          if (_isEditing) ...[
-            TextField(
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.stop, color: Colors.red),
+                      onPressed: () {
+                        _trainingController.stop();
+                        setState(() {
+                          _currentTrainingOptions = null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            if (_isEditing) ...[
+              TextField(
                 controller: _titleController,
-                decoration: InputDecoration(labelText: LocalizationService.translate('series_title', lang))),
-            const SizedBox(height: 8),
-            Row(children: [
-              Text('${LocalizationService.translate('category', lang)}: '),
-              ChoiceChip(
-                  label: const Text('Jun Fan Gung Fu'),
-                  selected: _selectedCategory == 'Jun Fan Gung Fu',
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedCategory = 'Jun Fan Gung Fu');
-                  }),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                  label: const Text('Jun Fan Kick Boxing'),
-                  selected: _selectedCategory == 'Jun Fan Kick Boxing',
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedCategory = 'Jun Fan Kick Boxing');
-                  })
-            ]),
-            const SizedBox(height: 8),
-            Row(children: [
-              Text('${LocalizationService.translate('type', lang)}: '),
-              ChoiceChip(
-                  label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
-                  selected: _selectedType == 'Attack',
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedType = 'Attack');
-                  }),
-              const SizedBox(width: 8),
-              ChoiceChip(
-                  label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
-                  selected: _selectedType == 'Defense',
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedType = 'Defense');
-                  })
-            ]),
-            const SizedBox(height: 8),
-            if (_selectedType == 'Attack')
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${LocalizationService.translate('method_of_attack', lang)}: ',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
+                decoration: InputDecoration(
+                  labelText: LocalizationService.translate(
+                    'series_title',
+                    lang,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text('${LocalizationService.translate('category', lang)}: '),
+                  ChoiceChip(
+                    label: const Text('Jun Fan Gung Fu'),
+                    selected: _selectedCategory == 'Jun Fan Gung Fu',
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _selectedCategory = 'Jun Fan Gung Fu');
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Jun Fan Kick Boxing'),
+                    selected: _selectedCategory == 'Jun Fan Kick Boxing',
+                    onSelected: (val) {
+                      if (val) {
+                        setState(
+                          () => _selectedCategory = 'Jun Fan Kick Boxing',
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text('${LocalizationService.translate('type', lang)}: '),
+                  ChoiceChip(
+                    label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
+                    selected: _selectedType == 'Attack',
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedType = 'Attack');
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
+                    selected: _selectedType == 'Defense',
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedType = 'Defense');
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_selectedType == 'Attack')
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${LocalizationService.translate('method_of_attack', lang)}: ',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
                         spacing: 8,
                         runSpacing: 4,
                         children: _methodDefinitions.keys
-                            .map((method) => Tooltip(
+                            .map(
+                              (method) => Tooltip(
                                 message: _methodDefinitions[method]!,
                                 child: ChoiceChip(
-                                    label: Text(method),
-                                    selected: _selectedMethod == method,
-                                    onSelected: (val) => setState(() => _selectedMethod = val ? method : null))))
-                            .toList())),
-                const SizedBox(height: 8)
-              ]),
-          ] else ...[
-            Wrap(spacing: 8, children: [
-              Chip(label: Text('${LocalizationService.translate('category', lang)}: $_selectedCategory')),
-              Chip(label: Text('${LocalizationService.translate('type', lang)}: $_selectedType'))
-            ]),
-            const SizedBox(height: 8),
-          ],
-          const Divider(),
-          Expanded(
+                                  label: Text(method),
+                                  selected: _selectedMethod == method,
+                                  onSelected: (val) => setState(
+                                    () => _selectedMethod = val ? method : null,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+            ] else ...[
+              Wrap(
+                spacing: 8,
+                children: [
+                  Chip(
+                    label: Text(
+                      '${LocalizationService.translate('category', lang)}: $_selectedCategory',
+                    ),
+                  ),
+                  Chip(
+                    label: Text(
+                      '${LocalizationService.translate('type', lang)}: $_selectedType',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+            const Divider(),
+            Expanded(
               child: _isEditing
                   ? ReorderableListView(
                       buildDefaultDragHandles: false,
@@ -1628,34 +2705,53 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           _moves.insert(newIndex, item);
                         });
                       },
-                      children: _buildMoveListTiles(lang))
-                  : ListView(children: _buildMoveListTiles(lang))),
-        ]),
+                      children: _buildMoveListTiles(lang),
+                    )
+                  : ListView(children: _buildMoveListTiles(lang)),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _isEditing
-          ? Column(mainAxisAlignment: MainAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
-              if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
-                FloatingActionButton(
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
+                  FloatingActionButton(
                     heroTag: 'voice_help_btn',
                     mini: true,
                     onPressed: () {
-                      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+                      final lang = Provider.of<SeriesProvider>(
+                        context,
+                        listen: false,
+                      ).language;
                       VoiceHelpDialog.show(context, lang);
                     },
                     backgroundColor: Colors.blueAccent,
-                    child: const Icon(Icons.help_outline, color: Colors.white, size: 20)),
-                const SizedBox(height: 8),
-                FloatingActionButton(
+                    child: const Icon(
+                      Icons.help_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FloatingActionButton(
                     heroTag: 'voice_btn',
                     onPressed: _startVoiceInput,
                     backgroundColor: Colors.redAccent,
-                    child: const Icon(Icons.mic, color: Colors.white)),
-                const SizedBox(height: 16),
+                    child: const Icon(Icons.mic, color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                FloatingActionButton(
+                  heroTag: 'add_btn',
+                  onPressed: () => _pickMove(),
+                  child: const Icon(Icons.add),
+                ),
               ],
-              FloatingActionButton(heroTag: 'add_btn', onPressed: () => _pickMove(), child: const Icon(Icons.add))
-            ])
+            )
           : null,
     );
   }
 }
-

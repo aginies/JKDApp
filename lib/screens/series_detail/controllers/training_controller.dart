@@ -34,17 +34,15 @@ class TrainingController {
       if (Platform.isIOS || Platform.isAndroid) {
         await _tts.setSharedInstance(true);
         if (Platform.isIOS) {
-          await _tts.setIosAudioCategory(
-            IosTextToSpeechAudioCategory.playback,
-            [
-              IosTextToSpeechAudioCategoryOptions.duckOthers,
-              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-            ],
-          );
+          await _tts
+              .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+                IosTextToSpeechAudioCategoryOptions.duckOthers,
+                IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+              ]);
         }
       }
     } catch (e) {
-      print("TTS Init Warning: $e");
+      debugPrint("TTS Init Warning: $e");
     }
   }
 
@@ -57,7 +55,7 @@ class TrainingController {
         await _tts.setLanguage('en-US');
       }
     } catch (e) {
-      print("TTS Language Warning: $e");
+      debugPrint("TTS Language Warning: $e");
     }
   }
 
@@ -109,7 +107,10 @@ class TrainingController {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    LocalizationService.translate('training_starts_in', language),
+                    LocalizationService.translate(
+                      'training_starts_in',
+                      language,
+                    ),
                     style: const TextStyle(color: Colors.white, fontSize: 18),
                   ),
                   const SizedBox(height: 20),
@@ -186,24 +187,28 @@ class TrainingController {
     void addInfo(Move m) {
       if (m.side.isNotEmpty) {
         sb.write(
-            '${LocalizationService.translate(m.side == 'L' ? 'left' : 'right', language)} ');
+          '${LocalizationService.translate(m.side == 'L' ? 'left' : 'right', language)} ',
+        );
       }
       sb.write('${m.name} ');
       if (m.level.isNotEmpty) {
         sb.write(
-            '${LocalizationService.translate(m.level.toLowerCase(), language)} ');
+          '${LocalizationService.translate(m.level.toLowerCase(), language)} ',
+        );
       }
       if (m.specialAction != null) sb.write('${m.specialAction} ');
       if (m.counterName != null) {
         sb.write('${LocalizationService.translate('answer', language)} ');
         if (m.counterSide != null) {
           sb.write(
-              '${LocalizationService.translate(m.counterSide == 'L' ? 'left' : 'right', language)} ');
+            '${LocalizationService.translate(m.counterSide == 'L' ? 'left' : 'right', language)} ',
+          );
         }
         sb.write('${m.counterName} ');
         if (m.counterLevel != null) {
           sb.write(
-              '${LocalizationService.translate(m.counterLevel!.toLowerCase(), language)} ');
+            '${LocalizationService.translate(m.counterLevel!.toLowerCase(), language)} ',
+          );
         }
       }
     }
@@ -232,7 +237,7 @@ class TrainingController {
     // Fire-and-forget async stop, with platform check to avoid plugin errors
     if (!Platform.isLinux) {
       _tts.stop().catchError((e) {
-        print("TTS stop warning: $e");
+        debugPrint("TTS stop warning: $e");
         return null;
       });
     } else {
@@ -240,7 +245,7 @@ class TrainingController {
       try {
         Process.run('spd-say', ['-S']);
       } catch (e) {
-        print("spd-say stop warning: $e");
+        debugPrint("spd-say stop warning: $e");
       }
     }
   }

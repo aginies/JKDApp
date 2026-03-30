@@ -25,7 +25,6 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
   final MediaService _mediaService = MediaService();
   String _glossarySearchQuery = '';
 
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -35,14 +34,22 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
-      case 'punch': return Icons.sports_mma;
-      case 'kick': return Icons.sports_martial_arts;
-      case 'packs': return Icons.front_hand;
-      case 'trapping': return Icons.back_hand;
-      case 'special': return Icons.directions_run;
-      case 'general': return Icons.info_outline;
-      case 'other': return Icons.more_horiz;
-      default: return Icons.help_outline;
+      case 'punch':
+        return Icons.sports_mma;
+      case 'kick':
+        return Icons.sports_martial_arts;
+      case 'packs':
+        return Icons.front_hand;
+      case 'trapping':
+        return Icons.back_hand;
+      case 'special':
+        return Icons.directions_run;
+      case 'general':
+        return Icons.info_outline;
+      case 'other':
+        return Icons.more_horiz;
+      default:
+        return Icons.help_outline;
     }
   }
 
@@ -51,86 +58,116 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     final lang = provider.language;
     final galleryPath = provider.galleryPath;
     if (galleryPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(LocalizationService.translate('gallery_path', lang))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(LocalizationService.translate('gallery_path', lang)),
+        ),
+      );
       return;
     }
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return AlertDialog(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text('$moveName - ${LocalizationService.translate('instructional_photos', lang)}')),
-                IconButton(
-                  icon: const Icon(Icons.add_a_photo, color: Colors.blueAccent),
-                  onPressed: () async {
-                    final file = await _mediaService.captureAndSaveImage(galleryPath, category, moveName);
-                    if (file != null) setModalState(() {});
-                  },
-                ),
-              ],
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              height: 400,
-              child: FutureBuilder<List<File>>(
-                future: _mediaService.getImagesForMove(galleryPath, category, moveName),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  final images = snapshot.data ?? [];
-                  if (images.isEmpty) return Center(child: Text(LocalizationService.translate('no_images', lang)));
-                  return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$moveName - ${LocalizationService.translate('instructional_photos', lang)}',
                     ),
-                    itemCount: images.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () => _showFullScreenImage(images[index]),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(images[index], fit: BoxFit.cover),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_a_photo,
+                      color: Colors.blueAccent,
+                    ),
+                    onPressed: () async {
+                      final file = await _mediaService.captureAndSaveImage(
+                        galleryPath,
+                        category,
+                        moveName,
+                      );
+                      if (file != null) setModalState(() {});
+                    },
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: FutureBuilder<List<File>>(
+                  future: _mediaService.getImagesForMove(
+                    galleryPath,
+                    category,
+                    moveName,
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final images = snapshot.data ?? [];
+                    if (images.isEmpty) {
+                      return Center(
+                        child: Text(
+                          LocalizationService.translate('no_images', lang),
                         ),
                       );
-                    },
-                  );
-                },
+                    }
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                      itemCount: images.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () => _showFullScreenImage(images[index]),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(images[index], fit: BoxFit.cover),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(LocalizationService.translate('finish', lang)),
-              ),
-            ],
-          );
-        });
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(LocalizationService.translate('finish', lang)),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
 
   void _showFullScreenImage(File imageFile) => showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: [
-              Image.file(imageFile),
-              Positioned(
-                right: 0,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      child: Stack(
+        children: [
+          Image.file(imageFile),
+          Positioned(
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   void _showGlossaryModal(BuildContext context, String lang) {
     _glossarySearchQuery = '';
@@ -138,57 +175,87 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return DefaultTabController(
-            length: 7,
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.95,
-              child: Column(
-                children: [
-                  AppBar(
-                    title: TextField(
-                      decoration: InputDecoration(
-                        hintText: LocalizationService.translate('search_hint', lang),
-                        prefixIcon: const Icon(Icons.search),
-                        border: InputBorder.none,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DefaultTabController(
+              length: 7,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.95,
+                child: Column(
+                  children: [
+                    AppBar(
+                      title: TextField(
+                        decoration: InputDecoration(
+                          hintText: LocalizationService.translate(
+                            'search_hint',
+                            lang,
+                          ),
+                          prefixIcon: const Icon(Icons.search),
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (val) =>
+                            setModalState(() => _glossarySearchQuery = val),
                       ),
-                      onChanged: (val) => setModalState(() => _glossarySearchQuery = val),
-                    ),
-                    automaticallyImplyLeading: false,
-                    actions: [
-                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-                    ],
-                  ),
-                  TabBar(
-                    isScrollable: true,
-                    tabs: [
-                      Tab(text: LocalizationService.translate('punches', lang), icon: Icon(_getCategoryIcon('punch'))),
-                      Tab(text: LocalizationService.translate('kicks', lang), icon: Icon(_getCategoryIcon('kick'))),
-                      Tab(text: LocalizationService.translate('packs', lang), icon: Icon(_getCategoryIcon('packs'))),
-                      Tab(text: LocalizationService.translate('trapping', lang), icon: Icon(_getCategoryIcon('trapping'))),
-                      Tab(text: LocalizationService.translate('special', lang), icon: Icon(_getCategoryIcon('special'))),
-                      Tab(text: LocalizationService.translate('general', lang), icon: Icon(_getCategoryIcon('general'))),
-                      Tab(text: LocalizationService.translate('other', lang), icon: Icon(_getCategoryIcon('other'))),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _buildGlossaryList('punch', lang),
-                        _buildGlossaryList('kick', lang),
-                        _buildGlossaryList('packs', lang),
-                        _buildGlossaryList('trapping', lang),
-                        _buildGlossaryList('special', lang),
-                        _buildGlossaryList('general', lang),
-                        _buildGlossaryList('other', lang),
+                      automaticallyImplyLeading: false,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                    TabBar(
+                      isScrollable: true,
+                      tabs: [
+                        Tab(
+                          text: LocalizationService.translate('punches', lang),
+                          icon: Icon(_getCategoryIcon('punch')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('kicks', lang),
+                          icon: Icon(_getCategoryIcon('kick')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('packs', lang),
+                          icon: Icon(_getCategoryIcon('packs')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('trapping', lang),
+                          icon: Icon(_getCategoryIcon('trapping')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('special', lang),
+                          icon: Icon(_getCategoryIcon('special')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('general', lang),
+                          icon: Icon(_getCategoryIcon('general')),
+                        ),
+                        Tab(
+                          text: LocalizationService.translate('other', lang),
+                          icon: Icon(_getCategoryIcon('other')),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildGlossaryList('punch', lang),
+                          _buildGlossaryList('kick', lang),
+                          _buildGlossaryList('packs', lang),
+                          _buildGlossaryList('trapping', lang),
+                          _buildGlossaryList('special', lang),
+                          _buildGlossaryList('general', lang),
+                          _buildGlossaryList('other', lang),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
@@ -197,35 +264,52 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(category),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         var items = snapshot.data!;
-        
+
         if (_glossarySearchQuery.isNotEmpty) {
           final query = _glossarySearchQuery.toLowerCase();
           items = items.where((item) {
             final name = item['name'].toString().toLowerCase();
             Map<String, String> trans = {};
-            try { trans = Map<String, String>.from(json.decode(item['translations'])); } catch (_) {}
+            try {
+              trans = Map<String, String>.from(
+                json.decode(item['translations']),
+              );
+            } catch (_) {}
             final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
             return name.contains(query) || t.contains(query);
           }).toList();
         }
 
-        if (items.isEmpty) return Center(child: Text(LocalizationService.translate('nothing', lang)));
+        if (items.isEmpty) {
+          return Center(
+            child: Text(LocalizationService.translate('nothing', lang)),
+          );
+        }
 
         return ListView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
             Map<String, String> trans = {};
-            try { trans = Map<String, String>.from(json.decode(item['translations'])); } catch (_) {}
+            try {
+              trans = Map<String, String>.from(
+                json.decode(item['translations']),
+              );
+            } catch (_) {}
             final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
 
             return InkWell(
               onDoubleTap: () => _showMediaGallery(category, item['name']),
               child: ListTile(
                 leading: Icon(_getCategoryIcon(category)),
-                title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(
+                  item['name'],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text(translation),
               ),
             );
@@ -240,25 +324,30 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return SizedBox(
-            height: MediaQuery.of(context).size.height * 0.95,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    LocalizationService.translate('voice_notes', lang),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SizedBox(
+              height: MediaQuery.of(context).size.height * 0.95,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      LocalizationService.translate('voice_notes', lang),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-                _buildRecordingControls(setModalState, lang),
-                const Divider(),
-                Expanded(child: _buildVoiceNotesList(setModalState, lang)),
-              ],
-            ),
-          );
-        });
+                  _buildRecordingControls(setModalState, lang),
+                  const Divider(),
+                  Expanded(child: _buildVoiceNotesList(setModalState, lang)),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -284,7 +373,12 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  void _showRecordingDialog(BuildContext context, String lang, String path, StateSetter setModalState) {
+  void _showRecordingDialog(
+    BuildContext context,
+    String lang,
+    String path,
+    StateSetter setModalState,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -308,7 +402,12 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  void _showSaveDialog(BuildContext context, String lang, String path, StateSetter setModalState) async {
+  void _showSaveDialog(
+    BuildContext context,
+    String lang,
+    String path,
+    StateSetter setModalState,
+  ) async {
     final existingRecords = await _voiceNoteService.getRecords();
     String baseName = LocalizationService.translate('new_recording', lang);
     String uniqueName = baseName;
@@ -328,7 +427,10 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         title: const Text('Save Recording'),
         content: TextField(controller: nameController, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(LocalizationService.translate('cancel', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
           ElevatedButton(
             onPressed: () async {
               await _voiceNoteService.saveRecord(nameController.text, path);
@@ -348,9 +450,15 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _voiceNoteService.getRecords(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
         final records = snapshot.data!;
-        if (records.isEmpty) return Center(child: Text(LocalizationService.translate('nothing', lang)));
+        if (records.isEmpty) {
+          return Center(
+            child: Text(LocalizationService.translate('nothing', lang)),
+          );
+        }
 
         return ListView.builder(
           itemCount: records.length,
@@ -368,12 +476,21 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () => _showRenameDialog(context, lang, r['id'], r['name'], setModalState),
+                    onPressed: () => _showRenameDialog(
+                      context,
+                      lang,
+                      r['id'],
+                      r['name'],
+                      setModalState,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                     onPressed: () async {
-                      await _voiceNoteService.deleteRecord(r['id'], r['file_path']);
+                      await _voiceNoteService.deleteRecord(
+                        r['id'],
+                        r['file_path'],
+                      );
                       setModalState(() {});
                     },
                   ),
@@ -386,7 +503,13 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  void _showRenameDialog(BuildContext context, String lang, int id, String oldName, StateSetter setModalState) {
+  void _showRenameDialog(
+    BuildContext context,
+    String lang,
+    int id,
+    String oldName,
+    StateSetter setModalState,
+  ) {
     final controller = TextEditingController(text: oldName);
     showDialog(
       context: context,
@@ -394,7 +517,10 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         title: Text(LocalizationService.translate('rename', lang)),
         content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(LocalizationService.translate('cancel', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
           ElevatedButton(
             onPressed: () async {
               await _voiceNoteService.renameRecord(id, controller.text);
@@ -410,21 +536,33 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, SeriesProvider provider, JkdSeries series) {
+  void _confirmDelete(
+    BuildContext context,
+    SeriesProvider provider,
+    JkdSeries series,
+  ) {
     final lang = provider.language;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(LocalizationService.translate('delete_series', lang)),
-        content: Text('${LocalizationService.translate('confirm_delete', lang)} "${series.title}"?'),
+        content: Text(
+          '${LocalizationService.translate('confirm_delete', lang)} "${series.title}"?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(LocalizationService.translate('cancel', lang))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
           TextButton(
             onPressed: () {
               provider.deleteSeries(series.id!);
               Navigator.pop(context);
             },
-            child: Text(LocalizationService.translate('delete', lang), style: const TextStyle(color: Colors.red)),
+            child: Text(
+              LocalizationService.translate('delete', lang),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -447,17 +585,20 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
               child: Image.asset('assets/icon/JKD.png'),
             ),
           ),
-          title: _isSearching 
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: LocalizationService.translate('search_hint', lang),
-                  border: InputBorder.none,
-                ),
-                onChanged: (val) => provider.setSearchQuery(val),
-              )
-            : Text(LocalizationService.translate('library_title', lang)),
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: LocalizationService.translate(
+                      'search_hint',
+                      lang,
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (val) => provider.setSearchQuery(val),
+                )
+              : Text(LocalizationService.translate('library_title', lang)),
           actions: [
             IconButton(
               icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -484,7 +625,12 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
               },
             ),
           ],
@@ -503,7 +649,12 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const SeriesDetailScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SeriesDetailScreen(),
+              ),
+            );
           },
           child: const Icon(Icons.add),
         ),
@@ -511,12 +662,18 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  Widget _buildSeriesList(SeriesProvider provider, String category, String lang) {
+  Widget _buildSeriesList(
+    SeriesProvider provider,
+    String category,
+    String lang,
+  ) {
     final filtered = provider.getFilteredSeries(category);
-    
+
     if (filtered.isEmpty) {
       return Center(
-        child: Text('${LocalizationService.translate('no_series', lang)} $category'),
+        child: Text(
+          '${LocalizationService.translate('no_series', lang)} $category',
+        ),
       );
     }
 
@@ -532,7 +689,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
               color: series.isSystem ? Colors.blueAccent : Colors.orangeAccent,
             ),
             title: Text(series.title),
-            subtitle: Text('${series.moves.length} ${LocalizationService.translate('moves', lang)}'),
+            subtitle: Text(
+              '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

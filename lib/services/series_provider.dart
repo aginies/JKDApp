@@ -15,7 +15,7 @@ class SeriesProvider with ChangeNotifier {
   bool _voiceEnabled = false;
   String _searchQuery = '';
   String? _galleryPath;
-  
+
   final DatabaseService _dbService = DatabaseService();
 
   List<JkdSeries> get series => _series;
@@ -34,7 +34,7 @@ class SeriesProvider with ChangeNotifier {
 
   Future<void> _init() async {
     final prefs = await _dbService.getSettings();
-    
+
     // Language
     if (prefs.containsKey('language')) {
       _language = prefs['language']!;
@@ -52,7 +52,10 @@ class SeriesProvider with ChangeNotifier {
 
     // Theme
     final themeStr = prefs['theme'] ?? 'system';
-    _themeMode = JkdThemeMode.values.firstWhere((e) => e.name == themeStr, orElse: () => JkdThemeMode.system);
+    _themeMode = JkdThemeMode.values.firstWhere(
+      (e) => e.name == themeStr,
+      orElse: () => JkdThemeMode.system,
+    );
 
     // Gallery
     _galleryPath = prefs['gallery_path'];
@@ -60,14 +63,22 @@ class SeriesProvider with ChangeNotifier {
       final Directory appDocDir = await getApplicationDocumentsDirectory();
       _galleryPath = '${appDocDir.path}/jkd_gallery';
     }
-    
+
     await _initGalleryDirectories();
     await loadSeries();
   }
 
   Future<void> _initGalleryDirectories() async {
     if (_galleryPath == null) return;
-    final List<String> categories = ['Punches', 'Kicks', 'Packs', 'Trapping', 'Special', 'General', 'Other'];
+    final List<String> categories = [
+      'Punches',
+      'Kicks',
+      'Packs',
+      'Trapping',
+      'Special',
+      'General',
+      'Other',
+    ];
     try {
       for (var cat in categories) {
         final dir = Directory('$_galleryPath/$cat');
@@ -76,7 +87,7 @@ class SeriesProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error creating gallery directories: $e');
+      debugPrint('Error creating gallery directories: $e');
     }
   }
 
@@ -132,7 +143,8 @@ class SeriesProvider with ChangeNotifier {
 
   Future<void> cloneSeries(JkdSeries original) async {
     final newSeries = JkdSeries(
-      title: "${original.title} (${LocalizationService.translate('cloned', _language)})",
+      title:
+          "${original.title} (${LocalizationService.translate('cloned', _language)})",
       category: original.category,
       type: original.type,
       attackMethod: original.attackMethod,
@@ -143,13 +155,15 @@ class SeriesProvider with ChangeNotifier {
   }
 
   List<JkdSeries> getFilteredSeries(String category) {
-    List<JkdSeries> filtered = _series.where((s) => s.category == category).toList();
+    List<JkdSeries> filtered = _series
+        .where((s) => s.category == category)
+        .toList();
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((s) {
         final query = _searchQuery.toLowerCase();
-        return s.title.toLowerCase().contains(query) || 
-               s.notes.toLowerCase().contains(query) ||
-               s.moves.any((m) => m.name.toLowerCase().contains(query));
+        return s.title.toLowerCase().contains(query) ||
+            s.notes.toLowerCase().contains(query) ||
+            s.moves.any((m) => m.name.toLowerCase().contains(query));
       }).toList();
     }
     return filtered;

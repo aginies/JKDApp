@@ -30,7 +30,9 @@ class MockSeriesProvider extends SeriesProvider {
 }
 
 void main() {
-  testWidgets('SeriesDetailScreen shows existing series data and updates it', (WidgetTester tester) async {
+  testWidgets('SeriesDetailScreen shows existing series data and updates it', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       final series = JkdSeries(
         id: 1,
@@ -52,32 +54,34 @@ void main() {
 
       // Verify initial values in view mode
       expect(find.text('Original Title'), findsOneWidget);
-      
+
       // Switch to edit mode via PopupMenu
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
-      
+
       await tester.tap(find.text(LocalizationService.translate('edit', 'en')));
       await tester.pumpAndSettle();
-      
+
       // Find the title TextField and enter new text
       expect(find.byType(TextField), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'Updated Title');
-      
+
       // Tap the check (save) button
       await tester.tap(find.byIcon(Icons.check));
       await tester.pumpAndSettle();
-      
+
       // Verify provider was called
       expect(mockProvider.lastUpdatedSeries?.title, 'Updated Title');
-      
+
       // Clean up to avoid pending timers
       await tester.pumpWidget(Container());
       await tester.pumpAndSettle();
     });
   });
 
-  testWidgets('SeriesDetailScreen can create a new series', (WidgetTester tester) async {
+  testWidgets('SeriesDetailScreen can create a new series', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       final mockProvider = MockSeriesProvider();
 
@@ -92,13 +96,13 @@ void main() {
 
       // Should be in edit mode immediately
       expect(find.byType(TextField), findsOneWidget);
-      
+
       await tester.enterText(find.byType(TextField), 'New Series Title');
-      
+
       // Tap the check (save) button
       await tester.tap(find.byIcon(Icons.check));
       await tester.pumpAndSettle();
-      
+
       // Verify provider was called
       expect(mockProvider.lastAddedSeries?.title, 'New Series Title');
 
@@ -108,7 +112,9 @@ void main() {
     });
   });
 
-  testWidgets('SeriesDetailScreen can change category and type', (WidgetTester tester) async {
+  testWidgets('SeriesDetailScreen can change category and type', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       final mockProvider = MockSeriesProvider();
 
@@ -128,7 +134,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Change type to 'Defense'
-      await tester.tap(find.text(LocalizationService.translate('type', 'en') == 'Type' ? 'Defense' : 'Défense'));
+      await tester.tap(
+        find.text(
+          LocalizationService.translate('type', 'en') == 'Type'
+              ? 'Defense'
+              : 'Défense',
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Tap save
@@ -143,7 +155,9 @@ void main() {
     });
   });
 
-  testWidgets('SeriesDetailScreen can set attack method', (WidgetTester tester) async {
+  testWidgets('SeriesDetailScreen can set attack method', (
+    WidgetTester tester,
+  ) async {
     await tester.runAsync(() async {
       final mockProvider = MockSeriesProvider();
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
@@ -6,7 +7,11 @@ import 'package:path/path.dart' as p;
 class MediaService {
   final ImagePicker _picker = ImagePicker();
 
-  Future<List<File>> getImagesForMove(String baseGalleryPath, String category, String moveName) async {
+  Future<List<File>> getImagesForMove(
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
     final String categoryDir = _getCategoryDirName(category);
     final String fullPath = p.join(baseGalleryPath, categoryDir);
     final Directory dir = Directory(fullPath);
@@ -21,12 +26,16 @@ class MediaService {
           .where((f) => p.basename(f.path).startsWith(prefix))
           .toList();
     } catch (e) {
-      print('Error listing images: $e');
+      debugPrint('Error listing images: $e');
       return [];
     }
   }
 
-  Future<File?> captureAndSaveImage(String baseGalleryPath, String category, String moveName) async {
+  Future<File?> captureAndSaveImage(
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
     if (photo == null) return null;
 
@@ -47,7 +56,11 @@ class MediaService {
 
     // 3. Generate Filename (move-name-ImageNumber.jpg)
     final String prefix = _slugify(moveName);
-    final existing = await getImagesForMove(baseGalleryPath, category, moveName);
+    final existing = await getImagesForMove(
+      baseGalleryPath,
+      category,
+      moveName,
+    );
     final int nextNum = existing.length + 1;
     final String fileName = '$prefix-$nextNum.jpg';
     final String finalPath = p.join(targetDirPath, fileName);

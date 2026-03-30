@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import '../models/series.dart';
@@ -22,13 +23,15 @@ class ImportService {
         final dbService = DatabaseService();
         final existingSeries = await dbService.getAllSeries();
         final existingTitles = existingSeries.map((s) => s.title).toList();
-        
-        final String importDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+        final String importDate = DateFormat(
+          'yyyy-MM-dd',
+        ).format(DateTime.now());
 
         for (var data in jsonData) {
           final series = JkdSeries.fromMap(Map<String, dynamic>.from(data), []);
           List<dynamic>? movesData = data['moves'];
-          
+
           String finalTitle = series.title;
           if (existingTitles.contains(finalTitle)) {
             int count = 1;
@@ -39,18 +42,20 @@ class ImportService {
             } while (existingTitles.contains(newTitle));
             finalTitle = newTitle;
           }
-          
+
           final newSeries = JkdSeries(
             title: finalTitle,
             category: series.category,
             type: series.type,
             attackMethod: series.attackMethod,
             notes: series.notes,
-            moves: movesData != null 
-              ? movesData.map((m) => Move.fromMap(Map<String, dynamic>.from(m))).toList()
-              : [],
+            moves: movesData != null
+                ? movesData
+                      .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
+                      .toList()
+                : [],
           );
-          
+
           await dbService.insertSeries(newSeries);
           existingTitles.add(finalTitle);
         }
@@ -58,7 +63,7 @@ class ImportService {
       }
       return false;
     } catch (e) {
-      print('Import error: $e');
+      debugPrint('Import error: $e');
       return false;
     }
   }
@@ -79,7 +84,9 @@ class ImportService {
         await dbService.clearGlossary();
 
         for (var item in jsonData) {
-          final Map<String, dynamic> cleanItem = Map<String, dynamic>.from(item);
+          final Map<String, dynamic> cleanItem = Map<String, dynamic>.from(
+            item,
+          );
           cleanItem.remove('id'); // Fresh IDs
           await dbService.insertGlossaryItem(cleanItem);
         }
@@ -87,7 +94,7 @@ class ImportService {
       }
       return false;
     } catch (e) {
-      print('Glossary import error: $e');
+      debugPrint('Glossary import error: $e');
       return false;
     }
   }

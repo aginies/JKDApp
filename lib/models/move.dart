@@ -68,7 +68,9 @@ class Move {
       'counter_level': counterLevel,
       'counter_special_action': counterSpecialAction,
       'counter_category': counterCategory,
-      'sub_moves_json': subMoves.isNotEmpty ? json.encode(subMoves.map((m) => m.toMap()).toList()) : null,
+      'sub_moves_json': subMoves.isNotEmpty
+          ? json.encode(subMoves.map((m) => m.toMap()).toList())
+          : null,
     };
   }
 
@@ -88,7 +90,9 @@ class Move {
       try {
         final decoded = json.decode(map['sub_moves_json']);
         if (decoded is List) {
-          subs = decoded.map((m) => Move.fromMap(Map<String, dynamic>.from(m))).toList();
+          subs = decoded
+              .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
+              .toList();
         }
       } catch (_) {}
     }

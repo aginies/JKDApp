@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'services/series_provider.dart';
-import 'screens/series_list_screen.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -38,9 +37,13 @@ class JkdApp extends StatelessWidget {
       primarySwatch: Colors.red,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: amoled ? Colors.black : null,
-      appBarTheme: amoled ? const AppBarTheme(backgroundColor: Colors.black) : null,
+      appBarTheme: amoled
+          ? const AppBarTheme(backgroundColor: Colors.black)
+          : null,
       cardTheme: amoled ? const CardThemeData(color: Color(0xFF121212)) : null,
-      bottomSheetTheme: amoled ? const BottomSheetThemeData(backgroundColor: Colors.black) : null,
+      bottomSheetTheme: amoled
+          ? const BottomSheetThemeData(backgroundColor: Colors.black)
+          : null,
       useMaterial3: true,
     );
   }
@@ -70,7 +73,6 @@ class JkdApp extends StatelessWidget {
         darkTheme = _buildDarkTheme(amoled: true);
         break;
       case JkdThemeMode.system:
-      default:
         mode = ThemeMode.system;
         theme = _buildLightTheme();
         darkTheme = _buildDarkTheme();

@@ -48,7 +48,11 @@ class VoiceInputDialog {
                 const SizedBox(width: 8),
                 const Expanded(child: Text('Listening...')),
                 IconButton(
-                  icon: const Icon(Icons.help_outline, color: Colors.blue, size: 20),
+                  icon: const Icon(
+                    Icons.help_outline,
+                    color: Colors.blue,
+                    size: 20,
+                  ),
                   onPressed: () {
                     voiceService.stopListening();
                     Navigator.pop(ctx);

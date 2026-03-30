@@ -30,7 +30,9 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
     // Pretty print initial JSON
     try {
       final decoded = json.decode(widget.initialJson);
-      _controller = TextEditingController(text: const JsonEncoder.withIndent('  ').convert(decoded));
+      _controller = TextEditingController(
+        text: const JsonEncoder.withIndent('  ').convert(decoded),
+      );
     } catch (_) {
       _controller = TextEditingController(text: widget.initialJson);
     }
@@ -51,12 +53,17 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
       await widget.onSave(_controller.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(LocalizationService.translate('json_saved', lang))),
+          SnackBar(
+            content: Text(LocalizationService.translate('json_saved', lang)),
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
-      setState(() => _error = '${LocalizationService.translate('invalid_json', lang)}: $e');
+      setState(
+        () => _error =
+            '${LocalizationService.translate('invalid_json', lang)}: $e',
+      );
     }
   }
 
@@ -81,7 +88,10 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               color: Colors.red.withOpacity(0.2),
-              child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+              child: Text(
+                _error!,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
             ),
           Expanded(
             child: Padding(
@@ -91,7 +101,7 @@ class _JsonEditorScreenState extends State<JsonEditorScreen> {
                 maxLines: null,
                 expands: true,
                 style: TextStyle(
-                  fontFamily: 'monospace', 
+                  fontFamily: 'monospace',
                   fontSize: 13,
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),

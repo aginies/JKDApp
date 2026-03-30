@@ -43,7 +43,10 @@ class TrainingOptionsDialog {
             children: [
               Text(
                 LocalizationService.translate('training_mode', language),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -60,7 +63,10 @@ class TrainingOptionsDialog {
                       DropdownButton<int>(
                         value: trainingStartIndex,
                         items: List.generate(movesCount, (i) => i + 1)
-                            .map((i) => DropdownMenuItem(value: i, child: Text('$i')))
+                            .map(
+                              (i) =>
+                                  DropdownMenuItem(value: i, child: Text('$i')),
+                            )
                             .toList(),
                         onChanged: (val) => setModalState(() {
                           trainingStartIndex = val!;
@@ -77,7 +83,10 @@ class TrainingOptionsDialog {
                       DropdownButton<int>(
                         value: trainingEndIndex,
                         items: List.generate(movesCount, (i) => i + 1)
-                            .map((i) => DropdownMenuItem(value: i, child: Text('$i')))
+                            .map(
+                              (i) =>
+                                  DropdownMenuItem(value: i, child: Text('$i')),
+                            )
                             .toList(),
                         onChanged: (val) => setModalState(() {
                           trainingEndIndex = val!;
@@ -93,7 +102,8 @@ class TrainingOptionsDialog {
                       const Text('Loop', style: TextStyle(fontSize: 12)),
                       Switch(
                         value: isLooping,
-                        onChanged: (val) => setModalState(() => isLooping = val),
+                        onChanged: (val) =>
+                            setModalState(() => isLooping = val),
                       ),
                     ],
                   ),
@@ -103,7 +113,9 @@ class TrainingOptionsDialog {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('${LocalizationService.translate('interval', language)}: '),
+                  Text(
+                    '${LocalizationService.translate('interval', language)}: ',
+                  ),
                   SizedBox(
                     width: 100,
                     child: Slider(

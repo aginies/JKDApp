@@ -73,7 +73,9 @@ class VoiceHelpDialog extends StatelessWidget {
                   : 'Right cross followed by left hook',
             ),
             _buildExample(
-              language == 'fr' ? '"jab réponse pak sao"' : '"jab answer pak sao"',
+              language == 'fr'
+                  ? '"jab réponse pak sao"'
+                  : '"jab answer pak sao"',
               language == 'fr'
                   ? 'Jab avec riposte pak sao'
                   : 'Jab with pak sao counter',
@@ -102,9 +104,14 @@ class VoiceHelpDialog extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(keywords,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  keywords,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -126,7 +133,10 @@ class VoiceHelpDialog extends StatelessWidget {
               Expanded(
                 child: Text(
                   voice,
-                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
