@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../models/move.dart';
 import '../models/series.dart';
 import '../services/series_provider.dart';
@@ -15,6 +14,12 @@ import '../services/pdf_service.dart';
 import '../services/export_service.dart';
 import '../services/media_service.dart';
 import '../services/voice_parsing_service.dart';
+import 'series_detail/dialogs/voice_help_dialog.dart';
+import 'series_detail/dialogs/voice_input_dialog.dart';
+import 'series_detail/dialogs/training_options_dialog.dart';
+import 'series_detail/controllers/training_controller.dart';
+import 'series_detail/widgets/move_display_widgets.dart';
+import 'series_detail/widgets/marquee_widget.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
@@ -35,13 +40,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   final FlutterTts _tts = FlutterTts();
   final VoiceParsingService _voiceService = VoiceParsingService();
-  bool _isTraining = false;
+  late TrainingController _trainingController;
   int _trainingInterval = 7;
-  int _currentTrainingIndex = -1;
-  int _trainingStartIndex = 1;
-  int _trainingEndIndex = 1;
-  bool _isLooping = false;
-  Timer? _trainingTimer;
+  TrainingOptions? _currentTrainingOptions;
 
   final MediaService _mediaService = MediaService();
 
@@ -77,53 +78,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     } else {
       _isEditing = true;
     }
-    _initTts();
-  }
-
-  void _initTts() async {
-    if (Platform.isLinux) return;
-    try {
-      await _tts.setVolume(1.0);
-      await _tts.setSpeechRate(0.3);
-      await _tts.setPitch(1.0);
-      if (Platform.isIOS || Platform.isAndroid) {
-        await _tts.setSharedInstance(true);
-        if (Platform.isIOS) {
-          await _tts.setIosAudioCategory(
-            IosTextToSpeechAudioCategory.playback,
-            [
-              IosTextToSpeechAudioCategoryOptions.duckOthers,
-              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-            ],
-          );
-        }
-      }
-    } catch (e) {
-      print("TTS Init Warning: $e");
-    }
-  }
-
-  Future<void> _speak(String text) async {
-    if (Platform.isLinux) {
-      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-      await Process.run('spd-say', ['-l', lang, text]);
-    } else {
-      await _tts.speak(text);
-    }
-  }
-
-  Future<void> _stopTts() async {
-    if (Platform.isLinux) {
-      await Process.run('spd-say', ['-S']);
-    } else {
-      await _tts.stop();
-    }
+    _trainingController = TrainingController(
+      tts: _tts,
+      onIndexChanged: (index) {
+        if (mounted) setState(() {});
+      },
+      onTrainingComplete: () {
+        if (mounted) setState(() {
+          _currentTrainingOptions = null;
+        });
+      },
+      context: context,
+    );
+    _trainingController.initTts();
   }
 
   @override
   void dispose() {
-    _trainingTimer?.cancel();
-    _stopTts();
+    _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
     super.dispose();
@@ -131,47 +103,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   String _slugify(String text) => text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'punch':
-        return Icons.sports_mma;
-      case 'kick':
-        return Icons.sports_martial_arts;
-      case 'packs':
-        return Icons.front_hand;
-      case 'trapping':
-        return Icons.back_hand;
-      case 'special':
-        return Icons.directions_run;
-      case 'text':
-        return Icons.text_fields;
-      case 'other':
-        return Icons.more_horiz;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
-  int _getTabIndexForCategory(String category) {
-    switch (category) {
-      case 'punch':
-        return 0;
-      case 'kick':
-        return 1;
-      case 'packs':
-        return 2;
-      case 'trapping':
-        return 3;
-      case 'special':
-        return 4;
-      case 'other':
-        return 5;
-      case 'text':
-        return 6;
-      default:
-        return -1;
-    }
-  }
 
   void _showMediaGallery(String category, String moveName) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
@@ -282,478 +213,37 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     if (mounted) Navigator.pop(context);
   }
 
-  void _showTrainingOptions() {
+  void _showTrainingOptions() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    // Default to full series every time the modal opens
-    _trainingStartIndex = 1;
-    _trainingEndIndex = _moves.length;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                LocalizationService.translate('training_mode', lang),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                LocalizationService.translate('training_desc', lang),
-                style: const TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      const Text('Start', style: TextStyle(fontSize: 12)),
-                      DropdownButton<int>(
-                        value: _trainingStartIndex,
-                        items: List.generate(_moves.length, (i) => i + 1)
-                            .map((i) => DropdownMenuItem(value: i, child: Text('$i')))
-                            .toList(),
-                        onChanged: (val) => setModalState(() {
-                          _trainingStartIndex = val!;
-                          if (_trainingEndIndex < _trainingStartIndex) _trainingEndIndex = _trainingStartIndex;
-                        }),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('End', style: TextStyle(fontSize: 12)),
-                      DropdownButton<int>(
-                        value: _trainingEndIndex,
-                        items: List.generate(_moves.length, (i) => i + 1)
-                            .map((i) => DropdownMenuItem(value: i, child: Text('$i')))
-                            .toList(),
-                        onChanged: (val) => setModalState(() {
-                          _trainingEndIndex = val!;
-                          if (_trainingStartIndex > _trainingEndIndex) _trainingEndIndex = _trainingEndIndex;
-                        }),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('Loop', style: TextStyle(fontSize: 12)),
-                      Switch(
-                        value: _isLooping,
-                        onChanged: (val) => setModalState(() => _isLooping = val),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('${LocalizationService.translate('interval', lang)}: '),
-                  SizedBox(
-                    width: 100,
-                    child: Slider(
-                      value: _trainingInterval.toDouble(),
-                      min: 3,
-                      max: 20,
-                      divisions: 17,
-                      label: _trainingInterval.toString(),
-                      onChanged: (val) => setModalState(() => _trainingInterval = val.toInt()),
-                    ),
-                  ),
-                  Text('$_trainingInterval s'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _startTraining();
-                },
-                icon: const Icon(Icons.play_arrow),
-                label: Text(LocalizationService.translate('start', lang)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 45),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
+    final options = await TrainingOptionsDialog.show(
+      context,
+      lang,
+      _moves.length,
+      _trainingInterval,
     );
-  }
 
-  void _startTraining() async {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    if (!Platform.isLinux) {
-      try {
-        if (lang == 'fr')
-          await _tts.setLanguage('fr-FR');
-        else
-          await _tts.setLanguage('en-US');
-      } catch (e) {}
-    }
-
-    // Countdown Dialog
-    int countdown = 3;
-    if (mounted) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setS) {
-            Timer.periodic(const Duration(seconds: 1), (t) {
-              if (countdown > 1) {
-                if (ctx.mounted) setS(() => countdown--);
-              } else {
-                t.cancel();
-                if (ctx.mounted) Navigator.pop(ctx);
-              }
-            });
-            return AlertDialog(
-              backgroundColor: Colors.black.withOpacity(0.8),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    LocalizationService.translate('training_starts_in', lang),
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '$countdown',
-                    style: const TextStyle(color: Colors.greenAccent, fontSize: 60, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      );
-    }
-
-    setState(() {
-      _isTraining = true;
-      _currentTrainingIndex = _trainingStartIndex - 1;
-    });
-    _playCurrentTrainingStep();
-  }
-
-  void _playCurrentTrainingStep() async {
-    if (!_isTraining) return;
-
-    if (_currentTrainingIndex >= _trainingEndIndex) {
-      if (_isLooping) {
-        setState(() {
-          _currentTrainingIndex = _trainingStartIndex - 1;
-        });
-      } else {
-        _stopTraining();
-        return;
-      }
-    }
-
-    await _speak(_buildTtsText(_moves[_currentTrainingIndex]));
-
-    _trainingTimer = Timer(Duration(seconds: _trainingInterval), () {
-      if (mounted && _isTraining) {
-        setState(() {
-          _currentTrainingIndex++;
-        });
-        _playCurrentTrainingStep();
-      }
-    });
-  }
-
-  String _buildTtsText(Move move) {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    StringBuffer sb = StringBuffer();
-    void addInfo(Move m) {
-      if (m.side.isNotEmpty) sb.write('${LocalizationService.translate(m.side == 'L' ? 'left' : 'right', lang)} ');
-      sb.write('${m.name} ');
-      if (m.level.isNotEmpty) sb.write('${LocalizationService.translate(m.level.toLowerCase(), lang)} ');
-      if (m.specialAction != null) sb.write('${m.specialAction} ');
-      if (m.counterName != null) {
-        sb.write('${LocalizationService.translate('answer', lang)} ');
-        if (m.counterSide != null) sb.write('${LocalizationService.translate(m.counterSide == 'L' ? 'left' : 'right', lang)} ');
-        sb.write('${m.counterName} ');
-        if (m.counterLevel != null) sb.write('${LocalizationService.translate(m.counterLevel!.toLowerCase(), lang)} ');
-      }
-    }
-
-    if (!move.isCombo)
-      addInfo(move);
-    else {
-      for (var sub in move.subMoves) {
-        addInfo(sub);
-        sb.write('. ');
-      }
-    }
-    return sb.toString();
-  }
-
-  void _stopTraining() {
-    _trainingTimer?.cancel();
-    _stopTts();
-    if (mounted)
+    if (options != null) {
       setState(() {
-        _isTraining = false;
-        _currentTrainingIndex = -1;
+        _trainingInterval = options.interval;
+        _currentTrainingOptions = options;
       });
-  }
-
-  Widget _levelIcon(String level, {double? size, bool mini = false}) {
-    if (level.isEmpty) return const SizedBox.shrink();
-    IconData id = level.toLowerCase() == 'high'
-        ? Icons.north_east
-        : (level.toLowerCase() == 'low' ? Icons.south_east : Icons.arrow_forward);
-    return Container(
-      padding: EdgeInsets.all(mini ? 5 : 6),
-      decoration: BoxDecoration(color: Colors.grey.shade700, shape: BoxShape.circle),
-      child: Icon(id, size: size ?? (mini ? 11 : 12), color: Colors.white),
-    );
-  }
-
-  Widget _drawBox({bool mini = false}) => Container(
-        padding: EdgeInsets.symmetric(horizontal: mini ? 4 : 6, vertical: 2),
-        decoration: BoxDecoration(color: Colors.orange.shade800, borderRadius: BorderRadius.circular(4)),
-        child: Text(
-          'D',
-          style: TextStyle(fontSize: mini ? 10 : 11, color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+      _trainingController.startTraining(
+        moves: _moves,
+        startIndex: options.startIndex,
+        endIndex: options.endIndex,
+        interval: options.interval,
+        isLooping: options.isLooping,
+        language: lang,
       );
-
-  void _showVoiceHelp() {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.help_outline, color: Colors.blue),
-            const SizedBox(width: 8),
-            Text(LocalizationService.translate('voice_help_title', lang)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                lang == 'fr'
-                  ? 'Comment utiliser la saisie vocale:'
-                  : 'How to use voice input:',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              _buildHelpSection(
-                lang == 'fr' ? 'Côtés' : 'Sides',
-                lang == 'fr'
-                  ? 'gauche, droite / droit'
-                  : 'left, right',
-                Icons.swap_horiz,
-              ),
-              _buildHelpSection(
-                lang == 'fr' ? 'Niveaux' : 'Levels',
-                lang == 'fr'
-                  ? 'haut, milieu / centre, bas'
-                  : 'high, mid / middle, low',
-                Icons.height,
-              ),
-              _buildHelpSection(
-                lang == 'fr' ? 'Enchaînement' : 'Next Move',
-                lang == 'fr'
-                  ? 'suivant, ensuite, puis, et, next, then'
-                  : 'next, then',
-                Icons.arrow_forward,
-              ),
-              _buildHelpSection(
-                lang == 'fr' ? 'Riposte' : 'Counter',
-                lang == 'fr'
-                  ? 'réponse, contre, answer, counter'
-                  : 'answer, counter',
-                Icons.reply,
-              ),
-              const Divider(height: 24),
-              Text(
-                lang == 'fr' ? 'Exemples:' : 'Examples:',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-              _buildExample(
-                lang == 'fr'
-                  ? '"gauche jab haut"'
-                  : '"left jab high"',
-                lang == 'fr'
-                  ? 'Jab gauche niveau haut'
-                  : 'Left high jab',
-              ),
-              _buildExample(
-                lang == 'fr'
-                  ? '"droite cross puis gauche hook"'
-                  : '"right cross then left hook"',
-                lang == 'fr'
-                  ? 'Cross droit suivi d\'un crochet gauche'
-                  : 'Right cross followed by left hook',
-              ),
-              _buildExample(
-                lang == 'fr'
-                  ? '"jab réponse pak sao"'
-                  : '"jab answer pak sao"',
-                lang == 'fr'
-                  ? 'Jab avec riposte pak sao'
-                  : 'Jab with pak sao counter',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    }
   }
 
-  Widget _buildHelpSection(String title, String keywords, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.blueGrey),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(keywords, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExample(String voice, String meaning) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.mic, size: 14, color: Colors.green),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  voice,
-                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 18.0),
-            child: Text(
-              '→ $meaning',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _startVoiceInput() async {
-    if (Platform.isLinux) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice input not supported on Linux')));
-      return;
-    }
-    if (await Permission.microphone.request() != PermissionStatus.granted) return;
-    if (await _voiceService.init() && mounted) {
-      String text = '';
-      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setS) {
-            _voiceService.startListening((t) {
-              setS(() {
-                text = t;
-              });
-            }, localeId: lang == 'fr' ? 'fr_FR' : 'en_US');
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.mic, color: Colors.red),
-                  const SizedBox(width: 8),
-                  const Expanded(child: Text('Listening...')),
-                  IconButton(
-                    icon: const Icon(Icons.help_outline, color: Colors.blue, size: 20),
-                    onPressed: () {
-                      _voiceService.stopListening();
-                      Navigator.pop(ctx);
-                      _showVoiceHelp();
-                    },
-                    tooltip: 'Help',
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(8)),
-                      child: Text(text.isEmpty ? 'Speak...' : text),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _voiceService.stopListening();
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _voiceService.stopListening();
-                    Navigator.pop(ctx);
-                    _processVoiceInput(text);
-                  },
-                  child: const Text('Done'),
-                ),
-              ],
-            );
-          },
-        ),
-      );
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    final text = await VoiceInputDialog.show(context, _voiceService, lang);
+    if (text != null && text.trim().isNotEmpty) {
+      _processVoiceInput(text);
     }
   }
 
@@ -796,27 +286,27 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   tabs: [
                     Tab(
                       text: LocalizationService.translate('punches', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('punch')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('punch')),
                     ),
                     Tab(
                       text: LocalizationService.translate('kicks', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('kick')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('kick')),
                     ),
                     Tab(
                       text: LocalizationService.translate('packs', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('packs')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('packs')),
                     ),
                     Tab(
                       text: LocalizationService.translate('trapping', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('trapping')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('trapping')),
                     ),
                     Tab(
                       text: LocalizationService.translate('special', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('special')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('special')),
                     ),
                     Tab(
                       text: LocalizationService.translate('other', Provider.of<SeriesProvider>(context).language),
-                      icon: Icon(_getCategoryIcon('other')),
+                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('other')),
                     ),
                     const Tab(text: 'Text', icon: Icon(Icons.text_fields)),
                   ],
@@ -982,7 +472,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
                         IconButton(
                           icon: const Icon(Icons.help_outline, color: Colors.blueAccent, size: 18),
-                          onPressed: _showVoiceHelp,
+                          onPressed: () {
+                            final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+                            VoiceHelpDialog.show(context, lang);
+                          },
                           visualDensity: VisualDensity.compact,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -1086,7 +579,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     _pendingLevel = m.level;
                                   }
                                 });
-                                final t = _getTabIndexForCategory(m.category);
+                                final t = MoveDisplayWidgets.getTabIndexForCategory(m.category);
                                 if (t != -1) DefaultTabController.of(ctx).animateTo(t);
                               },
                               child: Column(
@@ -1094,7 +587,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(_getCategoryIcon(m.category), size: 22, color: Colors.grey),
+                                      Icon(MoveDisplayWidgets.getCategoryIcon(m.category), size: 22, color: Colors.grey),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
@@ -1108,16 +601,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   Row(
                                     children: [
                                       if (m.side.isNotEmpty)
-                                        _sideCircle(
+                                        MoveDisplayWidgets.sideCircle(
                                           LocalizationService.translate(m.side == 'L' ? 'left' : 'right', lang).substring(0, 1),
                                           m.side,
                                           mini: true,
                                         ),
-                                      _levelIcon(m.level, size: 10, mini: true),
+                                      MoveDisplayWidgets.levelIcon(m.level, size: 10, mini: true),
                                       if (m.isFeint)
                                         Padding(
                                           padding: const EdgeInsets.only(left: 4.0),
-                                          child: _drawBox(mini: true),
+                                          child: MoveDisplayWidgets.drawBox(mini: true),
                                         ),
                                     ],
                                   ),
@@ -1150,7 +643,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       const Divider(height: 8),
                                       Row(
                                         children: [
-                                          Icon(_getCategoryIcon(m.counterCategory ?? ''), size: 18, color: Colors.orangeAccent),
+                                          Icon(MoveDisplayWidgets.getCategoryIcon(m.counterCategory ?? ''), size: 18, color: Colors.orangeAccent),
                                           const SizedBox(width: 2),
                                           Expanded(
                                             child: Text(
@@ -1241,7 +734,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(_getCategoryIcon(cat), size: 32, color: Colors.blueGrey),
+                          Icon(MoveDisplayWidgets.getCategoryIcon(cat), size: 32, color: Colors.blueGrey),
                           const SizedBox(width: 8),
                           Text(cat == 'special' ? (tr['en'] ?? item['name']) : item['name'],
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))
@@ -1363,7 +856,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(_getCategoryIcon(cat), size: 28, color: Colors.blueGrey),
+                          Icon(MoveDisplayWidgets.getCategoryIcon(cat), size: 28, color: Colors.blueGrey),
                           const SizedBox(width: 8),
                           Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold))
                         ],
@@ -1690,7 +1183,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       : () => _showMediaGallery(_moves[i].category, _moves[i].name),
                   child: Card(
                       margin: EdgeInsets.zero,
-                      color: _currentTrainingIndex == i ? Colors.green.withOpacity(0.3) : null,
+                      color: _trainingController.currentIndex == i ? Colors.green.withOpacity(0.3) : null,
                       child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
@@ -1703,14 +1196,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       label: Text('x${_moves[i].repetitions}', style: const TextStyle(fontWeight: FontWeight.bold)),
                                       backgroundColor: Colors.blueGrey),
                                 if (!_moves[i].isCombo) ...[
-                                  Icon(_getCategoryIcon(_moves[i].category), size: 32, color: Colors.blueGrey),
+                                  Icon(MoveDisplayWidgets.getCategoryIcon(_moves[i].category), size: 32, color: Colors.blueGrey),
                                   const SizedBox(width: 4),
                                   Tooltip(message: _moves[i].getTranslation(lang), child: Text(_moves[i].name, style: const TextStyle(fontWeight: FontWeight.bold))),
-                                  _sideCircle(
+                                  MoveDisplayWidgets.sideCircle(
                                       LocalizationService.translate(_moves[i].side == 'L' ? 'left' : 'right', lang).substring(0, 1),
                                       _moves[i].side),
-                                  _levelIcon(_moves[i].level, size: 14),
-                                  if (_moves[i].isFeint) Padding(padding: const EdgeInsets.only(left: 4.0), child: _drawBox()),
+                                  MoveDisplayWidgets.levelIcon(_moves[i].level, size: 14),
+                                  if (_moves[i].isFeint) Padding(padding: const EdgeInsets.only(left: 4.0), child: MoveDisplayWidgets.drawBox()),
                                   if (_moves[i].specialAction != null)
                                     Chip(
                                         label: Text(_moves[i].specialAction!, style: const TextStyle(fontSize: 9)),
@@ -1740,18 +1233,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                         Text('${subIdx + 1}.',
                                                             style: const TextStyle(
                                                                 fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                                                      Icon(_getCategoryIcon(sub.category), size: 24, color: Colors.grey),
+                                                      Icon(MoveDisplayWidgets.getCategoryIcon(sub.category), size: 24, color: Colors.grey),
                                                       Text(sub.name,
                                                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                                                      _sideCircle(
+                                                      MoveDisplayWidgets.sideCircle(
                                                           LocalizationService.translate(sub.side == 'L' ? 'left' : 'right', lang)
                                                               .substring(0, 1),
                                                           sub.side,
                                                           mini: false),
-                                                      _levelIcon(sub.level, size: 12),
+                                                      MoveDisplayWidgets.levelIcon(sub.level, size: 12),
                                                       if (sub.isFeint)
                                                         Padding(
-                                                            padding: const EdgeInsets.only(left: 4.0), child: _drawBox(mini: true)),
+                                                            padding: const EdgeInsets.only(left: 4.0), child: MoveDisplayWidgets.drawBox(mini: true)),
                                                       if (sub.specialAction != null)
                                                         Chip(
                                                             label: Text(sub.specialAction!, style: const TextStyle(fontSize: 10)),
@@ -1767,20 +1260,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                               _showMediaGallery(sub.counterCategory ?? '', sub.counterName!),
                                                           child: Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
                                                             const Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.orange),
-                                                            Icon(_getCategoryIcon(sub.counterCategory ?? ''),
+                                                            Icon(MoveDisplayWidgets.getCategoryIcon(sub.counterCategory ?? ''),
                                                                 size: 22, color: Colors.orangeAccent),
                                                             Text(sub.counterName!,
                                                                 style: const TextStyle(
                                                                     fontSize: 13,
                                                                     color: Colors.orangeAccent,
                                                                     fontWeight: FontWeight.w500)),
-                                                            _sideCircle(
+                                                            MoveDisplayWidgets.sideCircle(
                                                                 LocalizationService.translate(
                                                                         sub.counterSide == 'L' ? 'left' : 'right', lang)
                                                                     .substring(0, 1),
                                                                 sub.counterSide ?? '',
                                                                 mini: true),
-                                                            _levelIcon(sub.counterLevel ?? '', size: 10, mini: true)
+                                                            MoveDisplayWidgets.levelIcon(sub.counterLevel ?? '', size: 10, mini: true)
                                                           ])))
                                               ]));
                                         }).toList())),
@@ -1791,15 +1284,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                         onDoubleTap: () => _showMediaGallery(_moves[i].counterCategory ?? '', _moves[i].counterName!),
                                         child: Wrap(spacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
                                           const Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.orange),
-                                          Icon(_getCategoryIcon(_moves[i].counterCategory ?? ''), size: 28, color: Colors.grey),
+                                          Icon(MoveDisplayWidgets.getCategoryIcon(_moves[i].counterCategory ?? ''), size: 28, color: Colors.grey),
                                           Text('${LocalizationService.translate('answer', lang)}: ${_moves[i].counterName}',
                                               style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w500)),
-                                          _sideCircle(
+                                          MoveDisplayWidgets.sideCircle(
                                               LocalizationService.translate(_moves[i].counterSide == 'L' ? 'left' : 'right', lang)
                                                   .substring(0, 1),
                                               _moves[i].counterSide ?? '',
                                               mini: true),
-                                          _levelIcon(_moves[i].counterLevel ?? '', size: 10, mini: true),
+                                          MoveDisplayWidgets.levelIcon(_moves[i].counterLevel ?? '', size: 10, mini: true),
                                           if (_moves[i].counterSpecialAction != null)
                                             Chip(
                                                 label: Text(_moves[i].counterSpecialAction!, style: const TextStyle(fontSize: 8)),
@@ -1940,14 +1433,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         });
   }
 
-  Widget _sideCircle(String label, String sideCode, {bool mini = false}) {
-    if (sideCode.isEmpty) return const SizedBox.shrink();
-    return Container(
-        padding: EdgeInsets.all(mini ? 5 : 6),
-        decoration: BoxDecoration(color: sideCode == 'L' ? Colors.blue : Colors.red, shape: BoxShape.circle),
-        child: Text(label.substring(0, 1),
-            style: TextStyle(fontSize: mini ? 11 : 12, color: Colors.white, fontWeight: FontWeight.bold)));
-  }
 
   Widget _pickerSideButton(String label, String sd, String curr, Color c, int id, StateSetter setS, String lang,
       {bool withArrow = false}) {
@@ -2036,7 +1521,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(children: [
-          if (_isTraining)
+          if (_trainingController.isTraining)
             Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -2048,15 +1533,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Expanded(
                       child: Row(
                         children: [
-                          Text('TRAINING: ${_currentTrainingIndex + 1} / $_trainingEndIndex',
+                          Text('TRAINING: ${_trainingController.currentIndex + 1} / ${_currentTrainingOptions?.endIndex ?? _moves.length}',
                               style: const TextStyle(fontWeight: FontWeight.bold)),
-                          if (_isLooping) ...[
+                          if (_currentTrainingOptions?.isLooping ?? false) ...[
                             const SizedBox(width: 8),
                             const Icon(Icons.loop, size: 16, color: Colors.green),
                           ],
                         ],
                       )),
-                  IconButton(icon: const Icon(Icons.stop, color: Colors.red), onPressed: _stopTraining)
+                  IconButton(
+                    icon: const Icon(Icons.stop, color: Colors.red),
+                    onPressed: () {
+                      _trainingController.stop();
+                      setState(() {
+                        _currentTrainingOptions = null;
+                      });
+                    },
+                  )
                 ])),
           if (_isEditing) ...[
             TextField(
@@ -2146,7 +1639,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 FloatingActionButton(
                     heroTag: 'voice_help_btn',
                     mini: true,
-                    onPressed: _showVoiceHelp,
+                    onPressed: () {
+                      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+                      VoiceHelpDialog.show(context, lang);
+                    },
                     backgroundColor: Colors.blueAccent,
                     child: const Icon(Icons.help_outline, color: Colors.white, size: 20)),
                 const SizedBox(height: 8),
@@ -2164,69 +1660,3 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 }
 
-class MarqueeWidget extends StatefulWidget {
-  final Widget child;
-  final Duration animationDuration, backDuration, pauseDuration;
-
-  const MarqueeWidget({
-    super.key,
-    required this.child,
-    this.animationDuration = const Duration(milliseconds: 6000),
-    this.backDuration = const Duration(milliseconds: 800),
-    this.pauseDuration = const Duration(milliseconds: 800),
-  });
-
-  @override
-  State<MarqueeWidget> createState() => _MarqueeWidgetState();
-}
-
-class _MarqueeWidgetState extends State<MarqueeWidget> {
-  late ScrollController scrollController;
-
-  @override
-  void initState() {
-    scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) => scroll());
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    scrollController.dispose();
-    super.dispose();
-  }
-
-  void scroll() async {
-    while (mounted && scrollController.hasClients) {
-      if (scrollController.hasClients && scrollController.position.maxScrollExtent > 0) {
-        await Future.delayed(widget.pauseDuration);
-        if (mounted && scrollController.hasClients && scrollController.position.maxScrollExtent > 0) {
-          await scrollController.animateTo(
-            scrollController.position.maxScrollExtent,
-            duration: widget.animationDuration,
-            curve: Curves.linear,
-          );
-        }
-        await Future.delayed(widget.pauseDuration);
-        if (mounted && scrollController.hasClients) {
-          await scrollController.animateTo(
-            0.0,
-            duration: widget.backDuration,
-            curve: Curves.easeOut,
-          );
-        }
-      } else {
-        await Future.delayed(widget.pauseDuration);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      controller: scrollController,
-      child: widget.child,
-    );
-  }
-}
