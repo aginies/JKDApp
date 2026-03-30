@@ -57,6 +57,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   int? _editingComboItemIndex;
   bool _isEditingCounter = false;
   bool _isPickerOpen = false;
+  Map<String, dynamic>?
+  _pendingAttackMove; // Store attack info when selecting counter
+  final ScrollController _comboScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   Timer? _scrollTimer;
   int? _lastScrolledItemId;
@@ -112,6 +115,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
+    _comboScrollController.dispose();
     for (final controller in _glossaryScrollControllers.values) {
       controller.dispose();
     }
@@ -445,111 +449,227 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => DefaultTabController(
-          length: 7,
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.95,
-            child: Column(
-              children: [
-                _buildComboPreview(
-                  setS,
-                  Provider.of<SeriesProvider>(context).language,
-                  Provider.of<SeriesProvider>(context).voiceEnabled,
-                ),
-                TabBar(
-                  isScrollable: true,
-                  tabs: [
-                    Tab(
-                      text: LocalizationService.translate(
-                        'punches',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('punch')),
-                    ),
-                    Tab(
-                      text: LocalizationService.translate(
-                        'kicks',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('kick')),
-                    ),
-                    Tab(
-                      text: LocalizationService.translate(
-                        'packs',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('packs')),
-                    ),
-                    Tab(
-                      text: LocalizationService.translate(
-                        'trapping',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(
-                        MoveDisplayWidgets.getCategoryIcon('trapping'),
+        builder: (ctx, setS) {
+          final lang = Provider.of<SeriesProvider>(context).language;
+          final voiceEnabled = Provider.of<SeriesProvider>(
+            context,
+          ).voiceEnabled;
+          final isCounterMode = _pendingAttackMove != null;
+
+          return DefaultTabController(
+            key: ValueKey(isCounterMode),
+            length: isCounterMode ? 5 : 7,
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.95,
+              child: Column(
+                children: [
+                  _buildComboPreview(setS, lang, voiceEnabled),
+                  if (isCounterMode)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () =>
+                                setS(() => _pendingAttackMove = null),
+                          ),
+                          Text(
+                            LocalizationService.translate('pick_answer', lang),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    Tab(
-                      text: LocalizationService.translate(
-                        'special',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('special')),
-                    ),
-                    Tab(
-                      text: LocalizationService.translate(
-                        'other',
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      icon: Icon(MoveDisplayWidgets.getCategoryIcon('other')),
-                    ),
-                    const Tab(text: 'Text', icon: Icon(Icons.text_fields)),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildGlossaryWithScroll(
-                        'punch',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildGlossaryWithScroll(
-                        'kick',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildGlossaryWithScroll(
-                        'packs',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildGlossaryWithScroll(
-                        'trapping',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildGlossaryWithScroll(
-                        'special',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildGlossaryWithScroll(
-                        'other',
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                      _buildCustomTextTab(
-                        setS,
-                        Provider.of<SeriesProvider>(context).language,
-                      ),
-                    ],
+                  TabBar(
+                    isScrollable: true,
+                    tabs: isCounterMode
+                        ? [
+                            Tab(
+                              text: LocalizationService.translate(
+                                'packs',
+                                lang,
+                              ),
+                              icon: const Icon(Icons.front_hand),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'trapping',
+                                lang,
+                              ),
+                              icon: const Icon(Icons.back_hand),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'special',
+                                lang,
+                              ),
+                              icon: const Icon(Icons.directions_run),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'other',
+                                lang,
+                              ),
+                              icon: const Icon(Icons.more_horiz),
+                            ),
+                            const Tab(
+                              text: 'Text',
+                              icon: Icon(Icons.text_fields),
+                            ),
+                          ]
+                        : [
+                            Tab(
+                              text: LocalizationService.translate(
+                                'punches',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('punch'),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'kicks',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('kick'),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'packs',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('packs'),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'trapping',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('trapping'),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'special',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('special'),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'other',
+                                lang,
+                              ),
+                              icon: Icon(
+                                MoveDisplayWidgets.getCategoryIcon('other'),
+                              ),
+                            ),
+                            const Tab(
+                              text: 'Text',
+                              icon: Icon(Icons.text_fields),
+                            ),
+                          ],
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: TabBarView(
+                      children: isCounterMode
+                          ? [
+                              _buildCounterGlossaryList(
+                                'packs',
+                                setS,
+                                _pendingAttackMove!['item'],
+                                _pendingAttackMove!['cat'],
+                                _pendingAttackMove!['sd'],
+                                _pendingAttackMove!['lv'],
+                                _pendingAttackMove!['f'],
+                                _pendingAttackMove!['sp'],
+                                _pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                              ),
+                              _buildCounterGlossaryList(
+                                'trapping',
+                                setS,
+                                _pendingAttackMove!['item'],
+                                _pendingAttackMove!['cat'],
+                                _pendingAttackMove!['sd'],
+                                _pendingAttackMove!['lv'],
+                                _pendingAttackMove!['f'],
+                                _pendingAttackMove!['sp'],
+                                _pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                              ),
+                              _buildCounterGlossaryList(
+                                'special',
+                                setS,
+                                _pendingAttackMove!['item'],
+                                _pendingAttackMove!['cat'],
+                                _pendingAttackMove!['sd'],
+                                _pendingAttackMove!['lv'],
+                                _pendingAttackMove!['f'],
+                                _pendingAttackMove!['sp'],
+                                _pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                              ),
+                              _buildCounterGlossaryList(
+                                'other',
+                                setS,
+                                _pendingAttackMove!['item'],
+                                _pendingAttackMove!['cat'],
+                                _pendingAttackMove!['sd'],
+                                _pendingAttackMove!['lv'],
+                                _pendingAttackMove!['f'],
+                                _pendingAttackMove!['sp'],
+                                _pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                              ),
+                              _buildCustomTextTab(
+                                setS,
+                                lang,
+                                isCounter: true,
+                                attackItem: _pendingAttackMove!['item'],
+                                attackCategory: _pendingAttackMove!['cat'],
+                                side: _pendingAttackMove!['sd'],
+                                level: _pendingAttackMove!['lv'],
+                                isFeint: _pendingAttackMove!['f'],
+                                special: _pendingAttackMove!['sp'],
+                                attackTranslations: _pendingAttackMove!['tr'],
+                                reps: 1,
+                                pickerModalState: setS,
+                              ),
+                            ]
+                          : [
+                              _buildGlossaryWithScroll('punch', setS, lang),
+                              _buildGlossaryWithScroll('kick', setS, lang),
+                              _buildGlossaryWithScroll('packs', setS, lang),
+                              _buildGlossaryWithScroll('trapping', setS, lang),
+                              _buildGlossaryWithScroll('special', setS, lang),
+                              _buildGlossaryWithScroll('other', setS, lang),
+                              _buildCustomTextTab(setS, lang),
+                            ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
     setState(() => _isPickerOpen = false);
@@ -565,6 +685,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _targetSeriesIndex = null;
     _editingComboItemIndex = null;
     _isEditingCounter = false;
+    _pendingAttackMove = null;
     _lastScrolledItemId = null;
   }
 
@@ -815,168 +936,79 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             ),
           ),
           Expanded(
-            child: ReorderableListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _currentCombo.length,
-              onReorder: (old, newIdx) {
-                setS(() {
-                  if (newIdx > old) newIdx -= 1;
-                  final item = _currentCombo.removeAt(old);
-                  _currentCombo.insert(newIdx, item);
-                });
-              },
-              itemBuilder: (ctx, idx) {
-                final m = _currentCombo[idx];
-                final sel = _editingComboItemIndex == idx && !_isEditingCounter;
-                final cSel = _editingComboItemIndex == idx && _isEditingCounter;
-                return Card(
-                  key: ValueKey(m.uKey),
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                  shape: (sel || cSel)
-                      ? RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(
-                            color: sel
-                                ? Colors.blueAccent
-                                : Colors.orangeAccent,
-                            width: 2,
-                          ),
-                        )
-                      : null,
-                  child: Container(
-                    width: 160,
-                    padding: const EdgeInsets.all(6),
-                    child: Stack(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: () async {
-                                int? gid = m.glossaryId;
-                                // Robust fallback: try category match first, then global match
-                                if (gid == null) {
-                                  final db = DatabaseService();
-                                  var items = await db.getGlossaryByCategory(
-                                    m.category,
-                                  );
-                                  var match = items.firstWhere(
-                                    (i) =>
-                                        i['name'].toString().toLowerCase() ==
-                                        m.name.toLowerCase(),
-                                    orElse: () => {},
-                                  );
-
-                                  if (match.isEmpty) {
-                                    final all = await db.getGlossary();
-                                    match = all.firstWhere(
-                                      (i) =>
-                                          i['name'].toString().toLowerCase() ==
-                                          m.name.toLowerCase(),
-                                      orElse: () => {},
-                                    );
-                                  }
-
-                                  if (match.isNotEmpty) {
-                                    gid = match['id'];
-                                  }
-                                }
-
-                                setS(() {
-                                  _editingComboItemIndex = idx;
-                                  _isEditingCounter = false;
-                                  if (gid != null) {
-                                    _selectedSidesInPicker[gid] = m.side;
-                                    _selectedFeintsInPicker[gid] = m.isFeint;
-                                    _selectedSpecialsInPicker[gid] =
-                                        m.specialAction;
-                                    _pendingActionItemId = gid;
-                                    _pendingLevel = m.level;
-                                    _lastScrolledItemId =
-                                        null; // Reset to allow scrolling to new selection
-                                  }
-                                });
-                                final t =
-                                    MoveDisplayWidgets.getTabIndexForCategory(
-                                      m.category,
-                                    );
-                                if (t != -1 && ctx.mounted) {
-                                  DefaultTabController.of(ctx).animateTo(t);
-                                }
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        MoveDisplayWidgets.getCategoryIcon(
-                                          m.category,
-                                        ),
-                                        size: 22,
-                                        color: Colors.grey,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          '${idx + 1}. ${m.name}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      if (m.side.isNotEmpty)
-                                        MoveDisplayWidgets.sideCircle(
-                                          LocalizationService.translate(
-                                            m.side == 'L' ? 'left' : 'right',
-                                            lang,
-                                          ).substring(0, 1),
-                                          m.side,
-                                          mini: true,
-                                        ),
-                                      MoveDisplayWidgets.levelIcon(
-                                        m.level,
-                                        size: 10,
-                                        mini: true,
-                                      ),
-                                      if (m.isFeint)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 4.0,
-                                          ),
-                                          child: MoveDisplayWidgets.drawBox(
-                                            mini: true,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
+            child: Stack(
+              children: [
+                ReorderableListView.builder(
+                  scrollController: _comboScrollController,
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _currentCombo.length,
+                  onReorder: (old, newIdx) {
+                    setS(() {
+                      if (newIdx > old) newIdx -= 1;
+                      final item = _currentCombo.removeAt(old);
+                      _currentCombo.insert(newIdx, item);
+                    });
+                  },
+                  itemBuilder: (ctx, idx) {
+                    final m = _currentCombo[idx];
+                    final sel =
+                        _editingComboItemIndex == idx && !_isEditingCounter;
+                    final cSel =
+                        _editingComboItemIndex == idx && _isEditingCounter;
+                    return Card(
+                      key: ValueKey(m.uKey),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      shape: (sel || cSel)
+                          ? RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                color: sel
+                                    ? Colors.blueAccent
+                                    : Colors.orangeAccent,
+                                width: 2,
                               ),
-                            ),
-                            if (m.counterName != null)
-                              Expanded(
-                                child: GestureDetector(
+                            )
+                          : null,
+                      child: Container(
+                        width: 160,
+                        padding: const EdgeInsets.all(6),
+                        child: Stack(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
                                   onTap: () async {
-                                    final cat = m.counterCategory ?? '';
-                                    int? gid = m.counterGlossaryId;
-
-                                    if (gid == null && m.counterName != null) {
-                                      // Fallback to name search if ID is missing (legacy data)
-                                      final items = await DatabaseService()
-                                          .getGlossaryByCategory(cat);
-                                      final match = items.firstWhere(
-                                        (i) => i['name'] == m.counterName,
+                                    int? gid = m.glossaryId;
+                                    // Robust fallback: try category match first, then global match
+                                    if (gid == null) {
+                                      final db = DatabaseService();
+                                      var items = await db
+                                          .getGlossaryByCategory(m.category);
+                                      var match = items.firstWhere(
+                                        (i) =>
+                                            i['name']
+                                                .toString()
+                                                .toLowerCase() ==
+                                            m.name.toLowerCase(),
                                         orElse: () => {},
                                       );
+
+                                      if (match.isEmpty) {
+                                        final all = await db.getGlossary();
+                                        match = all.firstWhere(
+                                          (i) =>
+                                              i['name']
+                                                  .toString()
+                                                  .toLowerCase() ==
+                                              m.name.toLowerCase(),
+                                          orElse: () => {},
+                                        );
+                                      }
+
                                       if (match.isNotEmpty) {
                                         gid = match['id'];
                                       }
@@ -984,21 +1016,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
                                     setS(() {
                                       _editingComboItemIndex = idx;
-                                      _isEditingCounter = true;
+                                      _isEditingCounter = false;
                                       if (gid != null) {
-                                        _selectedSidesInPicker[gid] =
-                                            m.counterSide ?? '';
+                                        _selectedSidesInPicker[gid] = m.side;
+                                        _selectedFeintsInPicker[gid] =
+                                            m.isFeint;
                                         _selectedSpecialsInPicker[gid] =
-                                            m.counterSpecialAction;
+                                            m.specialAction;
                                         _pendingActionItemId = gid;
-                                        _pendingLevel = m.counterLevel;
+                                        _pendingLevel = m.level;
                                         _lastScrolledItemId =
                                             null; // Reset to allow scrolling to new selection
                                       }
                                     });
                                     final t =
                                         MoveDisplayWidgets.getTabIndexForCategory(
-                                          cat,
+                                          m.category,
                                         );
                                     if (t != -1 && ctx.mounted) {
                                       DefaultTabController.of(ctx).animateTo(t);
@@ -1008,72 +1041,221 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Divider(height: 8),
                                       Row(
                                         children: [
                                           Icon(
                                             MoveDisplayWidgets.getCategoryIcon(
-                                              m.counterCategory ?? '',
+                                              m.category,
                                             ),
-                                            size: 18,
-                                            color: Colors.orangeAccent,
+                                            size: 22,
+                                            color: Colors.grey,
                                           ),
-                                          const SizedBox(width: 2),
+                                          const SizedBox(width: 4),
                                           Expanded(
                                             child: Text(
-                                              '↳ ${m.counterName}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.orangeAccent,
-                                                decoration: cSel
-                                                    ? TextDecoration.underline
-                                                    : null,
+                                              '${idx + 1}. ${m.name}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
                                       ),
+                                      Row(
+                                        children: [
+                                          if (m.side.isNotEmpty)
+                                            MoveDisplayWidgets.sideCircle(
+                                              LocalizationService.translate(
+                                                m.side == 'L'
+                                                    ? 'left'
+                                                    : 'right',
+                                                lang,
+                                              ).substring(0, 1),
+                                              m.side,
+                                              mini: true,
+                                            ),
+                                          MoveDisplayWidgets.levelIcon(
+                                            m.level,
+                                            size: 10,
+                                            mini: true,
+                                          ),
+                                          if (m.isFeint)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 4.0,
+                                              ),
+                                              child: MoveDisplayWidgets.drawBox(
+                                                mini: true,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            const Spacer(),
-                            Center(
-                              child: ReorderableDragStartListener(
-                                index: idx,
-                                child: const Icon(
-                                  Icons.drag_handle,
-                                  size: 16,
-                                  color: Colors.grey,
+                                if (m.counterName != null)
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final cat = m.counterCategory ?? '';
+                                        int? gid = m.counterGlossaryId;
+
+                                        if (gid == null &&
+                                            m.counterName != null) {
+                                          // Fallback to name search if ID is missing (legacy data)
+                                          final items = await DatabaseService()
+                                              .getGlossaryByCategory(cat);
+                                          final match = items.firstWhere(
+                                            (i) => i['name'] == m.counterName,
+                                            orElse: () => {},
+                                          );
+                                          if (match.isNotEmpty) {
+                                            gid = match['id'];
+                                          }
+                                        }
+
+                                        setS(() {
+                                          _editingComboItemIndex = idx;
+                                          _isEditingCounter = true;
+                                          if (gid != null) {
+                                            _selectedSidesInPicker[gid] =
+                                                m.counterSide ?? '';
+                                            _selectedSpecialsInPicker[gid] =
+                                                m.counterSpecialAction;
+                                            _pendingActionItemId = gid;
+                                            _pendingLevel = m.counterLevel;
+                                            _lastScrolledItemId =
+                                                null; // Reset to allow scrolling to new selection
+                                          }
+                                        });
+                                        final t =
+                                            MoveDisplayWidgets.getTabIndexForCategory(
+                                              cat,
+                                            );
+                                        if (t != -1 && ctx.mounted) {
+                                          DefaultTabController.of(
+                                            ctx,
+                                          ).animateTo(t);
+                                        }
+                                      },
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Divider(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                MoveDisplayWidgets.getCategoryIcon(
+                                                  m.counterCategory ?? '',
+                                                ),
+                                                size: 18,
+                                                color: Colors.orangeAccent,
+                                              ),
+                                              const SizedBox(width: 2),
+                                              Expanded(
+                                                child: Text(
+                                                  '↳ ${m.counterName}',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.orangeAccent,
+                                                    decoration: cSel
+                                                        ? TextDecoration
+                                                              .underline
+                                                        : null,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                const Spacer(),
+                                Center(
+                                  child: ReorderableDragStartListener(
+                                    index: idx,
+                                    child: const Icon(
+                                      Icons.drag_handle,
+                                      size: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ),
+                              ],
+                            ),
+                            Positioned(
+                              right: -10,
+                              top: -10,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => setS(() {
+                                  _currentCombo.removeAt(idx);
+                                  if (_editingComboItemIndex == idx) {
+                                    _editingComboItemIndex = null;
+                                    _isEditingCounter = false;
+                                  }
+                                }),
                               ),
                             ),
                           ],
                         ),
-                        Positioned(
-                          right: -10,
-                          top: -10,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              size: 14,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => setS(() {
-                              _currentCombo.removeAt(idx);
-                              if (_editingComboItemIndex == idx) {
-                                _editingComboItemIndex = null;
-                                _isEditingCounter = false;
-                              }
-                            }),
-                          ),
+                      ),
+                    );
+                  },
+                ),
+                if (_currentCombo.length > 1) ...[
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.white70,
                         ),
-                      ],
+                        onPressed: () {
+                          _comboScrollController.animateTo(
+                            _comboScrollController.offset - 168,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                );
-              },
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () {
+                          _comboScrollController.animateTo(
+                            _comboScrollController.offset + 168,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -1724,23 +1906,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 minimumSize: const Size(0, 36),
               ),
               onPressed: () {
-                _pickCounterMove(
-                  isCustom
-                      ? {
-                          'name': _customMoveController.text,
-                          'translations': '{}',
-                          'hit_type': 'both',
-                        }
-                      : it,
-                  cat,
-                  sd,
-                  lv,
-                  f,
-                  sp,
-                  tr,
-                  1,
-                  setS,
-                );
+                setS(() {
+                  _pendingAttackMove = {
+                    'item': isCustom
+                        ? {
+                            'name': _customMoveController.text,
+                            'translations': '{}',
+                            'hit_type': 'both',
+                          }
+                        : it,
+                    'cat': cat,
+                    'sd': sd,
+                    'lv': lv,
+                    'f': f,
+                    'sp': sp,
+                    'tr': tr,
+                  };
+                  _pendingActionItemId = null;
+                  _pendingLevel = null;
+                });
               },
               child: Text(
                 LocalizationService.translate('answer', lang),
@@ -1935,10 +2119,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           _currentCombo.add(n);
         }
       }
+      _pendingAttackMove = null;
       _pendingActionItemId = null;
       _pendingLevel = null;
     });
-    Navigator.pop(context);
+    if (_editingComboItemIndex != null) {
+      Navigator.pop(context);
+    }
   }
 
   Widget _counterLevelButton(
