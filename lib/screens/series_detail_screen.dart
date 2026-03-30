@@ -799,24 +799,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     setS(() {
                                       _editingComboItemIndex = idx;
                                       _isEditingCounter = true;
+                                      if (m.counterName != null) {
+                                        // We don't have glossaryId for counter in Move model easily accessible here 
+                                        // but we can search for it or just set states if we had it.
+                                        // Actually, let's just set the states if we can.
+                                        _pendingActionItemId = null; // Reset to force re-selection or we could try to find it.
+                                      }
                                     });
-                                    _pickCounterMove(
-                                      {
-                                        'id': m.glossaryId,
-                                        'name': m.name,
-                                        'translations': json.encode(
-                                          m.translations,
-                                        ),
-                                      },
-                                      m.category,
-                                      m.side,
-                                      m.level,
-                                      m.isFeint,
-                                      m.specialAction,
-                                      m.translations,
-                                      1,
-                                      setS,
-                                    );
+                                    final t =
+                                        MoveDisplayWidgets.getTabIndexForCategory(
+                                          m.counterCategory ?? '',
+                                        );
+                                    if (t != -1) {
+                                      DefaultTabController.of(ctx).animateTo(t);
+                                    }
                                   },
                                   child: Column(
                                     crossAxisAlignment:
@@ -911,9 +907,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final isF = _selectedFeintsInPicker[id] ?? false;
             final spec = _selectedSpecialsInPicker[id];
-            final isE =
-                _editingComboItemIndex != null &&
-                _currentCombo[_editingComboItemIndex!].glossaryId == id;
+            final isE = _editingComboItemIndex != null &&
+                (!_isEditingCounter
+                    ? _currentCombo[_editingComboItemIndex!].glossaryId == id
+                    : (_currentCombo[_editingComboItemIndex!].counterName ==
+                            item['name'] &&
+                        _currentCombo[_editingComboItemIndex!].counterCategory ==
+                            cat));
             final String pL = item['possible_level'] ?? 'H,M,L';
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),
@@ -1412,30 +1412,40 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: const Size(0, 36),
               ),
-              onPressed: () {
+    onPressed: () {
                 setS(() {
-                  final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
-                      : null;
-                  final n = Move(
-                    glossaryId: isCustom ? null : it['id'],
-                    name: isCustom ? _customMoveController.text : it['name'],
-                    category: cat,
-                    translations: tr,
-                    side: sd,
-                    level: lv,
-                    isFeint: f,
-                    specialAction: sp,
-                    repetitions: 1,
-                    counterName: ex?.counterName,
-                    counterCategory: ex?.counterCategory,
-                    counterSide: ex?.counterSide,
-                    counterLevel: ex?.counterLevel,
-                    counterSpecialAction: ex?.counterSpecialAction,
-                  );
+                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final Move n;
+                  if (isE && _isEditingCounter) {
+                    n = ex!.copyWith(
+                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterCategory: cat,
+                      counterSide: sd,
+                      counterLevel: lv,
+                      counterSpecialAction: sp,
+                    );
+                  } else {
+                    n = Move(
+                      glossaryId: isCustom ? null : it['id'],
+                      name: isCustom ? _customMoveController.text : it['name'],
+                      category: cat,
+                      translations: tr,
+                      side: sd,
+                      level: lv,
+                      isFeint: f,
+                      specialAction: sp,
+                      repetitions: 1,
+                      counterName: ex?.counterName,
+                      counterCategory: ex?.counterCategory,
+                      counterSide: ex?.counterSide,
+                      counterLevel: ex?.counterLevel,
+                      counterSpecialAction: ex?.counterSpecialAction,
+                    );
+                  }
                   if (isE) {
                     _currentCombo[_editingComboItemIndex!] = n;
                     _editingComboItemIndex = null;
+                    _isEditingCounter = false;
                   } else {
                     _currentCombo.add(n);
                   }
@@ -1495,25 +1505,34 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
-                      : null;
-                  final n = Move(
-                    glossaryId: isCustom ? null : it['id'],
-                    name: isCustom ? _customMoveController.text : it['name'],
-                    category: cat,
-                    translations: tr,
-                    side: sd,
-                    level: lv,
-                    isFeint: f,
-                    specialAction: sp,
-                    repetitions: 1,
-                    counterName: ex?.counterName,
-                    counterCategory: ex?.counterCategory,
-                    counterSide: ex?.counterSide,
-                    counterLevel: ex?.counterLevel,
-                    counterSpecialAction: ex?.counterSpecialAction,
-                  );
+                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final Move n;
+                  if (isE && _isEditingCounter) {
+                    n = ex!.copyWith(
+                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterCategory: cat,
+                      counterSide: sd,
+                      counterLevel: lv,
+                      counterSpecialAction: sp,
+                    );
+                  } else {
+                    n = Move(
+                      glossaryId: isCustom ? null : it['id'],
+                      name: isCustom ? _customMoveController.text : it['name'],
+                      category: cat,
+                      translations: tr,
+                      side: sd,
+                      level: lv,
+                      isFeint: f,
+                      specialAction: sp,
+                      repetitions: 1,
+                      counterName: ex?.counterName,
+                      counterCategory: ex?.counterCategory,
+                      counterSide: ex?.counterSide,
+                      counterLevel: ex?.counterLevel,
+                      counterSpecialAction: ex?.counterSpecialAction,
+                    );
+                  }
                   if (isE) {
                     _currentCombo[_editingComboItemIndex!] = n;
                   } else {
@@ -2463,6 +2482,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       appBar: AppBar(
         title: Row(
           children: [
@@ -2715,43 +2735,42 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         ),
       ),
       floatingActionButton: _isEditing
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (Provider.of<SeriesProvider>(context).voiceEnabled) ...[
-                  FloatingActionButton(
-                    heroTag: 'voice_help_btn',
-                    mini: true,
-                    onPressed: () {
-                      final lang = Provider.of<SeriesProvider>(
-                        context,
-                        listen: false,
-                      ).language;
-                      VoiceHelpDialog.show(context, lang);
-                    },
-                    backgroundColor: Colors.blueAccent,
-                    child: const Icon(
-                      Icons.help_outline,
-                      color: Colors.white,
-                      size: 20,
+          ? Consumer<SeriesProvider>(
+              builder: (context, provider, child) => Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (provider.voiceEnabled) ...[
+                    FloatingActionButton(
+                      heroTag: 'voice_help_btn',
+                      mini: true,
+                      onPressed: () {
+                        final lang = provider.language;
+                        VoiceHelpDialog.show(context, lang);
+                      },
+                      backgroundColor: Colors.blueAccent,
+                      child: const Icon(
+                        Icons.help_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
+                    FloatingActionButton(
+                      heroTag: 'voice_btn',
+                      onPressed: _startVoiceInput,
+                      backgroundColor: Colors.redAccent,
+                      child: const Icon(Icons.mic, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   FloatingActionButton(
-                    heroTag: 'voice_btn',
-                    onPressed: _startVoiceInput,
-                    backgroundColor: Colors.redAccent,
-                    child: const Icon(Icons.mic, color: Colors.white),
+                    heroTag: 'add_btn',
+                    onPressed: () => _pickMove(),
+                    child: const Icon(Icons.add),
                   ),
-                  const SizedBox(height: 16),
                 ],
-                FloatingActionButton(
-                  heroTag: 'add_btn',
-                  onPressed: () => _pickMove(),
-                  child: const Icon(Icons.add),
-                ),
-              ],
+              ),
             )
           : null,
     );

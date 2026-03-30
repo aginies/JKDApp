@@ -48,7 +48,7 @@ class SeriesProvider with ChangeNotifier {
     }
 
     // Voice
-    _voiceEnabled = (prefs['voice_enabled'] ?? '0') == '1';
+    _voiceEnabled = !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
 
     // Theme
     final themeStr = prefs['theme'] ?? 'system';
@@ -104,6 +104,7 @@ class SeriesProvider with ChangeNotifier {
   }
 
   void setVoiceEnabled(bool enabled) async {
+    if (Platform.isLinux && enabled) return;
     _voiceEnabled = enabled;
     await _dbService.saveSetting('voice_enabled', enabled ? '1' : '0');
     notifyListeners();
