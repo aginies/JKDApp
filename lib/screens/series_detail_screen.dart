@@ -62,6 +62,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   final ScrollController _comboScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   Timer? _scrollTimer;
+  Timer? _saveDelayTimer;
   int? _lastScrolledItemId;
 
   final Map<String, String> _methodDefinitions = {
@@ -112,6 +113,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   @override
   void dispose() {
     _scrollTimer?.cancel();
+    _saveDelayTimer?.cancel();
     _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
@@ -363,8 +365,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       );
 
       // Dismiss the dialog and pop the screen after a short delay
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.pop(context);
+      _saveDelayTimer?.cancel();
+      _saveDelayTimer = Timer(const Duration(seconds: 1), () {
+        if (mounted) {
+          Navigator.pop(context); // Dismiss success dialog
+          Navigator.pop(context); // Pop the screen
+        }
+      });
     }
   }
 
