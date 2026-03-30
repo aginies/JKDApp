@@ -59,6 +59,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   bool _isPickerOpen = false;
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   Timer? _scrollTimer;
+  int? _lastScrolledItemId;
 
   final Map<String, String> _methodDefinitions = {
     'SDA':
@@ -305,8 +306,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       }
     } catch (_) {
       // If not JSON, it might be raw text from a legacy caller or error
-      final lang =
-          Provider.of<SeriesProvider>(context, listen: false).language;
+      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
       parsed = _voiceService.parseSentenceToCombo(input, lang);
     }
 
@@ -461,6 +461,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _targetSeriesIndex = null;
     _editingComboItemIndex = null;
     _isEditingCounter = false;
+    _lastScrolledItemId = null;
   }
 
   Future<int> _getInitialIndexForCategory(String cat) async {
@@ -473,12 +474,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     return FutureBuilder<int>(
       future: _getInitialIndexForCategory(cat),
       builder: (context, snapshot) {
-        return _buildGlossaryList(
-          cat,
-          setS,
-          lang,
-          initialIndex: snapshot.data,
-        );
+        return _buildGlossaryList(cat, setS, lang, initialIndex: snapshot.data);
       },
     );
   }
@@ -795,6 +791,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                         m.specialAction;
                                     _pendingActionItemId = gid;
                                     _pendingLevel = m.level;
+                                    _lastScrolledItemId =
+                                        null; // Reset to allow scrolling to new selection
                                   }
                                 });
                                 final t =
@@ -867,8 +865,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     final cat = m.counterCategory ?? '';
                                     int? gid = m.counterGlossaryId;
 
-                                    if (gid == null &&
-                                        m.counterName != null) {
+                                    if (gid == null && m.counterName != null) {
                                       // Fallback to name search if ID is missing (legacy data)
                                       final items = await DatabaseService()
                                           .getGlossaryByCategory(cat);
@@ -891,6 +888,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                             m.counterSpecialAction;
                                         _pendingActionItemId = gid;
                                         _pendingLevel = m.counterLevel;
+                                        _lastScrolledItemId =
+                                            null; // Reset to allow scrolling to new selection
                                       }
                                     });
                                     final t =
@@ -984,8 +983,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     String lang, {
     int? initialIndex,
   }) {
-    final scrollController =
-        _glossaryScrollControllers.putIfAbsent(cat, () => ScrollController());
+    final scrollController = _glossaryScrollControllers.putIfAbsent(
+      cat,
+      () => ScrollController(),
+    );
 
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
@@ -995,26 +996,43 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         }
         final items = snap.data!;
 
-        if (initialIndex != null && initialIndex >= 0) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _scrollTimer?.cancel();
-            _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+        if (initialIndex != null &&
+            initialIndex >= 0 &&
+            initialIndex < items.length) {
+          final targetItemId = items[initialIndex]['id'];
+          // Only scroll if we haven't already scrolled to this item
+          if (_lastScrolledItemId != targetItemId) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              if (scrollController.hasClients &&
-                  scrollController.position.hasContentDimensions) {
-                if (initialIndex == 0) {
-                  scrollController.jumpTo(0.0);
-                } else {
-                  double offset = initialIndex * 125.0;
-                  if (offset > scrollController.position.maxScrollExtent) {
+              _scrollTimer?.cancel();
+              _scrollTimer = Timer(const Duration(milliseconds: 100), () {
+                if (!mounted) return;
+                if (scrollController.hasClients &&
+                    scrollController.position.hasContentDimensions) {
+                  const double estimatedItemHeight = 125.0;
+                  final viewportHeight =
+                      scrollController.position.viewportDimension;
+
+                  // Calculate offset to center the item in the viewport
+                  double offset =
+                      (initialIndex * estimatedItemHeight) -
+                      (viewportHeight / 2) +
+                      (estimatedItemHeight / 2);
+
+                  // Clamp offset to valid range
+                  if (offset < 0) {
+                    offset = 0;
+                  } else if (offset >
+                      scrollController.position.maxScrollExtent) {
                     offset = scrollController.position.maxScrollExtent;
                   }
+
                   scrollController.jumpTo(offset);
+                  _lastScrolledItemId = targetItemId;
                 }
-              }
+              });
             });
-          });
+          }
         }
 
         return ListView.builder(
@@ -1033,14 +1051,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     _editingComboItemIndex != null &&
                     (!_isEditingCounter
                         ? _currentCombo[_editingComboItemIndex!].name ==
-                            item['name']
+                              item['name']
                         : _currentCombo[_editingComboItemIndex!].counterName ==
-                            item['name']) &&
+                              item['name']) &&
                     (!_isEditingCounter
                         ? _currentCombo[_editingComboItemIndex!].category == cat
                         : _currentCombo[_editingComboItemIndex!]
-                                .counterCategory ==
-                            cat));
+                                  .counterCategory ==
+                              cat));
             final String pL = item['possible_level'] ?? 'H,M,L';
             final bool sH = pL.contains('H'),
                 sM = pL.contains('M'),
@@ -1541,11 +1559,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterName: isCustom
+                          ? _customMoveController.text
+                          : it['name'],
                       counterGlossaryId: isCustom ? null : it['id'],
                       counterCategory: cat,
                       counterSide: sd,
@@ -1634,11 +1656,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
+                  final ex = isE
+                      ? _currentCombo[_editingComboItemIndex!]
+                      : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterName: isCustom
+                          ? _customMoveController.text
+                          : it['name'],
                       counterGlossaryId: isCustom ? null : it['id'],
                       counterCategory: cat,
                       counterSide: sd,

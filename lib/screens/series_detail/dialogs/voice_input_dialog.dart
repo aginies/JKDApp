@@ -58,8 +58,10 @@ class VoiceInputDialog {
               (t) {
                 setS(() {
                   recognizedText = t;
-                  currentOptions =
-                      voiceService.parseSentenceToOptions(t, language);
+                  currentOptions = voiceService.parseSentenceToOptions(
+                    t,
+                    language,
+                  );
                   for (int i = 0; i < currentOptions.length; i++) {
                     selectedIndices.putIfAbsent(i, () => 0);
                   }
@@ -131,8 +133,12 @@ class VoiceInputDialog {
                   name,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: (isSelected || onDark) ? Colors.white : Colors.black87,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: (isSelected || onDark)
+                        ? Colors.white
+                        : Colors.black87,
                   ),
                 ),
                 if (side.isNotEmpty) ...[
@@ -197,7 +203,8 @@ class VoiceInputDialog {
                         json.decode(item['translations'] ?? '{}'),
                       );
                     } catch (_) {}
-                    final translation = tr[language] ?? tr['en'] ?? tr['fr'] ?? '';
+                    final translation =
+                        tr[language] ?? tr['en'] ?? tr['fr'] ?? '';
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -206,10 +213,14 @@ class VoiceInputDialog {
                       child: ListTile(
                         leading: Icon(MoveDisplayWidgets.getCategoryIcon(cat)),
                         title: Text(
-                          cat == 'special' ? (tr['en'] ?? item['name']) : item['name'],
+                          cat == 'special'
+                              ? (tr['en'] ?? item['name'])
+                              : item['name'],
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: translation.isNotEmpty ? Text(translation) : null,
+                        subtitle: translation.isNotEmpty
+                            ? Text(translation)
+                            : null,
                       ),
                     );
                   },
@@ -223,8 +234,10 @@ class VoiceInputDialog {
             child: AlertDialog(
               titlePadding: EdgeInsets.zero,
               contentPadding: EdgeInsets.zero,
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 24),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 24,
+              ),
               title: Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.blueGrey.shade900,
@@ -235,7 +248,10 @@ class VoiceInputDialog {
                     Text(
                       showGlossary
                           ? LocalizationService.translate('glossary', language)
-                          : LocalizationService.translate('voice_notes', language),
+                          : LocalizationService.translate(
+                              'voice_notes',
+                              language,
+                            ),
                       style: const TextStyle(color: Colors.white, fontSize: 18),
                     ),
                     const Spacer(),
@@ -249,8 +265,12 @@ class VoiceInputDialog {
                     ),
                     if (!showGlossary)
                       IconButton(
-                        icon: const Icon(Icons.help_outline, color: Colors.white70),
-                        onPressed: () => VoiceHelpDialog.show(context, language),
+                        icon: const Icon(
+                          Icons.help_outline,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () =>
+                            VoiceHelpDialog.show(context, language),
                       ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white70),
@@ -265,493 +285,457 @@ class VoiceInputDialog {
               content: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height * 0.8,
-                child:
-                    showGlossary
-                        ? Column(
-                          children: [
-                            TabBar(
-                              isScrollable: true,
-                              tabs: [
-                                Tab(
-                                  text: LocalizationService.translate(
-                                    'punches',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon('punch'),
-                                  ),
+                child: showGlossary
+                    ? Column(
+                        children: [
+                          TabBar(
+                            isScrollable: true,
+                            tabs: [
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'punches',
+                                  language,
                                 ),
-                                Tab(
-                                  text: LocalizationService.translate(
-                                    'kicks',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon('kick'),
-                                  ),
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon('punch'),
                                 ),
-                                Tab(
-                                  text: LocalizationService.translate(
-                                    'packs',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon('packs'),
-                                  ),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'kicks',
+                                  language,
                                 ),
-                                Tab(
-                                  text: LocalizationService.translate(
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon('kick'),
+                                ),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'packs',
+                                  language,
+                                ),
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon('packs'),
+                                ),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'trapping',
+                                  language,
+                                ),
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon(
                                     'trapping',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon(
-                                      'trapping',
-                                    ),
                                   ),
                                 ),
-                                Tab(
-                                  text: LocalizationService.translate(
-                                    'special',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon(
-                                      'special',
-                                    ),
-                                  ),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'special',
+                                  language,
                                 ),
-                                Tab(
-                                  text: LocalizationService.translate(
-                                    'other',
-                                    language,
-                                  ),
-                                  icon: Icon(
-                                    MoveDisplayWidgets.getCategoryIcon('other'),
-                                  ),
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon('special'),
                                 ),
-                                const Tab(
-                                  text: 'Text',
-                                  icon: Icon(Icons.text_fields),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'other',
+                                  language,
+                                ),
+                                icon: Icon(
+                                  MoveDisplayWidgets.getCategoryIcon('other'),
+                                ),
+                              ),
+                              const Tab(
+                                text: 'Text',
+                                icon: Icon(Icons.text_fields),
+                              ),
+                            ],
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                buildGlossaryListView('punch'),
+                                buildGlossaryListView('kick'),
+                                buildGlossaryListView('packs'),
+                                buildGlossaryListView('trapping'),
+                                buildGlossaryListView('special'),
+                                buildGlossaryListView('other'),
+                                const Center(
+                                  child: Text('Custom Text Entries'),
                                 ),
                               ],
                             ),
-                            Expanded(
-                              child: TabBarView(
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          // PART 2: Hit / Counter Selection
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: IntrinsicHeight(
+                              child: Row(
                                 children: [
-                                  buildGlossaryListView('punch'),
-                                  buildGlossaryListView('kick'),
-                                  buildGlossaryListView('packs'),
-                                  buildGlossaryListView('trapping'),
-                                  buildGlossaryListView('special'),
-                                  buildGlossaryListView('other'),
-                                  const Center(child: Text('Custom Text Entries')),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                        : Column(
-                          children: [
-                            // PART 2: Hit / Counter Selection
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: IntrinsicHeight(
-                                child: Row(
-                                  children: [
-                                    // HIT SIDE
-                                    Expanded(
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            LocalizationService.translate(
-                                              'hit',
-                                              language,
-                                            ).toUpperCase(),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              letterSpacing: 1.1,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          GestureDetector(
-                                            onTap:
-                                                () =>
-                                                    recordingTarget == 'hit'
-                                                        ? stopPartRecording()
-                                                        : startPartRecording(
-                                                          'hit',
-                                                        ),
-                                            child: CircleAvatar(
-                                              radius: 30,
-                                              backgroundColor:
-                                                  recordingTarget == 'hit'
-                                                      ? Colors.red
-                                                      : Colors.blue.withValues(
-                                                        alpha: 0.2,
-                                                      ),
-                                              child: Icon(
-                                                recordingTarget == 'hit'
-                                                    ? Icons.stop
-                                                    : Icons.mic,
-                                                color:
-                                                    recordingTarget == 'hit'
-                                                        ? Colors.white
-                                                        : Colors.blue,
-                                                size: 30,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const VerticalDivider(
-                                      thickness: 1,
-                                      width: 32,
-                                    ),
-                                    // COUNTER SIDE
-                                    Expanded(
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            LocalizationService.translate(
-                                              'answer',
-                                              language,
-                                            ).toUpperCase(),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              letterSpacing: 1.1,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          GestureDetector(
-                                            onTap:
-                                                buildingMove == null
-                                                    ? null
-                                                    : () =>
-                                                        recordingTarget ==
-                                                                'counter'
-                                                            ? stopPartRecording()
-                                                            : startPartRecording(
-                                                              'counter',
-                                                            ),
-                                            child: Opacity(
-                                              opacity:
-                                                  buildingMove == null
-                                                      ? 0.3
-                                                      : 1.0,
-                                              child: CircleAvatar(
-                                                radius: 30,
-                                                backgroundColor:
-                                                    recordingTarget == 'counter'
-                                                        ? Colors.red
-                                                        : Colors
-                                                            .orange
-                                                            .withValues(
-                                                              alpha: 0.2,
-                                                            ),
-                                                child: Icon(
-                                                  recordingTarget == 'counter'
-                                                      ? Icons.stop
-                                                      : Icons.mic,
-                                                  color:
-                                                      recordingTarget ==
-                                                              'counter'
-                                                          ? Colors.white
-                                                          : Colors.orange,
-                                                  size: 30,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const Divider(height: 1),
-
-                            // PART 3: Current matching / Selection
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                width: double.infinity,
-                                color: Colors.black.withValues(alpha: 0.05),
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      recognizedText.isEmpty
-                                          ? 'Speak...'
-                                          : recognizedText,
-                                      style: const TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        fontSize: 14,
-                                        color: Colors.blueGrey,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Expanded(
-                                      child:
-                                          currentOptions.isEmpty
-                                              ? const Center(
-                                                child: Text(
-                                                  'Waiting for match...',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              )
-                                              : ListView.builder(
-                                                itemCount: currentOptions.length,
-                                                itemBuilder: (c, segIdx) {
-                                                  final options =
-                                                      currentOptions[segIdx];
-                                                  return Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                          bottom: 8.0,
-                                                        ),
-                                                    child: Wrap(
-                                                      spacing: 10,
-                                                      runSpacing: 10,
-                                                      children: List.generate(
-                                                        options.length,
-                                                        (optIdx) {
-                                                          final m =
-                                                              options[optIdx]
-                                                                  .move;
-                                                          final isSelected =
-                                                              selectedIndices[
-                                                                    segIdx] ==
-                                                                optIdx;
-                                                          return ActionChip(
-                                                            onPressed:
-                                                                () => setS(() {
-                                                                  selectedIndices[
-                                                                        segIdx] =
-                                                                      optIdx;
-                                                                }),
-                                                            backgroundColor:
-                                                                isSelected
-                                                                    ? Colors
-                                                                        .indigo
-                                                                    : Colors
-                                                                        .indigo
-                                                                        .withValues(
-                                                                          alpha:
-                                                                              0.1,
-                                                                        ),
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(8),
-                                                            label:
-                                                                renderMoveSummary(
-                                                                  m.name,
-                                                                  m.side,
-                                                                  m.level,
-                                                                  isSelected,
-                                                                  isSelected,
-                                                                ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                    ),
-                                    if (currentOptions.isNotEmpty)
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: ElevatedButton.icon(
-                                          onPressed: confirmSelection,
-                                          icon: const Icon(
-                                            Icons.check_circle_outline,
-                                          ),
-                                          label: const Text('Confirm Match'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                Colors.blue.shade700,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const Divider(height: 1),
-
-                            // PART 4: Final Selection Preview
-                            Expanded(
-                              flex: 5,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  children: [
-                                    Row(
+                                  // HIT SIDE
+                                  Expanded(
+                                    child: Column(
                                       children: [
-                                        const Text(
-                                          'SELECTION',
-                                          style: TextStyle(
+                                        Text(
+                                          LocalizationService.translate(
+                                            'hit',
+                                            language,
+                                          ).toUpperCase(),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
                                             letterSpacing: 1.1,
                                           ),
                                         ),
-                                        const Spacer(),
-                                        if (buildingMove != null)
-                                          ElevatedButton.icon(
-                                            onPressed: addToFinalList,
-                                            icon: const Icon(Icons.add),
-                                            label: const Text('Add to List'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.green.shade600,
-                                              foregroundColor: Colors.white,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
+                                        const SizedBox(height: 8),
+                                        GestureDetector(
+                                          onTap: () => recordingTarget == 'hit'
+                                              ? stopPartRecording()
+                                              : startPartRecording('hit'),
+                                          child: CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor:
+                                                recordingTarget == 'hit'
+                                                ? Colors.red
+                                                : Colors.blue.withValues(
+                                                    alpha: 0.2,
                                                   ),
-                                              minimumSize: const Size(0, 30),
+                                            child: Icon(
+                                              recordingTarget == 'hit'
+                                                  ? Icons.stop
+                                                  : Icons.mic,
+                                              color: recordingTarget == 'hit'
+                                                  ? Colors.white
+                                                  : Colors.blue,
+                                              size: 30,
                                             ),
                                           ),
+                                        ),
                                       ],
                                     ),
-                                    const SizedBox(height: 8),
-                                    Expanded(
-                                      child: ListView(
-                                        children: [
-                                          if (buildingMove != null)
-                                            Container(
-                                              margin: const EdgeInsets.only(
-                                                bottom: 8,
-                                              ),
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: Colors.green.shade700,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                color: Colors.green.shade700,
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.build,
-                                                    size: 18,
-                                                    color: Colors.white,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: renderFullMove(
-                                                      buildingMove!,
-                                                      onDark: true,
-                                                    ),
-                                                  ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.delete_outline,
-                                                      size: 20,
-                                                      color: Colors.white,
-                                                    ),
-                                                    onPressed:
-                                                        () => setS(
-                                                          () =>
-                                                              buildingMove =
-                                                                  null,
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ...finalMoves.map(
-                                            (m) => Container(
-                                              margin: const EdgeInsets.only(
-                                                bottom: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey.shade100,
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: ListTile(
-                                                dense: true,
-                                                visualDensity:
-                                                    VisualDensity.compact,
-                                                title: renderFullMove(m),
-                                                trailing: IconButton(
-                                                  icon: const Icon(
-                                                    Icons
-                                                        .remove_circle_outline,
-                                                    color: Colors.red,
-                                                  ),
-                                                  onPressed:
-                                                      () => setS(
-                                                        () =>
-                                                            finalMoves.remove(
-                                                              m,
-                                                            ),
-                                                      ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: ElevatedButton(
-                                        onPressed:
-                                            finalMoves.isEmpty &&
-                                                    buildingMove == null
-                                                ? null
-                                                : () {
-                                                  if (buildingMove != null) {
-                                                    finalMoves.add(
-                                                      buildingMove!,
-                                                    );
-                                                  }
-                                                  Navigator.pop(
-                                                    ctx,
-                                                    finalMoves,
-                                                  );
-                                                },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              Colors.indigo.shade800,
-                                          foregroundColor: Colors.white,
-                                          minimumSize: const Size(120, 40),
-                                        ),
-                                        child: Text(
+                                  ),
+                                  const VerticalDivider(
+                                    thickness: 1,
+                                    width: 32,
+                                  ),
+                                  // COUNTER SIDE
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        Text(
                                           LocalizationService.translate(
-                                            'finish',
+                                            'answer',
                                             language,
-                                          ),
+                                          ).toUpperCase(),
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                            letterSpacing: 1.1,
                                           ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        GestureDetector(
+                                          onTap: buildingMove == null
+                                              ? null
+                                              : () =>
+                                                    recordingTarget == 'counter'
+                                                    ? stopPartRecording()
+                                                    : startPartRecording(
+                                                        'counter',
+                                                      ),
+                                          child: Opacity(
+                                            opacity: buildingMove == null
+                                                ? 0.3
+                                                : 1.0,
+                                            child: CircleAvatar(
+                                              radius: 30,
+                                              backgroundColor:
+                                                  recordingTarget == 'counter'
+                                                  ? Colors.red
+                                                  : Colors.orange.withValues(
+                                                      alpha: 0.2,
+                                                    ),
+                                              child: Icon(
+                                                recordingTarget == 'counter'
+                                                    ? Icons.stop
+                                                    : Icons.mic,
+                                                color:
+                                                    recordingTarget == 'counter'
+                                                    ? Colors.white
+                                                    : Colors.orange,
+                                                size: 30,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const Divider(height: 1),
+
+                          // PART 3: Current matching / Selection
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              width: double.infinity,
+                              color: Colors.black.withValues(alpha: 0.05),
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    recognizedText.isEmpty
+                                        ? 'Speak...'
+                                        : recognizedText,
+                                    style: const TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 14,
+                                      color: Colors.blueGrey,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: currentOptions.isEmpty
+                                        ? const Center(
+                                            child: Text(
+                                              'Waiting for match...',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          )
+                                        : ListView.builder(
+                                            itemCount: currentOptions.length,
+                                            itemBuilder: (c, segIdx) {
+                                              final options =
+                                                  currentOptions[segIdx];
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 8.0,
+                                                ),
+                                                child: Wrap(
+                                                  spacing: 10,
+                                                  runSpacing: 10,
+                                                  children: List.generate(
+                                                    options.length,
+                                                    (optIdx) {
+                                                      final m =
+                                                          options[optIdx].move;
+                                                      final isSelected =
+                                                          selectedIndices[segIdx] ==
+                                                          optIdx;
+                                                      return ActionChip(
+                                                        onPressed: () => setS(() {
+                                                          selectedIndices[segIdx] =
+                                                              optIdx;
+                                                        }),
+                                                        backgroundColor:
+                                                            isSelected
+                                                            ? Colors.indigo
+                                                            : Colors.indigo
+                                                                  .withValues(
+                                                                    alpha: 0.1,
+                                                                  ),
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              8,
+                                                            ),
+                                                        label:
+                                                            renderMoveSummary(
+                                                              m.name,
+                                                              m.side,
+                                                              m.level,
+                                                              isSelected,
+                                                              isSelected,
+                                                            ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                  if (currentOptions.isNotEmpty)
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: ElevatedButton.icon(
+                                        onPressed: confirmSelection,
+                                        icon: const Icon(
+                                          Icons.check_circle_outline,
+                                        ),
+                                        label: const Text('Confirm Match'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blue.shade700,
+                                          foregroundColor: Colors.white,
                                         ),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const Divider(height: 1),
+
+                          // PART 4: Final Selection Preview
+                          Expanded(
+                            flex: 5,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'SELECTION',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (buildingMove != null)
+                                        ElevatedButton.icon(
+                                          onPressed: addToFinalList,
+                                          icon: const Icon(Icons.add),
+                                          label: const Text('Add to List'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.green.shade600,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
+                                            minimumSize: const Size(0, 30),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: ListView(
+                                      children: [
+                                        if (buildingMove != null)
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 8,
+                                            ),
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.green.shade700,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color: Colors.green.shade700,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.build,
+                                                  size: 18,
+                                                  color: Colors.white,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: renderFullMove(
+                                                    buildingMove!,
+                                                    onDark: true,
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                    size: 20,
+                                                    color: Colors.white,
+                                                  ),
+                                                  onPressed: () => setS(
+                                                    () => buildingMove = null,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ...finalMoves.map(
+                                          (m) => Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: ListTile(
+                                              dense: true,
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              title: renderFullMove(m),
+                                              trailing: IconButton(
+                                                icon: const Icon(
+                                                  Icons.remove_circle_outline,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () => setS(
+                                                  () => finalMoves.remove(m),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: ElevatedButton(
+                                      onPressed:
+                                          finalMoves.isEmpty &&
+                                              buildingMove == null
+                                          ? null
+                                          : () {
+                                              if (buildingMove != null) {
+                                                finalMoves.add(buildingMove!);
+                                              }
+                                              Navigator.pop(ctx, finalMoves);
+                                            },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.indigo.shade800,
+                                        foregroundColor: Colors.white,
+                                        minimumSize: const Size(120, 40),
+                                      ),
+                                      child: Text(
+                                        LocalizationService.translate(
+                                          'finish',
+                                          language,
+                                        ),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
               ),
             ),
           );

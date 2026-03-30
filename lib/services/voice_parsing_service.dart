@@ -269,7 +269,10 @@ class VoiceParsingService {
 
         if (counterPhrase.trim().isNotEmpty) {
           ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
-          var topCounters = findTopMatches(counterAttrs.remainingText, language);
+          var topCounters = findTopMatches(
+            counterAttrs.remainingText,
+            language,
+          );
 
           if (topCounters.isNotEmpty) {
             var matchedCounter = topCounters.first.entry;
