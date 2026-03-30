@@ -23,7 +23,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -71,6 +71,13 @@ class DatabaseService {
       await db.delete('glossary');
       await _seedGlossary(db);
     }
+    if (oldVersion < 8) {
+      try {
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
+        );
+      } catch (_) {}
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -96,7 +103,7 @@ class DatabaseService {
 
     await db.execute('''
       CREATE TABLE series_moves (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, sub_moves_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, sub_moves_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
 

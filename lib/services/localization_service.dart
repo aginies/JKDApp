@@ -98,6 +98,7 @@ class LocalizationService {
       'error': 'Error',
       'voice_help_title': 'Voice Input Help',
       'edit': 'Edit',
+      'hit': 'Hit',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -197,6 +198,7 @@ class LocalizationService {
       'error': 'Erreur',
       'voice_help_title': 'Aide Saisie Vocale',
       'edit': 'Modifier',
+      'hit': 'Attaque',
     },
   };
 

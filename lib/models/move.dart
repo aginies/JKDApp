@@ -3,7 +3,8 @@ import 'package:uuid/uuid.dart';
 
 class Move {
   final int? id;
-  final int? glossaryId; // NEW: Track the source glossary item
+  final int? glossaryId; // Track the source glossary item for hit
+  final int? counterGlossaryId; // Track the source glossary item for counter
   final String uKey;
   final String name;
   final String category; // 'punch', 'kick', 'packs', 'trapping', 'special'
@@ -25,6 +26,7 @@ class Move {
   Move({
     this.id,
     this.glossaryId,
+    this.counterGlossaryId,
     String? uKey,
     required this.name,
     this.category = '',
@@ -55,6 +57,7 @@ class Move {
     return {
       'id': id,
       'glossary_id': glossaryId,
+      'counter_glossary_id': counterGlossaryId,
       'name': name,
       'category': category,
       'side': side,
@@ -100,6 +103,7 @@ class Move {
     return Move(
       id: map['id'],
       glossaryId: map['glossary_id'],
+      counterGlossaryId: map['counter_glossary_id'],
       uKey: map['uKey'] ?? (map['id']?.toString() ?? const Uuid().v4()),
       name: map['name'] ?? (subs.isNotEmpty ? 'Combo' : ''),
       category: map['category'] ?? '',
@@ -121,6 +125,7 @@ class Move {
   Move copyWith({
     int? id,
     int? glossaryId,
+    int? counterGlossaryId,
     String? uKey,
     String? name,
     String? category,
@@ -140,6 +145,7 @@ class Move {
     return Move(
       id: id ?? this.id,
       glossaryId: glossaryId ?? this.glossaryId,
+      counterGlossaryId: counterGlossaryId ?? this.counterGlossaryId,
       uKey: uKey ?? this.uKey,
       name: name ?? this.name,
       category: category ?? this.category,

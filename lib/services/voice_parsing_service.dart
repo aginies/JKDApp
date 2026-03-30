@@ -30,6 +30,7 @@ class VoiceParsingService {
   final SpeechToText _speechToText = SpeechToText();
   final List<GlossaryEntry> _glossary = [];
   bool _isInitialized = false;
+  Function(String)? _onStatusCallback;
 
   // Keywords
   final List<String> _leftKeywords = ['left', 'gauche'];
@@ -57,7 +58,10 @@ class VoiceParsingService {
     if (!_isInitialized) {
       _isInitialized = await _speechToText.initialize(
         onError: (error) => debugPrint('STT Error: $error'),
-        onStatus: (status) => debugPrint('STT Status: $status'),
+        onStatus: (status) {
+          debugPrint('STT Status: $status');
+          _onStatusCallback?.call(status);
+        },
       );
       await _loadGlossary();
     }
@@ -102,7 +106,12 @@ class VoiceParsingService {
     }
   }
 
-  void startListening(Function(String) onResult, {String? localeId}) {
+  void startListening(
+    Function(String) onResult, {
+    String? localeId,
+    Function(String)? onStatus,
+  }) {
+    _onStatusCallback = onStatus;
     _speechToText.listen(
       onResult: (result) {
         onResult(result.recognizedWords);
@@ -113,6 +122,7 @@ class VoiceParsingService {
 
   void stopListening() {
     _speechToText.stop();
+    _onStatusCallback = null;
   }
 
   bool get isListening => _speechToText.isListening;

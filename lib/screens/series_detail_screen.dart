@@ -810,18 +810,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 child: GestureDetector(
                                   onTap: () async {
                                     final cat = m.counterCategory ?? '';
-                                    final items = await DatabaseService()
-                                        .getGlossaryByCategory(cat);
-                                    final match = items.firstWhere(
-                                      (i) => i['name'] == m.counterName,
-                                      orElse: () => {},
-                                    );
+                                    int? gid = m.counterGlossaryId;
+
+                                    if (gid == null &&
+                                        m.counterName != null) {
+                                      // Fallback to name search if ID is missing (legacy data)
+                                      final items = await DatabaseService()
+                                          .getGlossaryByCategory(cat);
+                                      final match = items.firstWhere(
+                                        (i) => i['name'] == m.counterName,
+                                        orElse: () => {},
+                                      );
+                                      if (match.isNotEmpty) {
+                                        gid = match['id'];
+                                      }
+                                    }
 
                                     setS(() {
                                       _editingComboItemIndex = idx;
                                       _isEditingCounter = true;
-                                      if (match.isNotEmpty) {
-                                        final gid = match['id'];
+                                      if (gid != null) {
                                         _selectedSidesInPicker[gid] =
                                             m.counterSide ?? '';
                                         _selectedSpecialsInPicker[gid] =
@@ -1440,15 +1448,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
-                      : null;
+                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom
-                          ? _customMoveController.text
-                          : it['name'],
+                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterGlossaryId: isCustom ? null : it['id'],
                       counterCategory: cat,
                       counterSide: sd,
                       counterLevel: lv,
@@ -1457,6 +1462,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   } else {
                     n = Move(
                       glossaryId: isCustom ? null : it['id'],
+                      counterGlossaryId: ex?.counterGlossaryId,
                       name: isCustom ? _customMoveController.text : it['name'],
                       category: cat,
                       translations: tr,
@@ -1535,15 +1541,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
-                      : null;
+                  final ex = isE ? _currentCombo[_editingComboItemIndex!] : null;
                   final Move n;
                   if (isE && _isEditingCounter) {
                     n = ex!.copyWith(
-                      counterName: isCustom
-                          ? _customMoveController.text
-                          : it['name'],
+                      counterName: isCustom ? _customMoveController.text : it['name'],
+                      counterGlossaryId: isCustom ? null : it['id'],
                       counterCategory: cat,
                       counterSide: sd,
                       counterLevel: lv,
@@ -1552,6 +1555,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   } else {
                     n = Move(
                       glossaryId: isCustom ? null : it['id'],
+                      counterGlossaryId: ex?.counterGlossaryId,
                       name: isCustom ? _customMoveController.text : it['name'],
                       category: cat,
                       translations: tr,
@@ -1666,6 +1670,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         final ex = _currentCombo[_editingComboItemIndex!];
         _currentCombo[_editingComboItemIndex!] = Move(
           glossaryId: ex.glossaryId,
+          counterGlossaryId: c['id'],
           name: ex.name,
           category: ex.category,
           translations: ex.translations,
@@ -1685,6 +1690,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       } else {
         final n = Move(
           glossaryId: at['id'],
+          counterGlossaryId: c['id'],
           name: at['name'],
           category: ac,
           translations: atr,
@@ -2035,7 +2041,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                                   const Icon(
                                                     Icons
                                                         .subdirectory_arrow_right,
-                                                    size: 16,
+                                                    size: 22,
                                                     color: Colors.orange,
                                                   ),
                                                   Icon(
@@ -2098,7 +2104,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   children: [
                                     const Icon(
                                       Icons.subdirectory_arrow_right,
-                                      size: 16,
+                                      size: 28,
                                       color: Colors.orange,
                                     ),
                                     Icon(
@@ -2109,7 +2115,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       color: Colors.grey,
                                     ),
                                     Text(
-                                      '${LocalizationService.translate('answer', lang)}: ${_moves[i].counterName}',
+                                      _moves[i].counterName!,
                                       style: const TextStyle(
                                         color: Colors.orangeAccent,
                                         fontWeight: FontWeight.w500,

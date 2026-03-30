@@ -52,15 +52,25 @@ class VoiceInputDialog {
               currentOptions = [];
               selectedIndices = {};
             });
-            voiceService.startListening((t) {
-              setS(() {
-                recognizedText = t;
-                currentOptions = voiceService.parseSentenceToOptions(t);
-                for (int i = 0; i < currentOptions.length; i++) {
-                  selectedIndices.putIfAbsent(i, () => 0);
+            voiceService.startListening(
+              (t) {
+                setS(() {
+                  recognizedText = t;
+                  currentOptions = voiceService.parseSentenceToOptions(t);
+                  for (int i = 0; i < currentOptions.length; i++) {
+                    selectedIndices.putIfAbsent(i, () => 0);
+                  }
+                });
+              },
+              localeId: language == 'fr' ? 'fr_FR' : 'en_US',
+              onStatus: (status) {
+                if (status == 'done' || status == 'notListening') {
+                  setS(() {
+                    recordingTarget = null;
+                  });
                 }
-              });
-            }, localeId: language == 'fr' ? 'fr_FR' : 'en_US');
+              },
+            );
           }
 
           void stopPartRecording() {
@@ -74,16 +84,14 @@ class VoiceInputDialog {
             if (currentOptions.isEmpty) return;
 
             setS(() {
-              // We take the first segment found (usually user says one thing at a time here)
+              // We take the first segment found
               final idx = selectedIndices[0] ?? 0;
               if (idx < currentOptions[0].length) {
                 final selectedMove = currentOptions[0][idx].move;
 
                 if (buildingMove == null) {
-                  // If we are recording hit, it becomes the new building move
                   buildingMove = selectedMove;
                 } else {
-                  // If we already have a hit, this becomes the counter
                   buildingMove = buildingMove!.copyWith(
                     counterName: selectedMove.name,
                     counterCategory: selectedMove.category,
@@ -112,6 +120,7 @@ class VoiceInputDialog {
             String side,
             String level,
             bool isSelected,
+            bool onDark,
           ) {
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -121,7 +130,7 @@ class VoiceInputDialog {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: (isSelected || onDark) ? Colors.white : Colors.black87,
                   ),
                 ),
                 if (side.isNotEmpty) ...[
@@ -143,20 +152,25 @@ class VoiceInputDialog {
             );
           }
 
-          Widget renderFullMove(Move m) {
+          Widget renderFullMove(Move m, {bool onDark = false}) {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                renderMoveSummary(m.name, m.side, m.level, false),
+                renderMoveSummary(m.name, m.side, m.level, false, onDark),
                 if (m.counterName != null) ...[
                   const SizedBox(width: 4),
-                  const Icon(Icons.subdirectory_arrow_right, size: 14),
+                  Icon(
+                    Icons.subdirectory_arrow_right,
+                    size: 14,
+                    color: onDark ? Colors.white70 : Colors.black54,
+                  ),
                   const SizedBox(width: 2),
                   renderMoveSummary(
                     m.counterName!,
                     m.counterSide ?? '',
                     m.counterLevel ?? '',
                     false,
+                    onDark,
                   ),
                 ],
               ],
@@ -207,7 +221,7 @@ class VoiceInputDialog {
                           child: Column(
                             children: [
                               Text(
-                                LocalizationService.translate('add', language),
+                                LocalizationService.translate('hit', language),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -362,6 +376,7 @@ class VoiceInputDialog {
                                                   m.side,
                                                   m.level,
                                                   isSelected,
+                                                  false,
                                                 ),
                                               );
                                             },
@@ -429,23 +444,27 @@ class VoiceInputDialog {
                                       ),
                                     ),
                                     borderRadius: BorderRadius.circular(8),
-                                    color: Colors.green.withValues(alpha: 0.05),
+                                    color: Colors.green.shade700,
                                   ),
                                   child: Row(
                                     children: [
                                       const Icon(
                                         Icons.build,
                                         size: 16,
-                                        color: Colors.green,
+                                        color: Colors.white,
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
-                                        child: renderFullMove(buildingMove!),
+                                        child: renderFullMove(
+                                          buildingMove!,
+                                          onDark: true,
+                                        ),
                                       ),
                                       IconButton(
                                         icon: const Icon(
                                           Icons.delete_outline,
                                           size: 18,
+                                          color: Colors.white,
                                         ),
                                         onPressed:
                                             () => setS(() => buildingMove = null),
