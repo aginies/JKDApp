@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
-import '../../../models/series.dart';
-import '../../../models/move.dart';
 import '../../../services/series_provider.dart';
 import '../../../services/localization_service.dart';
 
@@ -26,7 +24,6 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   double _delaySeconds = 1.5;
   String _currentMoveDisplay = "";
   String _currentSeriesTitle = "";
-  String? _lastSpokenSeriesTitle;
   Timer? _timer;
   final Random _random = Random();
 
@@ -98,7 +95,6 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       _timer?.cancel();
       _currentMoveDisplay = "";
       _currentSeriesTitle = "";
-      _lastSpokenSeriesTitle = null;
       if (!Platform.isLinux) {
         _tts.stop();
       }
@@ -138,7 +134,6 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
 
     setState(() {
       _currentSeriesTitle = targetSeries.title;
-      _lastSpokenSeriesTitle = targetSeries.title;
     });
 
     if (Platform.isLinux) {
@@ -160,8 +155,9 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       orElse: () => jkdSeries.first,
     );
 
-    final availableMoves =
-        targetSeries.moves.where((m) => m.side == _selectedGuard).toList();
+    final availableMoves = targetSeries.moves
+        .where((m) => m.side == _selectedGuard)
+        .toList();
 
     if (availableMoves.isEmpty) {
       _stop();
@@ -239,19 +235,27 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
               const SizedBox(width: 8),
               Text(
                 widget.language == 'fr' ? 'Lecteur Aléatoire' : 'Random Reader',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               const Spacer(),
               if (!_isPlaying)
                 IconButton(
-                  icon: const Icon(Icons.play_arrow, color: Colors.green, size: 32),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.green,
+                    size: 32,
+                  ),
                   onPressed: _play,
                 )
               else ...[
                 IconButton(
-                  icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause, 
-                    color: _isPaused ? Colors.green : Colors.orange, 
-                    size: 32
+                  icon: Icon(
+                    _isPaused ? Icons.play_arrow : Icons.pause,
+                    color: _isPaused ? Colors.green : Colors.orange,
+                    size: 32,
                   ),
                   onPressed: _isPaused ? _play : _pause,
                 ),
@@ -272,17 +276,33 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                   children: [
                     Text(
                       widget.language == 'fr' ? 'Série' : 'Series',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     DropdownButton<String>(
                       value: _selectedSeriesId,
                       isExpanded: true,
-                      underline: Container(height: 1, color: Colors.blue.withValues(alpha: 0.2)),
-                      items: jkdSeries.map((s) => DropdownMenuItem(
-                        value: s.id.toString(),
-                        child: Text(s.title, overflow: TextOverflow.ellipsis),
-                      )).toList(),
-                      onChanged: (_isPlaying && !_isPaused) ? null : (val) => setState(() => _selectedSeriesId = val!),
+                      underline: Container(
+                        height: 1,
+                        color: Colors.blue.withValues(alpha: 0.2),
+                      ),
+                      items: jkdSeries
+                          .map(
+                            (s) => DropdownMenuItem(
+                              value: s.id.toString(),
+                              child: Text(
+                                s.title,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (_isPlaying && !_isPaused)
+                          ? null
+                          : (val) => setState(() => _selectedSeriesId = val!),
                     ),
                   ],
                 ),
@@ -295,27 +315,42 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                   children: [
                     Text(
                       widget.language == 'fr' ? 'Garde' : 'Guard',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     DropdownButton<String>(
                       value: _selectedGuard,
                       isExpanded: true,
-                      underline: Container(height: 1, color: Colors.blue.withValues(alpha: 0.2)),
+                      underline: Container(
+                        height: 1,
+                        color: Colors.blue.withValues(alpha: 0.2),
+                      ),
                       items: [
                         DropdownMenuItem(
                           value: 'L',
                           child: Text(
-                            LocalizationService.translate('left', widget.language),
+                            LocalizationService.translate(
+                              'left',
+                              widget.language,
+                            ),
                           ),
                         ),
                         DropdownMenuItem(
                           value: 'R',
                           child: Text(
-                            LocalizationService.translate('right', widget.language),
+                            LocalizationService.translate(
+                              'right',
+                              widget.language,
+                            ),
                           ),
                         ),
                       ],
-                      onChanged: (_isPlaying && !_isPaused) ? null : (val) => setState(() => _selectedGuard = val!),
+                      onChanged: (_isPlaying && !_isPaused)
+                          ? null
+                          : (val) => setState(() => _selectedGuard = val!),
                     ),
                   ],
                 ),
@@ -328,17 +363,30 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                   children: [
                     Text(
                       widget.language == 'fr' ? 'Délai' : 'Delay',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     DropdownButton<double>(
                       value: _delaySeconds,
                       isExpanded: true,
-                      underline: Container(height: 1, color: Colors.blue.withValues(alpha: 0.2)),
-                      items: [0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 2.5].map((d) => DropdownMenuItem(
-                        value: d,
-                        child: Text('${d}s'),
-                      )).toList(),
-                      onChanged: (_isPlaying && !_isPaused) ? null : (val) => setState(() => _delaySeconds = val!),
+                      underline: Container(
+                        height: 1,
+                        color: Colors.blue.withValues(alpha: 0.2),
+                      ),
+                      items: [0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 2.5]
+                          .map(
+                            (d) => DropdownMenuItem(
+                              value: d,
+                              child: Text('${d}s'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (_isPlaying && !_isPaused)
+                          ? null
+                          : (val) => setState(() => _delaySeconds = val!),
                     ),
                   ],
                 ),

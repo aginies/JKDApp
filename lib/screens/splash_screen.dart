@@ -33,22 +33,23 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Full 360 rotation (two full spins for effect)
     _rotateAnimation = Tween<double>(begin: 0.0, end: 4 * math.pi).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOutCubic,
-      ),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
     );
 
     // Scale animation - start small, grow, then return to normal for Hero
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.5, end: 1.2)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 0.5,
+          end: 1.2,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 50.0,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.2, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(
+          begin: 1.2,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 50.0,
       ),
     ]).animate(_controller);
@@ -120,12 +121,10 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // Fade in the new screen gradually
           return FadeTransition(
-            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeIn,
-              ),
-            ),
+            opacity: Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeIn)),
             child: child,
           );
         },

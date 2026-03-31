@@ -173,7 +173,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
     if (!mounted) return;
     final cat = isCounter ? (m.counterCategory ?? '') : m.category;
-    final t = MoveDisplayWidgets.getTabIndexForCategory(cat, isCounter: isCounter);
+    final t = MoveDisplayWidgets.getTabIndexForCategory(
+      cat,
+      isCounter: isCounter,
+    );
     if (t != -1) {
       DefaultTabController.of(ctx).animateTo(t);
     }
@@ -2466,7 +2469,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       }
                     },
                     itemBuilder: (context) {
-                      final isSystemJkdMoves = widget.series!.isSystem &&
+                      final isSystemJkdMoves =
+                          widget.series!.isSystem &&
                           widget.series!.category == 'JKD Moves';
                       return [
                         if (!isSystemJkdMoves)
@@ -2483,41 +2487,41 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         PopupMenuItem(
                           value: 'print',
-                        child: ListTile(
-                          leading: const Icon(Icons.print),
-                          title: Text(
-                            LocalizationService.translate(
-                              'export_to_pdf',
-                              lang,
+                          child: ListTile(
+                            leading: const Icon(Icons.print),
+                            title: Text(
+                              LocalizationService.translate(
+                                'export_to_pdf',
+                                lang,
+                              ),
                             ),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
                           ),
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: 'share',
-                        child: ListTile(
-                          leading: const Icon(Icons.share),
-                          title: Text(
-                            LocalizationService.translate('share_json', lang),
+                        PopupMenuItem(
+                          value: 'share',
+                          child: ListTile(
+                            leading: const Icon(Icons.share),
+                            title: Text(
+                              LocalizationService.translate('share_json', lang),
+                            ),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
                           ),
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
                         ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'export',
-                        child: ListTile(
-                          leading: Icon(Icons.save_alt),
-                          title: Text('Export to JSON'),
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
+                        const PopupMenuItem(
+                          value: 'export',
+                          child: ListTile(
+                            leading: Icon(Icons.save_alt),
+                            title: Text('Export to JSON'),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
                         ),
-                      ),
-                    ];
-                  },
-                ),
+                      ];
+                    },
+                  ),
               ],
             ),
       body: SafeArea(

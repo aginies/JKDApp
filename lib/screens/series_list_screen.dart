@@ -987,134 +987,145 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             itemCount: filtered.length,
             itemBuilder: (context, index) {
               final series = filtered[index];
-        final isEven = index % 2 == 0;
-        final theme = Theme.of(context);
+              final isEven = index % 2 == 0;
+              final theme = Theme.of(context);
 
-        // Gradient colors based on system/user and theme
-        final isDark = theme.brightness == Brightness.dark;
-        final gradientColors = series.isSystem
-            ? (isDark
-                  ? [
-                      Colors.blue.withValues(alpha: 0.15),
-                      Colors.purple.withValues(alpha: 0.1),
-                    ]
-                  : [
-                      Colors.blue.withValues(alpha: 0.08),
-                      Colors.purple.withValues(alpha: 0.05),
-                    ])
-            : (isDark
-                  ? [
-                      Colors.teal.withValues(alpha: 0.15),
-                      Colors.green.withValues(alpha: 0.1),
-                    ]
-                  : [
-                      Colors.teal.withValues(alpha: 0.08),
-                      Colors.green.withValues(alpha: 0.05),
-                    ]);
+              // Gradient colors based on system/user and theme
+              final isDark = theme.brightness == Brightness.dark;
+              final gradientColors = series.isSystem
+                  ? (isDark
+                        ? [
+                            Colors.blue.withValues(alpha: 0.15),
+                            Colors.purple.withValues(alpha: 0.1),
+                          ]
+                        : [
+                            Colors.blue.withValues(alpha: 0.08),
+                            Colors.purple.withValues(alpha: 0.05),
+                          ])
+                  : (isDark
+                        ? [
+                            Colors.teal.withValues(alpha: 0.15),
+                            Colors.green.withValues(alpha: 0.1),
+                          ]
+                        : [
+                            Colors.teal.withValues(alpha: 0.08),
+                            Colors.green.withValues(alpha: 0.05),
+                          ]);
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          elevation: isEven ? 1 : 0.7,
-          clipBehavior: Clip.antiAlias,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    transitionDuration: const Duration(milliseconds: 300),
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        SeriesDetailScreen(series: series),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(
-                            1.0,
-                            0.0,
-                          ); // Slides in from the right
-                          const end = Offset.zero;
-                          final tween = Tween(begin: begin, end: end);
-                          final offsetAnimation = animation.drive(tween);
-                          return SlideTransition(
-                            position: offsetAnimation,
-                            child: child,
-                          );
-                        },
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                elevation: isEven ? 1 : 0.7,
+                clipBehavior: Clip.antiAlias,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
-                );
-              },
-              child: ListTile(
-                leading: series.isSystem
-                    ? Builder(
-                        builder: (context) {
-                          String asset = 'assets/icon/JKD.png';
-                          final cat = series.category;
-                          if (cat == 'Jun Fan Gung Fu') {
-                            asset = 'assets/icon/jfgf.png';
-                          } else if (cat == 'Jun Fan Kick Boxing') {
-                            asset = 'assets/icon/jfkb.png';
-                          } else if (cat == 'Kali') {
-                            asset = 'assets/icon/kali.png';
-                          } else if (cat == 'JKD Moves') {
-                            asset = 'assets/icon/JKD.png';
-                          }
-                          return Image.asset(asset, width: 38, height: 38);
-                        },
-                      )
-                    : const Icon(
-                        Icons.person,
-                        color: Colors.orangeAccent,
-                        size: 38,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 300),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  SeriesDetailScreen(series: series),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                                const begin = Offset(
+                                  1.0,
+                                  0.0,
+                                ); // Slides in from the right
+                                const end = Offset.zero;
+                                final tween = Tween(begin: begin, end: end);
+                                final offsetAnimation = animation.drive(tween);
+                                return SlideTransition(
+                                  position: offsetAnimation,
+                                  child: child,
+                                );
+                              },
+                        ),
+                      );
+                    },
+                    child: ListTile(
+                      leading: series.isSystem
+                          ? Builder(
+                              builder: (context) {
+                                String asset = 'assets/icon/JKD.png';
+                                final cat = series.category;
+                                if (cat == 'Jun Fan Gung Fu') {
+                                  asset = 'assets/icon/jfgf.png';
+                                } else if (cat == 'Jun Fan Kick Boxing') {
+                                  asset = 'assets/icon/jfkb.png';
+                                } else if (cat == 'Kali') {
+                                  asset = 'assets/icon/kali.png';
+                                } else if (cat == 'JKD Moves') {
+                                  asset = 'assets/icon/JKD.png';
+                                }
+                                return Image.asset(
+                                  asset,
+                                  width: 38,
+                                  height: 38,
+                                );
+                              },
+                            )
+                          : const Icon(
+                              Icons.person,
+                              color: Colors.orangeAccent,
+                              size: 38,
+                            ),
+                      title: Text(series.title),
+                      subtitle: Text(
+                        '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
+                        style: const TextStyle(
+                          color: Colors.pink,
+                          fontSize: 12,
+                        ),
                       ),
-                title: Text(series.title),
-                subtitle: Text(
-                  '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
-                  style: const TextStyle(color: Colors.pink, fontSize: 12),
+                      trailing: context.read<SeriesProvider>().developerMode
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.copy,
+                                    color: Colors.blueGrey,
+                                  ),
+                                  onPressed: () => _confirmClone(
+                                    context,
+                                    context.read<SeriesProvider>(),
+                                    series,
+                                  ),
+                                  tooltip: LocalizationService.translate(
+                                    'clone',
+                                    lang,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => _confirmDelete(
+                                    context,
+                                    context.read<SeriesProvider>(),
+                                    series,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
-                trailing: context.read<SeriesProvider>().developerMode
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.copy,
-                              color: Colors.blueGrey,
-                            ),
-                            onPressed: () => _confirmClone(
-                              context,
-                              context.read<SeriesProvider>(),
-                              series,
-                            ),
-                            tooltip: LocalizationService.translate(
-                              'clone',
-                              lang,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _confirmDelete(
-                              context,
-                              context.read<SeriesProvider>(),
-                              series,
-                            ),
-                          ),
-                        ],
-                      )
-                    : null,
-              ),
-            ),
+              );
+            },
           ),
-        );
-      },
-    ),
-  ),
-],
-);
-}
+        ),
+      ],
+    );
+  }
 }
