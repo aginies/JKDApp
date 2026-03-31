@@ -174,6 +174,7 @@ class SeriesProvider with ChangeNotifier {
   }
 
   Future<void> loadSeries() async {
+    _filteredCache.clear();
     _series = await _dbService.getAllSeries();
     notifyListeners();
   }

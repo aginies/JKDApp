@@ -5,10 +5,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 
-class _TtsLine {
+class TtsLine {
   final String text;
   final int delayMs;
-  _TtsLine(this.text, this.delayMs);
+  TtsLine(this.text, this.delayMs);
 }
 
 class TrainingController {
@@ -20,6 +20,7 @@ class TrainingController {
   bool _isTraining = false;
   bool _isPaused = false;
   int _currentIndex = -1;
+  int _subIndex = 0; // Tracks progress within a combo/item
   Timer? _timer;
 
   // Stored parameters for resume
@@ -77,32 +78,29 @@ class TrainingController {
     }
   }
 
-  Future<void> speak(dynamic text, String language) async {
-    if (text is String) {
+  Future<void> speak(List<TtsLine> lines, String language) async {
+    // Start from _subIndex
+    for (int i = _subIndex; i < lines.length; i++) {
+      if (!_isTraining || _isPaused) break;
+      
+      final line = lines[i];
       if (Platform.isLinux) {
         try {
-          await Process.run('spd-say', ['-l', language, '-w', text]);
+          await Process.run('spd-say', ['-l', language, '-w', line.text]);
         } catch (e) {
           debugPrint("spd-say warning: $e");
         }
       } else {
-        await _tts.speak(text);
+        await _tts.speak(line.text);
       }
-    } else if (text is List<_TtsLine>) {
-      for (final line in text) {
-        if (!_isTraining || _isPaused) break;
-        if (Platform.isLinux) {
-          try {
-            await Process.run('spd-say', ['-l', language, '-w', line.text]);
-          } catch (e) {
-            debugPrint("spd-say warning: $e");
-          }
-        } else {
-          await _tts.speak(line.text);
-        }
-        if (line.delayMs > 0) {
-          await Future.delayed(Duration(milliseconds: line.delayMs));
-        }
+      
+      if (!_isTraining || _isPaused) break;
+
+      // Update subIndex AFTER speaking successfully
+      _subIndex = i + 1;
+
+      if (line.delayMs > 0 && i < lines.length - 1) {
+        await Future.delayed(Duration(milliseconds: line.delayMs));
       }
     }
   }
@@ -190,6 +188,7 @@ class TrainingController {
     _isTraining = true;
     _isPaused = false;
     _currentIndex = startIndex - 1;
+    _subIndex = 0;
     onIndexChanged(_currentIndex);
 
     _playStep(
@@ -248,6 +247,7 @@ class TrainingController {
     if (_currentIndex >= endIndex) {
       if (isLooping) {
         _currentIndex = startIndex - 1;
+        _subIndex = 0;
         onIndexChanged(_currentIndex);
       } else {
         stop();
@@ -255,36 +255,40 @@ class TrainingController {
       }
     }
 
-    await speak(
-      _buildTtsTextList(moves[_currentIndex], language, comboInterval),
-      language,
-    );
+    final lines = _buildTtsTextList(moves[_currentIndex], language, comboInterval);
+    await speak(lines, language);
 
     if (_isPaused) return;
 
-    _timer = Timer(Duration(seconds: interval), () {
-      if (_isTraining && !_isPaused) {
-        _currentIndex++;
-        onIndexChanged(_currentIndex);
-        _playStep(
-          moves: moves,
-          startIndex: startIndex,
-          endIndex: endIndex,
-          interval: interval,
-          comboInterval: comboInterval,
-          isLooping: isLooping,
-          language: language,
-        );
-      }
-    });
+    // If we finished all lines for this move, move to next after interval
+    if (_subIndex >= lines.length) {
+      _subIndex = 0; // Reset for next move
+      _timer = Timer(Duration(seconds: interval), () {
+        if (_isTraining && !_isPaused) {
+          _currentIndex++;
+          onIndexChanged(_currentIndex);
+          _playStep(
+            moves: moves,
+            startIndex: startIndex,
+            endIndex: endIndex,
+            interval: interval,
+            comboInterval: comboInterval,
+            isLooping: isLooping,
+            language: language,
+          );
+        }
+      });
+    } else {
+      // We paused in the middle of a combo, resume() will handle it
+    }
   }
 
-  List<_TtsLine> _buildTtsTextList(
+  List<TtsLine> _buildTtsTextList(
     Move move,
     String language,
     int comboInterval,
   ) {
-    List<_TtsLine> lines = [];
+    List<TtsLine> lines = [];
 
     void addMoveLines(Move m) {
       StringBuffer sb = StringBuffer();
@@ -303,7 +307,7 @@ class TrainingController {
 
       // If there is an answer, add the hit with 1s delay
       if (m.counterName != null) {
-        lines.add(_TtsLine(sb.toString().trim(), 1000));
+        lines.add(TtsLine(sb.toString().trim(), 1000));
         StringBuffer csb = StringBuffer();
         csb.write('${LocalizationService.translate('answer', language)} ');
         if (m.counterSide != null) {
@@ -317,10 +321,10 @@ class TrainingController {
             '${LocalizationService.translate(m.counterLevel!.toLowerCase(), language)} ',
           );
         }
-        lines.add(_TtsLine(csb.toString().trim(), comboInterval));
+        lines.add(TtsLine(csb.toString().trim(), comboInterval));
       } else {
         // No answer, just the hit with combo delay
-        lines.add(_TtsLine(sb.toString().trim(), comboInterval));
+        lines.add(TtsLine(sb.toString().trim(), comboInterval));
       }
     }
 
@@ -340,6 +344,7 @@ class TrainingController {
     _isTraining = false;
     _isPaused = false;
     _currentIndex = -1;
+    _subIndex = 0;
     onTrainingComplete();
   }
 

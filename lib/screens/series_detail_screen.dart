@@ -65,7 +65,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
   Timer? _scrollTimer;
-  Timer? _saveDelayTimer;
   int? _lastScrolledItemId;
 
   final Map<String, String> _methodDefinitions = {
@@ -121,7 +120,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   @override
   void dispose() {
     _scrollTimer?.cancel();
-    _saveDelayTimer?.cancel();
     _trainingController.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
@@ -391,11 +389,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       );
 
       // Dismiss the dialog and pop the screen after a short delay
-      _saveDelayTimer?.cancel();
-      _saveDelayTimer = Timer(const Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          Navigator.pop(context); // Dismiss success dialog
-          Navigator.pop(context); // Pop the screen
+          Navigator.of(context).pop(); // Dismiss success dialog
+          Navigator.of(context).pop(); // Pop the series detail screen
         }
       });
     }
@@ -2404,7 +2401,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 child: Card(
                   margin: EdgeInsets.zero,
                   color: _trainingController.currentIndex == i
-                      ? Colors.green.withValues(alpha: 0.3)
+                      ? Colors.grey.withValues(alpha: 0.2)
                       : null,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -3066,12 +3063,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.2),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.fitness_center, color: Colors.green),
+                      const Icon(Icons.fitness_center, color: Colors.grey),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Row(
@@ -3088,7 +3085,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               const Icon(
                                 Icons.loop,
                                 size: 16,
-                                color: Colors.green,
+                                color: Colors.grey,
                               ),
                             ],
                           ],

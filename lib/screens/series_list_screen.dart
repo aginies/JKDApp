@@ -731,16 +731,19 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             _buildSeriesList('Kali', lang),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SeriesDetailScreen(),
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(right: 120.0),
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SeriesDetailScreen(),
+                ),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
         ),
       ),
     );
