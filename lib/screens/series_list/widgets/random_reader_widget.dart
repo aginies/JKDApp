@@ -376,7 +376,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                         height: 1,
                         color: Colors.blue.withValues(alpha: 0.2),
                       ),
-                      items: [ 0.6, 1.0, 1.5, 2.0, 2.5 ]
+                      items: [0.6, 1.0, 1.5, 2.0, 2.5]
                           .map(
                             (d) => DropdownMenuItem(
                               value: d,
