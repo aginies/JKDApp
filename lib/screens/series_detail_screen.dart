@@ -1267,18 +1267,30 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     top: 0,
                     bottom: 0,
                     child: Center(
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white70,
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 4),
+                        decoration: BoxDecoration(
+                          color: (!Platform.isAndroid && !Platform.isIOS)
+                              ? Colors.black87
+                              : Colors.black26,
+                          shape: BoxShape.circle,
                         ),
-                        onPressed: () {
-                          _comboScrollController.animateTo(
-                            _comboScrollController.offset - 168,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                            size: (!Platform.isAndroid && !Platform.isIOS)
+                                ? 26
+                                : 20,
+                          ),
+                          onPressed: () {
+                            _comboScrollController.animateTo(
+                              _comboScrollController.offset - 168,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -1287,18 +1299,30 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     top: 0,
                     bottom: 0,
                     child: Center(
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white70,
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        decoration: BoxDecoration(
+                          color: (!Platform.isAndroid && !Platform.isIOS)
+                              ? Colors.black87
+                              : Colors.black26,
+                          shape: BoxShape.circle,
                         ),
-                        onPressed: () {
-                          _comboScrollController.animateTo(
-                            _comboScrollController.offset + 168,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: (!Platform.isAndroid && !Platform.isIOS)
+                                ? 26
+                                : 20,
+                          ),
+                          onPressed: () {
+                            _comboScrollController.animateTo(
+                              _comboScrollController.offset + 168,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),

@@ -108,6 +108,8 @@ class MoveDisplayWidgets {
         return Colors.pink;
       case 'text':
         return Colors.teal;
+      case 'combo':
+        return Colors.orange;
       case 'other':
         return Colors.blueGrey;
       default:

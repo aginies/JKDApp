@@ -774,67 +774,25 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
               );
             },
             child: ListTile(
-              leading: Builder(
-                builder: (context) {
-                  // Determine dominant category
-                  String dominantCategory = 'other';
-                  if (series.moves.isNotEmpty) {
-                    final Map<String, int> counts = {};
-                    for (var m in series.moves) {
-                      counts[m.category] = (counts[m.category] ?? 0) + 1;
-                    }
-                    dominantCategory = counts.entries
-                        .reduce((a, b) => a.value > b.value ? a : b)
-                        .key;
-                  }
-
-                  return Stack(
-                    children: [
-                      if (series.isSystem)
-                        Builder(
-                          builder: (context) {
-                            String asset = 'assets/icon/JKD.png';
-                            if (category == 'Jun Fan Gung Fu') {
-                              asset = 'assets/icon/jfgf.png';
-                            } else if (category == 'Jun Fan Kick Boxing') {
-                              asset = 'assets/icon/jfkb.png';
-                            } else if (category == 'Kali') {
-                              asset = 'assets/icon/kali.png';
-                            }
-                            return Image.asset(asset, width: 32, height: 32);
-                          },
-                        )
-                      else
-                        const Icon(
-                          Icons.person,
-                          color: Colors.orangeAccent,
-                          size: 32,
-                        ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(1),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey, width: 0.5),
-                          ),
-                          child: Icon(
-                            MoveDisplayWidgets.getCategoryIcon(
-                              dominantCategory,
-                            ),
-                            color: MoveDisplayWidgets.getCategoryColor(
-                              dominantCategory,
-                            ),
-                            size: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+              leading: series.isSystem
+                  ? Builder(
+                    builder: (context) {
+                      String asset = 'assets/icon/JKD.png';
+                      if (category == 'Jun Fan Gung Fu') {
+                        asset = 'assets/icon/jfgf.png';
+                      } else if (category == 'Jun Fan Kick Boxing') {
+                        asset = 'assets/icon/jfkb.png';
+                      } else if (category == 'Kali') {
+                        asset = 'assets/icon/kali.png';
+                      }
+                      return Image.asset(asset, width: 40, height: 40);
+                    },
+                  )
+                  : const Icon(
+                    Icons.person,
+                    color: Colors.orangeAccent,
+                    size: 40,
+                  ),
               title: Text(series.title),
               subtitle: Text(
                 '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
