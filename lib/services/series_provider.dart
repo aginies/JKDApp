@@ -155,7 +155,7 @@ class SeriesProvider with ChangeNotifier {
 
   void setThemeColor(Color color) async {
     _themeColor = color;
-    await _dbService.saveSetting('theme_color', color.value.toString());
+    await _dbService.saveSetting('theme_color', color.toARGB32().toString());
     notifyListeners();
   }
 

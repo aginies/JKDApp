@@ -2695,7 +2695,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             spacing: 8,
                             runSpacing: 4,
                             children: SeriesDetailConstants
-                                .methodDefinitions.keys
+                                .methodDefinitions
+                                .keys
                                 .map(
                                   (method) => Tooltip(
                                     message: SeriesDetailConstants
@@ -2704,8 +2705,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                       label: Text(method),
                                       selected: _selectedMethod == method,
                                       onSelected: (val) => setState(
-                                        () => _selectedMethod =
-                                            val ? method : null,
+                                        () => _selectedMethod = val
+                                            ? method
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -2715,7 +2717,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           const SizedBox(height: 8),
                         ],
                       ),
-                  ],                ] else ...[
+                  ],
+                ] else ...[
                   Wrap(
                     spacing: 8,
                     children: [
