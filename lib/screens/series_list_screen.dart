@@ -19,17 +19,29 @@ class SeriesListScreen extends StatefulWidget {
   State<SeriesListScreen> createState() => _SeriesListScreenState();
 }
 
-class _SeriesListScreenState extends State<SeriesListScreen> {
+class _SeriesListScreenState extends State<SeriesListScreen>
+    with SingleTickerProviderStateMixin {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   final VoiceNoteService _voiceNoteService = VoiceNoteService();
   final MediaService _mediaService = MediaService();
   String _glossarySearchQuery = '';
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _voiceNoteService.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -806,7 +818,15 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select((SeriesProvider p) => p.language);
+    final provider = context.watch<SeriesProvider>();
+    final lang = provider.language;
+    final isLoading = provider.isLoading;
+
+    if (isLoading) {
+      _rotationController.repeat();
+    } else {
+      _rotationController.stop();
+    }
 
     return DefaultTabController(
       length: 4,
@@ -816,7 +836,10 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Hero(
               tag: 'app_logo',
-              child: Image.asset('assets/icon/JKD.png'),
+              child: RotationTransition(
+                turns: _rotationController,
+                child: Image.asset('assets/icon/JKD.png'),
+              ),
             ),
           ),
           title: _isSearching

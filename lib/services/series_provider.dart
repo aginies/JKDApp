@@ -37,6 +37,7 @@ class SeriesProvider with ChangeNotifier {
   double _speechRate = 0.25;
   String _searchQuery = '';
   String? _galleryPath;
+  bool _isLoading = false;
 
   final DatabaseService _dbService = DatabaseService();
 
@@ -51,6 +52,7 @@ class SeriesProvider with ChangeNotifier {
   double get speechRate => _speechRate;
   String get searchQuery => _searchQuery;
   String? get galleryPath => _galleryPath;
+  bool get isLoading => _isLoading;
 
   SeriesProvider() {
     _init();
@@ -60,6 +62,8 @@ class SeriesProvider with ChangeNotifier {
   SeriesProvider.empty();
 
   Future<void> _init() async {
+    _isLoading = true;
+    notifyListeners();
     final prefs = await _dbService.getSettings();
 
     // Language
@@ -199,8 +203,11 @@ class SeriesProvider with ChangeNotifier {
   }
 
   Future<void> loadSeries() async {
+    _isLoading = true;
+    notifyListeners();
     _filteredCache.clear();
     _series = await _dbService.getAllSeries();
+    _isLoading = false;
     notifyListeners();
   }
 
