@@ -4,6 +4,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:string_similarity/string_similarity.dart';
 import '../models/move.dart';
 import 'database_service.dart';
+import '../utils/translation_utils.dart';
 
 class GlossaryEntry {
   final String name;
@@ -70,7 +71,7 @@ class VoiceParsingService {
 
   Future<void> _loadGlossary() async {
     _glossary.clear();
-    final categories = [
+    final categories = {
       'punch',
       'kick',
       'packs',
@@ -78,31 +79,32 @@ class VoiceParsingService {
       'special',
       'general',
       'other',
-    ];
-    for (String cat in categories) {
-      final items = await DatabaseService().getGlossaryByCategory(cat);
-      for (var item in items) {
-        Map<String, String> trans = {};
-        try {
-          trans = Map<String, String>.from(
-            json.decode(item['translations'] ?? '{}'),
-          );
-        } catch (_) {}
+    };
 
-        Map<String, dynamic> removal = {};
-        try {
-          removal = json.decode(item['removal'] ?? '{}');
-        } catch (_) {}
+    // Load all glossary items in one query instead of 7 sequential queries
+    final allItems = await DatabaseService().getGlossary();
 
-        _glossary.add(
-          GlossaryEntry(
-            name: item['name'],
-            category: cat,
-            translations: trans,
-            restrictedLevel: removal['level'],
-          ),
-        );
+    for (var item in allItems) {
+      final cat = item['category'] as String?;
+      if (cat == null || !categories.contains(cat)) continue;
+
+      final trans = TranslationUtils.parseTranslations(item['translations']);
+
+      Map<String, dynamic> removal = {};
+      try {
+        removal = json.decode(item['removal'] ?? '{}');
+      } catch (e) {
+        debugPrint('Error parsing removal data: $e');
       }
+
+      _glossary.add(
+        GlossaryEntry(
+          name: item['name'],
+          category: cat,
+          translations: trans,
+          restrictedLevel: removal['level'],
+        ),
+      );
     }
   }
 

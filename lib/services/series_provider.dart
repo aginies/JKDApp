@@ -26,6 +26,7 @@ class SeriesProvider with ChangeNotifier {
 
   List<JkdSeries> _series = [];
   final Map<String, List<JkdSeries>> _filteredCache = {};
+  List<Map<String, dynamic>> _glossary = [];
   String _language = 'en';
   JkdThemeMode _themeMode = JkdThemeMode.system;
   bool _voiceEnabled = false;
@@ -38,6 +39,7 @@ class SeriesProvider with ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
 
   List<JkdSeries> get series => _series;
+  List<Map<String, dynamic>> get glossary => _glossary;
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
   bool get voiceEnabled => _voiceEnabled;
@@ -96,6 +98,7 @@ class SeriesProvider with ChangeNotifier {
     }
 
     await _initGalleryDirectories();
+    await loadGlossary();
     await loadSeries();
   }
 
@@ -173,10 +176,20 @@ class SeriesProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadGlossary() async {
+    _glossary = await _dbService.getGlossary();
+  }
+
   Future<void> loadSeries() async {
     _filteredCache.clear();
     _series = await _dbService.getAllSeries();
     notifyListeners();
+  }
+
+  /// Get glossary items by category from the pre-loaded cache
+  /// This eliminates N+1 queries by using in-memory filtering
+  List<Map<String, dynamic>> getGlossaryByCategory(String category) {
+    return _glossary.where((item) => item['category'] == category).toList();
   }
 
   Future<void> addSeries(JkdSeries series) async {
