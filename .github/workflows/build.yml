@@ -154,8 +154,11 @@ jobs:
       - name: Package macOS
         run: |
           VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "Version detected: $VERSION"
           cd build/macos/Build/Products/Release
           zip -r ../../../../JKDNotes-v$VERSION-macOS.zip "JKD_Notes.app"
+          cd ../../../../
+          ls -la JKDNotes-v$VERSION-macOS.zip
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
