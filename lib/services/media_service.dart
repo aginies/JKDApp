@@ -91,6 +91,19 @@ class MediaService {
     return savedFile;
   }
 
+  Future<bool> deleteImage(File file) async {
+    try {
+      if (await file.exists()) {
+        await file.delete();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error deleting image: $e');
+      return false;
+    }
+  }
+
   String _getCategoryDirName(String category) {
     // Capitalize first letter: punches -> Punches
     if (category.isEmpty) return 'Other';
