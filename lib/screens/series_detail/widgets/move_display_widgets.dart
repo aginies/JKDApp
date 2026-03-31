@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/category_utils.dart';
 
 /// Common widgets for displaying move attributes
 class MoveDisplayWidgets {
@@ -73,48 +74,12 @@ class MoveDisplayWidgets {
 
   /// Category icon mapping
   static IconData getCategoryIcon(String category) {
-    switch (category) {
-      case 'punch':
-        return Icons.sports_mma;
-      case 'kick':
-        return Icons.sports_martial_arts;
-      case 'packs':
-        return Icons.front_hand;
-      case 'trapping':
-        return Icons.back_hand;
-      case 'move':
-        return Icons.directions_run;
-      case 'text':
-        return Icons.text_fields;
-      case 'other':
-        return Icons.more_horiz;
-      default:
-        return Icons.help_outline;
-    }
+    return CategoryUtils.getCategoryIcon(category);
   }
 
   /// Category color mapping
   static Color getCategoryColor(String category) {
-    switch (category) {
-      case 'punch':
-        return Colors.purple;
-      case 'kick':
-        return Colors.red;
-      case 'packs':
-        return Colors.green;
-      case 'trapping':
-        return Colors.blue;
-      case 'move':
-        return Colors.pink;
-      case 'text':
-        return Colors.teal;
-      case 'combo':
-        return Colors.orange;
-      case 'other':
-        return Colors.blueGrey;
-      default:
-        return Colors.grey;
-    }
+    return CategoryUtils.getCategoryColor(category);
   }
 
   /// Get tab index for category (used in tab navigation)

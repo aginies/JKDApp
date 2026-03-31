@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import '../utils/string_utils.dart';
+import '../utils/category_utils.dart';
 
 class MediaService {
   final ImagePicker _picker = ImagePicker();
@@ -13,7 +14,7 @@ class MediaService {
     String category,
     String moveName,
   ) async {
-    final String categoryDir = _getCategoryDirName(category);
+    final String categoryDir = CategoryUtils.getCategoryDirName(category);
     final String fullPath = p.join(baseGalleryPath, categoryDir);
     final Directory dir = Directory(fullPath);
 
@@ -58,7 +59,7 @@ class MediaService {
     String category,
     String moveName,
   ) async {
-    final String categoryDir = _getCategoryDirName(category);
+    final String categoryDir = CategoryUtils.getCategoryDirName(category);
     final String targetDirPath = p.join(baseGalleryPath, categoryDir);
     final Directory targetDir = Directory(targetDirPath);
     if (!await targetDir.exists()) {
@@ -103,12 +104,6 @@ class MediaService {
       debugPrint('Error deleting image: $e');
       return false;
     }
-  }
-
-  String _getCategoryDirName(String category) {
-    // Capitalize first letter: punches -> Punches
-    if (category.isEmpty) return 'Other';
-    return category[0].toUpperCase() + category.substring(1).toLowerCase();
   }
 
 }
