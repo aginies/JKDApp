@@ -25,19 +25,33 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    // Duration for the turn: 500ms
+    // Duration for rotation: 800ms
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 800),
     );
 
-    // Full 360 rotation (0 to 0.5s)
-    _rotateAnimation = Tween<double>(begin: 0.0, end: 2 * math.pi).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutQuart),
+    // Full 360 rotation (two full spins for effect)
+    _rotateAnimation = Tween<double>(begin: 0.0, end: 4 * math.pi).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOutCubic,
+      ),
     );
 
-    // Constant scale
-    _scaleAnimation = ConstantTween<double>(1.0).animate(_controller);
+    // Scale animation - start small, grow, then return to normal for Hero
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.5, end: 1.2)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.2, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50.0,
+      ),
+    ]).animate(_controller);
 
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -47,13 +61,13 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Start the rotation animation
-    _controller.forward();
-
-    // Start checking for data readiness after logo rotation
-    _timer = Timer(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        _checkForData();
-      }
+    _controller.forward().then((_) {
+      // After rotation completes, wait a bit then check for data
+      _timer = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _checkForData();
+        }
+      });
     });
   }
 
@@ -93,19 +107,29 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToShowApp() async {
-    // Smooth fade transition
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Brief delay to ensure rotation is settled at 0
+    await Future.delayed(const Duration(milliseconds: 200));
 
     if (!mounted) return;
 
+    // Use PageRouteBuilder with longer duration for visible Hero transition
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             const SeriesListScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
+          // Fade in the new screen gradually
+          return FadeTransition(
+            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeIn,
+              ),
+            ),
+            child: child,
+          );
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 1200),
       ),
     );
   }
@@ -120,17 +144,23 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
+      backgroundColor: const Color(0xFFE8E8E8),
       body: Center(
         child: _isShowingLoading
             ? _buildLoadingIndicator()
             : AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
+                  // Use modulo to keep rotation at 0 when animation completes
+                  // This ensures Hero transition starts from non-rotated state
+                  final angle = _controller.status == AnimationStatus.completed
+                      ? 0.0
+                      : _rotateAnimation.value;
+
                   return Opacity(
                     opacity: _opacityAnimation.value,
                     child: Transform.rotate(
-                      angle: _rotateAnimation.value,
+                      angle: angle,
                       child: Transform.scale(
                         scale: _scaleAnimation.value,
                         child: Hero(
@@ -154,16 +184,16 @@ class _SplashScreenState extends State<SplashScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        CircularProgressIndicator(
+        const CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF666666)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF666666)),
           backgroundColor: Colors.transparent,
         ),
         const SizedBox(height: 16),
         Text(
           _seriesCount > 0 ? '$_seriesCount series loaded' : 'Loading...',
           style: TextStyle(
-            color: _seriesCount > 0 ? Colors.white60 : Colors.white38,
+            color: _seriesCount > 0 ? Colors.black87 : Colors.black54,
             fontSize: 14,
             fontFamily: 'Roboto',
           ),

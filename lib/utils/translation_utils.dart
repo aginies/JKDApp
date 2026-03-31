@@ -20,9 +20,7 @@ class TranslationUtils {
 
         final decoded = json.decode(translationsField);
         if (decoded is Map) {
-          return decoded.map(
-            (k, v) => MapEntry(k.toString(), v.toString()),
-          );
+          return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
         }
       }
 

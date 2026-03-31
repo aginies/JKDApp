@@ -21,6 +21,7 @@ import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/widgets/move_list_display_widget.dart';
+import 'series_detail/widgets/combo_card_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
 import '../utils/string_utils.dart';
@@ -112,7 +113,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     super.dispose();
   }
 
-
   void _scrollToIndex(int index) {
     if (!_movesScrollController.hasClients) return;
 
@@ -158,6 +158,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
+  void _handleEditComboItem(int index, bool isCounter, StateSetter setS) async {
+    if (index < 0 || index >= _currentCombo.length) return;
+    final m = _currentCombo[index];
+    setS(() {
+      _pickerState.setEditingComboItemIndex(index);
+      _pickerState.setIsEditingCounter(isCounter);
+    });
+
+    if (!mounted) return;
+    final cat = isCounter ? (m.counterCategory ?? '') : m.category;
+    final t = MoveDisplayWidgets.getTabIndexForCategory(cat);
+    if (t != -1) {
+      DefaultTabController.of(context).animateTo(t);
+    }
+  }
+
   void _removeItemFromCombo(int index, StateSetter setS, String lang) {
     if (index < 0 || index >= _currentCombo.length) return;
     final removedItem = _currentCombo[index];
@@ -165,12 +181,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       _currentCombo.removeAt(index);
       _comboListKey.currentState?.removeItem(
         index,
-        (context, animation) => _buildComboCard(
-          removedItem,
-          index,
-          setS,
-          lang,
-          animation,
+        (context, animation) => ComboCardWidget(
+          move: removedItem,
+          index: index,
+          language: lang,
+          animation: animation,
+          onRemove: () {},
+          onEdit: (idx, isCounter) {},
           isRemoving: true,
         ),
         duration: const Duration(
@@ -186,289 +203,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         );
       }
     });
-  }
-
-  Widget _buildComboCard(
-    Move m,
-    int idx,
-    StateSetter setS,
-    String lang,
-    Animation<double> animation, {
-    bool isRemoving = false,
-  }) {
-    final sel =
-        !isRemoving &&
-        _pickerState.editingComboItemIndex == idx &&
-        !_pickerState.isEditingCounter;
-    final cSel =
-        !isRemoving &&
-        _pickerState.editingComboItemIndex == idx &&
-        _pickerState.isEditingCounter;
-
-    // Use slide + fade for a more pronounced "fly-in" effect from the right
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-
-    final fadeAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeIn,
-    );
-
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: SlideTransition(
-        position: slideAnimation,
-        child: SizeTransition(
-          sizeFactor: animation,
-          axis: Axis.horizontal,
-          child: Card(
-            key: isRemoving ? null : ValueKey(m.uKey),
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            shape: (sel || cSel)
-                ? RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(
-                      color: sel
-                          ? MoveDisplayWidgets.getCategoryColor(m.category)
-                          : MoveDisplayWidgets.getCategoryColor(
-                              m.counterCategory ?? '',
-                            ),
-                      width: 2,
-                    ),
-                  )
-                : null,
-            child: Container(
-              width: 160,
-              padding: const EdgeInsets.all(6),
-              child: Stack(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          if (isRemoving) return;
-                          int? gid = m.glossaryId;
-                          if (gid == null) {
-                            final db = DatabaseService();
-                            var items = await db.getGlossaryByCategory(
-                              m.category,
-                            );
-                            var match = items.firstWhere(
-                              (i) =>
-                                  i['name'].toString().toLowerCase() ==
-                                  m.name.toLowerCase(),
-                              orElse: () => {},
-                            );
-                            if (match.isEmpty) {
-                              final all = await db.getGlossary();
-                              match = all.firstWhere(
-                                (i) =>
-                                    i['name'].toString().toLowerCase() ==
-                                    m.name.toLowerCase(),
-                                orElse: () => {},
-                              );
-                            }
-                            if (match.isNotEmpty) gid = match['id'];
-                          }
-                          setS(() {
-                            _pickerState.setEditingComboItemIndex(idx);
-                            _pickerState.setIsEditingCounter(false);
-                            if (gid != null) {
-                              _pickerState.setSelectedSide(gid, m.side);
-                              _pickerState.setSelectedFeint(gid, m.isFeint);
-                              _pickerState.setSelectedSpecial(
-                                gid,
-                                m.specialAction,
-                              );
-                              _pickerState.setPendingActionItem(gid);
-                              _pickerState.setPendingLevel(m.level);
-                              _pickerState.setLastScrolledItemId(null);
-                            }
-                          });
-                          if (!mounted) return;
-                          final t = MoveDisplayWidgets.getTabIndexForCategory(
-                            m.category,
-                          );
-                          if (t != -1) {
-                            DefaultTabController.of(context).animateTo(t);
-                          }
-                        },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  MoveDisplayWidgets.getCategoryIcon(
-                                    m.category,
-                                  ),
-                                  size: 22,
-                                  color: MoveDisplayWidgets.getCategoryColor(
-                                    m.category,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${idx + 1}. ${m.name}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                if (m.side.isNotEmpty)
-                                  MoveDisplayWidgets.sideCircle(
-                                    LocalizationService.translate(
-                                      m.side == 'L' ? 'left' : 'right',
-                                      lang,
-                                    ).substring(0, 1),
-                                    m.side,
-                                    mini: true,
-                                  ),
-                                MoveDisplayWidgets.levelIcon(
-                                  m.level,
-                                  size: 10,
-                                  mini: true,
-                                ),
-                                if (m.isFeint)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 4.0),
-                                    child: MoveDisplayWidgets.drawBox(
-                                      mini: true,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (m.counterName != null)
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () async {
-                              if (isRemoving) return;
-                              final cat = m.counterCategory ?? '';
-                              int? gid = m.counterGlossaryId;
-                              if (gid == null && m.counterName != null) {
-                                final items = await DatabaseService()
-                                    .getGlossaryByCategory(cat);
-                                final match = items.firstWhere(
-                                  (i) => i['name'] == m.counterName,
-                                  orElse: () => {},
-                                );
-                                if (match.isNotEmpty) gid = match['id'];
-                              }
-                              setS(() {
-                                _pickerState.setEditingComboItemIndex(idx);
-                                _pickerState.setIsEditingCounter(true);
-                                if (gid != null) {
-                                  _pickerState.setSelectedSide(
-                                    gid,
-                                    m.counterSide ?? '',
-                                  );
-                                  _pickerState.setSelectedSpecial(
-                                    gid,
-                                    m.counterSpecialAction,
-                                  );
-                                  _pickerState.setPendingActionItem(gid);
-                                  _pickerState.setPendingLevel(m.counterLevel);
-                                  _pickerState.setLastScrolledItemId(null);
-                                }
-                              });
-                              if (!mounted) return;
-                              final t =
-                                  MoveDisplayWidgets.getTabIndexForCategory(
-                                    cat,
-                                  );
-                              if (t != -1) {
-                                DefaultTabController.of(context).animateTo(t);
-                              }
-                            },
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Divider(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        m.counterCategory ?? '',
-                                      ),
-                                      size: 16,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            m.counterCategory ?? '',
-                                          ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        m.counterName!,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if ((m.counterSide ?? '').isNotEmpty)
-                                  Row(
-                                    children: [
-                                      MoveDisplayWidgets.sideCircle(
-                                        LocalizationService.translate(
-                                          m.counterSide == 'L'
-                                              ? 'left'
-                                              : 'right',
-                                          lang,
-                                        ).substring(0, 1),
-                                        m.counterSide!,
-                                        mini: true,
-                                      ),
-                                      MoveDisplayWidgets.levelIcon(
-                                        m.counterLevel ?? '',
-                                        size: 10,
-                                        mini: true,
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (!isRemoving)
-                    Positioned(
-                      right: -10,
-                      top: -10,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          size: 14,
-                          color: Colors.red,
-                        ),
-                        onPressed: () => _removeItemFromCombo(idx, setS, lang),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   void _showMediaGallery(String category, String moveName) {
@@ -1344,12 +1078,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     if (idx >= _currentCombo.length) {
                       return const SizedBox.shrink();
                     }
-                    return _buildComboCard(
-                      _currentCombo[idx],
-                      idx,
-                      setS,
-                      lang,
-                      animation,
+                    final m = _currentCombo[idx];
+                    return ComboCardWidget(
+                      move: m,
+                      index: idx,
+                      language: lang,
+                      animation: animation,
+                      onRemove: () => _removeItemFromCombo(idx, setS, lang),
+                      onEdit: (index, isCounter) =>
+                          _handleEditComboItem(index, isCounter, setS),
+                      isSelected:
+                          _pickerState.editingComboItemIndex == idx &&
+                          !_pickerState.isEditingCounter,
+                      isCounterSelected:
+                          _pickerState.editingComboItemIndex == idx &&
+                          _pickerState.isEditingCounter,
                     );
                   },
                 ),
@@ -2431,10 +2174,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       context: context,
       onEdit: (index) => () {
         if (_moves[index].isCombo) {
-          _pickMove(
-            initialMoves: _moves[index].subMoves,
-            seriesIndex: index,
-          );
+          _pickMove(initialMoves: _moves[index].subMoves, seriesIndex: index);
         } else {
           _pickMove(initialMoves: [_moves[index]], seriesIndex: index);
         }
@@ -2447,7 +2187,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           _moves.insert(index + 1, copy);
         });
       },
-      onDelete: (index) => () => _confirmDeleteItem(context, index, lang),
+      onDelete: (index) =>
+          () => _confirmDeleteItem(context, index, lang),
       onShowMediaGallery: _showMediaGallery,
       onSetState: (moves, atIndex) => setState(() {
         _moves = moves;
@@ -2570,7 +2311,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     if (widget.series == null) return;
     String? dir = await FilePicker.platform.getDirectoryPath();
     if (dir == null) return;
-    final fileName = 'jkd-series-${StringUtils.slugify(widget.series!.title)}.json';
+    final fileName =
+        'jkd-series-${StringUtils.slugify(widget.series!.title)}.json';
     if (!mounted) return;
     final proceed = await showDialog<bool>(
       context: context,

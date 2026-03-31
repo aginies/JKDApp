@@ -105,5 +105,4 @@ class MediaService {
       return false;
     }
   }
-
 }

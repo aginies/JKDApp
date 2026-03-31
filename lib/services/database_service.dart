@@ -69,7 +69,9 @@ class DatabaseService {
           'ALTER TABLE series_moves ADD COLUMN glossary_id INTEGER',
         );
       } catch (e) {
-        debugPrint('Migration warning: glossary_id column may already exist - $e');
+        debugPrint(
+          'Migration warning: glossary_id column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
     }
@@ -85,7 +87,9 @@ class DatabaseService {
           'ALTER TABLE glossary ADD COLUMN possible_type_attack TEXT',
         );
       } catch (e) {
-        debugPrint('Migration warning: possible_type_attack column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_type_attack column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
     }
@@ -93,7 +97,9 @@ class DatabaseService {
       try {
         await db.execute('ALTER TABLE glossary ADD COLUMN possible_level TEXT');
       } catch (e) {
-        debugPrint('Migration warning: possible_level column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_level column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
     }
@@ -103,7 +109,9 @@ class DatabaseService {
           'ALTER TABLE series ADD COLUMN is_system INTEGER DEFAULT 0',
         );
       } catch (e) {
-        debugPrint('Migration warning: is_system column may already exist - $e');
+        debugPrint(
+          'Migration warning: is_system column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
     }
@@ -117,7 +125,9 @@ class DatabaseService {
           'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
         );
       } catch (e) {
-        debugPrint('Migration warning: counter_glossary_id column may already exist - $e');
+        debugPrint(
+          'Migration warning: counter_glossary_id column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
     }
@@ -150,7 +160,9 @@ class DatabaseService {
           'ALTER TABLE glossary ADD COLUMN possible_direction TEXT',
         );
       } catch (e) {
-        debugPrint('Migration warning: possible_direction column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_direction column may already exist - $e',
+        );
         // This is expected if upgrading from certain versions
       }
       // Re-seed glossary to include possible_direction data
@@ -441,7 +453,9 @@ class DatabaseService {
             level: row['level'] as String,
             isFeint: (row['is_feint'] as int) == 1,
             specialAction: row['special_action'] as String?,
-            translations: TranslationUtils.parseTranslations(row['translations']),
+            translations: TranslationUtils.parseTranslations(
+              row['translations'],
+            ),
             repetitions: row['repetitions'] as int,
             counterName: row['counter_name'] as String?,
             counterCategory: row['counter_category'] as String?,

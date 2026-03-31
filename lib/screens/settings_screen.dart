@@ -197,7 +197,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: Text(LocalizationService.translate('error', lang)),
+                            title: Text(
+                              LocalizationService.translate('error', lang),
+                            ),
                             content: Text(
                               'Failed to export series. Please ensure:\n'
                               '• You have write permission to the selected directory\n'
@@ -207,7 +209,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx),
-                                child: Text(LocalizationService.translate('finish', lang)),
+                                child: Text(
+                                  LocalizationService.translate('finish', lang),
+                                ),
                               ),
                             ],
                           ),
