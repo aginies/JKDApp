@@ -22,15 +22,13 @@ class ExportService {
       final String jsonString = const JsonEncoder.withIndent(
         '  ',
       ).convert(jsonData);
-      
+
       final directory = await getTemporaryDirectory();
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'JKD Series Backup',
-      );
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([XFile(file.path)], text: 'JKD Series Backup');
     } catch (e) {
       debugPrint('Share error: $e');
     }
@@ -49,10 +47,8 @@ class ExportService {
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'JKD Glossary Backup',
-      );
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([XFile(file.path)], text: 'JKD Glossary Backup');
     } catch (e) {
       debugPrint('Glossary share error: $e');
     }

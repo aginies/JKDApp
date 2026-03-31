@@ -774,23 +774,23 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         final isDark = theme.brightness == Brightness.dark;
         final gradientColors = series.isSystem
             ? (isDark
-                ? [
-                    Colors.blue.withValues(alpha: 0.15),
-                    Colors.purple.withValues(alpha: 0.1),
-                  ]
-                : [
-                    Colors.blue.withValues(alpha: 0.08),
-                    Colors.purple.withValues(alpha: 0.05),
-                  ])
+                  ? [
+                      Colors.blue.withValues(alpha: 0.15),
+                      Colors.purple.withValues(alpha: 0.1),
+                    ]
+                  : [
+                      Colors.blue.withValues(alpha: 0.08),
+                      Colors.purple.withValues(alpha: 0.05),
+                    ])
             : (isDark
-                ? [
-                    Colors.teal.withValues(alpha: 0.15),
-                    Colors.green.withValues(alpha: 0.1),
-                  ]
-                : [
-                    Colors.teal.withValues(alpha: 0.08),
-                    Colors.green.withValues(alpha: 0.05),
-                  ]);
+                  ? [
+                      Colors.teal.withValues(alpha: 0.15),
+                      Colors.green.withValues(alpha: 0.1),
+                    ]
+                  : [
+                      Colors.teal.withValues(alpha: 0.08),
+                      Colors.green.withValues(alpha: 0.05),
+                    ]);
 
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -860,13 +860,19 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.copy, color: Colors.blueGrey),
+                            icon: const Icon(
+                              Icons.copy,
+                              color: Colors.blueGrey,
+                            ),
                             onPressed: () => _confirmClone(
                               context,
                               context.read<SeriesProvider>(),
                               series,
                             ),
-                            tooltip: LocalizationService.translate('clone', lang),
+                            tooltip: LocalizationService.translate(
+                              'clone',
+                              lang,
+                            ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),

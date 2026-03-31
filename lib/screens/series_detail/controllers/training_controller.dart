@@ -82,7 +82,7 @@ class TrainingController {
     // Start from _subIndex
     for (int i = _subIndex; i < lines.length; i++) {
       if (!_isTraining || _isPaused) break;
-      
+
       final line = lines[i];
       if (Platform.isLinux) {
         try {
@@ -93,7 +93,7 @@ class TrainingController {
       } else {
         await _tts.speak(line.text);
       }
-      
+
       if (!_isTraining || _isPaused) break;
 
       // Update subIndex AFTER speaking successfully
@@ -255,7 +255,11 @@ class TrainingController {
       }
     }
 
-    final lines = _buildTtsTextList(moves[_currentIndex], language, comboInterval);
+    final lines = _buildTtsTextList(
+      moves[_currentIndex],
+      language,
+      comboInterval,
+    );
     await speak(lines, language);
 
     if (_isPaused) return;

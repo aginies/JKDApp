@@ -83,7 +83,8 @@ class LocalizationService {
       'clone': 'Clone',
       'cloned': 'cloned',
       'manage_series': 'Manage Series',
-      'manage_series_desc': 'Enable cloning, deleting and advanced synchronization',
+      'manage_series_desc':
+          'Enable cloning, deleting and advanced synchronization',
       'expert_mode': 'Expert Mode',
       'media_backup': 'Media Backup (ZIP)',
       'backup_images': 'Backup All Images',
@@ -200,7 +201,8 @@ class LocalizationService {
       'clone': 'Cloner',
       'cloned': 'copie',
       'manage_series': 'Gérer les séries',
-      'manage_series_desc': 'Activer le clonage, la suppression et la synchronisation avancée',
+      'manage_series_desc':
+          'Activer le clonage, la suppression et la synchronisation avancée',
       'expert_mode': 'Mode Expert',
       'media_backup': 'Sauvegarde Médias (ZIP)',
       'backup_images': 'Sauvegarder toutes les images',

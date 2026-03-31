@@ -2984,75 +2984,92 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   ),
                 ],
               ),
-        actions: [
-          if (!_isEditing && widget.series != null)
-            IconButton(
-              icon: const Icon(
-                Icons.play_circle_fill,
-                color: Colors.greenAccent,
-              ),
-              onPressed: _showTrainingOptions,
-              tooltip: LocalizationService.translate('training_mode', lang),
-            ),
-          if (_isEditing)
-            IconButton(icon: const Icon(Icons.check), onPressed: _saveSeries)
-          else if (widget.series != null)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.settings),
-              onSelected: (value) {
-                if (value == 'edit') {
-                  setState(() => _isEditing = true);
-                } else if (value == 'print') {
-                  PdfService.exportSeriesToPdf(widget.series!, lang);
-                } else if (value == 'export') {
-                  _handleExportJson();
-                } else if (value == 'share') {
-                  ExportService.shareSeriesJson([widget.series!], fileName: 'jkd-series-${widget.series!.title.replaceAll(' ', '-').toLowerCase()}.json');
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: const Icon(Icons.edit),
-                    title: Text(LocalizationService.translate('edit', lang)),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'print',
-                  child: ListTile(
-                    leading: const Icon(Icons.print),
-                    title: Text(
-                      LocalizationService.translate('export_to_pdf', lang),
+              actions: [
+                if (!_isEditing && widget.series != null)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.play_circle_fill,
+                      color: Colors.greenAccent,
                     ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
+                    onPressed: _showTrainingOptions,
+                    tooltip: LocalizationService.translate(
+                      'training_mode',
+                      lang,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'share',
-                  child: ListTile(
-                    leading: const Icon(Icons.share),
-                    title: Text(LocalizationService.translate('share_json', lang)),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
+                if (_isEditing)
+                  IconButton(
+                    icon: const Icon(Icons.check),
+                    onPressed: _saveSeries,
+                  )
+                else if (widget.series != null)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.settings),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        setState(() => _isEditing = true);
+                      } else if (value == 'print') {
+                        PdfService.exportSeriesToPdf(widget.series!, lang);
+                      } else if (value == 'export') {
+                        _handleExportJson();
+                      } else if (value == 'share') {
+                        ExportService.shareSeriesJson(
+                          [widget.series!],
+                          fileName:
+                              'jkd-series-${widget.series!.title.replaceAll(' ', '-').toLowerCase()}.json',
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: Text(
+                            LocalizationService.translate('edit', lang),
+                          ),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'print',
+                        child: ListTile(
+                          leading: const Icon(Icons.print),
+                          title: Text(
+                            LocalizationService.translate(
+                              'export_to_pdf',
+                              lang,
+                            ),
+                          ),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'share',
+                        child: ListTile(
+                          leading: const Icon(Icons.share),
+                          title: Text(
+                            LocalizationService.translate('share_json', lang),
+                          ),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'export',
+                        child: ListTile(
+                          leading: Icon(Icons.save_alt),
+                          title: Text('Export to JSON'),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'export',
-                  child: ListTile(
-                    leading: Icon(Icons.save_alt),
-                    title: Text('Export to JSON'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
               ],
             ),
-        ],
-      ),
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
@@ -3065,244 +3082,250 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           },
           child: Padding(
             key: ValueKey(_isEditing),
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10.0,
+              vertical: 16.0,
+            ),
             child: Column(
               children: [
-              if (_trainingController.isTraining)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.fitness_center, color: Colors.grey),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Text(
-                              'TRAINING: ${_trainingController.currentIndex + 1} / ${_currentTrainingOptions?.endIndex ?? _moves.length}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                if (_trainingController.isTraining)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.fitness_center, color: Colors.grey),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                'TRAINING: ${_trainingController.currentIndex + 1} / ${_currentTrainingOptions?.endIndex ?? _moves.length}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            if (_currentTrainingOptions?.isLooping ??
-                                false) ...[
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.loop,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
+                              if (_currentTrainingOptions?.isLooping ??
+                                  false) ...[
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.loop,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
+                        IconButton(
+                          icon: Icon(
+                            _trainingController.isPaused
+                                ? Icons.play_arrow
+                                : Icons.pause,
+                            color: Colors.greenAccent,
+                          ),
+                          onPressed: () {
+                            if (_trainingController.isPaused) {
+                              _trainingController.resume();
+                            } else {
+                              _trainingController.pause();
+                            }
+                            setState(() {});
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.stop, color: Colors.red),
+                          onPressed: () {
+                            _trainingController.stop();
+                            setState(() {
+                              _currentTrainingOptions = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                if (_isEditing) ...[
+                  TextField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: LocalizationService.translate(
+                        'series_title',
+                        lang,
                       ),
-                      IconButton(
-                        icon: Icon(
-                          _trainingController.isPaused
-                              ? Icons.play_arrow
-                              : Icons.pause,
-                          color: Colors.greenAccent,
-                        ),
-                        onPressed: () {
-                          if (_trainingController.isPaused) {
-                            _trainingController.resume();
-                          } else {
-                            _trainingController.pause();
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Jun Fan Gung Fu'),
+                        selected: _selectedCategory == 'Jun Fan Gung Fu',
+                        onSelected: (val) {
+                          if (val) {
+                            setState(
+                              () => _selectedCategory = 'Jun Fan Gung Fu',
+                            );
                           }
-                          setState(() {});
                         },
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.stop, color: Colors.red),
-                        onPressed: () {
-                          _trainingController.stop();
-                          setState(() {
-                            _currentTrainingOptions = null;
-                          });
+                      ChoiceChip(
+                        label: const Text('Jun Fan Kick Boxing'),
+                        selected: _selectedCategory == 'Jun Fan Kick Boxing',
+                        onSelected: (val) {
+                          if (val) {
+                            setState(
+                              () => _selectedCategory = 'Jun Fan Kick Boxing',
+                            );
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('Kali'),
+                        selected: _selectedCategory == 'Kali',
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() => _selectedCategory = 'Kali');
+                          }
                         },
                       ),
                     ],
                   ),
-                ),
-              if (_isEditing) ...[
-                TextField(
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: LocalizationService.translate(
-                      'series_title',
-                      lang,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Jun Fan Gung Fu'),
-                      selected: _selectedCategory == 'Jun Fan Gung Fu',
-                      onSelected: (val) {
-                        if (val) {
-                          setState(() => _selectedCategory = 'Jun Fan Gung Fu');
-                        }
-                      },
-                    ),
-                    ChoiceChip(
-                      label: const Text('Jun Fan Kick Boxing'),
-                      selected: _selectedCategory == 'Jun Fan Kick Boxing',
-                      onSelected: (val) {
-                        if (val) {
-                          setState(
-                            () => _selectedCategory = 'Jun Fan Kick Boxing',
-                          );
-                        }
-                      },
-                    ),
-                    ChoiceChip(
-                      label: const Text('Kali'),
-                      selected: _selectedCategory == 'Kali',
-                      onSelected: (val) {
-                        if (val) {
-                          setState(() => _selectedCategory = 'Kali');
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
-                      selected: _selectedType == 'Attack',
-                      onSelected: (val) {
-                        if (val) setState(() => _selectedType = 'Attack');
-                      },
-                    ),
-                    ChoiceChip(
-                      label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
-                      selected: _selectedType == 'Defense',
-                      onSelected: (val) {
-                        if (val) setState(() => _selectedType = 'Defense');
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (_selectedType == 'Attack')
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
                     children: [
-                      Wrap(
-                        alignment: WrapAlignment.start,
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: _methodDefinitions.keys
-                            .map(
-                              (method) => Tooltip(
-                                message: _methodDefinitions[method]!,
-                                child: ChoiceChip(
-                                  label: Text(method),
-                                  selected: _selectedMethod == method,
-                                  onSelected: (val) => setState(
-                                    () => _selectedMethod = val ? method : null,
+                      ChoiceChip(
+                        label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
+                        selected: _selectedType == 'Attack',
+                        onSelected: (val) {
+                          if (val) setState(() => _selectedType = 'Attack');
+                        },
+                      ),
+                      ChoiceChip(
+                        label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
+                        selected: _selectedType == 'Defense',
+                        onSelected: (val) {
+                          if (val) setState(() => _selectedType = 'Defense');
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (_selectedType == 'Attack')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          alignment: WrapAlignment.start,
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: _methodDefinitions.keys
+                              .map(
+                                (method) => Tooltip(
+                                  message: _methodDefinitions[method]!,
+                                  child: ChoiceChip(
+                                    label: Text(method),
+                                    selected: _selectedMethod == method,
+                                    onSelected: (val) => setState(
+                                      () =>
+                                          _selectedMethod = val ? method : null,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-              ] else ...[
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    Chip(
-                      label: Text(
-                        '${LocalizationService.translate('category', lang)}: $_selectedCategory',
-                      ),
+                              )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
-                    Chip(
-                      label: Text(
-                        '${LocalizationService.translate('type', lang)}: $_selectedType',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-              SizedBox(
-                height: 48,
-                child: Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    if (_isEditing) ...[
-                      const SizedBox(width: 8),
-                      Consumer<SeriesProvider>(
-                        builder: (context, provider, child) => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (provider.voiceEnabled) ...[
-                              FloatingActionButton.small(
-                                heroTag: 'voice_btn',
-                                onPressed: _startVoiceInput,
-                                backgroundColor: Colors.redAccent,
-                                child: const Icon(
-                                  Icons.mic,
-                                  size: 20,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            FloatingActionButton.small(
-                              heroTag: 'add_btn',
-                              onPressed: () => _pickMove(),
-                              child: const Icon(Icons.add, size: 20),
-                            ),
-                          ],
+                ] else ...[
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      Chip(
+                        label: Text(
+                          '${LocalizationService.translate('category', lang)}: $_selectedCategory',
                         ),
                       ),
-                      const SizedBox(width: 16),
-                    ],
-                  ],
-                ),
-              ),
-              Expanded(
-                child: _isEditing
-                    ? ReorderableListView(
-                        scrollController: _movesScrollController,
-                        buildDefaultDragHandles: false,
-                        onReorder: (oldIndex, newIndex) {
-                          setState(() {
-                            if (newIndex > oldIndex) newIndex -= 1;
-                            final item = _moves.removeAt(oldIndex);
-                            _moves.insert(newIndex, item);
-                          });
-                        },
-                        children: _buildMoveListTiles(lang),
-                      )
-                    : ListView(
-                        controller: _movesScrollController,
-                        children: _buildMoveListTiles(lang),
+                      Chip(
+                        label: Text(
+                          '${LocalizationService.translate('type', lang)}: $_selectedType',
+                        ),
                       ),
-              ),
-            ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      if (_isEditing) ...[
+                        const SizedBox(width: 8),
+                        Consumer<SeriesProvider>(
+                          builder: (context, provider, child) => Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (provider.voiceEnabled) ...[
+                                FloatingActionButton.small(
+                                  heroTag: 'voice_btn',
+                                  onPressed: _startVoiceInput,
+                                  backgroundColor: Colors.redAccent,
+                                  child: const Icon(
+                                    Icons.mic,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              FloatingActionButton.small(
+                                heroTag: 'add_btn',
+                                onPressed: () => _pickMove(),
+                                child: const Icon(Icons.add, size: 20),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                      ],
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _isEditing
+                      ? ReorderableListView(
+                          scrollController: _movesScrollController,
+                          buildDefaultDragHandles: false,
+                          onReorder: (oldIndex, newIndex) {
+                            setState(() {
+                              if (newIndex > oldIndex) newIndex -= 1;
+                              final item = _moves.removeAt(oldIndex);
+                              _moves.insert(newIndex, item);
+                            });
+                          },
+                          children: _buildMoveListTiles(lang),
+                        )
+                      : ListView(
+                          controller: _movesScrollController,
+                          children: _buildMoveListTiles(lang),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

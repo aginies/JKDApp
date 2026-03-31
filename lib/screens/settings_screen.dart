@@ -141,7 +141,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       return;
                     }
 
-                    await ExportService.shareSeriesJson(toExport, fileName: fileName);
+                    await ExportService.shareSeriesJson(
+                      toExport,
+                      fileName: fileName,
+                    );
                     if (context.mounted) Navigator.pop(context);
                   },
                   child: Text(LocalizationService.translate('share', lang)),
@@ -194,7 +197,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }
                   },
-                  child: Text(LocalizationService.translate('save_to_device', lang)),
+                  child: Text(
+                    LocalizationService.translate('save_to_device', lang),
+                  ),
                 ),
               ],
             );
@@ -233,7 +238,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(LocalizationService.translate('backup_glossary', lang)),
-        content: Text(LocalizationService.translate('glossary_backup_desc', lang)),
+        content: Text(
+          LocalizationService.translate('glossary_backup_desc', lang),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, 'cancel'),
@@ -760,7 +767,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(),
               SwitchListTile(
                 secondary: const Icon(Icons.edit_note),
-                title: Text(LocalizationService.translate('manage_series', lang)),
+                title: Text(
+                  LocalizationService.translate('manage_series', lang),
+                ),
                 subtitle: Text(
                   LocalizationService.translate('manage_series_desc', lang),
                 ),

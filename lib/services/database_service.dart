@@ -225,8 +225,9 @@ class DatabaseService {
         final String response = await rootBundle.loadString(seriesFile);
         final List<dynamic> fileData = json.decode(response);
         allSeriesData.addAll(fileData);
-      } catch (e) {
+      } catch (e, stackTrace) {
         debugPrint('Error loading series file $seriesFile: $e');
+        debugPrint(stackTrace.toString());
       }
     }
 
