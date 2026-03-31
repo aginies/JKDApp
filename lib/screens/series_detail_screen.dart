@@ -61,6 +61,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Map<String, dynamic>?
   _pendingAttackMove; // Store attack info when selecting counter
   final ScrollController _comboScrollController = ScrollController();
+  final GlobalKey<AnimatedListState> _comboListKey = GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
@@ -150,6 +151,323 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       targetOffset,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
+    );
+  }
+
+  void _addItemToCombo(Move item, StateSetter setS) {
+    setS(() {
+      _currentCombo.add(item);
+      _comboListKey.currentState?.insertItem(
+        _currentCombo.length - 1,
+        duration: const Duration(milliseconds: 400),
+      );
+    });
+    // Auto-scroll to end after animation
+    Future.delayed(const Duration(milliseconds: 450), () {
+      if (_comboScrollController.hasClients) {
+        _comboScrollController.animateTo(
+          _comboScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _removeItemFromCombo(int index, StateSetter setS, String lang) {
+    if (index < 0 || index >= _currentCombo.length) return;
+    final removedItem = _currentCombo[index];
+    setS(() {
+      _currentCombo.removeAt(index);
+      _comboListKey.currentState?.removeItem(
+        index,
+        (context, animation) => _buildComboCard(
+          removedItem,
+          index,
+          setS,
+          lang,
+          animation,
+          isRemoving: true,
+        ),
+        duration: const Duration(milliseconds: 350),
+      );
+      if (_editingComboItemIndex == index) {
+        _editingComboItemIndex = null;
+        _isEditingCounter = false;
+      } else if (_editingComboItemIndex != null &&
+          _editingComboItemIndex! > index) {
+        _editingComboItemIndex = _editingComboItemIndex! - 1;
+      }
+    });
+  }
+
+  Widget _buildComboCard(
+    Move m,
+    int idx,
+    StateSetter setS,
+    String lang,
+    Animation<double> animation, {
+    bool isRemoving = false,
+  }) {
+    final sel =
+        !isRemoving && _editingComboItemIndex == idx && !_isEditingCounter;
+    final cSel =
+        !isRemoving && _editingComboItemIndex == idx && _isEditingCounter;
+
+    // Use slide + fade for a more pronounced "fly-in" effect from the right
+    final slideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+
+    final fadeAnimation = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeIn,
+    );
+
+    return FadeTransition(
+      opacity: fadeAnimation,
+      child: SlideTransition(
+        position: slideAnimation,
+        child: SizeTransition(
+          sizeFactor: animation,
+          axis: Axis.horizontal,
+          child: Card(
+            key: isRemoving ? null : ValueKey(m.uKey),
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            shape: (sel || cSel)
+                ? RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(
+                      color: sel
+                          ? MoveDisplayWidgets.getCategoryColor(m.category)
+                          : MoveDisplayWidgets.getCategoryColor(
+                              m.counterCategory ?? '',
+                            ),
+                      width: 2,
+                    ),
+                  )
+                : null,
+            child: Container(
+              width: 160,
+              padding: const EdgeInsets.all(6),
+              child: Stack(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          if (isRemoving) return;
+                          int? gid = m.glossaryId;
+                          if (gid == null) {
+                            final db = DatabaseService();
+                            var items = await db.getGlossaryByCategory(
+                              m.category,
+                            );
+                            var match = items.firstWhere(
+                              (i) =>
+                                  i['name'].toString().toLowerCase() ==
+                                  m.name.toLowerCase(),
+                              orElse: () => {},
+                            );
+                            if (match.isEmpty) {
+                              final all = await db.getGlossary();
+                              match = all.firstWhere(
+                                (i) =>
+                                    i['name'].toString().toLowerCase() ==
+                                    m.name.toLowerCase(),
+                                orElse: () => {},
+                              );
+                            }
+                            if (match.isNotEmpty) gid = match['id'];
+                          }
+                          setS(() {
+                            _editingComboItemIndex = idx;
+                            _isEditingCounter = false;
+                            if (gid != null) {
+                              _selectedSidesInPicker[gid] = m.side;
+                              _selectedFeintsInPicker[gid] = m.isFeint;
+                              _selectedSpecialsInPicker[gid] = m.specialAction;
+                              _pendingActionItemId = gid;
+                              _pendingLevel = m.level;
+                              _lastScrolledItemId = null;
+                            }
+                          });
+                          final t = MoveDisplayWidgets.getTabIndexForCategory(
+                            m.category,
+                          );
+                          if (t != -1 && context.mounted) {
+                            DefaultTabController.of(context).animateTo(t);
+                          }
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  MoveDisplayWidgets.getCategoryIcon(
+                                    m.category,
+                                  ),
+                                  size: 22,
+                                  color: MoveDisplayWidgets.getCategoryColor(
+                                    m.category,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    '${idx + 1}. ${m.name}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                if (m.side.isNotEmpty)
+                                  MoveDisplayWidgets.sideCircle(
+                                    LocalizationService.translate(
+                                      m.side == 'L' ? 'left' : 'right',
+                                      lang,
+                                    ).substring(0, 1),
+                                    m.side,
+                                    mini: true,
+                                  ),
+                                MoveDisplayWidgets.levelIcon(
+                                  m.level,
+                                  size: 10,
+                                  mini: true,
+                                ),
+                                if (m.isFeint)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 4.0),
+                                    child: MoveDisplayWidgets.drawBox(
+                                      mini: true,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (m.counterName != null)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              if (isRemoving) return;
+                              final cat = m.counterCategory ?? '';
+                              int? gid = m.counterGlossaryId;
+                              if (gid == null && m.counterName != null) {
+                                final items = await DatabaseService()
+                                    .getGlossaryByCategory(cat);
+                                final match = items.firstWhere(
+                                  (i) => i['name'] == m.counterName,
+                                  orElse: () => {},
+                                );
+                                if (match.isNotEmpty) gid = match['id'];
+                              }
+                              setS(() {
+                                _editingComboItemIndex = idx;
+                                _isEditingCounter = true;
+                                if (gid != null) {
+                                  _selectedSidesInPicker[gid] =
+                                      m.counterSide ?? '';
+                                  _selectedSpecialsInPicker[gid] =
+                                      m.counterSpecialAction;
+                                  _pendingActionItemId = gid;
+                                  _pendingLevel = m.counterLevel;
+                                  _lastScrolledItemId = null;
+                                }
+                              });
+                              final t =
+                                  MoveDisplayWidgets.getTabIndexForCategory(
+                                    cat,
+                                  );
+                              if (t != -1 && context.mounted) {
+                                DefaultTabController.of(context).animateTo(t);
+                              }
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Divider(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        m.counterCategory ?? '',
+                                      ),
+                                      size: 16,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            m.counterCategory ?? '',
+                                          ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        m.counterName!,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if ((m.counterSide ?? '').isNotEmpty)
+                                  Row(
+                                    children: [
+                                      MoveDisplayWidgets.sideCircle(
+                                        LocalizationService.translate(
+                                          m.counterSide == 'L'
+                                              ? 'left'
+                                              : 'right',
+                                          lang,
+                                        ).substring(0, 1),
+                                        m.counterSide!,
+                                        mini: true,
+                                      ),
+                                      MoveDisplayWidgets.levelIcon(
+                                        m.counterLevel ?? '',
+                                        size: 10,
+                                        mini: true,
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (!isRemoving)
+                    Positioned(
+                      right: -10,
+                      top: -10,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => _removeItemFromCombo(idx, setS, lang),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -454,7 +772,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     if (parsed.isEmpty) return;
     setState(() {
       if (_isPickerOpen) {
-        _currentCombo.addAll(parsed);
+        // Since we are in a modal bottom sheet with a separate StateSetter (setS),
+        // we need to be careful. However, _processVoiceInput usually runs via 
+        // a dialog that pops back. If we are in the picker, we should ideally
+        // use the setS provided to the picker, but this method uses setState.
+        // For now, let's at least add them.
+        for (var m in parsed) {
+          _currentCombo.add(m);
+          _comboListKey.currentState?.insertItem(
+            _currentCombo.length - 1,
+            duration: const Duration(milliseconds: 400),
+          );
+        }
       } else {
         if (parsed.length == 1) {
           _moves.add(parsed.first);
@@ -473,7 +802,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   void _pickMove({List<Move>? initialMoves, int? seriesIndex}) async {
     _resetPickerState();
-    if (initialMoves != null) _currentCombo.addAll(initialMoves);
+    if (initialMoves != null) {
+      _currentCombo.addAll(initialMoves);
+      // Wait for bottom sheet to open and AnimatedList to be ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (int i = 0; i < initialMoves.length; i++) {
+          _comboListKey.currentState?.insertItem(
+            i,
+            duration: const Duration(milliseconds: 400),
+          );
+        }
+      });
+    }
     _editingSeriesIndex = seriesIndex;
     _targetSeriesIndex = seriesIndex;
     _editingComboItemIndex = null;
@@ -1001,288 +1341,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           Expanded(
             child: Stack(
               children: [
-                ReorderableListView.builder(
-                  scrollController: _comboScrollController,
+                AnimatedList(
+                  key: _comboListKey,
+                  controller: _comboScrollController,
                   scrollDirection: Axis.horizontal,
-                  itemCount: _currentCombo.length,
-                  onReorder: (old, newIdx) {
-                    setS(() {
-                      if (newIdx > old) newIdx -= 1;
-                      final item = _currentCombo.removeAt(old);
-                      _currentCombo.insert(newIdx, item);
-                    });
-                  },
-                  itemBuilder: (ctx, idx) {
-                    final m = _currentCombo[idx];
-                    final sel =
-                        _editingComboItemIndex == idx && !_isEditingCounter;
-                    final cSel =
-                        _editingComboItemIndex == idx && _isEditingCounter;
-                    return Card(
-                      key: ValueKey(m.uKey),
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 4,
-                      ),
-                      shape: (sel || cSel)
-                          ? RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color: sel
-                                    ? MoveDisplayWidgets.getCategoryColor(
-                                        m.category,
-                                      )
-                                    : MoveDisplayWidgets.getCategoryColor(
-                                        m.counterCategory ?? '',
-                                      ),
-                                width: 2,
-                              ),
-                            )
-                          : null,
-                      child: Container(
-                        width: 160,
-                        padding: const EdgeInsets.all(6),
-                        child: Stack(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    int? gid = m.glossaryId;
-                                    // Robust fallback: try category match first, then global match
-                                    if (gid == null) {
-                                      final db = DatabaseService();
-                                      var items = await db
-                                          .getGlossaryByCategory(m.category);
-                                      var match = items.firstWhere(
-                                        (i) =>
-                                            i['name']
-                                                .toString()
-                                                .toLowerCase() ==
-                                            m.name.toLowerCase(),
-                                        orElse: () => {},
-                                      );
-
-                                      if (match.isEmpty) {
-                                        final all = await db.getGlossary();
-                                        match = all.firstWhere(
-                                          (i) =>
-                                              i['name']
-                                                  .toString()
-                                                  .toLowerCase() ==
-                                              m.name.toLowerCase(),
-                                          orElse: () => {},
-                                        );
-                                      }
-
-                                      if (match.isNotEmpty) {
-                                        gid = match['id'];
-                                      }
-                                    }
-
-                                    setS(() {
-                                      _editingComboItemIndex = idx;
-                                      _isEditingCounter = false;
-                                      if (gid != null) {
-                                        _selectedSidesInPicker[gid] = m.side;
-                                        _selectedFeintsInPicker[gid] =
-                                            m.isFeint;
-                                        _selectedSpecialsInPicker[gid] =
-                                            m.specialAction;
-                                        _pendingActionItemId = gid;
-                                        _pendingLevel = m.level;
-                                        _lastScrolledItemId =
-                                            null; // Reset to allow scrolling to new selection
-                                      }
-                                    });
-                                    final t =
-                                        MoveDisplayWidgets.getTabIndexForCategory(
-                                          m.category,
-                                        );
-                                    if (t != -1 && ctx.mounted) {
-                                      DefaultTabController.of(ctx).animateTo(t);
-                                    }
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            MoveDisplayWidgets.getCategoryIcon(
-                                              m.category,
-                                            ),
-                                            size: 22,
-                                            color:
-                                                MoveDisplayWidgets.getCategoryColor(
-                                                  m.category,
-                                                ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
-                                            child: Text(
-                                              '${idx + 1}. ${m.name}',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          if (m.side.isNotEmpty)
-                                            MoveDisplayWidgets.sideCircle(
-                                              LocalizationService.translate(
-                                                m.side == 'L'
-                                                    ? 'left'
-                                                    : 'right',
-                                                lang,
-                                              ).substring(0, 1),
-                                              m.side,
-                                              mini: true,
-                                            ),
-                                          MoveDisplayWidgets.levelIcon(
-                                            m.level,
-                                            size: 10,
-                                            mini: true,
-                                          ),
-                                          if (m.isFeint)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 4.0,
-                                              ),
-                                              child: MoveDisplayWidgets.drawBox(
-                                                mini: true,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (m.counterName != null)
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        final cat = m.counterCategory ?? '';
-                                        int? gid = m.counterGlossaryId;
-
-                                        if (gid == null &&
-                                            m.counterName != null) {
-                                          // Fallback to name search if ID is missing (legacy data)
-                                          final items = await DatabaseService()
-                                              .getGlossaryByCategory(cat);
-                                          final match = items.firstWhere(
-                                            (i) => i['name'] == m.counterName,
-                                            orElse: () => {},
-                                          );
-                                          if (match.isNotEmpty) {
-                                            gid = match['id'];
-                                          }
-                                        }
-
-                                        setS(() {
-                                          _editingComboItemIndex = idx;
-                                          _isEditingCounter = true;
-                                          if (gid != null) {
-                                            _selectedSidesInPicker[gid] =
-                                                m.counterSide ?? '';
-                                            _selectedSpecialsInPicker[gid] =
-                                                m.counterSpecialAction;
-                                            _pendingActionItemId = gid;
-                                            _pendingLevel = m.counterLevel;
-                                            _lastScrolledItemId =
-                                                null; // Reset to allow scrolling to new selection
-                                          }
-                                        });
-                                        final t =
-                                            MoveDisplayWidgets.getTabIndexForCategory(
-                                              cat,
-                                            );
-                                        if (t != -1 && ctx.mounted) {
-                                          DefaultTabController.of(
-                                            ctx,
-                                          ).animateTo(t);
-                                        }
-                                      },
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Divider(height: 8),
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                MoveDisplayWidgets.getCategoryIcon(
-                                                  m.counterCategory ?? '',
-                                                ),
-                                                size: 18,
-                                                color:
-                                                    MoveDisplayWidgets.getCategoryColor(
-                                                      m.counterCategory ?? '',
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 2),
-                                              Expanded(
-                                                child: Text(
-                                                  '↳ ${m.counterName}',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.orangeAccent,
-                                                    decoration: cSel
-                                                        ? TextDecoration
-                                                              .underline
-                                                        : null,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                const Spacer(),
-                                Center(
-                                  child: ReorderableDragStartListener(
-                                    index: idx,
-                                    child: const Icon(
-                                      Icons.drag_handle,
-                                      size: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Positioned(
-                              right: -10,
-                              top: -10,
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => setS(() {
-                                  _currentCombo.removeAt(idx);
-                                  if (_editingComboItemIndex == idx) {
-                                    _editingComboItemIndex = null;
-                                    _isEditingCounter = false;
-                                  }
-                                }),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  initialItemCount: _currentCombo.length,
+                  itemBuilder: (ctx, idx, animation) {
+                    if (idx >= _currentCombo.length) return const SizedBox.shrink();
+                    return _buildComboCard(
+                      _currentCombo[idx],
+                      idx,
+                      setS,
+                      lang,
+                      animation,
                     );
                   },
                 ),
@@ -1359,7 +1430,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       ),
     );
   }
-
   Widget _buildGlossaryList(
     String cat,
     StateSetter setS,
@@ -2016,7 +2086,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     _editingComboItemIndex = null;
                     _isEditingCounter = false;
                   } else {
-                    _currentCombo.add(n);
+                    _addItemToCombo(n, setS);
                   }
                   _pendingActionItemId = null;
                   _pendingLevel = null;
@@ -2113,7 +2183,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   if (isE) {
                     _currentCombo[_editingComboItemIndex!] = n;
                   } else {
-                    _currentCombo.add(n);
+                    _addItemToCombo(n, setS);
                   }
                 });
                 _finishAndAddCombo();
@@ -2248,7 +2318,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           _currentCombo[_editingComboItemIndex!] = n;
           _editingComboItemIndex = null;
         } else {
-          _currentCombo.add(n);
+          _addItemToCombo(n, pS);
         }
       }
       _pendingAttackMove = null;
