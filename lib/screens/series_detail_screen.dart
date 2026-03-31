@@ -558,7 +558,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     }
     _pickerState.setEditingSeriesIndex(seriesIndex);
     _pickerState.setTargetSeriesIndex(seriesIndex);
-    if (seriesIndex != null && seriesIndex >= 0 && seriesIndex < _moves.length) {
+    if (seriesIndex != null &&
+        seriesIndex >= 0 &&
+        seriesIndex < _moves.length) {
       _pickerState.setSelectedSubLetter(_moves[seriesIndex].subLetter);
     }
     _pickerState.setEditingComboItemIndex(null);
@@ -1056,12 +1058,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   value: '_',
                                   child: Text('_'),
                                 ),
-                                ...'abcdefg'.split('').map(
-                                  (l) => DropdownMenuItem(
-                                    value: l,
-                                    child: Text(l),
-                                  ),
-                                ),
+                                ...'abcdefg'
+                                    .split('')
+                                    .map(
+                                      (l) => DropdownMenuItem(
+                                        value: l,
+                                        child: Text(l),
+                                      ),
+                                    ),
                               ],
                               onChanged: (val) {
                                 setS(
@@ -2249,7 +2253,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
       // Apply sub-letter if selected
       if (_pickerState.selectedSubLetter != null) {
-        finalMove = finalMove.copyWith(subLetter: _pickerState.selectedSubLetter);
+        finalMove = finalMove.copyWith(
+          subLetter: _pickerState.selectedSubLetter,
+        );
       }
 
       if (_pickerState.editingSeriesIndex != null) {

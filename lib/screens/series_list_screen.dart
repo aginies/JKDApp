@@ -56,6 +56,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       case 'trapping':
         return Icons.back_hand;
       case 'move':
+        return Icons.directions_walk;
+      case 'jkd_moves':
         return Icons.directions_run;
       case 'general':
         return Icons.info_outline;

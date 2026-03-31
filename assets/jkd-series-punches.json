@@ -1,6 +1,7 @@
 [
   {
     "title": "22 Coups de poings",
+    "category": "Jun Fan Gung Fu",
     "moves": [
       {"name": "Jab", "side": "L"},
       {"name": "Cross", "side": "R"},

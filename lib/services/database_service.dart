@@ -59,9 +59,13 @@ class DatabaseService {
     }
     if (oldVersion < 3) {
       try {
-        await db.execute('ALTER TABLE series_moves ADD COLUMN glossary_id INTEGER');
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN glossary_id INTEGER',
+        );
       } catch (e) {
-        debugPrint('Migration warning: glossary_id column may already exist - $e');
+        debugPrint(
+          'Migration warning: glossary_id column may already exist - $e',
+        );
       }
     }
     if (oldVersion < 4) {
@@ -71,23 +75,33 @@ class DatabaseService {
         debugPrint('Migration warning: hit_type column may already exist - $e');
       }
       try {
-        await db.execute('ALTER TABLE glossary ADD COLUMN possible_type_attack TEXT');
+        await db.execute(
+          'ALTER TABLE glossary ADD COLUMN possible_type_attack TEXT',
+        );
       } catch (e) {
-        debugPrint('Migration warning: possible_type_attack column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_type_attack column may already exist - $e',
+        );
       }
     }
     if (oldVersion < 5) {
       try {
         await db.execute('ALTER TABLE glossary ADD COLUMN possible_level TEXT');
       } catch (e) {
-        debugPrint('Migration warning: possible_level column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_level column may already exist - $e',
+        );
       }
     }
     if (oldVersion < 6) {
       try {
-        await db.execute('ALTER TABLE series ADD COLUMN is_system INTEGER DEFAULT 0');
+        await db.execute(
+          'ALTER TABLE series ADD COLUMN is_system INTEGER DEFAULT 0',
+        );
       } catch (e) {
-        debugPrint('Migration warning: is_system column may already exist - $e');
+        debugPrint(
+          'Migration warning: is_system column may already exist - $e',
+        );
       }
     }
     if (oldVersion < 7) {
@@ -96,9 +110,13 @@ class DatabaseService {
     }
     if (oldVersion < 8) {
       try {
-        await db.execute('ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER');
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
+        );
       } catch (e) {
-        debugPrint('Migration warning: counter_glossary_id column may already exist - $e');
+        debugPrint(
+          'Migration warning: counter_glossary_id column may already exist - $e',
+        );
       }
     }
     if (oldVersion < 9) {
@@ -115,28 +133,50 @@ class DatabaseService {
     }
     if (oldVersion < 10) {
       try {
-        await db.execute('ALTER TABLE glossary ADD COLUMN possible_direction TEXT');
+        await db.execute(
+          'ALTER TABLE glossary ADD COLUMN possible_direction TEXT',
+        );
       } catch (e) {
-        debugPrint('Migration warning: possible_direction column may already exist - $e');
+        debugPrint(
+          'Migration warning: possible_direction column may already exist - $e',
+        );
       }
       await db.delete('glossary');
       await _seedGlossary(db);
     }
     if (oldVersion < 11) {
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_series_moves_series_id ON series_moves(series_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_series_moves_glossary_id ON series_moves(glossary_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_glossary_name ON glossary(name)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_series_moves_series_pos ON series_moves(series_id, position)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_glossary_cat_pos ON glossary(category, position)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_voice_records_created ON voice_records(created_at DESC)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_glossary_position ON glossary(position)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_id ON series_moves(series_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_glossary_id ON series_moves(glossary_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_name ON glossary(name)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_pos ON series_moves(series_id, position)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_cat_pos ON glossary(category, position)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_voice_records_created ON voice_records(created_at DESC)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_position ON glossary(position)',
+      );
     }
     if (oldVersion < 12) {
       try {
         await db.execute('ALTER TABLE series_moves ADD COLUMN sub_letter TEXT');
       } catch (e) {
-        debugPrint('Migration warning: sub_letter column may already exist - $e');
+        debugPrint(
+          'Migration warning: sub_letter column may already exist - $e',
+        );
       }
     }
   }
@@ -169,24 +209,44 @@ class DatabaseService {
       )
     ''');
 
-    await db.execute('CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT)');
-    await db.execute('CREATE TABLE voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)');
+    await db.execute(
+      'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT)',
+    );
+    await db.execute(
+      'CREATE TABLE voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)',
+    );
 
-    await db.execute('CREATE INDEX idx_series_moves_series_id ON series_moves(series_id)');
-    await db.execute('CREATE INDEX idx_series_moves_glossary_id ON series_moves(glossary_id)');
-    await db.execute('CREATE INDEX idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)');
+    await db.execute(
+      'CREATE INDEX idx_series_moves_series_id ON series_moves(series_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_series_moves_glossary_id ON series_moves(glossary_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)',
+    );
     await db.execute('CREATE INDEX idx_glossary_name ON glossary(name)');
-    await db.execute('CREATE INDEX idx_series_moves_series_pos ON series_moves(series_id, position)');
-    await db.execute('CREATE INDEX idx_glossary_cat_pos ON glossary(category, position)');
-    await db.execute('CREATE INDEX idx_voice_records_created ON voice_records(created_at DESC)');
-    await db.execute('CREATE INDEX idx_glossary_position ON glossary(position)');
+    await db.execute(
+      'CREATE INDEX idx_series_moves_series_pos ON series_moves(series_id, position)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_glossary_cat_pos ON glossary(category, position)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_voice_records_created ON voice_records(created_at DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_glossary_position ON glossary(position)',
+    );
 
     await _seedGlossary(db);
     await _seedSeries(db);
   }
 
   Future<void> _seedGlossary(Database db) async {
-    final String glossaryResponse = await rootBundle.loadString('assets/jkd-glossary.json');
+    final String glossaryResponse = await rootBundle.loadString(
+      'assets/jkd-glossary.json',
+    );
     final Map<String, dynamic> glossaryData = json.decode(glossaryResponse);
 
     int globalPosition = 0;
@@ -236,7 +296,8 @@ class DatabaseService {
 
             if (move['glossary_id'] != null) {
               gid = (move['glossary_id'] as num).toInt();
-            } else if (move['name'] != null && !move['name'].toString().startsWith('Combo:')) {
+            } else if (move['name'] != null &&
+                !move['name'].toString().startsWith('Combo:')) {
               String name = move['name'] as String;
               if (name.contains(':')) name = name.split(':').last.trim();
 
@@ -257,7 +318,10 @@ class DatabaseService {
               'sub_letter': move['sub_letter'],
               'is_feint': move['is_feint'] ?? 0,
               'special_action': move['special_action'],
-              'translations': move['translations'] ?? glossaryTranslations ?? json.encode({}),
+              'translations':
+                  move['translations'] ??
+                  glossaryTranslations ??
+                  json.encode({}),
               'repetitions': move['repetitions'] ?? 1,
               'counter_name': move['counter_name'],
               'counter_category': move['counter_category'],
@@ -275,8 +339,13 @@ class DatabaseService {
     }
   }
 
-  Future<Map<String, Map<String, dynamic>>> _buildGlossaryNameMap(Database db) async {
-    final List<Map<String, dynamic>> glossary = await db.query('glossary', orderBy: 'position');
+  Future<Map<String, Map<String, dynamic>>> _buildGlossaryNameMap(
+    Database db,
+  ) async {
+    final List<Map<String, dynamic>> glossary = await db.query(
+      'glossary',
+      orderBy: 'position',
+    );
     final Map<String, Map<String, dynamic>> nameMap = {};
     for (var entry in glossary) {
       if (entry['name'] != null) {
@@ -301,9 +370,16 @@ class DatabaseService {
     await db.insert('glossary', item);
   }
 
-  Future<List<Map<String, dynamic>>> getGlossaryByCategory(String category) async {
+  Future<List<Map<String, dynamic>>> getGlossaryByCategory(
+    String category,
+  ) async {
     final db = await database;
-    return await db.query('glossary', where: 'category = ?', whereArgs: [category], orderBy: 'position');
+    return await db.query(
+      'glossary',
+      where: 'category = ?',
+      whereArgs: [category],
+      orderBy: 'position',
+    );
   }
 
   Future<List<JkdSeries>> getAllSeries() async {
@@ -336,26 +412,30 @@ class DatabaseService {
         );
       }
       if (row['m_id'] != null) {
-        seriesMap[sId]!.moves.add(Move(
-          id: row['m_id'] as int,
-          glossaryId: row['glossary_id'] as int?,
-          counterGlossaryId: row['counter_glossary_id'] as int?,
-          name: row['name'] as String? ?? '',
-          category: row['m_category'] as String? ?? '',
-          side: row['side'] as String? ?? '',
-          level: row['level'] as String? ?? '',
-          subLetter: row['sub_letter'] as String?,
-          isFeint: (row['is_feint'] as int? ?? 0) == 1,
-          specialAction: row['special_action'] as String?,
-          translations: TranslationUtils.parseTranslations(row['translations']),
-          repetitions: row['repetitions'] as int? ?? 1,
-          counterName: row['counter_name'] as String?,
-          counterCategory: row['counter_category'] as String?,
-          counterSide: row['counter_side'] as String?,
-          counterLevel: row['counter_level'] as String?,
-          counterSpecialAction: row['counter_special_action'] as String?,
-          subMoves: _parseSubMoves(row['sub_moves_json']),
-        ));
+        seriesMap[sId]!.moves.add(
+          Move(
+            id: row['m_id'] as int,
+            glossaryId: row['glossary_id'] as int?,
+            counterGlossaryId: row['counter_glossary_id'] as int?,
+            name: row['name'] as String? ?? '',
+            category: row['m_category'] as String? ?? '',
+            side: row['side'] as String? ?? '',
+            level: row['level'] as String? ?? '',
+            subLetter: row['sub_letter'] as String?,
+            isFeint: (row['is_feint'] as int? ?? 0) == 1,
+            specialAction: row['special_action'] as String?,
+            translations: TranslationUtils.parseTranslations(
+              row['translations'],
+            ),
+            repetitions: row['repetitions'] as int? ?? 1,
+            counterName: row['counter_name'] as String?,
+            counterCategory: row['counter_category'] as String?,
+            counterSide: row['counter_side'] as String?,
+            counterLevel: row['counter_level'] as String?,
+            counterSpecialAction: row['counter_special_action'] as String?,
+            subMoves: _parseSubMoves(row['sub_moves_json']),
+          ),
+        );
       }
     }
     return seriesMap.values.toList();
@@ -390,8 +470,17 @@ class DatabaseService {
   Future<void> updateSeries(JkdSeries series) async {
     final db = await database;
     final seriesMap = series.toMap();
-    await db.update('series', seriesMap, where: 'id = ?', whereArgs: [series.id]);
-    await db.delete('series_moves', where: 'series_id = ?', whereArgs: [series.id]);
+    await db.update(
+      'series',
+      seriesMap,
+      where: 'id = ?',
+      whereArgs: [series.id],
+    );
+    await db.delete(
+      'series_moves',
+      where: 'series_id = ?',
+      whereArgs: [series.id],
+    );
     for (int i = 0; i < series.moves.length; i++) {
       var moveMap = series.moves[i].toMap();
       moveMap.remove('id');
@@ -414,7 +503,10 @@ class DatabaseService {
 
   Future<void> saveSetting(String key, String value) async {
     final db = await database;
-    await db.insert('settings', {'key': key, 'value': value}, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Map<String, dynamic>>> getVoiceRecords() async {
@@ -433,7 +525,12 @@ class DatabaseService {
 
   Future<void> updateVoiceRecordName(int id, String newName) async {
     final db = await database;
-    await db.update('voice_records', {'name': newName}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'voice_records',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> deleteVoiceRecord(int id) async {
