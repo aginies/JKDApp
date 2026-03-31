@@ -311,19 +311,81 @@ class DatabaseService {
 
   Future<List<JkdSeries>> getAllSeries() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('series');
-    List<JkdSeries> result = [];
-    for (var map in maps) {
-      final List<Map<String, dynamic>> moveMaps = await db.query(
-        'series_moves',
-        where: 'series_id = ?',
-        whereArgs: [map['id']],
-        orderBy: 'position',
-      );
-      List<Move> moves = moveMaps.map((m) => Move.fromMap(m)).toList();
-      result.add(JkdSeries.fromMap(map, moves));
+    
+    // Join series and moves to get everything in one go
+    final List<Map<String, dynamic>> results = await db.rawQuery('''
+      SELECT 
+        s.id as s_id, s.title, s.category as s_category, s.type, s.attack_method, s.notes, s.is_system,
+        m.id as m_id, m.series_id, m.glossary_id, m.counter_glossary_id, m.name, m.category as m_category, 
+        m.side, m.level, m.is_feint, m.special_action, m.translations, m.repetitions, 
+        m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
+        m.sub_moves_json, m.position
+      FROM series s
+      LEFT JOIN series_moves m ON s.id = m.series_id
+      ORDER BY s.id, m.position
+    ''');
+
+    Map<int, JkdSeries> seriesMap = {};
+    
+    for (var row in results) {
+      int sId = row['s_id'] as int;
+      
+      if (!seriesMap.containsKey(sId)) {
+        seriesMap[sId] = JkdSeries(
+          id: sId,
+          title: row['title'] as String,
+          category: row['s_category'] as String,
+          type: row['type'] as String,
+          attackMethod: row['attack_method'] as String?,
+          notes: row['notes'] as String,
+          isSystem: (row['is_system'] as int) == 1,
+          moves: [],
+        );
+      }
+      
+      if (row['m_id'] != null) {
+        seriesMap[sId]!.moves.add(Move(
+          id: row['m_id'] as int,
+          glossaryId: row['glossary_id'] as int?,
+          counterGlossaryId: row['counter_glossary_id'] as int?,
+          name: row['name'] as String,
+          category: row['m_category'] as String,
+          side: row['side'] as String,
+          level: row['level'] as String,
+          isFeint: (row['is_feint'] as int) == 1,
+          specialAction: row['special_action'] as String?,
+          translations: _parseTranslations(row['translations']),
+          repetitions: row['repetitions'] as int,
+          counterName: row['counter_name'] as String?,
+          counterCategory: row['counter_category'] as String?,
+          counterSide: row['counter_side'] as String?,
+          counterLevel: row['counter_level'] as String?,
+          counterSpecialAction: row['counter_special_action'] as String?,
+          subMoves: _parseSubMoves(row['sub_moves_json']),
+        ));
+      }
     }
-    return result;
+    
+    return seriesMap.values.toList();
+  }
+
+  Map<String, String> _parseTranslations(dynamic jsonStr) {
+    if (jsonStr == null || jsonStr.toString().isEmpty) return {};
+    try {
+      return Map<String, String>.from(json.decode(jsonStr.toString()));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  List<Move> _parseSubMoves(dynamic jsonStr) {
+    if (jsonStr == null || jsonStr.toString().isEmpty) return [];
+    try {
+      final List<dynamic> decoded = json.decode(jsonStr.toString());
+      return decoded.map((m) => Move.fromMap(m)).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<int> insertSeries(JkdSeries series) async {

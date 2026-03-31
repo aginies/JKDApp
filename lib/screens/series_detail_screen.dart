@@ -61,6 +61,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   _pendingAttackMove; // Store attack info when selecting counter
   final ScrollController _comboScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
+  final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
   Timer? _scrollTimer;
   Timer? _saveDelayTimer;
   int? _lastScrolledItemId;
@@ -1398,10 +1399,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 sL = pL.contains('L');
             final String pD = item['possible_direction'] ?? '';
             final bool hasDirection = pD.isNotEmpty;
-            Map<String, String> tr = {};
-            try {
-              tr = Map<String, String>.from(json.decode(item['translations']));
-            } catch (_) {}
+            final Map<String, String> tr =
+                (item['parsed_translations'] as Map<String, String>?) ?? {};
             final translation = tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1609,8 +1608,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     StateSetter pickerS,
     String lang,
   ) {
+    final glossaryFuture = _glossaryFutures.putIfAbsent(cat, () async {
+      final items = await DatabaseService().getGlossaryByCategory(cat);
+      return items.map((item) {
+        final Map<String, dynamic> mutableItem = Map.from(item);
+        try {
+          mutableItem['parsed_translations'] = Map<String, String>.from(
+            json.decode(item['translations']),
+          );
+        } catch (_) {
+          mutableItem['parsed_translations'] = <String, String>{};
+        }
+        return mutableItem;
+      }).toList();
+    });
+
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: DatabaseService().getGlossaryByCategory(cat),
+      future: glossaryFuture,
       builder: (ctx, snap) {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -1636,10 +1650,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             final side = _selectedSidesInPicker[id] ?? '';
             final spec = _selectedSpecialsInPicker[id];
             final String pL = item['possible_level'] ?? 'H,M,L';
-            Map<String, String> tr = {};
-            try {
-              tr = Map<String, String>.from(json.decode(item['translations']));
-            } catch (_) {}
+            final Map<String, String> tr =
+                (item['parsed_translations'] as Map<String, String>?) ?? {};
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: InkWell(

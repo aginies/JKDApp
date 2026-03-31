@@ -606,8 +606,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SeriesProvider>(context);
-    final lang = provider.language;
+    final lang = context.select((SeriesProvider p) => p.language);
 
     return DefaultTabController(
       length: 3,
@@ -631,7 +630,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                     ),
                     border: InputBorder.none,
                   ),
-                  onChanged: (val) => provider.setSearchQuery(val),
+                  onChanged: (val) => context.read<SeriesProvider>().setSearchQuery(val),
                 )
               : Text(LocalizationService.translate('library_title', lang)),
           actions: [
@@ -642,7 +641,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                   _isSearching = !_isSearching;
                   if (!_isSearching) {
                     _searchController.clear();
-                    provider.setSearchQuery('');
+                    context.read<SeriesProvider>().setSearchQuery('');
                   }
                 });
               },
@@ -706,9 +705,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         ),
         body: TabBarView(
           children: [
-            _buildSeriesList(provider, 'Jun Fan Gung Fu', lang),
-            _buildSeriesList(provider, 'Jun Fan Kick Boxing', lang),
-            _buildSeriesList(provider, 'Kali', lang),
+            _buildSeriesList('Jun Fan Gung Fu', lang),
+            _buildSeriesList('Jun Fan Kick Boxing', lang),
+            _buildSeriesList('Kali', lang),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -727,11 +726,11 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
   }
 
   Widget _buildSeriesList(
-    SeriesProvider provider,
     String category,
     String lang,
   ) {
-    final filtered = provider.getFilteredSeries(category);
+    // Only listen to filtered series for this specific category
+    final filtered = context.select((SeriesProvider p) => p.getFilteredSeries(category));
 
     if (filtered.isEmpty) {
       return Center(
@@ -846,12 +845,12 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.copy, color: Colors.blueGrey),
-                    onPressed: () => _confirmClone(context, provider, series),
+                    onPressed: () => _confirmClone(context, context.read<SeriesProvider>(), series),
                     tooltip: LocalizationService.translate('clone', lang),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, provider, series),
+                    onPressed: () => _confirmDelete(context, context.read<SeriesProvider>(), series),
                   ),
                 ],
               ),

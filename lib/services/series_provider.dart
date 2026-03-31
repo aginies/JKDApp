@@ -25,6 +25,7 @@ class SeriesProvider with ChangeNotifier {
   ];
 
   List<JkdSeries> _series = [];
+  final Map<String, List<JkdSeries>> _filteredCache = {};
   String _language = 'en';
   JkdThemeMode _themeMode = JkdThemeMode.system;
   bool _voiceEnabled = false;
@@ -298,17 +299,22 @@ class SeriesProvider with ChangeNotifier {
   }
 
   List<JkdSeries> getFilteredSeries(String category) {
+    if (_filteredCache.containsKey(category)) {
+      return _filteredCache[category]!;
+    }
+
     List<JkdSeries> filtered = _series
         .where((s) => s.category == category)
         .toList();
     if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
       filtered = filtered.where((s) {
-        final query = _searchQuery.toLowerCase();
         return s.title.toLowerCase().contains(query) ||
             s.notes.toLowerCase().contains(query) ||
             s.moves.any((m) => m.name.toLowerCase().contains(query));
       }).toList();
     }
+    _filteredCache[category] = filtered;
     return filtered;
   }
 }
