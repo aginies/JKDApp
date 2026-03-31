@@ -47,7 +47,7 @@
     {"name": "Gerk", "translations": {"en": "Foot", "fr": "Pied"}, "hit_type": "closed", "possible_level": "M,L", "removal": {}}
   ],
   "packs": [
-    {"name": "Pak Sao", "translations": {"en": "Slapping hand", "fr": "Gifler avec la main"}, "possible_type_attack": "both", "possible_level": "H,M,L", "removal": {}},
+    {"name": "Pak Sao", "translations": {"en": "Slapping hand", "fr": "Gifler with la main"}, "possible_type_attack": "both", "possible_level": "H,M,L", "removal": {}},
     {"name": "Shoulder Roll", "translations": {"en": "Shoulder roll", "fr": "Rotation d'épaule"}, "possible_type_attack": "both", "possible_level": "H,M,L", "removal": {}},
     {"name": "Insinida", "translations": {"en": "Insinida (Diagonal entry)", "fr": "Insinida (Entrée diagonale)"}, "possible_type_attack": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Woang Pack Sao", "translations": {"en": "Cross slap parry", "fr": "Protection + claque croisée"}, "possible_type_attack": "both", "possible_level": "H,M,L", "removal": {}},
@@ -76,6 +76,14 @@
     {"name": "Fook Sao", "translations": {"en": "Bridge-on hand", "fr": "Poignet plié"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Bong Sao", "translations": {"en": "Wing arm", "fr": "Parade du coude"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Poon Sao", "translations": {"en": "Forearm winding (rotation)", "fr": "Enroulement (rotation) bras"}, "possible_level": "H,M,L", "removal": {}}
+  ],
+  "jkd_moves": [
+    {"name": "Move forward", "translations": {"en": "Move forward", "fr": "Avancer"}, "possible_level": "", "removal": {}},
+    {"name": "Move backward", "translations": {"en": "Move backward", "fr": "Reculer"}, "possible_level": "", "removal": {}},
+    {"name": "Move front leg side", "translations": {"en": "Move front leg side", "fr": "Côté jambe avant"}, "possible_level": "", "removal": {}},
+    {"name": "Move rear leg side", "translations": {"en": "Move rear leg side", "fr": "Côté jambe arrière"}, "possible_level": "", "removal": {}},
+    {"name": "Rotation CCW", "translations": {"en": "Rotation counter-clockwise", "fr": "Rotation anti-horaire"}, "possible_level": "", "removal": {}},
+    {"name": "Rotation CW", "translations": {"en": "Rotation clockwise", "fr": "Rotation horaire"}, "possible_level": "", "removal": {}}
   ],
   "move": [
     {"name": "Change guard", "translations": {"en": "Change guard", "fr": "Changement de garde"}, "possible_level": "", "removal": {}},

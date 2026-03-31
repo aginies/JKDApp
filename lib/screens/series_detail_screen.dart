@@ -565,7 +565,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
           return DefaultTabController(
             key: ValueKey(isCounterMode),
-            length: isCounterMode ? 5 : 7,
+            length: isCounterMode ? 5 : 8,
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.95,
               child: Column(
@@ -703,6 +703,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             ),
                             Tab(
                               text: LocalizationService.translate(
+                                'jkd_moves',
+                                lang,
+                              ),
+                              icon: const Icon(
+                                Icons.directions_run,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
                                 'other',
                                 lang,
                               ),
@@ -803,6 +813,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildGlossaryWithScroll('packs', setS, lang),
                               _buildGlossaryWithScroll('trapping', setS, lang),
                               _buildGlossaryWithScroll('move', setS, lang),
+                              _buildGlossaryWithScroll('jkd_moves', setS, lang),
                               _buildGlossaryWithScroll('other', setS, lang),
                               _buildCustomTextTab(setS, lang),
                             ],
@@ -2172,6 +2183,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       isEditing: _isEditing,
       trainingController: _trainingController,
       context: context,
+      category: _selectedCategory,
       onEdit: (index) => () {
         if (_moves[index].isCombo) {
           _pickMove(initialMoves: _moves[index].subMoves, seriesIndex: index);
@@ -2571,6 +2583,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             setState(
                               () => _selectedCategory = 'Jun Fan Kick Boxing',
                             );
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('JKD Moves'),
+                        selected: _selectedCategory == 'JKD Moves',
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() => _selectedCategory = 'JKD Moves');
                           }
                         },
                       ),

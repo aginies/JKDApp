@@ -69,6 +69,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: Text('Jun Fan Kick Boxing'),
                               ),
                               DropdownMenuItem(
+                                value: 'JKD Moves',
+                                child: Text('JKD Moves'),
+                              ),
+                              DropdownMenuItem(
                                 value: 'Kali',
                                 child: Text('Kali'),
                               ),

@@ -257,7 +257,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 ),
               ),
               child: DefaultTabController(
-                length: 7,
+                length: 8,
                 child: Column(
                   children: [
                     // Handle bar for the bottom sheet
@@ -342,6 +342,13 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                           icon: Icon(_getCategoryIcon('move')),
                         ),
                         Tab(
+                          text: LocalizationService.translate(
+                            'jkd_moves',
+                            lang,
+                          ),
+                          icon: const Icon(Icons.directions_run),
+                        ),
+                        Tab(
                           text: LocalizationService.translate('general', lang),
                           icon: Icon(_getCategoryIcon('general')),
                         ),
@@ -359,6 +366,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                           _buildGlossaryList('packs', lang),
                           _buildGlossaryList('trapping', lang),
                           _buildGlossaryList('move', lang),
+                          _buildGlossaryList('jkd_moves', lang),
                           _buildGlossaryList('general', lang),
                           _buildGlossaryList('other', lang),
                         ],
@@ -800,7 +808,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     final lang = context.select((SeriesProvider p) => p.language);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           leading: Padding(
@@ -902,6 +910,20 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
+                          'assets/icon/JKD.png',
+                          width: 28,
+                          height: 28,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('JKD Moves'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
                           'assets/icon/kali.png',
                           width: 28,
                           height: 28,
@@ -920,6 +942,7 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
           children: [
             _buildSeriesList('Jun Fan Gung Fu', lang),
             _buildSeriesList('Jun Fan Kick Boxing', lang),
+            _buildSeriesList('JKD Moves', lang),
             _buildSeriesList('Kali', lang),
           ],
         ),
@@ -1033,6 +1056,8 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                             asset = 'assets/icon/jfkb.png';
                           } else if (cat == 'Kali') {
                             asset = 'assets/icon/kali.png';
+                          } else if (cat == 'JKD Moves') {
+                            asset = 'assets/icon/JKD.png';
                           }
                           return Image.asset(asset, width: 38, height: 38);
                         },

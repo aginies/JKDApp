@@ -27,6 +27,7 @@ class DatabaseService {
     'assets/jkd-series-kicks.json',
     'assets/jkd-series-loyda-jfk.json',
     'assets/jkd-series-trapping-base.json',
+    'assets/jkd-series-footwork.json',
   ];
 
   // Cache for glossary name→id map to avoid repeated queries

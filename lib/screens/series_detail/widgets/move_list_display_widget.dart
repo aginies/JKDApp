@@ -13,6 +13,7 @@ class MoveListDisplayWidget {
     required bool isEditing,
     required TrainingController trainingController,
     required BuildContext context,
+    required String category,
     required VoidCallback Function(int index) onEdit,
     required VoidCallback Function(int index) onClone,
     required VoidCallback Function(int index) onDelete,
@@ -31,12 +32,14 @@ class MoveListDisplayWidget {
       }
     }
 
+    final bool hideNumbers = category == 'JKD Moves';
+
     return [
       for (int i = 0; i < moves.length; i++)
         Padding(
           key: ValueKey(moves[i].uKey),
           padding: EdgeInsets.only(
-            left: moves[i].category == 'move' ? 0.0 : 15.0,
+            left: (moves[i].category == 'move' || hideNumbers) ? 0.0 : 15.0,
             bottom: 8.0,
           ),
           child: Stack(
@@ -437,7 +440,7 @@ class MoveListDisplayWidget {
                   ),
                 ),
               ),
-              if (displayNumbers[i] > 0)
+              if (displayNumbers[i] > 0 && !hideNumbers)
                 Positioned(
                   left: -15,
                   top: 0,
