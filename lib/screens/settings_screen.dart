@@ -115,6 +115,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Text(LocalizationService.translate('cancel', lang)),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    List<JkdSeries> toExport = [];
+                    String fileName = 'jkd_export.json';
+
+                    if (exportType == 'category') {
+                      toExport = allSeries
+                          .where((s) => s.category == selectedCategory)
+                          .toList();
+                      fileName =
+                          'jkd-${selectedCategory.replaceAll(' ', '-').toLowerCase()}-series.json';
+                    } else if (exportType == 'single' &&
+                        selectedSeries != null) {
+                      toExport = [selectedSeries!];
+                      fileName =
+                          'jkd-series-${selectedSeries!.title.replaceAll(' ', '-').toLowerCase()}.json';
+                    }
+
+                    if (toExport.isEmpty) {
+                      if (context.mounted) Navigator.pop(context);
+                      return;
+                    }
+
+                    await ExportService.shareSeriesJson(toExport, fileName: fileName);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Text(LocalizationService.translate('share', lang)),
+                ),
+                ElevatedButton(
                   onPressed: () async {
                     String? selectedDirectory = await FilePicker.platform
                         .getDirectoryPath();
@@ -162,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }
                   },
-                  child: Text(LocalizationService.translate('finish', lang)),
+                  child: Text(LocalizationService.translate('save_to_device', lang)),
                 ),
               ],
             );
@@ -197,54 +229,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleGlossaryBackup(BuildContext context, String lang) async {
-    String? targetDir = await FilePicker.platform.getDirectoryPath();
-    if (targetDir == null) return;
-
-    final String fileName =
-        'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
-
-    if (!context.mounted) return;
-
-    final proceed = await showDialog<bool>(
+    final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(LocalizationService.translate('backup_glossary', lang)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Backup Summary:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('Type: Glossary (JSON)', style: const TextStyle(fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              'Target File: $fileName',
-              style: const TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Target Dir: $targetDir',
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
+        content: Text(LocalizationService.translate('glossary_backup_desc', lang)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context, 'cancel'),
             child: Text(LocalizationService.translate('cancel', lang)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(LocalizationService.translate('finish', lang)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, 'share'),
+            child: Text(LocalizationService.translate('share', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: Text(LocalizationService.translate('save_to_device', lang)),
           ),
         ],
       ),
     );
 
-    if (proceed == true) {
+    if (action == 'share') {
+      await ExportService.shareGlossaryJson();
+    } else if (action == 'save') {
+      String? targetDir = await FilePicker.platform.getDirectoryPath();
+      if (targetDir == null) return;
       final path = await ExportService.exportGlossaryToJson(
         customDirectory: targetDir,
       );

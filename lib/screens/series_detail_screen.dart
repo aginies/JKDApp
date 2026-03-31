@@ -3006,6 +3006,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   PdfService.exportSeriesToPdf(widget.series!, lang);
                 } else if (value == 'export') {
                   _handleExportJson();
+                } else if (value == 'share') {
+                  ExportService.shareSeriesJson([widget.series!], fileName: 'jkd-series-${widget.series!.title.replaceAll(' ', '-').toLowerCase()}.json');
                 }
               },
               itemBuilder: (context) => [
@@ -3025,6 +3027,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     title: Text(
                       LocalizationService.translate('export_to_pdf', lang),
                     ),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'share',
+                  child: ListTile(
+                    leading: const Icon(Icons.share),
+                    title: Text(LocalizationService.translate('share_json', lang)),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
