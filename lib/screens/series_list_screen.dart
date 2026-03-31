@@ -9,7 +9,6 @@ import '../services/database_service.dart';
 import '../services/media_service.dart';
 import 'series_detail_screen.dart';
 import 'settings_screen.dart';
-import 'series_detail/widgets/move_display_widgets.dart';
 import '../models/series.dart';
 
 class SeriesListScreen extends StatefulWidget {
