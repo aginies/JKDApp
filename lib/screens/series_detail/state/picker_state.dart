@@ -38,6 +38,9 @@ class PickerState extends ChangeNotifier {
   // Last scrolled item ID to prevent re-scrolling
   int? _lastScrolledItemId;
 
+  // Selected sub-letter (a, b, c, ...)
+  String? _selectedSubLetter;
+
   // Getters
   Map<int, String> get selectedSides => _selectedSides;
   Map<int, bool> get selectedFeints => _selectedFeints;
@@ -51,6 +54,7 @@ class PickerState extends ChangeNotifier {
   bool get isPickerOpen => _isPickerOpen;
   Map<String, dynamic>? get pendingAttackMove => _pendingAttackMove;
   int? get lastScrolledItemId => _lastScrolledItemId;
+  String? get selectedSubLetter => _selectedSubLetter;
 
   bool get isEditingMode => _editingComboItemIndex != null;
 
@@ -115,6 +119,11 @@ class PickerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedSubLetter(String? letter) {
+    _selectedSubLetter = letter;
+    notifyListeners();
+  }
+
   /// Activates a glossary item and clears conflicting selections
   void activateGlossaryItem(int itemId) {
     if (_pendingActionItemId != itemId) {
@@ -140,6 +149,7 @@ class PickerState extends ChangeNotifier {
     _isEditingCounter = false;
     _pendingAttackMove = null;
     _lastScrolledItemId = null;
+    _selectedSubLetter = null;
     notifyListeners();
   }
 

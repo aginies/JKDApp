@@ -21,12 +21,17 @@ class MoveListDisplayWidget {
     required Function(List<Move> movesToInsert, int atIndex) onSetState,
   }) {
     // Calculate display numbers excluding 'move' category items
-    int displayNumber = 0;
+    int currentMainNumber = 0;
     final List<int> displayNumbers = [];
     for (int i = 0; i < moves.length; i++) {
       if (moves[i].category != 'move') {
-        displayNumber++;
-        displayNumbers.add(displayNumber);
+        if (moves[i].subLetter == null) {
+          currentMainNumber++;
+        } else if (currentMainNumber == 0) {
+          // If the very first item has a sub-letter, we start at 1
+          currentMainNumber = 1;
+        }
+        displayNumbers.add(currentMainNumber);
       } else {
         displayNumbers.add(0); // 0 means no number for move items
       }
@@ -39,7 +44,9 @@ class MoveListDisplayWidget {
         Padding(
           key: ValueKey(moves[i].uKey),
           padding: EdgeInsets.only(
-            left: (moves[i].category == 'move' || hideNumbers) ? 0.0 : 15.0,
+            left: (moves[i].category == 'move' || hideNumbers)
+                ? 0.0
+                : (moves[i].subLetter != null ? 45.0 : 15.0),
             bottom: 8.0,
           ),
           child: Stack(
@@ -449,13 +456,30 @@ class MoveListDisplayWidget {
                     child: CircleAvatar(
                       radius: 15,
                       backgroundColor: Colors.redAccent,
-                      child: Text(
-                        '${displayNumbers[i]}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (moves[i].subLetter == null)
+                            Text(
+                              '${displayNumbers[i]}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                height: 1.0,
+                              ),
+                            )
+                          else
+                            Text(
+                              moves[i].subLetter!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.yellowAccent,
+                                height: 1.0,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),

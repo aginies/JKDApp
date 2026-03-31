@@ -12,6 +12,7 @@ class Move {
   final String category; // 'punch', 'kick', 'packs', 'trapping', 'move'
   final String side;
   final String level;
+  final String? subLetter;
   final bool isFeint;
   final String? specialAction;
   final Map<String, String> translations;
@@ -34,6 +35,7 @@ class Move {
     this.category = '',
     this.side = '',
     this.level = '',
+    this.subLetter,
     this.isFeint = false,
     this.specialAction,
     this.translations = const {},
@@ -64,6 +66,7 @@ class Move {
       'category': category,
       'side': side,
       'level': level,
+      'sub_letter': subLetter,
       'is_feint': isFeint ? 1 : 0,
       'special_action': specialAction,
       'translations': json.encode(translations),
@@ -105,6 +108,7 @@ class Move {
       category: map['category'] ?? '',
       side: map['side'] ?? '',
       level: map['level'] ?? '',
+      subLetter: map['sub_letter'],
       isFeint: (map['is_feint'] ?? 0) == 1,
       specialAction: map['special_action'],
       translations: trans,
@@ -127,6 +131,7 @@ class Move {
     String? category,
     String? side,
     String? level,
+    String? subLetter,
     bool? isFeint,
     String? specialAction,
     Map<String, String>? translations,
@@ -147,6 +152,7 @@ class Move {
       category: category ?? this.category,
       side: side ?? this.side,
       level: level ?? this.level,
+      subLetter: subLetter ?? this.subLetter,
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,

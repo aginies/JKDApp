@@ -558,6 +558,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     }
     _pickerState.setEditingSeriesIndex(seriesIndex);
     _pickerState.setTargetSeriesIndex(seriesIndex);
+    if (seriesIndex != null && seriesIndex >= 0 && seriesIndex < _moves.length) {
+      _pickerState.setSelectedSubLetter(_moves[seriesIndex].subLetter);
+    }
     _pickerState.setEditingComboItemIndex(null);
     setState(() => _pickerState.setIsPickerOpen(true));
     await showModalBottomSheet(
@@ -863,6 +866,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   void _resetPickerState() {
     _pickerState.reset();
+    _currentCombo.clear();
+    _customMoveController.clear();
   }
 
   Future<int> _getInitialIndexForCategory(String cat) async {
@@ -1017,6 +1022,58 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           },
                         ),
                       ],
+                      const SizedBox(width: 8),
+                      // Sub-letter selector (a, b, c, ...)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'sub:',
+                              style: TextStyle(fontSize: 9, color: Colors.grey),
+                            ),
+                            const SizedBox(width: 4),
+                            DropdownButton<String>(
+                              value: _pickerState.selectedSubLetter ?? '_',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: _pickerState.selectedSubLetter != null
+                                    ? Colors.orangeAccent
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                              ),
+                              isDense: true,
+                              underline: const SizedBox(),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: '_',
+                                  child: Text('_'),
+                                ),
+                                ...'abcdefg'.split('').map(
+                                  (l) => DropdownMenuItem(
+                                    value: l,
+                                    child: Text(l),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                setS(
+                                  () => _pickerState.setSelectedSubLetter(
+                                    val == '_' ? null : val,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   Row(
@@ -2182,13 +2239,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   void _finishAndAddCombo() {
     if (_currentCombo.isEmpty) return;
     setState(() {
-      final Move finalMove = _currentCombo.length == 1
+      Move finalMove = _currentCombo.length == 1
           ? _currentCombo.first
           : Move(
               name: 'Combo: ${_currentCombo.first.name} + ...',
               category: 'combo',
               subMoves: List.from(_currentCombo),
             );
+
+      // Apply sub-letter if selected
+      if (_pickerState.selectedSubLetter != null) {
+        finalMove = finalMove.copyWith(subLetter: _pickerState.selectedSubLetter);
+      }
+
       if (_pickerState.editingSeriesIndex != null) {
         _moves.removeAt(_pickerState.editingSeriesIndex!);
         int target =
