@@ -61,6 +61,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Map<String, dynamic>?
   _pendingAttackMove; // Store attack info when selecting counter
   final ScrollController _comboScrollController = ScrollController();
+  final ScrollController _movesScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
   Timer? _scrollTimer;
@@ -97,7 +98,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _trainingController = TrainingController(
       tts: _tts,
       onIndexChanged: (index) {
-        if (mounted) setState(() {});
+        if (mounted) {
+          setState(() {});
+          if (index >= 0 && index < _moves.length) {
+            _scrollToIndex(index);
+          }
+        }
       },
       onTrainingComplete: () {
         if (mounted) {
@@ -120,6 +126,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     _titleController.dispose();
     _customMoveController.dispose();
     _comboScrollController.dispose();
+    _movesScrollController.dispose();
     for (final controller in _glossaryScrollControllers.values) {
       controller.dispose();
     }
@@ -130,6 +137,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       .toLowerCase()
       .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
       .replaceAll(RegExp(r'^-+|-+$'), '');
+
+  void _scrollToIndex(int index) {
+    if (!_movesScrollController.hasClients) return;
+
+    // Approximate height of each card
+    const double itemHeight = 110.0;
+    final double targetOffset = (index * itemHeight).clamp(
+      0.0,
+      _movesScrollController.position.maxScrollExtent,
+    );
+
+    _movesScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
 
   void _showMediaGallery(String category, String moveName) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
@@ -3232,6 +3256,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               Expanded(
                 child: _isEditing
                     ? ReorderableListView(
+                        scrollController: _movesScrollController,
                         buildDefaultDragHandles: false,
                         onReorder: (oldIndex, newIndex) {
                           setState(() {
@@ -3242,7 +3267,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         },
                         children: _buildMoveListTiles(lang),
                       )
-                    : ListView(children: _buildMoveListTiles(lang)),
+                    : ListView(
+                        controller: _movesScrollController,
+                        children: _buildMoveListTiles(lang),
+                      ),
               ),
             ],
           ),
