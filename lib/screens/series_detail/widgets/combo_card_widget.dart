@@ -50,10 +50,7 @@ class ComboCardWidget extends StatelessWidget {
           axis: Axis.horizontal,
           child: Card(
             key: isRemoving ? null : ValueKey(move.uKey),
-            margin: const EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 4,
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             shape: (isSelected || isCounterSelected)
                 ? RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -108,9 +105,7 @@ class ComboCardWidget extends StatelessWidget {
           ? null
           : () async {
               int? gid = move.glossaryId;
-              if (gid == null) {
-                gid = await _findGlossaryId(move.category, move.name);
-              }
+              gid ??= await _findGlossaryId(move.category, move.name);
               onEdit(index, false);
             },
       child: Column(
@@ -147,11 +142,7 @@ class ComboCardWidget extends StatelessWidget {
                   move.side,
                   mini: true,
                 ),
-              MoveDisplayWidgets.levelIcon(
-                move.level,
-                size: 10,
-                mini: true,
-              ),
+              MoveDisplayWidgets.levelIcon(move.level, size: 10, mini: true),
               if (move.isFeint)
                 Padding(
                   padding: const EdgeInsets.only(left: 4.0),
@@ -184,9 +175,7 @@ class ComboCardWidget extends StatelessWidget {
           Row(
             children: [
               Icon(
-                MoveDisplayWidgets.getCategoryIcon(
-                  move.counterCategory ?? '',
-                ),
+                MoveDisplayWidgets.getCategoryIcon(move.counterCategory ?? ''),
                 size: 16,
                 color: MoveDisplayWidgets.getCategoryColor(
                   move.counterCategory ?? '',

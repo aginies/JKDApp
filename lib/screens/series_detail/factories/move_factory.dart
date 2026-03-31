@@ -1,4 +1,4 @@
-import '../../models/move.dart';
+import '../../../models/move.dart';
 
 class MoveFactory {
   /// Creates a standard move from glossary item

@@ -147,38 +147,27 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                                 onTap: () async {
                                   final confirmed = await showDialog<bool>(
                                     context: context,
-                                    builder:
-                                        (context) => AlertDialog(
-                                          title: const Text('Delete Image?'),
-                                          content: const Text(
-                                            'Are you sure you want to delete this instructional photo?',
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.pop(
-                                                        context,
-                                                        false,
-                                                      ),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.pop(
-                                                        context,
-                                                        true,
-                                                      ),
-                                              child: const Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete Image?'),
+                                      content: const Text(
+                                        'Are you sure you want to delete this instructional photo?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text('Cancel'),
                                         ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   );
                                   if (confirmed == true) {
                                     final deleted = await _mediaService

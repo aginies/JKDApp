@@ -36,11 +36,17 @@ class SeriesDetailConstants {
 
   // Method definitions
   static const Map<String, String> methodDefinitions = {
-    'SDA': 'Simple Direct Attack: A single, direct strike without preceding feints.',
-    'PIA': 'Progressive Indirect Attack: Begins with a feint to misdirect and progresses to an open line.',
-    'SIA': 'Single Indirect Attack: A single motion that changes direction mid-flight.',
-    'BTAA': 'Broken Timing Angle Attack: Varying speed and timing to disrupt defensive rhythm.',
-    'ABD': 'Attack By Drawing: Deliberately baiting the opponent into attacking to create a counter opportunity.',
-    'ABC': 'Attack By Combination: A rapid sequence of multiple strikes to overwhelm the guard.',
+    'SDA':
+        'Simple Direct Attack: A single, direct strike without preceding feints.',
+    'PIA':
+        'Progressive Indirect Attack: Begins with a feint to misdirect and progresses to an open line.',
+    'SIA':
+        'Single Indirect Attack: A single motion that changes direction mid-flight.',
+    'BTAA':
+        'Broken Timing Angle Attack: Varying speed and timing to disrupt defensive rhythm.',
+    'ABD':
+        'Attack By Drawing: Deliberately baiting the opponent into attacking to create a counter opportunity.',
+    'ABC':
+        'Attack By Combination: A rapid sequence of multiple strikes to overwhelm the guard.',
   };
 }

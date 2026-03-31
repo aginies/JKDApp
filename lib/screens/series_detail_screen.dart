@@ -20,8 +20,6 @@ import 'series_detail/dialogs/training_options_dialog.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
-import 'series_detail/widgets/combo_card_widget.dart';
-import 'series_detail/widgets/workflow_buttons.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
 
@@ -122,9 +120,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
     final double targetOffset =
         (index * SeriesDetailConstants.estimatedMoveItemHeight).clamp(
-      0.0,
-      _movesScrollController.position.maxScrollExtent,
-    );
+          0.0,
+          _movesScrollController.position.maxScrollExtent,
+        );
 
     _movesScrollController.animateTo(
       targetOffset,
@@ -201,9 +199,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     bool isRemoving = false,
   }) {
     final sel =
-        !isRemoving && _pickerState.editingComboItemIndex == idx && !_pickerState.isEditingCounter;
+        !isRemoving &&
+        _pickerState.editingComboItemIndex == idx &&
+        !_pickerState.isEditingCounter;
     final cSel =
-        !isRemoving && _pickerState.editingComboItemIndex == idx && _pickerState.isEditingCounter;
+        !isRemoving &&
+        _pickerState.editingComboItemIndex == idx &&
+        _pickerState.isEditingCounter;
 
     // Use slide + fade for a more pronounced "fly-in" effect from the right
     final slideAnimation = Tween<Offset>(
@@ -279,7 +281,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             if (gid != null) {
                               _pickerState.setSelectedSide(gid, m.side);
                               _pickerState.setSelectedFeint(gid, m.isFeint);
-                              _pickerState.setSelectedSpecial(gid, m.specialAction);
+                              _pickerState.setSelectedSpecial(
+                                gid,
+                                m.specialAction,
+                              );
                               _pickerState.setPendingActionItem(gid);
                               _pickerState.setPendingLevel(m.level);
                               _pickerState.setLastScrolledItemId(null);
@@ -768,7 +773,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     setState(() {
       if (_pickerState.isPickerOpen) {
         // Since we are in a modal bottom sheet with a separate StateSetter (setS),
-        // we need to be careful. However, _processVoiceInput usually runs via 
+        // we need to be careful. However, _processVoiceInput usually runs via
         // a dialog that pops back. If we are in the picker, we should ideally
         // use the setS provided to the picker, but this method uses setState.
         // For now, let's at least add them.
@@ -839,8 +844,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.arrow_back),
-                            onPressed: () =>
-                                setS(() => _pickerState.setPendingAttackMove(null)),
+                            onPressed: () => setS(
+                              () => _pickerState.setPendingAttackMove(null),
+                            ),
                           ),
                           Text(
                             LocalizationService.translate('pick_answer', lang),
@@ -1043,13 +1049,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 setS,
                                 lang,
                                 isCounter: true,
-                                attackItem: _pickerState.pendingAttackMove!['item'],
-                                attackCategory: _pickerState.pendingAttackMove!['cat'],
+                                attackItem:
+                                    _pickerState.pendingAttackMove!['item'],
+                                attackCategory:
+                                    _pickerState.pendingAttackMove!['cat'],
                                 side: _pickerState.pendingAttackMove!['sd'],
                                 level: _pickerState.pendingAttackMove!['lv'],
                                 isFeint: _pickerState.pendingAttackMove!['f'],
                                 special: _pickerState.pendingAttackMove!['sp'],
-                                attackTranslations: _pickerState.pendingAttackMove!['tr'],
+                                attackTranslations:
+                                    _pickerState.pendingAttackMove!['tr'],
                                 reps: 1,
                                 pickerModalState: setS,
                               ),
@@ -1082,7 +1091,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Future<int> _getInitialIndexForCategory(String cat) async {
     if (_pickerState.pendingActionItemId == null) return -1;
     final items = await DatabaseService().getGlossaryByCategory(cat);
-    return items.indexWhere((item) => item['id'] == _pickerState.pendingActionItemId);
+    return items.indexWhere(
+      (item) => item['id'] == _pickerState.pendingActionItemId,
+    );
   }
 
   Widget _buildGlossaryWithScroll(String cat, StateSetter setS, String lang) {
@@ -1221,7 +1232,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ).toList(),
                           onChanged: (val) {
                             if (val != null) {
-                              setS(() => _pickerState.setTargetSeriesIndex(val - 1));
+                              setS(
+                                () =>
+                                    _pickerState.setTargetSeriesIndex(val - 1),
+                              );
                             }
                           },
                         ),
@@ -1231,7 +1245,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (voiceEnabled && _pickerState.editingSeriesIndex == null) ...[
+                      if (voiceEnabled &&
+                          _pickerState.editingSeriesIndex == null) ...[
                         IconButton(
                           icon: const Icon(
                             Icons.help_outline,
@@ -1326,7 +1341,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   scrollDirection: Axis.horizontal,
                   initialItemCount: _currentCombo.length,
                   itemBuilder: (ctx, idx, animation) {
-                    if (idx >= _currentCombo.length) return const SizedBox.shrink();
+                    if (idx >= _currentCombo.length) {
+                      return const SizedBox.shrink();
+                    }
                     return _buildComboCard(
                       _currentCombo[idx],
                       idx,
@@ -1409,6 +1426,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       ),
     );
   }
+
   Widget _buildGlossaryList(
     String cat,
     StateSetter setS,
@@ -1482,12 +1500,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 (_pickerState.pendingActionItemId == null &&
                     _pickerState.editingComboItemIndex != null &&
                     (!_pickerState.isEditingCounter
-                        ? _currentCombo[_pickerState.editingComboItemIndex!].name ==
+                        ? _currentCombo[_pickerState.editingComboItemIndex!]
+                                  .name ==
                               item['name']
-                        : _currentCombo[_pickerState.editingComboItemIndex!].counterName ==
+                        : _currentCombo[_pickerState.editingComboItemIndex!]
+                                  .counterName ==
                               item['name']) &&
                     (!_pickerState.isEditingCounter
-                        ? _currentCombo[_pickerState.editingComboItemIndex!].category == cat
+                        ? _currentCombo[_pickerState.editingComboItemIndex!]
+                                  .category ==
+                              cat
                         : _currentCombo[_pickerState.editingComboItemIndex!]
                                   .counterCategory ==
                               cat));
@@ -1635,8 +1657,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   style: const TextStyle(fontSize: 10),
                                 ),
                                 selected: isF,
-                                onSelected: (v) =>
-                                    setS(() => _pickerState.selectedFeints[id] = v),
+                                onSelected: (v) => setS(
+                                  () => _pickerState.selectedFeints[id] = v,
+                                ),
                               ),
                               ActionChip(
                                 label: Text(
@@ -1969,7 +1992,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     IconData icon = l == 'High'
         ? Icons.north_east
         : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
-    final bool sel = _pickerState.pendingActionItemId == id && _pickerState.pendingLevel == l;
+    final bool sel =
+        _pickerState.pendingActionItemId == id &&
+        _pickerState.pendingLevel == l;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2380,7 +2405,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             );
       if (_pickerState.editingSeriesIndex != null) {
         _moves.removeAt(_pickerState.editingSeriesIndex!);
-        int target = _pickerState.targetSeriesIndex ?? _pickerState.editingSeriesIndex!;
+        int target =
+            _pickerState.targetSeriesIndex ?? _pickerState.editingSeriesIndex!;
         if (target >= _moves.length) {
           _moves.add(finalMove);
         } else {
@@ -3277,23 +3303,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           alignment: WrapAlignment.start,
                           spacing: 8,
                           runSpacing: 4,
-                          children:
-                              SeriesDetailConstants.methodDefinitions.keys
-                                  .map(
-                                    (method) => Tooltip(
-                                      message: SeriesDetailConstants
-                                          .methodDefinitions[method]!,
-                                      child: ChoiceChip(
-                                        label: Text(method),
-                                        selected: _selectedMethod == method,
-                                        onSelected: (val) => setState(
-                                          () => _selectedMethod =
-                                              val ? method : null,
-                                        ),
-                                      ),
+                          children: SeriesDetailConstants.methodDefinitions.keys
+                              .map(
+                                (method) => Tooltip(
+                                  message: SeriesDetailConstants
+                                      .methodDefinitions[method]!,
+                                  child: ChoiceChip(
+                                    label: Text(method),
+                                    selected: _selectedMethod == method,
+                                    onSelected: (val) => setState(
+                                      () =>
+                                          _selectedMethod = val ? method : null,
                                     ),
-                                  )
-                                  .toList(),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                         const SizedBox(height: 8),
                       ],
