@@ -30,6 +30,7 @@ class SeriesProvider with ChangeNotifier {
   List<Map<String, dynamic>> _glossary = [];
   String _language = 'en';
   JkdThemeMode _themeMode = JkdThemeMode.system;
+  Color _themeColor = Colors.red;
   bool _voiceEnabled = false;
   bool _developerMode = false;
   String? _projectPath;
@@ -43,6 +44,7 @@ class SeriesProvider with ChangeNotifier {
   List<Map<String, dynamic>> get glossary => _glossary;
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
+  Color get themeColor => _themeColor;
   bool get voiceEnabled => _voiceEnabled;
   bool get developerMode => _developerMode;
   String? get projectPath => _projectPath;
@@ -91,6 +93,15 @@ class SeriesProvider with ChangeNotifier {
       orElse: () => JkdThemeMode.system,
     );
 
+    // Theme Color
+    if (prefs.containsKey('theme_color')) {
+      try {
+        _themeColor = Color(int.parse(prefs['theme_color']!));
+      } catch (_) {
+        _themeColor = Colors.red;
+      }
+    }
+
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
@@ -135,6 +146,12 @@ class SeriesProvider with ChangeNotifier {
   void setThemeMode(JkdThemeMode mode) async {
     _themeMode = mode;
     await _dbService.saveSetting('theme', mode.name);
+    notifyListeners();
+  }
+
+  void setThemeColor(Color color) async {
+    _themeColor = color;
+    await _dbService.saveSetting('theme_color', color.value.toString());
     notifyListeners();
   }
 

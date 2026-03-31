@@ -801,6 +801,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: Text(LocalizationService.translate('theme_color', lang)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    Colors.red,
+                    Colors.pink,
+                    Colors.purple,
+                    Colors.deepPurple,
+                    Colors.indigo,
+                    Colors.blue,
+                    Colors.lightBlue,
+                    Colors.cyan,
+                    Colors.teal,
+                    Colors.green,
+                    Colors.lightGreen,
+                    Colors.lime,
+                    Colors.yellow,
+                    Colors.amber,
+                    Colors.orange,
+                    Colors.deepOrange,
+                    Colors.brown,
+                    Colors.grey,
+                    Colors.blueGrey,
+                  ].map((color) {
+                    final isSelected = provider.themeColor.value == color.value;
+                    return GestureDetector(
+                      onTap: () => provider.setThemeColor(color),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: isSelected
+                              ? Border.all(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                  width: 3,
+                                )
+                              : Border.all(
+                                  color: Colors.grey.withValues(alpha: 0.3),
+                                ),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                          ],
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 20,
+                              )
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
               SwitchListTile(
                 secondary: const Icon(Icons.mic),
                 title: Text(

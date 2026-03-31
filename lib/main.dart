@@ -24,17 +24,17 @@ void main() async {
 class JkdApp extends StatelessWidget {
   const JkdApp({super.key});
 
-  ThemeData _buildLightTheme() {
+  ThemeData _buildLightTheme(Color seedColor) {
     return ThemeData(
-      primarySwatch: Colors.red,
+      colorSchemeSeed: seedColor,
       brightness: Brightness.light,
       useMaterial3: true,
     );
   }
 
-  ThemeData _buildDarkTheme({bool amoled = false}) {
+  ThemeData _buildDarkTheme(Color seedColor, {bool amoled = false}) {
     return ThemeData(
-      primarySwatch: Colors.red,
+      colorSchemeSeed: seedColor,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: amoled ? Colors.black : null,
       appBarTheme: amoled
@@ -50,7 +50,9 @@ class JkdApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = context.watch<SeriesProvider>().themeMode;
+    final provider = context.watch<SeriesProvider>();
+    final themeMode = provider.themeMode;
+    final seedColor = provider.themeColor;
 
     ThemeMode mode;
     ThemeData theme;
@@ -59,23 +61,23 @@ class JkdApp extends StatelessWidget {
     switch (themeMode) {
       case JkdThemeMode.light:
         mode = ThemeMode.light;
-        theme = _buildLightTheme();
-        darkTheme = _buildDarkTheme();
+        theme = _buildLightTheme(seedColor);
+        darkTheme = _buildDarkTheme(seedColor);
         break;
       case JkdThemeMode.dark:
         mode = ThemeMode.dark;
-        theme = _buildLightTheme();
-        darkTheme = _buildDarkTheme();
+        theme = _buildLightTheme(seedColor);
+        darkTheme = _buildDarkTheme(seedColor);
         break;
       case JkdThemeMode.amoled:
         mode = ThemeMode.dark;
-        theme = _buildLightTheme();
-        darkTheme = _buildDarkTheme(amoled: true);
+        theme = _buildLightTheme(seedColor);
+        darkTheme = _buildDarkTheme(seedColor, amoled: true);
         break;
       case JkdThemeMode.system:
         mode = ThemeMode.system;
-        theme = _buildLightTheme();
-        darkTheme = _buildDarkTheme();
+        theme = _buildLightTheme(seedColor);
+        darkTheme = _buildDarkTheme(seedColor);
         break;
     }
 
