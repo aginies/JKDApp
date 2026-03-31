@@ -2968,23 +2968,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/icon/JKD.png', height: 32),
-            const SizedBox(width: 8),
-            Expanded(
-              child: MarqueeWidget(
-                child: Text(
-                  widget.series == null
-                      ? LocalizationService.translate('new_series', lang)
-                      : widget.series!.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+      appBar: _currentTrainingOptions != null
+          ? null
+          : AppBar(
+              title: Row(
+                children: [
+                  Image.asset('assets/icon/JKD.png', height: 32),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: MarqueeWidget(
+                      child: Text(
+                        widget.series == null
+                            ? LocalizationService.translate('new_series', lang)
+                            : widget.series!.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
         actions: [
           if (!_isEditing && widget.series != null)
             IconButton(
@@ -3043,22 +3045,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             ),
         ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(
-          milliseconds: 300,
-        ), // Same duration as page transition
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end);
-          final offsetAnimation = animation.drive(tween);
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-        child: Padding(
-          key: ValueKey(_isEditing), // Key is crucial for AnimatedSwitcher
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 16.0),
-          child: Column(
-            children: [
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            final tween = Tween(begin: begin, end: end);
+            final offsetAnimation = animation.drive(tween);
+            return SlideTransition(position: offsetAnimation, child: child);
+          },
+          child: Padding(
+            key: ValueKey(_isEditing),
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 16.0),
+            child: Column(
+              children: [
               if (_trainingController.isTraining)
                 Container(
                   width: double.infinity,
@@ -3092,6 +3093,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             ],
                           ],
                         ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _trainingController.isPaused
+                              ? Icons.play_arrow
+                              : Icons.pause,
+                          color: Colors.greenAccent,
+                        ),
+                        onPressed: () {
+                          if (_trainingController.isPaused) {
+                            _trainingController.resume();
+                          } else {
+                            _trainingController.pause();
+                          }
+                          setState(() {});
+                        },
                       ),
                       IconButton(
                         icon: const Icon(Icons.stop, color: Colors.red),
@@ -3277,6 +3294,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

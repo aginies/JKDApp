@@ -743,27 +743,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _handleMediaRestore(context, lang, provider.galleryPath),
               ),
               const Divider(),
-              // Developer Options
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Text(
-                  'Developer Options',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
               SwitchListTile(
-                secondary: const Icon(Icons.developer_mode),
-                title: const Text('Developer Mode'),
-                subtitle: const Text(
-                  'Sync edits directly to project JSON files',
+                secondary: const Icon(Icons.edit_note),
+                title: Text(LocalizationService.translate('manage_series', lang)),
+                subtitle: Text(
+                  LocalizationService.translate('manage_series_desc', lang),
                 ),
                 value: provider.developerMode,
                 onChanged: (val) => provider.setDeveloperMode(val),
               ),
               if (provider.developerMode) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: Text(
+                    'Developer Sync',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
                 ListTile(
                   leading: const Icon(Icons.folder),
                   title: const Text('Project Path'),

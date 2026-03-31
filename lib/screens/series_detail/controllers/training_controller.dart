@@ -18,8 +18,18 @@ class TrainingController {
   final BuildContext context;
 
   bool _isTraining = false;
+  bool _isPaused = false;
   int _currentIndex = -1;
   Timer? _timer;
+
+  // Stored parameters for resume
+  List<Move>? _moves;
+  int? _startIndex;
+  int? _endIndex;
+  int? _interval;
+  int? _comboInterval;
+  bool? _isLooping;
+  String? _language;
 
   TrainingController({
     required FlutterTts tts,
@@ -29,6 +39,7 @@ class TrainingController {
   }) : _tts = tts;
 
   bool get isTraining => _isTraining;
+  bool get isPaused => _isPaused;
   int get currentIndex => _currentIndex;
 
   Future<void> initTts({double speechRate = 0.25}) async {
@@ -37,6 +48,7 @@ class TrainingController {
       await _tts.setVolume(1.0);
       await _tts.setSpeechRate(speechRate);
       await _tts.setPitch(1.0);
+      await _tts.awaitSpeakCompletion(true);
       if (Platform.isIOS || Platform.isAndroid) {
         await _tts.setSharedInstance(true);
         if (Platform.isIOS) {
@@ -69,7 +81,7 @@ class TrainingController {
     if (text is String) {
       if (Platform.isLinux) {
         try {
-          await Process.run('spd-say', ['-l', language, text]);
+          await Process.run('spd-say', ['-l', language, '-w', text]);
         } catch (e) {
           debugPrint("spd-say warning: $e");
         }
@@ -78,10 +90,10 @@ class TrainingController {
       }
     } else if (text is List<_TtsLine>) {
       for (final line in text) {
-        if (!_isTraining) break;
+        if (!_isTraining || _isPaused) break;
         if (Platform.isLinux) {
           try {
-            await Process.run('spd-say', ['-l', language, line.text]);
+            await Process.run('spd-say', ['-l', language, '-w', line.text]);
           } catch (e) {
             debugPrint("spd-say warning: $e");
           }
@@ -117,6 +129,14 @@ class TrainingController {
     required String language,
     double speechRate = 0.25,
   }) async {
+    _moves = moves;
+    _startIndex = startIndex;
+    _endIndex = endIndex;
+    _interval = interval;
+    _comboInterval = comboInterval;
+    _isLooping = isLooping;
+    _language = language;
+
     await setLanguage(language);
     if (!Platform.isLinux) {
       await _tts.setSpeechRate(speechRate);
@@ -168,6 +188,7 @@ class TrainingController {
     }
 
     _isTraining = true;
+    _isPaused = false;
     _currentIndex = startIndex - 1;
     onIndexChanged(_currentIndex);
 
@@ -182,6 +203,37 @@ class TrainingController {
     );
   }
 
+  void pause() {
+    if (!_isTraining || _isPaused) return;
+    _isPaused = true;
+    _timer?.cancel();
+    stopTts();
+    onIndexChanged(_currentIndex); // Trigger UI update for pause state
+  }
+
+  void resume() {
+    if (!_isTraining || !_isPaused) return;
+    _isPaused = false;
+    onIndexChanged(_currentIndex);
+    if (_moves != null &&
+        _startIndex != null &&
+        _endIndex != null &&
+        _interval != null &&
+        _comboInterval != null &&
+        _isLooping != null &&
+        _language != null) {
+      _playStep(
+        moves: _moves!,
+        startIndex: _startIndex!,
+        endIndex: _endIndex!,
+        interval: _interval!,
+        comboInterval: _comboInterval!,
+        isLooping: _isLooping!,
+        language: _language!,
+      );
+    }
+  }
+
   void _playStep({
     required List<Move> moves,
     required int startIndex,
@@ -191,7 +243,7 @@ class TrainingController {
     required bool isLooping,
     required String language,
   }) async {
-    if (!_isTraining) return;
+    if (!_isTraining || _isPaused) return;
 
     if (_currentIndex >= endIndex) {
       if (isLooping) {
@@ -208,8 +260,10 @@ class TrainingController {
       language,
     );
 
+    if (_isPaused) return;
+
     _timer = Timer(Duration(seconds: interval), () {
-      if (_isTraining) {
+      if (_isTraining && !_isPaused) {
         _currentIndex++;
         onIndexChanged(_currentIndex);
         _playStep(
@@ -284,6 +338,7 @@ class TrainingController {
     _timer?.cancel();
     stopTts();
     _isTraining = false;
+    _isPaused = false;
     _currentIndex = -1;
     onTrainingComplete();
   }

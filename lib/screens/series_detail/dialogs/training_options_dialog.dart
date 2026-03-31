@@ -125,7 +125,7 @@ class TrainingOptionsDialog {
                     '${LocalizationService.translate('interval', language)}: ',
                   ),
                   SizedBox(
-                    width: 100,
+                    width: 180,
                     child: Slider(
                       value: trainingInterval.toDouble(),
                       min: 3,
@@ -147,7 +147,7 @@ class TrainingOptionsDialog {
                     '${LocalizationService.translate('combo_interval', language)}: ',
                   ),
                   SizedBox(
-                    width: 100,
+                    width: 180,
                     child: Slider(
                       value: trainingComboInterval.toDouble(),
                       min: 500,
@@ -170,7 +170,7 @@ class TrainingOptionsDialog {
                     '${LocalizationService.translate('speech_rate', language)}: ',
                   ),
                   SizedBox(
-                    width: 100,
+                    width: 180,
                     child: Slider(
                       value: trainingSpeechRate,
                       min: 0.1,

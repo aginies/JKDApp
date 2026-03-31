@@ -828,28 +828,30 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
                 style: const TextStyle(color: Colors.pink, fontSize: 12),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.copy, color: Colors.blueGrey),
-                    onPressed: () => _confirmClone(
-                      context,
-                      context.read<SeriesProvider>(),
-                      series,
-                    ),
-                    tooltip: LocalizationService.translate('clone', lang),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(
-                      context,
-                      context.read<SeriesProvider>(),
-                      series,
-                    ),
-                  ),
-                ],
-              ),
+              trailing: context.read<SeriesProvider>().developerMode
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.copy, color: Colors.blueGrey),
+                          onPressed: () => _confirmClone(
+                            context,
+                            context.read<SeriesProvider>(),
+                            series,
+                          ),
+                          tooltip: LocalizationService.translate('clone', lang),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _confirmDelete(
+                            context,
+                            context.read<SeriesProvider>(),
+                            series,
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
             ),
           ),
         );
