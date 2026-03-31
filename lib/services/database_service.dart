@@ -330,14 +330,22 @@ class DatabaseService {
 
         // Use pre-built map for O(1) lookup instead of database query
         int? gid;
+        String? glossaryTranslations;
+
         if (move['glossary_id'] != null) {
           gid = (move['glossary_id'] as num) as int?;
         } else if (move['name'] != null &&
             !move['name'].toString().startsWith('Combo:')) {
-          final name = move['name'] as String?;
-          if (name != null && glossaryMap.containsKey(name)) {
-            final mapGid = glossaryMap[name];
-            if (mapGid != null) gid = mapGid;
+          String name = move['name'] as String;
+          // Strip prefix for lookup if it's a JKD Move (e.g., "1: Move forward" -> "Move forward")
+          if (name.contains(':')) {
+            name = name.split(':').last.trim();
+          }
+
+          if (glossaryMap.containsKey(name)) {
+            final entry = glossaryMap[name]!;
+            gid = entry['id'] as int?;
+            glossaryTranslations = entry['translations'] as String?;
           }
         }
 
@@ -350,7 +358,8 @@ class DatabaseService {
           'level': move['level'] ?? '',
           'is_feint': move['is_feint'] ?? 0,
           'special_action': move['special_action'],
-          'translations': move['translations'] ?? json.encode({}),
+          'translations':
+              move['translations'] ?? glossaryTranslations ?? json.encode({}),
           'repetitions': move['repetitions'] ?? 1,
           'counter_name': move['counter_name'],
           'counter_category': move['counter_category'],
@@ -365,16 +374,18 @@ class DatabaseService {
   }
 
   /// Pre-build glossary name→id map to avoid repeated database queries
-  Future<Map<String, int?>> _buildGlossaryNameMap(Database db) async {
+  Future<Map<String, Map<String, dynamic>>> _buildGlossaryNameMap(
+    Database db,
+  ) async {
     final List<Map<String, dynamic>> glossary = await db.query(
       'glossary',
       orderBy: 'position',
     );
-    final Map<String, int?> nameMap = {};
+    final Map<String, Map<String, dynamic>> nameMap = {};
 
     for (var entry in glossary) {
       if (entry['name'] != null) {
-        nameMap[entry['name'] as String] = entry['id'] as int?;
+        nameMap[entry['name'] as String] = entry;
       }
     }
 

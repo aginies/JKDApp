@@ -158,7 +158,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  void _handleEditComboItem(int index, bool isCounter, StateSetter setS) async {
+  void _handleEditComboItem(
+    int index,
+    bool isCounter,
+    StateSetter setS,
+    BuildContext ctx,
+  ) async {
     if (index < 0 || index >= _currentCombo.length) return;
     final m = _currentCombo[index];
     setS(() {
@@ -168,9 +173,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
     if (!mounted) return;
     final cat = isCounter ? (m.counterCategory ?? '') : m.category;
-    final t = MoveDisplayWidgets.getTabIndexForCategory(cat);
+    final t = MoveDisplayWidgets.getTabIndexForCategory(cat, isCounter: isCounter);
     if (t != -1) {
-      DefaultTabController.of(context).animateTo(t);
+      DefaultTabController.of(ctx).animateTo(t);
     }
   }
 
@@ -565,7 +570,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
           return DefaultTabController(
             key: ValueKey(isCounterMode),
-            length: isCounterMode ? 5 : 8,
+            length: isCounterMode ? 6 : 8,
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.95,
               child: Column(
@@ -624,6 +629,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 color: MoveDisplayWidgets.getCategoryColor(
                                   'move',
                                 ),
+                              ),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'jkd_moves',
+                                lang,
+                              ),
+                              icon: const Icon(
+                                Icons.directions_run,
+                                color: Colors.blue,
                               ),
                             ),
                             Tab(
@@ -763,6 +778,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               ),
                               _buildCounterGlossaryList(
                                 'move',
+                                setS,
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                              ),
+                              _buildCounterGlossaryList(
+                                'jkd_moves',
                                 setS,
                                 _pickerState.pendingAttackMove!['item'],
                                 _pickerState.pendingAttackMove!['cat'],
@@ -1097,7 +1126,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       animation: animation,
                       onRemove: () => _removeItemFromCombo(idx, setS, lang),
                       onEdit: (index, isCounter) =>
-                          _handleEditComboItem(index, isCounter, setS),
+                          _handleEditComboItem(index, isCounter, setS, ctx),
                       isSelected:
                           _pickerState.editingComboItemIndex == idx &&
                           !_pickerState.isEditingCounter,
@@ -2369,7 +2398,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           : AppBar(
               title: Row(
                 children: [
-                  Image.asset('assets/icon/JKD.png', height: 32),
+                  Builder(
+                    builder: (context) {
+                      String asset = 'assets/icon/JKD.png';
+                      if (widget.series != null) {
+                        final cat = widget.series!.category;
+                        if (cat == 'Jun Fan Gung Fu') {
+                          asset = 'assets/icon/jfgf.png';
+                        } else if (cat == 'Jun Fan Kick Boxing') {
+                          asset = 'assets/icon/jfkb.png';
+                        } else if (cat == 'Kali') {
+                          asset = 'assets/icon/kali.png';
+                        } else if (cat == 'JKD Moves') {
+                          asset = 'assets/icon/JKD.png';
+                        }
+                      }
+                      return Image.asset(asset, height: 32);
+                    },
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: MarqueeWidget(
@@ -2419,20 +2465,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         );
                       }
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          leading: const Icon(Icons.edit),
-                          title: Text(
-                            LocalizationService.translate('edit', lang),
+                    itemBuilder: (context) {
+                      final isSystemJkdMoves = widget.series!.isSystem &&
+                          widget.series!.category == 'JKD Moves';
+                      return [
+                        if (!isSystemJkdMoves)
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: ListTile(
+                              leading: const Icon(Icons.edit),
+                              title: Text(
+                                LocalizationService.translate('edit', lang),
+                              ),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'print',
+                        PopupMenuItem(
+                          value: 'print',
                         child: ListTile(
                           leading: const Icon(Icons.print),
                           title: Text(
@@ -2465,8 +2515,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                    ],
-                  ),
+                    ];
+                  },
+                ),
               ],
             ),
       body: SafeArea(

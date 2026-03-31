@@ -15,6 +15,8 @@ class CategoryUtils {
         return Icons.back_hand;
       case 'move':
         return Icons.directions_run;
+      case 'jkd_moves':
+        return Icons.directions_run;
       case 'text':
         return Icons.text_fields;
       case 'other':
@@ -37,6 +39,8 @@ class CategoryUtils {
         return Colors.blue;
       case 'move':
         return Colors.pink;
+      case 'jkd_moves':
+        return Colors.blue;
       case 'text':
         return Colors.teal;
       case 'combo':

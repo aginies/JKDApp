@@ -83,7 +83,26 @@ class MoveDisplayWidgets {
   }
 
   /// Get tab index for category (used in tab navigation)
-  static int getTabIndexForCategory(String category) {
+  static int getTabIndexForCategory(String category, {bool isCounter = false}) {
+    if (isCounter) {
+      switch (category) {
+        case 'packs':
+          return 0;
+        case 'trapping':
+          return 1;
+        case 'move':
+          return 2;
+        case 'jkd_moves':
+          return 3;
+        case 'other':
+          return 4;
+        case 'text':
+          return 5;
+        default:
+          return -1;
+      }
+    }
+
     switch (category) {
       case 'punch':
         return 0;
@@ -95,10 +114,12 @@ class MoveDisplayWidgets {
         return 3;
       case 'move':
         return 4;
-      case 'other':
+      case 'jkd_moves':
         return 5;
-      case 'text':
+      case 'other':
         return 6;
+      case 'text':
+        return 7;
       default:
         return -1;
     }

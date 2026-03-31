@@ -8,6 +8,7 @@ import '../services/database_service.dart';
 import '../services/media_service.dart';
 import 'series_detail_screen.dart';
 import 'settings_screen.dart';
+import 'series_list/widgets/random_reader_widget.dart';
 import '../models/series.dart';
 import '../utils/translation_utils.dart';
 
@@ -978,10 +979,14 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
       );
     }
 
-    return ListView.builder(
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final series = filtered[index];
+    return Column(
+      children: [
+        if (category == 'JKD Moves') RandomReaderWidget(language: lang),
+        Expanded(
+          child: ListView.builder(
+            itemCount: filtered.length,
+            itemBuilder: (context, index) {
+              final series = filtered[index];
         final isEven = index % 2 == 0;
         final theme = Theme.of(context);
 
@@ -1107,6 +1112,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
           ),
         );
       },
-    );
-  }
+    ),
+  ),
+],
+);
+}
 }

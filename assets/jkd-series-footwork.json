@@ -4,18 +4,18 @@
     "category": "JKD Moves",
     "notes": "Basic JKD footwork: step with the lead foot, then slide the rear foot.",
     "moves": [
-      {"name": "1: Move forward", "side": "L"},
-      {"name": "2: Move backward", "side": "L"},
-      {"name": "3: Move front leg side", "side": "L"},
-      {"name": "4: Move rear leg side", "side": "L"},
-      {"name": "5: Rotation CCW", "side": "L"},
-      {"name": "6: Rotation CW", "side": "L"},
-      {"name": "1: Move forward", "side": "R"},
-      {"name": "2: Move backward", "side": "R"},
-      {"name": "3: Move front leg side", "side": "R"},
-      {"name": "4: Move rear leg side", "side": "R"},
-      {"name": "6: Rotation CW", "side": "R"},
-      {"name": "5: Rotation CCW", "side": "R"}
+      {"name": "1: Move forward", "side": "L", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "L", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "L", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "L", "category": "jkd_moves"},
+      {"name": "1: Move forward", "side": "R", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "R", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "R", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "R", "category": "jkd_moves"}
     ]
   },
   {
@@ -23,18 +23,18 @@
     "category": "JKD Moves",
     "notes": "Slide the rear foot first, then step with the lead foot.",
     "moves": [
-      {"name": "1: Move forward", "side": "L"},
-      {"name": "2: Move backward", "side": "L"},
-      {"name": "3: Move front leg side", "side": "L"},
-      {"name": "4: Move rear leg side", "side": "L"},
-      {"name": "5: Rotation CCW", "side": "L"},
-      {"name": "6: Rotation CW", "side": "L"},
-      {"name": "1: Move forward", "side": "R"},
-      {"name": "2: Move backward", "side": "R"},
-      {"name": "3: Move front leg side", "side": "R"},
-      {"name": "4: Move rear leg side", "side": "R"},
-      {"name": "6: Rotation CW", "side": "R"},
-      {"name": "5: Rotation CCW", "side": "R"}
+      {"name": "1: Move forward", "side": "L", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "L", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "L", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "L", "category": "jkd_moves"},
+      {"name": "1: Move forward", "side": "R", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "R", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "R", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "R", "category": "jkd_moves"}
     ]
   },
   {
@@ -42,18 +42,18 @@
     "category": "JKD Moves",
     "notes": "Bursting movement by pushing off the rear foot.",
     "moves": [
-      {"name": "1: Move forward", "side": "L"},
-      {"name": "2: Move backward", "side": "L"},
-      {"name": "3: Move front leg side", "side": "L"},
-      {"name": "4: Move rear leg side", "side": "L"},
-      {"name": "5: Rotation CCW", "side": "L"},
-      {"name": "6: Rotation CW", "side": "L"},
-      {"name": "1: Move forward", "side": "R"},
-      {"name": "2: Move backward", "side": "R"},
-      {"name": "3: Move front leg side", "side": "R"},
-      {"name": "4: Move rear leg side", "side": "R"},
-      {"name": "6: Rotation CW", "side": "R"},
-      {"name": "5: Rotation CCW", "side": "R"}
+      {"name": "1: Move forward", "side": "L", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "L", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "L", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "L", "category": "jkd_moves"},
+      {"name": "1: Move forward", "side": "R", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "R", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "R", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "R", "category": "jkd_moves"}
     ]
   },
   {
@@ -61,18 +61,18 @@
     "category": "JKD Moves",
     "notes": "Rhythmical weight shifting footwork.",
     "moves": [
-      {"name": "1: Move forward", "side": "L"},
-      {"name": "2: Move backward", "side": "L"},
-      {"name": "3: Move front leg side", "side": "L"},
-      {"name": "4: Move rear leg side", "side": "L"},
-      {"name": "5: Rotation CCW", "side": "L"},
-      {"name": "6: Rotation CW", "side": "L"},
-      {"name": "1: Move forward", "side": "R"},
-      {"name": "2: Move backward", "side": "R"},
-      {"name": "3: Move front leg side", "side": "R"},
-      {"name": "4: Move rear leg side", "side": "R"},
-      {"name": "6: Rotation CW", "side": "R"},
-      {"name": "5: Rotation CCW", "side": "R"}
+      {"name": "1: Move forward", "side": "L", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "L", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "L", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "L", "category": "jkd_moves"},
+      {"name": "1: Move forward", "side": "R", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "R", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "R", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "R", "category": "jkd_moves"}
     ]
   },
   {
@@ -80,18 +80,18 @@
     "category": "JKD Moves",
     "notes": "Springy footwork for rapid entry and exit.",
     "moves": [
-      {"name": "1: Move forward", "side": "L"},
-      {"name": "2: Move backward", "side": "L"},
-      {"name": "3: Move front leg side", "side": "L"},
-      {"name": "4: Move rear leg side", "side": "L"},
-      {"name": "5: Rotation CCW", "side": "L"},
-      {"name": "6: Rotation CW", "side": "L"},
-      {"name": "1: Move forward", "side": "R"},
-      {"name": "2: Move backward", "side": "R"},
-      {"name": "3: Move front leg side", "side": "R"},
-      {"name": "4: Move rear leg side", "side": "R"},
-      {"name": "6: Rotation CW", "side": "R"},
-      {"name": "5: Rotation CCW", "side": "R"}
+      {"name": "1: Move forward", "side": "L", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "L", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "L", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "L", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "L", "category": "jkd_moves"},
+      {"name": "1: Move forward", "side": "R", "category": "jkd_moves"},
+      {"name": "2: Move backward", "side": "R", "category": "jkd_moves"},
+      {"name": "3: Move front leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "4: Move rear leg side", "side": "R", "category": "jkd_moves"},
+      {"name": "6: Rotation CW", "side": "R", "category": "jkd_moves"},
+      {"name": "5: Rotation CCW", "side": "R", "category": "jkd_moves"}
     ]
   }
 ]
