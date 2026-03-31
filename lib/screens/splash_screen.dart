@@ -19,7 +19,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _rotateAnimation;
   late Animation<double> _opacityAnimation;
   Timer? _timer;
-  bool _isReady = false;
   bool _isShowingLoading = false;
   int _seriesCount = 0; // Track loaded count for loading indicator
 
@@ -68,7 +67,6 @@ class _SplashScreenState extends State<SplashScreen>
       _seriesCount = count;
 
       if (count > 0) {
-        _isReady = true;
         if (mounted) {
           _navigateToShowApp();
         }

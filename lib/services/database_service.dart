@@ -231,7 +231,6 @@ class DatabaseService {
     await _seedSeries(db);
   }
 
-
   Future<void> _seedGlossary(Database db) async {
     final String glossaryResponse = await rootBundle.loadString(
       'assets/jkd-glossary.json',

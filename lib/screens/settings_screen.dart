@@ -420,6 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (path != null) {
+        // ignore: deprecated_member_use
         await Share.shareXFiles([XFile(path)], text: 'JKD Media Backup');
       } else {
         if (context.mounted) {

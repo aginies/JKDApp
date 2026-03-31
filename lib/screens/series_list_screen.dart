@@ -174,38 +174,82 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return DefaultTabController(
-              length: 7,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.95,
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.95,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: DefaultTabController(
+                length: 7,
                 child: Column(
                   children: [
-                    AppBar(
-                      title: TextField(
-                        decoration: InputDecoration(
-                          hintText: LocalizationService.translate(
-                            'search_hint',
-                            lang,
-                          ),
-                          prefixIcon: const Icon(Icons.search),
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (val) =>
-                            setModalState(() => _glossarySearchQuery = val),
+                    // Handle bar for the bottom sheet
+                    Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 8),
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: LocalizationService.translate(
+                                    'search_hint',
+                                    lang,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                                style: const TextStyle(fontSize: 16),
+                                onChanged: (val) => setModalState(
+                                  () => _glossarySearchQuery = val,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.grey[200],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TabBar(
                       isScrollable: true,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      labelColor: Theme.of(context).primaryColor,
+                      unselectedLabelColor: Colors.grey,
                       tabs: [
                         Tab(
                           text: LocalizationService.translate('punches', lang),
@@ -261,6 +305,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
   }
 
   Widget _buildGlossaryList(String category, String lang) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final galleryPath = provider.galleryPath;
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(category),
       builder: (context, snapshot) {
@@ -286,11 +333,22 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
 
         if (items.isEmpty) {
           return Center(
-            child: Text(LocalizationService.translate('nothing', lang)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text(
+                  LocalizationService.translate('nothing', lang),
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
           );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(8),
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
@@ -302,15 +360,85 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             } catch (_) {}
             final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
 
-            return InkWell(
-              onDoubleTap: () => _showMediaGallery(category, item['name']),
-              child: ListTile(
-                leading: Icon(_getCategoryIcon(category)),
-                title: Text(
-                  item['name'],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+            return Card(
+              elevation: 0,
+              color: Colors.grey[50],
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _showMediaGallery(category, item['name']),
+                onDoubleTap: () => _showMediaGallery(category, item['name']),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(category),
+                          color: Theme.of(context).primaryColor,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (translation.isNotEmpty)
+                              Text(
+                                translation,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (galleryPath != null)
+                        FutureBuilder<List<File>>(
+                          future: _mediaService.getImagesForMove(
+                            galleryPath,
+                            category,
+                            item['name'],
+                          ),
+                          builder: (context, snapshot) {
+                            final hasImages =
+                                snapshot.hasData && snapshot.data!.isNotEmpty;
+                            return Icon(
+                              Icons.image,
+                              size: 18,
+                              color: hasImages ? Colors.blue : Colors.grey[300],
+                            );
+                          },
+                        ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
+                    ],
+                  ),
                 ),
-                subtitle: Text(translation),
               ),
             );
           },
