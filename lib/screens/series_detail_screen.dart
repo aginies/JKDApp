@@ -20,6 +20,10 @@ import 'series_detail/dialogs/training_options_dialog.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
+import 'series_detail/widgets/combo_card_widget.dart';
+import 'series_detail/widgets/workflow_buttons.dart';
+import 'series_detail/constants/series_detail_constants.dart';
+import 'series_detail/state/picker_state.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
@@ -47,41 +51,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   final MediaService _mediaService = MediaService();
 
+  // Picker state management
+  final PickerState _pickerState = PickerState();
   final List<Move> _currentCombo = [];
-  final Map<int, String> _selectedSidesInPicker = {};
-  final Map<int, bool> _selectedFeintsInPicker = {};
-  final Map<int, String?> _selectedSpecialsInPicker = {};
-  int? _pendingActionItemId;
-  String? _pendingLevel;
-  int? _editingSeriesIndex;
-  int? _targetSeriesIndex;
-  int? _editingComboItemIndex;
-  bool _isEditingCounter = false;
-  bool _isPickerOpen = false;
-  Map<String, dynamic>?
-  _pendingAttackMove; // Store attack info when selecting counter
   final ScrollController _comboScrollController = ScrollController();
-  final GlobalKey<AnimatedListState> _comboListKey = GlobalKey<AnimatedListState>();
+  final GlobalKey<AnimatedListState> _comboListKey =
+      GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
   final Map<String, ScrollController> _glossaryScrollControllers = {};
   final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
   Timer? _scrollTimer;
-  int? _lastScrolledItemId;
-
-  final Map<String, String> _methodDefinitions = {
-    'SDA':
-        'Simple Direct Attack: A single, direct strike without preceding feints.',
-    'PIA':
-        'Progressive Indirect Attack: Begins with a feint to misdirect and progresses to an open line.',
-    'SIA':
-        'Single Indirect Attack: A single motion that changes direction mid-flight.',
-    'BTAA':
-        'Broken Timing Angle Attack: Varying speed and timing to disrupt defensive rhythm.',
-    'ABD':
-        'Attack By Drawing: Deliberately baiting the opponent into attacking to create a counter opportunity.',
-    'ABC':
-        'Attack By Combination: A rapid sequence of multiple strikes to overwhelm the guard.',
-  };
 
   @override
   void initState() {
@@ -122,6 +101,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   void dispose() {
     _scrollTimer?.cancel();
     _trainingController.dispose();
+    _pickerState.dispose();
     _titleController.dispose();
     _customMoveController.dispose();
     _comboScrollController.dispose();
@@ -140,16 +120,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   void _scrollToIndex(int index) {
     if (!_movesScrollController.hasClients) return;
 
-    // Approximate height of each card
-    const double itemHeight = 110.0;
-    final double targetOffset = (index * itemHeight).clamp(
+    final double targetOffset =
+        (index * SeriesDetailConstants.estimatedMoveItemHeight).clamp(
       0.0,
       _movesScrollController.position.maxScrollExtent,
     );
 
     _movesScrollController.animateTo(
       targetOffset,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(
+        milliseconds: SeriesDetailConstants.scrollAnimationMs,
+      ),
       curve: Curves.easeInOut,
     );
   }
@@ -159,19 +140,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       _currentCombo.add(item);
       _comboListKey.currentState?.insertItem(
         _currentCombo.length - 1,
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(
+          milliseconds: SeriesDetailConstants.comboAnimationMs,
+        ),
       );
     });
     // Auto-scroll to end after animation
-    Future.delayed(const Duration(milliseconds: 450), () {
-      if (_comboScrollController.hasClients) {
-        _comboScrollController.animateTo(
-          _comboScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    Future.delayed(
+      const Duration(milliseconds: SeriesDetailConstants.comboAnimationMs + 50),
+      () {
+        if (_comboScrollController.hasClients) {
+          _comboScrollController.animateTo(
+            _comboScrollController.position.maxScrollExtent,
+            duration: const Duration(
+              milliseconds: SeriesDetailConstants.removeAnimationMs,
+            ),
+            curve: Curves.easeOut,
+          );
+        }
+      },
+    );
   }
 
   void _removeItemFromCombo(int index, StateSetter setS, String lang) {
@@ -189,14 +177,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           animation,
           isRemoving: true,
         ),
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(
+          milliseconds: SeriesDetailConstants.removeAnimationMs,
+        ),
       );
-      if (_editingComboItemIndex == index) {
-        _editingComboItemIndex = null;
-        _isEditingCounter = false;
-      } else if (_editingComboItemIndex != null &&
-          _editingComboItemIndex! > index) {
-        _editingComboItemIndex = _editingComboItemIndex! - 1;
+      if (_pickerState.editingComboItemIndex == index) {
+        _pickerState.clearEditingState();
+      } else if (_pickerState.editingComboItemIndex != null &&
+          _pickerState.editingComboItemIndex! > index) {
+        _pickerState.setEditingComboItemIndex(
+          _pickerState.editingComboItemIndex! - 1,
+        );
       }
     });
   }
@@ -210,9 +201,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     bool isRemoving = false,
   }) {
     final sel =
-        !isRemoving && _editingComboItemIndex == idx && !_isEditingCounter;
+        !isRemoving && _pickerState.editingComboItemIndex == idx && !_pickerState.isEditingCounter;
     final cSel =
-        !isRemoving && _editingComboItemIndex == idx && _isEditingCounter;
+        !isRemoving && _pickerState.editingComboItemIndex == idx && _pickerState.isEditingCounter;
 
     // Use slide + fade for a more pronounced "fly-in" effect from the right
     final slideAnimation = Tween<Offset>(
@@ -283,15 +274,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             if (match.isNotEmpty) gid = match['id'];
                           }
                           setS(() {
-                            _editingComboItemIndex = idx;
-                            _isEditingCounter = false;
+                            _pickerState.setEditingComboItemIndex(idx);
+                            _pickerState.setIsEditingCounter(false);
                             if (gid != null) {
-                              _selectedSidesInPicker[gid] = m.side;
-                              _selectedFeintsInPicker[gid] = m.isFeint;
-                              _selectedSpecialsInPicker[gid] = m.specialAction;
-                              _pendingActionItemId = gid;
-                              _pendingLevel = m.level;
-                              _lastScrolledItemId = null;
+                              _pickerState.setSelectedSide(gid, m.side);
+                              _pickerState.setSelectedFeint(gid, m.isFeint);
+                              _pickerState.setSelectedSpecial(gid, m.specialAction);
+                              _pickerState.setPendingActionItem(gid);
+                              _pickerState.setPendingLevel(m.level);
+                              _pickerState.setLastScrolledItemId(null);
                             }
                           });
                           final t = MoveDisplayWidgets.getTabIndexForCategory(
@@ -373,16 +364,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 if (match.isNotEmpty) gid = match['id'];
                               }
                               setS(() {
-                                _editingComboItemIndex = idx;
-                                _isEditingCounter = true;
+                                _pickerState.setEditingComboItemIndex(idx);
+                                _pickerState.setIsEditingCounter(true);
                                 if (gid != null) {
-                                  _selectedSidesInPicker[gid] =
-                                      m.counterSide ?? '';
-                                  _selectedSpecialsInPicker[gid] =
-                                      m.counterSpecialAction;
-                                  _pendingActionItemId = gid;
-                                  _pendingLevel = m.counterLevel;
-                                  _lastScrolledItemId = null;
+                                  _pickerState.setSelectedSide(
+                                    gid,
+                                    m.counterSide ?? '',
+                                  );
+                                  _pickerState.setSelectedSpecial(
+                                    gid,
+                                    m.counterSpecialAction,
+                                  );
+                                  _pickerState.setPendingActionItem(gid);
+                                  _pickerState.setPendingLevel(m.counterLevel);
+                                  _pickerState.setLastScrolledItemId(null);
                                 }
                               });
                               final t =
@@ -771,7 +766,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
     if (parsed.isEmpty) return;
     setState(() {
-      if (_isPickerOpen) {
+      if (_pickerState.isPickerOpen) {
         // Since we are in a modal bottom sheet with a separate StateSetter (setS),
         // we need to be careful. However, _processVoiceInput usually runs via 
         // a dialog that pops back. If we are in the picker, we should ideally
@@ -814,10 +809,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         }
       });
     }
-    _editingSeriesIndex = seriesIndex;
-    _targetSeriesIndex = seriesIndex;
-    _editingComboItemIndex = null;
-    setState(() => _isPickerOpen = true);
+    _pickerState.setEditingSeriesIndex(seriesIndex);
+    _pickerState.setTargetSeriesIndex(seriesIndex);
+    _pickerState.setEditingComboItemIndex(null);
+    setState(() => _pickerState.setIsPickerOpen(true));
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -827,7 +822,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           final voiceEnabled = Provider.of<SeriesProvider>(
             context,
           ).voiceEnabled;
-          final isCounterMode = _pendingAttackMove != null;
+          final isCounterMode = _pickerState.pendingAttackMove != null;
 
           return DefaultTabController(
             key: ValueKey(isCounterMode),
@@ -845,7 +840,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           IconButton(
                             icon: const Icon(Icons.arrow_back),
                             onPressed: () =>
-                                setS(() => _pendingAttackMove = null),
+                                setS(() => _pickerState.setPendingAttackMove(null)),
                           ),
                           Text(
                             LocalizationService.translate('pick_answer', lang),
@@ -991,13 +986,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildCounterGlossaryList(
                                 'packs',
                                 setS,
-                                _pendingAttackMove!['item'],
-                                _pendingAttackMove!['cat'],
-                                _pendingAttackMove!['sd'],
-                                _pendingAttackMove!['lv'],
-                                _pendingAttackMove!['f'],
-                                _pendingAttackMove!['sp'],
-                                _pendingAttackMove!['tr'],
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
                                 1,
                                 setS,
                                 lang,
@@ -1005,13 +1000,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildCounterGlossaryList(
                                 'trapping',
                                 setS,
-                                _pendingAttackMove!['item'],
-                                _pendingAttackMove!['cat'],
-                                _pendingAttackMove!['sd'],
-                                _pendingAttackMove!['lv'],
-                                _pendingAttackMove!['f'],
-                                _pendingAttackMove!['sp'],
-                                _pendingAttackMove!['tr'],
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
                                 1,
                                 setS,
                                 lang,
@@ -1019,13 +1014,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildCounterGlossaryList(
                                 'move',
                                 setS,
-                                _pendingAttackMove!['item'],
-                                _pendingAttackMove!['cat'],
-                                _pendingAttackMove!['sd'],
-                                _pendingAttackMove!['lv'],
-                                _pendingAttackMove!['f'],
-                                _pendingAttackMove!['sp'],
-                                _pendingAttackMove!['tr'],
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
                                 1,
                                 setS,
                                 lang,
@@ -1033,13 +1028,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildCounterGlossaryList(
                                 'other',
                                 setS,
-                                _pendingAttackMove!['item'],
-                                _pendingAttackMove!['cat'],
-                                _pendingAttackMove!['sd'],
-                                _pendingAttackMove!['lv'],
-                                _pendingAttackMove!['f'],
-                                _pendingAttackMove!['sp'],
-                                _pendingAttackMove!['tr'],
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
                                 1,
                                 setS,
                                 lang,
@@ -1048,13 +1043,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 setS,
                                 lang,
                                 isCounter: true,
-                                attackItem: _pendingAttackMove!['item'],
-                                attackCategory: _pendingAttackMove!['cat'],
-                                side: _pendingAttackMove!['sd'],
-                                level: _pendingAttackMove!['lv'],
-                                isFeint: _pendingAttackMove!['f'],
-                                special: _pendingAttackMove!['sp'],
-                                attackTranslations: _pendingAttackMove!['tr'],
+                                attackItem: _pickerState.pendingAttackMove!['item'],
+                                attackCategory: _pickerState.pendingAttackMove!['cat'],
+                                side: _pickerState.pendingAttackMove!['sd'],
+                                level: _pickerState.pendingAttackMove!['lv'],
+                                isFeint: _pickerState.pendingAttackMove!['f'],
+                                special: _pickerState.pendingAttackMove!['sp'],
+                                attackTranslations: _pickerState.pendingAttackMove!['tr'],
                                 reps: 1,
                                 pickerModalState: setS,
                               ),
@@ -1077,27 +1072,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         },
       ),
     );
-    setState(() => _isPickerOpen = false);
+    setState(() => _pickerState.setIsPickerOpen(false));
   }
 
   void _resetPickerState() {
-    _selectedSidesInPicker.clear();
-    _selectedFeintsInPicker.clear();
-    _selectedSpecialsInPicker.clear();
-    _pendingActionItemId = null;
-    _pendingLevel = null;
-    _editingSeriesIndex = null;
-    _targetSeriesIndex = null;
-    _editingComboItemIndex = null;
-    _isEditingCounter = false;
-    _pendingAttackMove = null;
-    _lastScrolledItemId = null;
+    _pickerState.reset();
   }
 
   Future<int> _getInitialIndexForCategory(String cat) async {
-    if (_pendingActionItemId == null) return -1;
+    if (_pickerState.pendingActionItemId == null) return -1;
     final items = await DatabaseService().getGlossaryByCategory(cat);
-    return items.indexWhere((item) => item['id'] == _pendingActionItemId);
+    return items.indexWhere((item) => item['id'] == _pickerState.pendingActionItemId);
   }
 
   Widget _buildGlossaryWithScroll(String cat, StateSetter setS, String lang) {
@@ -1110,13 +1095,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _activateGlossaryItem(int itemId) {
-    if (_pendingActionItemId != itemId) {
-      _selectedSidesInPicker.clear();
-      _selectedFeintsInPicker.clear();
-      _selectedSpecialsInPicker.clear();
-      _pendingActionItemId = itemId;
-      _pendingLevel = null;
-    }
+    _pickerState.activateGlossaryItem(itemId);
   }
 
   Widget _buildCustomTextTab(
@@ -1210,8 +1189,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _editingSeriesIndex != null
-                            ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_editingSeriesIndex! + 1}'
+                        _pickerState.editingSeriesIndex != null
+                            ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_pickerState.editingSeriesIndex! + 1}'
                             : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -1219,11 +1198,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           color: Colors.blueAccent,
                         ),
                       ),
-                      if (_editingSeriesIndex != null) ...[
+                      if (_pickerState.editingSeriesIndex != null) ...[
                         const SizedBox(width: 8),
                         DropdownButton<int>(
-                          value: _targetSeriesIndex != null
-                              ? _targetSeriesIndex! + 1
+                          value: _pickerState.targetSeriesIndex != null
+                              ? _pickerState.targetSeriesIndex! + 1
                               : 1,
                           style: TextStyle(
                             fontSize: 11,
@@ -1242,7 +1221,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ).toList(),
                           onChanged: (val) {
                             if (val != null) {
-                              setS(() => _targetSeriesIndex = val - 1);
+                              setS(() => _pickerState.setTargetSeriesIndex(val - 1));
                             }
                           },
                         ),
@@ -1252,7 +1231,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (voiceEnabled && _editingSeriesIndex == null) ...[
+                      if (voiceEnabled && _pickerState.editingSeriesIndex == null) ...[
                         IconButton(
                           icon: const Icon(
                             Icons.help_outline,
@@ -1282,7 +1261,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ),
                       ],
                       const SizedBox(width: 12),
-                      if (_editingSeriesIndex != null)
+                      if (_pickerState.editingSeriesIndex != null)
                         Padding(
                           padding: const EdgeInsets.only(right: 4.0),
                           child: ElevatedButton(
@@ -1317,7 +1296,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             Navigator.pop(context);
                           },
                           child: Text(
-                            _editingSeriesIndex != null
+                            _pickerState.editingSeriesIndex != null
                                 ? LocalizationService.translate(
                                     'update_item',
                                     lang,
@@ -1454,7 +1433,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             initialIndex < items.length) {
           final targetItemId = items[initialIndex]['id'];
           // Only scroll if we haven't already scrolled to this item
-          if (_lastScrolledItemId != targetItemId) {
+          if (_pickerState.lastScrolledItemId != targetItemId) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               _scrollTimer?.cancel();
@@ -1481,7 +1460,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   }
 
                   scrollController.jumpTo(offset);
-                  _lastScrolledItemId = targetItemId;
+                  _pickerState.setLastScrolledItemId(targetItemId);
                 }
               });
             });
@@ -1494,22 +1473,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           itemBuilder: (ctx, idx) {
             final item = items[idx];
             final id = item['id'];
-            final side = _selectedSidesInPicker[id] ?? '';
-            final isF = _selectedFeintsInPicker[id] ?? false;
-            final spec = _selectedSpecialsInPicker[id];
+            final side = _pickerState.selectedSides[id] ?? '';
+            final isF = _pickerState.selectedFeints[id] ?? false;
+            final spec = _pickerState.selectedSpecials[id];
             // Expanded highlight logic: match by ID or by name/cat if ID is null (legacy)
             final bool isE =
-                _pendingActionItemId == id ||
-                (_pendingActionItemId == null &&
-                    _editingComboItemIndex != null &&
-                    (!_isEditingCounter
-                        ? _currentCombo[_editingComboItemIndex!].name ==
+                _pickerState.pendingActionItemId == id ||
+                (_pickerState.pendingActionItemId == null &&
+                    _pickerState.editingComboItemIndex != null &&
+                    (!_pickerState.isEditingCounter
+                        ? _currentCombo[_pickerState.editingComboItemIndex!].name ==
                               item['name']
-                        : _currentCombo[_editingComboItemIndex!].counterName ==
+                        : _currentCombo[_pickerState.editingComboItemIndex!].counterName ==
                               item['name']) &&
-                    (!_isEditingCounter
-                        ? _currentCombo[_editingComboItemIndex!].category == cat
-                        : _currentCombo[_editingComboItemIndex!]
+                    (!_pickerState.isEditingCounter
+                        ? _currentCombo[_pickerState.editingComboItemIndex!].category == cat
+                        : _currentCombo[_pickerState.editingComboItemIndex!]
                                   .counterCategory ==
                               cat));
             final String pL = item['possible_level'] ?? 'H,M,L';
@@ -1598,8 +1577,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ] else if (cat == 'move')
                             ElevatedButton(
                               onPressed: () => setS(() {
-                                _pendingActionItemId = id;
-                                _pendingLevel = '';
+                                _pickerState.setPendingActionItem(id);
+                                _pickerState.setPendingLevel('');
                               }),
                               child: const Text('ADD'),
                             )
@@ -1609,9 +1588,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               'L',
                               Colors.blue,
                               () => setS(() {
-                                _pendingActionItemId = id;
-                                _pendingLevel = '';
-                                _selectedSidesInPicker[id] = 'L';
+                                _pickerState.setPendingActionItem(id);
+                                _pickerState.setPendingLevel('');
+                                _pickerState.selectedSides[id] = 'L';
                               }),
                               lang,
                               id,
@@ -1621,9 +1600,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               'R',
                               Colors.red,
                               () => setS(() {
-                                _pendingActionItemId = id;
-                                _pendingLevel = '';
-                                _selectedSidesInPicker[id] = 'R';
+                                _pickerState.setPendingActionItem(id);
+                                _pickerState.setPendingLevel('');
+                                _pickerState.selectedSides[id] = 'R';
                               }),
                               lang,
                               id,
@@ -1657,7 +1636,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 ),
                                 selected: isF,
                                 onSelected: (v) =>
-                                    setS(() => _selectedFeintsInPicker[id] = v),
+                                    setS(() => _pickerState.selectedFeints[id] = v),
                               ),
                               ActionChip(
                                 label: Text(
@@ -1687,14 +1666,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             ),
                         ],
                       ),
-                      if (_pendingActionItemId == id)
+                      if (_pickerState.pendingActionItemId == id)
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: _buildWorkflowButtons(
                             item,
                             cat,
                             side,
-                            _pendingLevel ?? '',
+                            _pickerState.pendingLevel ?? '',
                             isF,
                             spec,
                             tr,
@@ -1766,8 +1745,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           itemBuilder: (ctx, idx) {
             final item = items[idx];
             final id = item['id'];
-            final side = _selectedSidesInPicker[id] ?? '';
-            final spec = _selectedSpecialsInPicker[id];
+            final side = _pickerState.selectedSides[id] ?? '';
+            final spec = _pickerState.selectedSpecials[id];
             final String pL = item['possible_level'] ?? 'H,M,L';
             final Map<String, String> tr =
                 (item['parsed_translations'] as Map<String, String>?) ?? {};
@@ -1990,7 +1969,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     IconData icon = l == 'High'
         ? Icons.north_east
         : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
-    final bool sel = _pendingActionItemId == id && _pendingLevel == l;
+    final bool sel = _pickerState.pendingActionItemId == id && _pickerState.pendingLevel == l;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2001,7 +1980,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       onPressed: () => setS(() {
         _activateGlossaryItem(id);
         // Toggle: if already selected, deselect (set to empty string)
-        _pendingLevel = sel ? '' : l;
+        _pickerState.setPendingLevel(sel ? '' : l);
       }),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2032,7 +2011,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     String lang, {
     bool isCustom = false,
   }) {
-    final bool isE = _editingComboItemIndex != null;
+    final bool isE = _pickerState.editingComboItemIndex != null;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -2048,10 +2027,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               onPressed: () {
                 setS(() {
                   final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
+                      ? _currentCombo[_pickerState.editingComboItemIndex!]
                       : null;
                   final Move n;
-                  if (isE && _isEditingCounter) {
+                  if (isE && _pickerState.isEditingCounter) {
                     n = ex!.copyWith(
                       counterName: isCustom
                           ? _customMoveController.text
@@ -2082,14 +2061,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     );
                   }
                   if (isE) {
-                    _currentCombo[_editingComboItemIndex!] = n;
-                    _editingComboItemIndex = null;
-                    _isEditingCounter = false;
+                    _currentCombo[_pickerState.editingComboItemIndex!] = n;
+                    _pickerState.setEditingComboItemIndex(null);
+                    _pickerState.setIsEditingCounter(false);
                   } else {
                     _addItemToCombo(n, setS);
                   }
-                  _pendingActionItemId = null;
-                  _pendingLevel = null;
+                  _pickerState.setPendingActionItem(null);
+                  _pickerState.setPendingLevel(null);
                 });
               },
               child: Text(
@@ -2109,7 +2088,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               ),
               onPressed: () {
                 setS(() {
-                  _pendingAttackMove = {
+                  _pickerState.setPendingAttackMove({
                     'item': isCustom
                         ? {
                             'name': _customMoveController.text,
@@ -2123,9 +2102,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     'f': f,
                     'sp': sp,
                     'tr': tr,
-                  };
-                  _pendingActionItemId = null;
-                  _pendingLevel = null;
+                  });
+                  _pickerState.setPendingActionItem(null);
+                  _pickerState.setPendingLevel(null);
                 });
               },
               child: Text(
@@ -2147,10 +2126,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               onPressed: () {
                 setS(() {
                   final ex = isE
-                      ? _currentCombo[_editingComboItemIndex!]
+                      ? _currentCombo[_pickerState.editingComboItemIndex!]
                       : null;
                   final Move n;
-                  if (isE && _isEditingCounter) {
+                  if (isE && _pickerState.isEditingCounter) {
                     n = ex!.copyWith(
                       counterName: isCustom
                           ? _customMoveController.text
@@ -2181,7 +2160,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     );
                   }
                   if (isE) {
-                    _currentCombo[_editingComboItemIndex!] = n;
+                    _currentCombo[_pickerState.editingComboItemIndex!] = n;
                   } else {
                     _addItemToCombo(n, setS);
                   }
@@ -2203,8 +2182,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 minimumSize: const Size(0, 36),
               ),
               onPressed: () => setS(() {
-                if (isE) _editingComboItemIndex = null;
-                _pendingActionItemId = null;
+                if (isE) _pickerState.setEditingComboItemIndex(null);
+                _pickerState.setPendingActionItem(null);
               }),
               child: Text(
                 LocalizationService.translate('cancel', lang),
@@ -2226,7 +2205,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     int id,
   ) {
     final icon = sd == 'L' ? Icons.arrow_back : Icons.arrow_forward;
-    final bool sel = _selectedSidesInPicker[id] == sd;
+    final bool sel = _pickerState.selectedSides[id] == sd;
     return ActionChip(
       onPressed: () {
         _activateGlossaryItem(id);
@@ -2274,10 +2253,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     String? cLevelOverride,
   }) {
     pS(() {
-      final isE = _editingComboItemIndex != null;
-      if (isE && _isEditingCounter) {
-        final ex = _currentCombo[_editingComboItemIndex!];
-        _currentCombo[_editingComboItemIndex!] = Move(
+      final isE = _pickerState.editingComboItemIndex != null;
+      if (isE && _pickerState.isEditingCounter) {
+        final ex = _currentCombo[_pickerState.editingComboItemIndex!];
+        _currentCombo[_pickerState.editingComboItemIndex!] = Move(
           glossaryId: ex.glossaryId,
           counterGlossaryId: c['id'],
           name: ex.name,
@@ -2294,8 +2273,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           counterLevel: cLevelOverride ?? ex.level,
           counterSpecialAction: null,
         );
-        _editingComboItemIndex = null;
-        _isEditingCounter = false;
+        _pickerState.setEditingComboItemIndex(null);
+        _pickerState.setIsEditingCounter(false);
       } else {
         final n = Move(
           glossaryId: at['id'],
@@ -2315,17 +2294,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           counterSpecialAction: null,
         );
         if (isE) {
-          _currentCombo[_editingComboItemIndex!] = n;
-          _editingComboItemIndex = null;
+          _currentCombo[_pickerState.editingComboItemIndex!] = n;
+          _pickerState.setEditingComboItemIndex(null);
         } else {
           _addItemToCombo(n, pS);
         }
       }
-      _pendingAttackMove = null;
-      _pendingActionItemId = null;
-      _pendingLevel = null;
+      _pickerState.setPendingAttackMove(null);
+      _pickerState.setPendingActionItem(null);
+      _pickerState.setPendingLevel(null);
     });
-    if (_editingComboItemIndex != null) {
+    if (_pickerState.editingComboItemIndex != null) {
       Navigator.pop(context);
     }
   }
@@ -2399,9 +2378,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               category: 'combo',
               subMoves: List.from(_currentCombo),
             );
-      if (_editingSeriesIndex != null) {
-        _moves.removeAt(_editingSeriesIndex!);
-        int target = _targetSeriesIndex ?? _editingSeriesIndex!;
+      if (_pickerState.editingSeriesIndex != null) {
+        _moves.removeAt(_pickerState.editingSeriesIndex!);
+        int target = _pickerState.targetSeriesIndex ?? _pickerState.editingSeriesIndex!;
         if (target >= _moves.length) {
           _moves.add(finalMove);
         } else {
@@ -2411,9 +2390,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         _moves.add(finalMove);
       }
       _currentCombo.clear();
-      _editingSeriesIndex = null;
-      _targetSeriesIndex = null;
-      _editingComboItemIndex = null;
+      _pickerState.setEditingSeriesIndex(null);
+      _pickerState.setTargetSeriesIndex(null);
+      _pickerState.setEditingComboItemIndex(null);
     });
   }
 
@@ -2925,7 +2904,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 return ListTile(
                   title: const Text('None'),
                   onTap: () {
-                    setS(() => _selectedSpecialsInPicker[id] = null);
+                    setS(() => _pickerState.selectedSpecials[id] = null);
                     Navigator.pop(ctx);
                   },
                 );
@@ -2934,7 +2913,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               return ListTile(
                 title: Text(s['name']),
                 onTap: () {
-                  setS(() => _selectedSpecialsInPicker[id] = s['name']);
+                  setS(() => _pickerState.selectedSpecials[id] = s['name']);
                   Navigator.pop(ctx);
                 },
               );
@@ -2985,7 +2964,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       onSelected: (selected) {
         setS(() {
           _activateGlossaryItem(id);
-          _selectedSidesInPicker[id] = selected ? sd : '';
+          _pickerState.selectedSides[id] = selected ? sd : '';
         });
       },
     );
@@ -3298,21 +3277,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           alignment: WrapAlignment.start,
                           spacing: 8,
                           runSpacing: 4,
-                          children: _methodDefinitions.keys
-                              .map(
-                                (method) => Tooltip(
-                                  message: _methodDefinitions[method]!,
-                                  child: ChoiceChip(
-                                    label: Text(method),
-                                    selected: _selectedMethod == method,
-                                    onSelected: (val) => setState(
-                                      () =>
-                                          _selectedMethod = val ? method : null,
+                          children:
+                              SeriesDetailConstants.methodDefinitions.keys
+                                  .map(
+                                    (method) => Tooltip(
+                                      message: SeriesDetailConstants
+                                          .methodDefinitions[method]!,
+                                      child: ChoiceChip(
+                                        label: Text(method),
+                                        selected: _selectedMethod == method,
+                                        onSelected: (val) => setState(
+                                          () => _selectedMethod =
+                                              val ? method : null,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                                  )
+                                  .toList(),
                         ),
                         const SizedBox(height: 8),
                       ],
