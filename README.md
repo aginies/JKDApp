@@ -5,235 +5,96 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 ## Features
 
 ### Core Functionality
-- **Series Management**: Create and organize training series for Jun Fan Gung Fu and Jun Fan Kick Boxing
-- **Move Glossary**: Extensive database of punches, kicks, packs, trapping techniques, and special moves
-- **Combo Builder**: Visual interface to build complex attack/defense combinations
-- **Training Mode**: Text-to-speech guided training with configurable intervals and looping
-- **Voice Recognition**: Speech-to-text input for hands-free combo creation (Android/iOS only)
-- **Multi-language**: Full support for English and French
+- **Series Management**: Create and organize training series for Jun Fan Gung Fu, Jun Fan Kick Boxing, and **JKD Moves** (Footwork).
+- **Move Glossary**: Extensive database of punches, kicks, packs, trapping, and specialized JKD movements.
+- **Combo Builder**: Visual interface to build complex combinations with support for **sub-numbering** (e.g., 1a, 1b, 1c).
+- **Training Mode**: Text-to-speech guided training with configurable intervals and looping.
+- **Random Reader**: Specialized training tool for JKD Footwork that calls out moves randomly within a selected series.
+- **Multi-language**: Full support for English and French.
 
 ### Advanced Features
-- **Counter Moves**: Add defensive responses to attacks
-- **Attack Methods**: SDA, PIA, SIA, BTAA, ABD, ABC
-- **Media Gallery**: Attach instructional photos to techniques (take photo or select from files, auto-resized to 500px with 75% JPG compression)
-- **PDF Export**: Generate printable training sheets
-- **Import/Export**: Backup and restore series in JSON format
-- **Glossary Backup**: Export/import the entire technique database
-- **Media Backup**: ZIP backup/restore for instructional photos
-- **Auto-Load Series**: Automatically loads trusted series from assets on first launch
+- **Theme Personalization**: Choose your own **Theme Color** from a wide palette (Blue, Red, Green, etc.).
+- **Adaptive UI**: Interface elements automatically adjust colors for maximum readability in Light, Dark, and AMOLED modes.
+- **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
+- **Media Gallery**: Attach instructional photos to techniques with auto-compression and swipe navigation.
+- **Integrated Logging**: View and save application logs directly from settings for troubleshooting.
+- **PDF Export**: Generate printable training sheets.
+- **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
 
 ## Project Structure
 
 ```
 lib/
-├── models/              # Data models (Move, Series)
+├── models/              # Data models (Move, JkdSeries)
 ├── services/            # Business logic and APIs
-│   ├── database_service.dart
-│   ├── voice_parsing_service.dart
+│   ├── database_service.dart   # SQLite management (Current Version: 13)
+│   ├── series_provider.dart     # State & Settings provider
+│   ├── logging_service.dart     # App event tracking
 │   ├── localization_service.dart
-│   ├── export_service.dart
 │   └── ...
 ├── screens/
-│   ├── series_list_screen.dart
-│   ├── settings_screen.dart
-│   └── series_detail/   # Refactored series detail screen
-│       ├── series_detail_screen.dart (main screen)
-│       ├── dialogs/     # Modal dialogs
-│       │   ├── voice_help_dialog.dart
-│       │   ├── voice_input_dialog.dart
-│       │   └── training_options_dialog.dart
-│       ├── widgets/     # Reusable UI components
-│       │   ├── move_display_widgets.dart
-│       │   └── marquee_widget.dart
-│       └── controllers/ # Business logic controllers
-│           └── training_controller.dart
-└── main.dart
+│   ├── series_list_screen.dart  # Main dashboard with Categories
+│   ├── settings_screen.dart     # App configuration & Theme chooser
+│   ├── series_list/
+│   │   └── widgets/
+│   │       └── random_reader_widget.dart  # Footwork training tool
+│   └── series_detail/
+│       ├── widgets/
+│       │   └── move_list_display_widget.dart # Hierarchical list with sub-letters
+│       └── ...
+└── utils/               # Utility classes (Category, Translation, etc.)
 ```
 
-## Series Files Management
+## JKD Footwork Training (Random Reader)
 
-### Automatic Series Loading
+The **Random Reader** is a specialized tool found in the "JKD Moves" tab. It is designed for reactive footwork drills:
+1. **Sequence**: It announces the Series name (in English) once, waits 1s, and then calls out move numbers (1-6) in the selected language.
+2. **Configuration**:
+   - **Series Selection**: Choose specific footwork patterns (Step and Slide, Pendulum, etc.).
+   - **Guard**: Toggle between Left and Right guard.
+   - **Delay**: Adjustable timing from 0.4s to 2.5s for progressive speed training.
+3. **Visuals**: A prominent display shows the current move in large text for quick reference.
 
-The app automatically loads all series files from the `assets/` directory on first launch. These are trusted system series that seed the database.
+## Sub-Numbering System (Hierarchy)
 
-**How it works:**
-1. Series files follow the naming pattern: `jkd-series-*.json`
-2. All files listed in `lib/services/database_service.dart` (`_seriesFiles` array) are loaded automatically
-3. Files are loaded during database initialization
-4. All series are marked as system series (`is_system: 1`)
+You can now group variations of a move using letters (a, b, c...):
+- **Visual Grouping**: Sub-items are automatically indented to the right.
+- **Clean Numbering**: The main sequence number is displayed once at the top of the group, with large yellow letters indicating the sub-variation.
+- **Rhythmic Training**: The training mode and random reader respect this hierarchy for a more natural flow.
 
-**Adding a New Series File:**
-1. Create your series JSON file (e.g., `jkd-series-kicks.json`) in the `assets/` directory
-2. Add the filename to the `_seriesFiles` list in `lib/services/database_service.dart`:
-   ```dart
-   static const List<String> _seriesFiles = [
-     'assets/jkd-series-punches.json',
-     'assets/jkd-series-4-counts.json',
-     'assets/jkd-series-kicks.json',  // Add your new file here
-   ];
-   ```
-3. The series will be automatically loaded on next database reset
+## Personalization & Display
 
-**Series File Format:**
-```json
-[
-  {
-    "title": "Series Name",
-    "category": "Jun Fan Gung Fu",
-    "type": "Attack",
-    "attack_method": "SDA",
-    "notes": "Description",
-    "is_system": 1,
-    "moves": [
-      {
-        "name": "Jab",
-        "category": "punch",
-        "side": "L",
-        "level": "High",
-        "repetitions": 1,
-        "sub_moves_json": null
-      }
-    ]
-  }
-]
-```
-
-**Note:** The glossary file (`assets/jkd-glossary.json`) contains all available techniques and is loaded separately.
-
-## Voice Recognition
-
-### Supported Platforms
-- ✅ Android
-- ✅ iOS
-- ❌ Linux (disabled in settings)
-
-### Voice Commands
-
-**English Keywords:**
-- **Sides**: left, right
-- **Levels**: high, mid, middle, low
-- **Chain moves**: next, then
-- **Counters**: answer, counter
-
-**French Keywords:**
-- **Sides**: gauche, droite, droit
-- **Levels**: haut, milieu, centre, bas
-- **Chain moves**: suivant, ensuite, puis, et
-- **Counters**: réponse, contre
-
-**Examples:**
-```
-"left jab high" → Left jab at high level
-"right cross then left hook" → Combo: right cross + left hook
-"jab answer pak sao" → Jab with pak sao counter
-```
-
-### Voice Recognition Settings
-The matching threshold is set to 0.3 for better speech recognition accuracy. Voice input can be toggled in Settings and is only available on supported platforms.
-
-## Training Mode
-
-Training mode reads each move aloud with configurable settings:
-- **Start/End Index**: Choose which moves to practice
-- **Interval**: 3-20 seconds between moves
-- **Combo Interval**: 500-5000 ms between strikes in a combination
-- **Loop**: Repeat the sequence continuously
-- **Language**: TTS in English or French
-
-## Database Schema
-
-The app uses SQLite for local storage:
-- **series**: Training series metadata (user-created + auto-loaded system series)
-- **series_moves**: Individual moves within series, including combos with sub_moves_json
-- **glossary**: Technique database with translations (auto-loaded from `jkd-glossary.json`)
-- **voice_records**: Voice note recordings (future feature)
-
-**Initialization:**
-- On first launch, the database is seeded with:
-  - All techniques from `assets/jkd-glossary.json`
-  - All series from files listed in `DatabaseService._seriesFiles`
-- System series are marked with `is_system: 1` and appear in the library alongside user-created series
-
-## Development
-
-### Prerequisites
-- Flutter SDK (latest stable)
-- Dart SDK
-- Android Studio / Xcode (for mobile development)
-
-### Dependencies
-Key packages:
-- `sqflite`: Local database
-- `provider`: State management
-- `speech_to_text`: Voice input
-- `flutter_tts`: Text-to-speech
-- `pdf`: PDF generation
-- `string_similarity`: Voice command matching
-
-### Building
-```bash
-# Get dependencies
-flutter pub get
-
-# Run on device/emulator
-flutter run
-
-# Build APK
-flutter build apk
-
-# Build iOS
-flutter build ios
-```
-
-## Recent Updates (2025)
-
-### Code Refactoring
-The series detail screen has been refactored from a monolithic 2,232-line file into modular components:
-- **25.5% code reduction** (1,662 lines)
-- **Separated concerns**: Dialogs, widgets, and controllers
-- **Improved maintainability**: Easier to test and extend
-- **Preserved functionality**: All features working as before
-
-### Feature Enhancements
-- **Auto-Load Series**: System automatically loads all `jkd-series-*.json` files from assets
-- **Media Gallery Improvements**:
-  - Added file picker to select photos from device (alongside camera capture)
-  - Auto-resize images to 500px width with 75% JPG compression
-  - Swipe navigation between photos in full-screen view
-  - Pinch-to-zoom support
-- **UI Improvements**:
-  - Simplified app title to "JKD" in top bar
-  - Repositioned floating action buttons to divider line in edit mode
-  - Improved item scrolling: centers selected items in viewport
-  - Increased left padding for better visibility of item numbers
-  - Removed label clutter in edit mode (Category, Type, Method labels)
-  - Left-aligned chips for consistent layout
+- **Theme Color**: Change the app's primary accent color in Settings.
+- **AMOLED Support**: Optimized "True Black" mode for OLED screens.
+- **Adaptive Tabs**: Tab titles dynamically switch between White (Dark/AMOLED) and Primary color (Light) for perfect contrast.
+- **Visual Loading**: The JKD logo in the top bar rotates while the database is initializing or loading data.
 
 ## Platform Support
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Android  | ✅ Full | All features supported |
+| Android  | ✅ Full | Primary platform support |
 | iOS      | ✅ Full | All features supported |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
-| Web      | ❓ Untested | May require adjustments |
 
-## Localization
+## Recent Updates (v1.0.4+2)
 
-The app supports:
-- **English** (en)
-- **French** (fr)
+- **Database v13**: Added `sub_letter` support and automatic system series re-seeding.
+- **Improved Logging**: Logs now include versioning and timestamps, saveable as `jkd_app-VERSION-DATE-HOUR.log`.
+- **Glossary Overhaul**: Improved readability in dark themes and fixed missing category icons.
+- **Default Theme**: Switched default app color to **Blue**.
+- **Refined Detail View**: Simplified labels and improved scrolling behavior for long series.
 
-Translations are managed in `lib/services/localization_service.dart`.
+## Development
 
-## License
-
-[Add your license here]
+### Building
+```bash
+flutter pub get
+flutter run
+```
 
 ## Contributors
-
-[Add contributors here]
+- **Antoine Giniès** (Author & Lead Developer)
 
 ## Version
-
-Current version: 1.0
+Current version: **1.0.4+2**
