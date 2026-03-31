@@ -668,39 +668,60 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
               },
             ),
           ],
-          bottom: TabBar(
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset('assets/icon/jfgf.png', width: 30, height: 30),
-                    const SizedBox(width: 8),
-                    const Text('Jun Fan Gung Fu'),
-                  ],
-                ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Material(
+              elevation: 2.0,
+              child: TabBar(
+                isScrollable: true,
+                indicatorColor: Theme.of(context).primaryColor,
+                indicatorWeight: 3,
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/icon/jfgf.png',
+                          width: 28,
+                          height: 28,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Jun Fan Gung Fu'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/icon/jfkb.png',
+                          width: 28,
+                          height: 28,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Jun Fan Kick Boxing'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/icon/kali.png',
+                          width: 28,
+                          height: 28,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Kali'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset('assets/icon/jfkb.png', width: 30, height: 30),
-                    const SizedBox(width: 8),
-                    const Text('Jun Fan Kick Boxing'),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset('assets/icon/kali.png', width: 30, height: 30),
-                    const SizedBox(width: 8),
-                    const Text('Kali'),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         body: TabBarView(
@@ -744,11 +765,20 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final series = filtered[index];
+        final isEven = index % 2 == 0;
+        final theme = Theme.of(context);
+        
+        // Subtle alternating color
+        final bgColor = isEven 
+            ? theme.cardColor 
+            : theme.cardColor.withValues(alpha: 0.9);
+
         return Card(
-          margin: const EdgeInsets.all(8.0),
-          clipBehavior: Clip.antiAlias, // Ensures the ripple is contained
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          elevation: isEven ? 1 : 0.7,
+          color: bgColor,
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            // Wrap with InkWell for explicit ripple effect
             onTap: () {
               Navigator.push(
                 context,
@@ -778,20 +808,21 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                   ? Builder(
                     builder: (context) {
                       String asset = 'assets/icon/JKD.png';
-                      if (category == 'Jun Fan Gung Fu') {
+                      final cat = series.category;
+                      if (cat == 'Jun Fan Gung Fu') {
                         asset = 'assets/icon/jfgf.png';
-                      } else if (category == 'Jun Fan Kick Boxing') {
+                      } else if (cat == 'Jun Fan Kick Boxing') {
                         asset = 'assets/icon/jfkb.png';
-                      } else if (category == 'Kali') {
+                      } else if (cat == 'Kali') {
                         asset = 'assets/icon/kali.png';
                       }
-                      return Image.asset(asset, width: 40, height: 40);
+                      return Image.asset(asset, width: 38, height: 38);
                     },
                   )
                   : const Icon(
                     Icons.person,
                     color: Colors.orangeAccent,
-                    size: 40,
+                    size: 38,
                   ),
               title: Text(series.title),
               subtitle: Text(
