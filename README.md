@@ -73,9 +73,11 @@ You can now group variations of a move using letters (a, b, c...):
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Android  | ✅ Full | Primary platform support |
-| iOS      | ✅ Full | All features supported |
+| Android  | ✅ Full | Primary mobile platform support |
+| Windows  | ✅ Full | Fully supported desktop platform |
+| MacOS    | ✅ Full | Fully supported desktop platform |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
+| iOS      | ⚠️ Limited | Supported by code but not officially built (Apple Developer account) |
 
 ## Recent Updates (v1.0.4+2)
 
