@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/export_service.dart';
@@ -360,9 +362,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ) async {
     if (sourcePath == null) return;
 
-    String? targetDir = await FilePicker.platform.getDirectoryPath();
-    if (targetDir == null) return;
-
     final String timestamp = DateFormat(
       'yyyy-MM-dd_HH-mm',
     ).format(DateTime.now());
@@ -389,11 +388,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Target File: $zipFileName',
               style: const TextStyle(fontSize: 12),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Target Dir: $targetDir',
-              style: const TextStyle(fontSize: 12),
-            ),
           ],
         ),
         actions: [
@@ -418,28 +412,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (proceed == 'share') {
+      final tempDir = await getTemporaryDirectory();
       final path = await MediaBackupService.backupGalleryToZip(
         sourcePath,
-        targetDir,
+        tempDir.path,
+        zipFileName: zipFileName,
       );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              path != null
-                  ? '${LocalizationService.translate('backup_success', lang)} $path'
-                  : LocalizationService.translate('error', lang),
+
+      if (path != null) {
+        await Share.shareXFiles([XFile(path)], text: 'JKD Media Backup');
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(LocalizationService.translate('error', lang)),
             ),
-          ),
-        );
+          );
+        }
       }
     } else if (proceed == 'save') {
       String? saveDir = await FilePicker.platform.getDirectoryPath();
       if (saveDir == null) return;
+
       final path = await MediaBackupService.backupGalleryToZip(
         sourcePath,
         saveDir,
+        zipFileName: zipFileName,
       );
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

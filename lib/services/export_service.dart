@@ -27,7 +27,6 @@ class ExportService {
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      // ignore: deprecated_member_use
       await Share.shareXFiles([XFile(file.path)], text: 'JKD Series Backup');
     } catch (e) {
       debugPrint('Share error: $e');
@@ -47,7 +46,6 @@ class ExportService {
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      // ignore: deprecated_member_use
       await Share.shareXFiles([XFile(file.path)], text: 'JKD Glossary Backup');
     } catch (e) {
       debugPrint('Glossary share error: $e');

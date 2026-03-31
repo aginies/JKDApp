@@ -10,14 +10,14 @@ class MediaBackupService {
 
   static Future<String?> backupGalleryToZip(
     String sourcePath,
-    String targetDir,
-  ) async {
+    String targetDir, {
+    String? zipFileName,
+  }) async {
     try {
-      final String timestamp = DateFormat(
-        'yyyy-MM-dd_HH-mm',
-      ).format(DateTime.now());
-      final String zipFileName = 'jkd_media_backup_$timestamp.zip';
-      final String zipPath = p.join(targetDir, zipFileName);
+      final String finalFileName =
+          zipFileName ??
+          'jkd_media_backup_${DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now())}.zip';
+      final String zipPath = p.join(targetDir, finalFileName);
 
       final encoder = ZipFileEncoder();
       encoder.create(zipPath);

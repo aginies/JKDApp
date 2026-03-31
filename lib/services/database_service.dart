@@ -47,7 +47,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -135,6 +135,35 @@ class DatabaseService {
       await db.delete('glossary');
       await _seedGlossary(db);
     }
+    if (oldVersion < 11) {
+      // Ensure all indexes exist for upgraded users
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_id ON series_moves(series_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_glossary_id ON series_moves(glossary_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_name ON glossary(name)',
+      );
+
+      // Add new optimized composite and sort indexes
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_pos ON series_moves(series_id, position)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_cat_pos ON glossary(category, position)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_voice_records_created ON voice_records(created_at DESC)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_glossary_position ON glossary(position)',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -184,9 +213,24 @@ class DatabaseService {
     );
     await db.execute('CREATE INDEX idx_glossary_name ON glossary(name)');
 
+    // Optimized composite and sort indexes
+    await db.execute(
+      'CREATE INDEX idx_series_moves_series_pos ON series_moves(series_id, position)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_glossary_cat_pos ON glossary(category, position)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_voice_records_created ON voice_records(created_at DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_glossary_position ON glossary(position)',
+    );
+
     await _seedGlossary(db);
     await _seedSeries(db);
   }
+
 
   Future<void> _seedGlossary(Database db) async {
     final String glossaryResponse = await rootBundle.loadString(
