@@ -290,10 +290,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _pickerState.setLastScrolledItemId(null);
                             }
                           });
+                          if (!mounted) return;
                           final t = MoveDisplayWidgets.getTabIndexForCategory(
                             m.category,
                           );
-                          if (t != -1 && context.mounted) {
+                          if (t != -1) {
                             DefaultTabController.of(context).animateTo(t);
                           }
                         },
@@ -385,11 +386,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _pickerState.setLastScrolledItemId(null);
                                 }
                               });
+                              if (!mounted) return;
                               final t =
                                   MoveDisplayWidgets.getTabIndexForCategory(
                                     cat,
                                   );
-                              if (t != -1 && context.mounted) {
+                              if (t != -1) {
                                 DefaultTabController.of(context).animateTo(t);
                               }
                             },
