@@ -22,6 +22,7 @@ import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
+import '../utils/string_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
@@ -110,10 +111,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     super.dispose();
   }
 
-  String _slugify(String text) => text
-      .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-      .replaceAll(RegExp(r'^-+|-+$'), '');
 
   void _scrollToIndex(int index) {
     if (!_movesScrollController.hasClients) return;
@@ -3002,7 +2999,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     if (widget.series == null) return;
     String? dir = await FilePicker.platform.getDirectoryPath();
     if (dir == null) return;
-    final fileName = 'jkd-series-${_slugify(widget.series!.title)}.json';
+    final fileName = 'jkd-series-${StringUtils.slugify(widget.series!.title)}.json';
     if (!mounted) return;
     final proceed = await showDialog<bool>(
       context: context,

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
+import '../utils/string_utils.dart';
 
 class MediaService {
   final ImagePicker _picker = ImagePicker();
@@ -18,7 +19,7 @@ class MediaService {
 
     if (!await dir.exists()) return [];
 
-    final String prefix = _slugify(moveName);
+    final String prefix = StringUtils.slugify(moveName);
     try {
       final List<FileSystemEntity> files = dir.listSync();
       return files
@@ -73,7 +74,7 @@ class MediaService {
     img.Image resized = img.copyResize(image, width: 500);
 
     // 3. Generate Filename (move-name-ImageNumber.jpg)
-    final String prefix = _slugify(moveName);
+    final String prefix = StringUtils.slugify(moveName);
     final existing = await getImagesForMove(
       baseGalleryPath,
       category,
@@ -110,10 +111,4 @@ class MediaService {
     return category[0].toUpperCase() + category.substring(1).toLowerCase();
   }
 
-  String _slugify(String text) {
-    return text
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-+|-+$'), '');
-  }
 }
