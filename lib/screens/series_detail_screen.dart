@@ -2433,7 +2433,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 ],
               ),
               actions: [
-                if (!_isEditing && widget.series != null)
+                if (!_isEditing &&
+                    widget.series != null &&
+                    widget.series!.category != 'JKD Moves')
                   IconButton(
                     icon: const Icon(
                       Icons.play_circle_fill,
@@ -2662,56 +2664,58 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    alignment: WrapAlignment.start,
-                    spacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
-                        selected: _selectedType == 'Attack',
-                        onSelected: (val) {
-                          if (val) setState(() => _selectedType = 'Attack');
-                        },
-                      ),
-                      ChoiceChip(
-                        label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
-                        selected: _selectedType == 'Defense',
-                        onSelected: (val) {
-                          if (val) setState(() => _selectedType = 'Defense');
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (_selectedType == 'Attack')
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  if (_selectedCategory != 'JKD Moves') ...[
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 8,
                       children: [
-                        Wrap(
-                          alignment: WrapAlignment.start,
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: SeriesDetailConstants.methodDefinitions.keys
-                              .map(
-                                (method) => Tooltip(
-                                  message: SeriesDetailConstants
-                                      .methodDefinitions[method]!,
-                                  child: ChoiceChip(
-                                    label: Text(method),
-                                    selected: _selectedMethod == method,
-                                    onSelected: (val) => setState(
-                                      () =>
-                                          _selectedMethod = val ? method : null,
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                        ChoiceChip(
+                          label: Text(lang == 'fr' ? 'Attaque' : 'Attack'),
+                          selected: _selectedType == 'Attack',
+                          onSelected: (val) {
+                            if (val) setState(() => _selectedType = 'Attack');
+                          },
                         ),
-                        const SizedBox(height: 8),
+                        ChoiceChip(
+                          label: Text(lang == 'fr' ? 'Défense' : 'Defense'),
+                          selected: _selectedType == 'Defense',
+                          onSelected: (val) {
+                            if (val) setState(() => _selectedType = 'Defense');
+                          },
+                        ),
                       ],
                     ),
-                ] else ...[
+                    const SizedBox(height: 8),
+                    if (_selectedType == 'Attack')
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            alignment: WrapAlignment.start,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: SeriesDetailConstants
+                                .methodDefinitions.keys
+                                .map(
+                                  (method) => Tooltip(
+                                    message: SeriesDetailConstants
+                                        .methodDefinitions[method]!,
+                                    child: ChoiceChip(
+                                      label: Text(method),
+                                      selected: _selectedMethod == method,
+                                      onSelected: (val) => setState(
+                                        () => _selectedMethod =
+                                            val ? method : null,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                  ],                ] else ...[
                   Wrap(
                     spacing: 8,
                     children: [
@@ -2720,11 +2724,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           '${LocalizationService.translate('category', lang)}: $_selectedCategory',
                         ),
                       ),
-                      Chip(
-                        label: Text(
-                          '${LocalizationService.translate('type', lang)}: $_selectedType',
+                      if (_selectedCategory != 'JKD Moves')
+                        Chip(
+                          label: Text(
+                            '${LocalizationService.translate('type', lang)}: $_selectedType',
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
