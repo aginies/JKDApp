@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import '../services/media_service.dart';
 import 'series_detail_screen.dart';
 import 'settings_screen.dart';
 import '../models/series.dart';
+import '../utils/translation_utils.dart';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -390,12 +390,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
           final query = _glossarySearchQuery.toLowerCase();
           items = items.where((item) {
             final name = item['name'].toString().toLowerCase();
-            Map<String, String> trans = {};
-            try {
-              trans = Map<String, String>.from(
-                json.decode(item['translations']),
-              );
-            } catch (_) {}
+            final trans = TranslationUtils.parseTranslations(
+              item['translations'],
+            );
             final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
             return name.contains(query) || t.contains(query);
           }).toList();
@@ -422,12 +419,9 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
-            Map<String, String> trans = {};
-            try {
-              trans = Map<String, String>.from(
-                json.decode(item['translations']),
-              );
-            } catch (_) {}
+            final trans = TranslationUtils.parseTranslations(
+              item['translations'],
+            );
             final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
 
             return Card(

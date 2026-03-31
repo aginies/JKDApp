@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/move.dart';
 import '../models/series.dart';
+import '../utils/translation_utils.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -67,29 +68,44 @@ class DatabaseService {
         await db.execute(
           'ALTER TABLE series_moves ADD COLUMN glossary_id INTEGER',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: glossary_id column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
     }
     if (oldVersion < 4) {
       try {
         await db.execute('ALTER TABLE glossary ADD COLUMN hit_type TEXT');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: hit_type column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
       try {
         await db.execute(
           'ALTER TABLE glossary ADD COLUMN possible_type_attack TEXT',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: possible_type_attack column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
     }
     if (oldVersion < 5) {
       try {
         await db.execute('ALTER TABLE glossary ADD COLUMN possible_level TEXT');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: possible_level column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
     }
     if (oldVersion < 6) {
       try {
         await db.execute(
           'ALTER TABLE series ADD COLUMN is_system INTEGER DEFAULT 0',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: is_system column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
     }
     if (oldVersion < 7) {
       await db.delete('glossary');
@@ -100,7 +116,10 @@ class DatabaseService {
         await db.execute(
           'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: counter_glossary_id column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
     }
     if (oldVersion < 9) {
       // Populate missing glossary_ids for all existing moves in one bulk query
@@ -130,7 +149,10 @@ class DatabaseService {
         await db.execute(
           'ALTER TABLE glossary ADD COLUMN possible_direction TEXT',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration warning: possible_direction column may already exist - $e');
+        // This is expected if upgrading from certain versions
+      }
       // Re-seed glossary to include possible_direction data
       await db.delete('glossary');
       await _seedGlossary(db);
@@ -419,7 +441,7 @@ class DatabaseService {
             level: row['level'] as String,
             isFeint: (row['is_feint'] as int) == 1,
             specialAction: row['special_action'] as String?,
-            translations: _parseTranslations(row['translations']),
+            translations: TranslationUtils.parseTranslations(row['translations']),
             repetitions: row['repetitions'] as int,
             counterName: row['counter_name'] as String?,
             counterCategory: row['counter_category'] as String?,
@@ -435,21 +457,13 @@ class DatabaseService {
     return seriesMap.values.toList();
   }
 
-  Map<String, String> _parseTranslations(dynamic jsonStr) {
-    if (jsonStr == null || jsonStr.toString().isEmpty) return {};
-    try {
-      return Map<String, String>.from(json.decode(jsonStr.toString()));
-    } catch (_) {
-      return {};
-    }
-  }
-
   List<Move> _parseSubMoves(dynamic jsonStr) {
     if (jsonStr == null || jsonStr.toString().isEmpty) return [];
     try {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error parsing sub_moves_json: $e');
       return [];
     }
   }

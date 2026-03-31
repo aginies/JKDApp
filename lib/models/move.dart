@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import '../utils/translation_utils.dart';
 
 class Move {
   final int? id;
@@ -78,15 +80,7 @@ class Move {
   }
 
   factory Move.fromMap(Map<String, dynamic> map) {
-    Map<String, String> trans = {};
-    if (map['translations'] != null) {
-      try {
-        final decoded = json.decode(map['translations']);
-        if (decoded is Map) {
-          trans = decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
-        }
-      } catch (_) {}
-    }
+    final trans = TranslationUtils.parseTranslations(map['translations']);
 
     List<Move> subs = [];
     if (map['sub_moves_json'] != null) {
@@ -97,7 +91,9 @@ class Move {
               .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
               .toList();
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error parsing sub_moves_json: $e');
+      }
     }
 
     return Move(
