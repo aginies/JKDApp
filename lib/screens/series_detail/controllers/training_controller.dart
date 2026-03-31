@@ -112,6 +112,7 @@ class TrainingController {
     required int startIndex,
     required int endIndex,
     required int interval,
+    required int comboInterval,
     required bool isLooping,
     required String language,
     double speechRate = 0.25,
@@ -175,6 +176,7 @@ class TrainingController {
       startIndex: startIndex,
       endIndex: endIndex,
       interval: interval,
+      comboInterval: comboInterval,
       isLooping: isLooping,
       language: language,
     );
@@ -185,6 +187,7 @@ class TrainingController {
     required int startIndex,
     required int endIndex,
     required int interval,
+    required int comboInterval,
     required bool isLooping,
     required String language,
   }) async {
@@ -200,7 +203,10 @@ class TrainingController {
       }
     }
 
-    await speak(_buildTtsTextList(moves[_currentIndex], language), language);
+    await speak(
+      _buildTtsTextList(moves[_currentIndex], language, comboInterval),
+      language,
+    );
 
     _timer = Timer(Duration(seconds: interval), () {
       if (_isTraining) {
@@ -211,6 +217,7 @@ class TrainingController {
           startIndex: startIndex,
           endIndex: endIndex,
           interval: interval,
+          comboInterval: comboInterval,
           isLooping: isLooping,
           language: language,
         );
@@ -218,7 +225,11 @@ class TrainingController {
     });
   }
 
-  List<_TtsLine> _buildTtsTextList(Move move, String language) {
+  List<_TtsLine> _buildTtsTextList(
+    Move move,
+    String language,
+    int comboInterval,
+  ) {
     List<_TtsLine> lines = [];
 
     void addMoveLines(Move m) {
@@ -252,10 +263,10 @@ class TrainingController {
             '${LocalizationService.translate(m.counterLevel!.toLowerCase(), language)} ',
           );
         }
-        lines.add(_TtsLine(csb.toString().trim(), 2500));
+        lines.add(_TtsLine(csb.toString().trim(), comboInterval));
       } else {
         // No answer, just the hit with combo delay
-        lines.add(_TtsLine(sb.toString().trim(), 2500));
+        lines.add(_TtsLine(sb.toString().trim(), comboInterval));
       }
     }
 

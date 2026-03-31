@@ -42,6 +42,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   final VoiceParsingService _voiceService = VoiceParsingService();
   late TrainingController _trainingController;
   int _trainingInterval = 7;
+  int _comboInterval = 2500;
   TrainingOptions? _currentTrainingOptions;
 
   final MediaService _mediaService = MediaService();
@@ -384,12 +385,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       lang,
       _moves.length,
       _trainingInterval,
+      _comboInterval,
       provider.speechRate,
     );
 
     if (options != null) {
       setState(() {
         _trainingInterval = options.interval;
+        _comboInterval = options.comboInterval;
         _currentTrainingOptions = options;
       });
       _trainingController.startTraining(
@@ -397,6 +400,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         startIndex: options.startIndex,
         endIndex: options.endIndex,
         interval: options.interval,
+        comboInterval: options.comboInterval,
         isLooping: options.isLooping,
         language: lang,
         speechRate: provider.speechRate,

@@ -136,6 +136,7 @@ The matching threshold is set to 0.3 for better speech recognition accuracy. Voi
 Training mode reads each move aloud with configurable settings:
 - **Start/End Index**: Choose which moves to practice
 - **Interval**: 3-20 seconds between moves
+- **Combo Interval**: 500-5000 ms between strikes in a combination
 - **Loop**: Repeat the sequence continuously
 - **Language**: TTS in English or French
 

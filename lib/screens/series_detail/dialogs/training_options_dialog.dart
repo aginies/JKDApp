@@ -5,6 +5,7 @@ class TrainingOptions {
   final int startIndex;
   final int endIndex;
   final int interval;
+  final int comboInterval;
   final bool isLooping;
   final double speechRate;
 
@@ -12,6 +13,7 @@ class TrainingOptions {
     required this.startIndex,
     required this.endIndex,
     required this.interval,
+    required this.comboInterval,
     required this.isLooping,
     required this.speechRate,
   });
@@ -23,11 +25,13 @@ class TrainingOptionsDialog {
     String language,
     int movesCount,
     int currentInterval,
+    int currentComboInterval,
     double currentSpeechRate,
   ) async {
     int trainingStartIndex = 1;
     int trainingEndIndex = movesCount;
     int trainingInterval = currentInterval;
+    int trainingComboInterval = currentComboInterval;
     double trainingSpeechRate = currentSpeechRate;
     bool isLooping = false;
 
@@ -140,6 +144,28 @@ class TrainingOptionsDialog {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
+                    '${LocalizationService.translate('combo_interval', language)}: ',
+                  ),
+                  SizedBox(
+                    width: 100,
+                    child: Slider(
+                      value: trainingComboInterval.toDouble(),
+                      min: 500,
+                      max: 5000,
+                      divisions: 9,
+                      label: trainingComboInterval.toString(),
+                      onChanged: (val) => setModalState(
+                          () => trainingComboInterval = val.toInt()),
+                    ),
+                  ),
+                  Text('$trainingComboInterval ms'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
                     '${LocalizationService.translate('speech_rate', language)}: ',
                   ),
                   SizedBox(
@@ -166,6 +192,7 @@ class TrainingOptionsDialog {
                       startIndex: trainingStartIndex,
                       endIndex: trainingEndIndex,
                       interval: trainingInterval,
+                      comboInterval: trainingComboInterval,
                       isLooping: isLooping,
                       speechRate: trainingSpeechRate,
                     ),
