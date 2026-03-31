@@ -109,7 +109,7 @@ jobs:
           Type=Application
           Name=JKD Notes
           Icon=jkd_notes
-          Exec=jeet_kune_do_notes
+          Exec=JKD_Notes
           Categories=Utility;
           EOF
           
@@ -119,7 +119,7 @@ jobs:
           # Use linuxdeploy to create the AppImage
           export ARCH=x86_64
           ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run \
-            --executable AppDir/usr/bin/jeet_kune_do_notes \
+            --executable AppDir/usr/bin/JKD_Notes \
             --desktop-file jkd_notes.desktop \
             --icon-file jkd_notes.png \
             --appdir AppDir \
@@ -136,9 +136,63 @@ jobs:
           path: JKDNotes-v*-Linux.AppImage
           if-no-files-found: error
 
+  build-macos:
+    name: Build macOS
+    needs: [test]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build macOS
+        run: flutter build macos --release --no-codesign
+      - name: Package macOS
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          cd build/macos/Build/Products/Release
+          zip -r ../../../../JKDNotes-v$VERSION-macOS.zip "JKD_Notes.app"
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-zip
+          path: JKDNotes-v*-macOS.zip
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows
+    needs: [test]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Windows
+        run: flutter build windows --release
+      - name: Package Windows
+        shell: pwsh
+        run: |
+          $VERSION = (Get-Content pubspec.yaml | Select-String "^version: " | ForEach-Object { $_.ToString().Split(" ")[1].Split("+")[0] })
+          Compress-Archive -Path build\windows\x64\release\bundle\* -DestinationPath JKDNotes-v$VERSION-Windows.zip
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-zip
+          path: JKDNotes-v*-Windows.zip
+          if-no-files-found: error
+
   create-release:
     name: Create GitHub Release
-    needs: [build-android, build-linux]
+    needs: [build-android, build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,6 +233,18 @@ jobs:
           name: linux-release-appimage
           path: ./artifacts/linux
 
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release-zip
+          path: ./artifacts/macos
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release-zip
+          path: ./artifacts/windows
+
       - name: Rename Files for Release
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION }}"
@@ -195,6 +261,18 @@ jobs:
           if ls ./artifacts/linux/JKDNotes-*-Linux.AppImage 1> /dev/null 2>&1; then
             cp ./artifacts/linux/JKDNotes-*-Linux.AppImage ./release/JKDNotes-$VERSION-Linux.AppImage
             echo "✅ Linux AppImage copied successfully"
+          fi
+
+          # Copy and rename macOS ZIP
+          if ls ./artifacts/macos/JKDNotes-*-macOS.zip 1> /dev/null 2>&1; then
+            cp ./artifacts/macos/JKDNotes-*-macOS.zip ./release/JKDNotes-$VERSION-macOS.zip
+            echo "✅ macOS ZIP copied successfully"
+          fi
+
+          # Copy and rename Windows ZIP
+          if ls ./artifacts/windows/JKDNotes-*-Windows.zip 1> /dev/null 2>&1; then
+            cp ./artifacts/windows/JKDNotes-*-Windows.zip ./release/JKDNotes-$VERSION-Windows.zip
+            echo "✅ Windows ZIP copied successfully"
           fi
           
           echo "=== Final release files ==="
@@ -215,6 +293,8 @@ jobs:
           echo "## Downloads" >> release_notes.md
           echo "- **Android**: Install the APK file on your Android device" >> release_notes.md
           echo "- **Linux**: Download and run the `.AppImage` (make it executable with `chmod +x`)" >> release_notes.md
+          echo "- **macOS**: Extract the ZIP and run the `.app`" >> release_notes.md
+          echo "- **Windows**: Extract the ZIP and run the executable" >> release_notes.md
 
       - name: Release
         uses: softprops/action-gh-release@v2
