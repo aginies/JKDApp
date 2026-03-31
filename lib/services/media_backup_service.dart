@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
 class MediaBackupService {
+  static String buildBackupPath(String sourcePath, String timestamp) =>
+      p.join(sourcePath, 'jkd_media_backup_$timestamp.zip');
+
   static Future<String?> backupGalleryToZip(
     String sourcePath,
     String targetDir,

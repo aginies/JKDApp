@@ -28,6 +28,11 @@ class DatabaseService {
     'assets/jkd-series-trapping-base.json',
   ];
 
+  // Cache for glossary name→id map to avoid repeated queries
+  static Map<String, int?>? _glossaryNameMap;
+
+  static Map<String, int?>? get glossaryNameMap => _glossaryNameMap;
+
   factory DatabaseService() => _instance;
 
   DatabaseService._internal();
@@ -98,45 +103,27 @@ class DatabaseService {
       } catch (_) {}
     }
     if (oldVersion < 9) {
-      // Populate missing glossary_ids and counter_glossary_ids for existing moves
-      final allMoves = await db.query('series_moves');
-      for (var move in allMoves) {
-        Map<String, dynamic> updates = {};
+      // Populate missing glossary_ids for all existing moves in one bulk query
+      await db.rawQuery('''
+        UPDATE series_moves 
+        SET glossary_id = (
+          SELECT id FROM glossary 
+          WHERE name = series_moves.name 
+          LIMIT 1
+        )
+        WHERE glossary_id IS NULL AND name IS NOT NULL
+      ''');
 
-        if (move['glossary_id'] == null && move['name'] != null) {
-          final results = await db.query(
-            'glossary',
-            where: 'name = ?',
-            whereArgs: [move['name']],
-            limit: 1,
-          );
-          if (results.isNotEmpty) {
-            updates['glossary_id'] = results.first['id'];
-          }
-        }
-
-        if (move['counter_glossary_id'] == null &&
-            move['counter_name'] != null) {
-          final results = await db.query(
-            'glossary',
-            where: 'name = ?',
-            whereArgs: [move['counter_name']],
-            limit: 1,
-          );
-          if (results.isNotEmpty) {
-            updates['counter_glossary_id'] = results.first['id'];
-          }
-        }
-
-        if (updates.isNotEmpty) {
-          await db.update(
-            'series_moves',
-            updates,
-            where: 'id = ?',
-            whereArgs: [move['id']],
-          );
-        }
-      }
+      // Populate missing counter_glossary_ids
+      await db.rawQuery('''
+        UPDATE series_moves 
+        SET counter_glossary_id = (
+          SELECT id FROM glossary 
+          WHERE name = series_moves.counter_name 
+          LIMIT 1
+        )
+        WHERE counter_glossary_id IS NULL AND counter_name IS NOT NULL
+      ''');
     }
     if (oldVersion < 10) {
       try {
@@ -185,6 +172,18 @@ class DatabaseService {
       'CREATE TABLE voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)',
     );
 
+    // Create indexes for faster queries
+    await db.execute(
+      'CREATE INDEX idx_series_moves_series_id ON series_moves(series_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_series_moves_glossary_id ON series_moves(glossary_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)',
+    );
+    await db.execute('CREATE INDEX idx_glossary_name ON glossary(name)');
+
     await _seedGlossary(db);
     await _seedSeries(db);
   }
@@ -231,38 +230,40 @@ class DatabaseService {
       }
     }
 
+    // Pre-build glossary name→id map for O(1) lookups
+    final glossaryMap = await _buildGlossaryNameMap(db);
+
     for (var s in allSeriesData) {
-      int seriesId = await db.insert('series', {
-        'title': s['title'],
-        'category': s['category'] ?? 'Jun Fan Gung Fu',
-        'type': s['type'] ?? 'Attack',
-        'attack_method': s['attack_method'],
-        'notes': s['notes'] ?? 'Initial seed data',
-        'is_system': s['is_system'] ?? 1,
-      });
+      final seriesMap = <String, dynamic>{};
+      seriesMap['title'] = s['title'];
+      seriesMap['category'] = s['category'] ?? 'Jun Fan Gung Fu';
+      seriesMap['type'] = s['type'] ?? 'Attack';
+      seriesMap['attack_method'] = s['attack_method'];
+      seriesMap['notes'] = s['notes'] ?? 'Initial seed data';
+      seriesMap['is_system'] = s['is_system'] ?? 1;
+
+      seriesMap['id'] = await db.insert('series', seriesMap);
+      final seriesId = seriesMap['id'] as int;
 
       final moves = s['moves'] as List<dynamic>;
+
       for (int i = 0; i < moves.length; i++) {
         var move = moves[i];
 
-        // Try to find glossary ID by name matching (for simple moves)
+        // Use pre-built map for O(1) lookup instead of database query
         int? gid;
         if (move['glossary_id'] != null) {
-          gid = move['glossary_id'];
+          gid = (move['glossary_id'] as num) as int?;
         } else if (move['name'] != null &&
             !move['name'].toString().startsWith('Combo:')) {
-          final glossaryResults = await db.query(
-            'glossary',
-            where: 'name = ?',
-            whereArgs: [move['name']],
-            limit: 1,
-          );
-          if (glossaryResults.isNotEmpty) {
-            gid = glossaryResults.first['id'] as int?;
+          final name = move['name'] as String?;
+          if (name != null && glossaryMap.containsKey(name)) {
+            final mapGid = glossaryMap[name];
+            if (mapGid != null) gid = mapGid;
           }
         }
 
-        await db.insert('series_moves', {
+        await db.insert('series_moves', <String, dynamic>{
           'series_id': seriesId,
           'glossary_id': gid,
           'name': move['name'],
@@ -283,6 +284,23 @@ class DatabaseService {
         });
       }
     }
+  }
+
+  /// Pre-build glossary name→id map to avoid repeated database queries
+  Future<Map<String, int?>> _buildGlossaryNameMap(Database db) async {
+    final List<Map<String, dynamic>> glossary = await db.query(
+      'glossary',
+      orderBy: 'position',
+    );
+    final Map<String, int?> nameMap = {};
+
+    for (var entry in glossary) {
+      if (entry['name'] != null) {
+        nameMap[entry['name'] as String] = entry['id'] as int?;
+      }
+    }
+
+    return nameMap;
   }
 
   Future<List<Map<String, dynamic>>> getGlossary() async {

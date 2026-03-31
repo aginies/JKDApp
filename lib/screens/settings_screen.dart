@@ -370,7 +370,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (!context.mounted) return;
 
-    final proceed = await showDialog<bool>(
+    final proceed = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(LocalizationService.translate('backup_images', lang)),
@@ -398,21 +398,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context, 'cancel'),
             child: Text(LocalizationService.translate('cancel', lang)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(LocalizationService.translate('finish', lang)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, 'share'),
+            child: Text(LocalizationService.translate('share', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: Text(LocalizationService.translate('save_to_device', lang)),
           ),
         ],
       ),
     );
 
-    if (proceed == true) {
+    if (proceed == 'share') {
       final path = await MediaBackupService.backupGalleryToZip(
         sourcePath,
         targetDir,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              path != null
+                  ? '${LocalizationService.translate('backup_success', lang)} $path'
+                  : LocalizationService.translate('error', lang),
+            ),
+          ),
+        );
+      }
+    } else if (proceed == 'save') {
+      String? saveDir = await FilePicker.platform.getDirectoryPath();
+      if (saveDir == null) return;
+      final path = await MediaBackupService.backupGalleryToZip(
+        sourcePath,
+        saveDir,
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -816,12 +842,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const Divider(),
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'JKD v1.0',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'JKD v1.0',
+                      style: const TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Author: Antoine Giniès',
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ],
