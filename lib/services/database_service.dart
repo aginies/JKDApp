@@ -140,7 +140,9 @@ class DatabaseService {
     }
     if (oldVersion < 10) {
       try {
-        await db.execute('ALTER TABLE glossary ADD COLUMN possible_direction TEXT');
+        await db.execute(
+          'ALTER TABLE glossary ADD COLUMN possible_direction TEXT',
+        );
       } catch (_) {}
       // Re-seed glossary to include possible_direction data
       await db.delete('glossary');
@@ -311,7 +313,7 @@ class DatabaseService {
 
   Future<List<JkdSeries>> getAllSeries() async {
     final db = await database;
-    
+
     // Join series and moves to get everything in one go
     final List<Map<String, dynamic>> results = await db.rawQuery('''
       SELECT 
@@ -326,10 +328,10 @@ class DatabaseService {
     ''');
 
     Map<int, JkdSeries> seriesMap = {};
-    
+
     for (var row in results) {
       int sId = row['s_id'] as int;
-      
+
       if (!seriesMap.containsKey(sId)) {
         seriesMap[sId] = JkdSeries(
           id: sId,
@@ -342,30 +344,32 @@ class DatabaseService {
           moves: [],
         );
       }
-      
+
       if (row['m_id'] != null) {
-        seriesMap[sId]!.moves.add(Move(
-          id: row['m_id'] as int,
-          glossaryId: row['glossary_id'] as int?,
-          counterGlossaryId: row['counter_glossary_id'] as int?,
-          name: row['name'] as String,
-          category: row['m_category'] as String,
-          side: row['side'] as String,
-          level: row['level'] as String,
-          isFeint: (row['is_feint'] as int) == 1,
-          specialAction: row['special_action'] as String?,
-          translations: _parseTranslations(row['translations']),
-          repetitions: row['repetitions'] as int,
-          counterName: row['counter_name'] as String?,
-          counterCategory: row['counter_category'] as String?,
-          counterSide: row['counter_side'] as String?,
-          counterLevel: row['counter_level'] as String?,
-          counterSpecialAction: row['counter_special_action'] as String?,
-          subMoves: _parseSubMoves(row['sub_moves_json']),
-        ));
+        seriesMap[sId]!.moves.add(
+          Move(
+            id: row['m_id'] as int,
+            glossaryId: row['glossary_id'] as int?,
+            counterGlossaryId: row['counter_glossary_id'] as int?,
+            name: row['name'] as String,
+            category: row['m_category'] as String,
+            side: row['side'] as String,
+            level: row['level'] as String,
+            isFeint: (row['is_feint'] as int) == 1,
+            specialAction: row['special_action'] as String?,
+            translations: _parseTranslations(row['translations']),
+            repetitions: row['repetitions'] as int,
+            counterName: row['counter_name'] as String?,
+            counterCategory: row['counter_category'] as String?,
+            counterSide: row['counter_side'] as String?,
+            counterLevel: row['counter_level'] as String?,
+            counterSpecialAction: row['counter_special_action'] as String?,
+            subMoves: _parseSubMoves(row['sub_moves_json']),
+          ),
+        );
       }
     }
-    
+
     return seriesMap.values.toList();
   }
 

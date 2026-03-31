@@ -629,7 +629,8 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                     ),
                     border: InputBorder.none,
                   ),
-                  onChanged: (val) => context.read<SeriesProvider>().setSearchQuery(val),
+                  onChanged: (val) =>
+                      context.read<SeriesProvider>().setSearchQuery(val),
                 )
               : Text(LocalizationService.translate('library_title', lang)),
           actions: [
@@ -745,12 +746,11 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
     );
   }
 
-  Widget _buildSeriesList(
-    String category,
-    String lang,
-  ) {
+  Widget _buildSeriesList(String category, String lang) {
     // Only listen to filtered series for this specific category
-    final filtered = context.select((SeriesProvider p) => p.getFilteredSeries(category));
+    final filtered = context.select(
+      (SeriesProvider p) => p.getFilteredSeries(category),
+    );
 
     if (filtered.isEmpty) {
       return Center(
@@ -766,10 +766,10 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
         final series = filtered[index];
         final isEven = index % 2 == 0;
         final theme = Theme.of(context);
-        
+
         // Subtle alternating color
-        final bgColor = isEven 
-            ? theme.cardColor 
+        final bgColor = isEven
+            ? theme.cardColor
             : theme.cardColor.withValues(alpha: 0.9);
 
         return Card(
@@ -805,24 +805,24 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
             child: ListTile(
               leading: series.isSystem
                   ? Builder(
-                    builder: (context) {
-                      String asset = 'assets/icon/JKD.png';
-                      final cat = series.category;
-                      if (cat == 'Jun Fan Gung Fu') {
-                        asset = 'assets/icon/jfgf.png';
-                      } else if (cat == 'Jun Fan Kick Boxing') {
-                        asset = 'assets/icon/jfkb.png';
-                      } else if (cat == 'Kali') {
-                        asset = 'assets/icon/kali.png';
-                      }
-                      return Image.asset(asset, width: 38, height: 38);
-                    },
-                  )
+                      builder: (context) {
+                        String asset = 'assets/icon/JKD.png';
+                        final cat = series.category;
+                        if (cat == 'Jun Fan Gung Fu') {
+                          asset = 'assets/icon/jfgf.png';
+                        } else if (cat == 'Jun Fan Kick Boxing') {
+                          asset = 'assets/icon/jfkb.png';
+                        } else if (cat == 'Kali') {
+                          asset = 'assets/icon/kali.png';
+                        }
+                        return Image.asset(asset, width: 38, height: 38);
+                      },
+                    )
                   : const Icon(
-                    Icons.person,
-                    color: Colors.orangeAccent,
-                    size: 38,
-                  ),
+                      Icons.person,
+                      color: Colors.orangeAccent,
+                      size: 38,
+                    ),
               title: Text(series.title),
               subtitle: Text(
                 '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
@@ -833,12 +833,20 @@ class _SeriesListScreenState extends State<SeriesListScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.copy, color: Colors.blueGrey),
-                    onPressed: () => _confirmClone(context, context.read<SeriesProvider>(), series),
+                    onPressed: () => _confirmClone(
+                      context,
+                      context.read<SeriesProvider>(),
+                      series,
+                    ),
                     tooltip: LocalizationService.translate('clone', lang),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, context.read<SeriesProvider>(), series),
+                    onPressed: () => _confirmDelete(
+                      context,
+                      context.read<SeriesProvider>(),
+                      series,
+                    ),
                   ),
                 ],
               ),

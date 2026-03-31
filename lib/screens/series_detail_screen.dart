@@ -2499,7 +2499,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   // Calculate display number for submoves (skip 'move' category)
                                   int subDisplayNumber = 0;
                                   for (int j = 0; j <= subIdx; j++) {
-                                    if (_moves[i].subMoves[j].category != 'move') {
+                                    if (_moves[i].subMoves[j].category !=
+                                        'move') {
                                       subDisplayNumber++;
                                     }
                                   }

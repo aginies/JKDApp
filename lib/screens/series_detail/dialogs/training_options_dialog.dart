@@ -155,7 +155,8 @@ class TrainingOptionsDialog {
                       divisions: 9,
                       label: trainingComboInterval.toString(),
                       onChanged: (val) => setModalState(
-                          () => trainingComboInterval = val.toInt()),
+                        () => trainingComboInterval = val.toInt(),
+                      ),
                     ),
                   ),
                   Text('$trainingComboInterval ms'),
