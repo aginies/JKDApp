@@ -7,6 +7,7 @@ import '../models/series.dart';
 import '../models/move.dart';
 import '../services/database_service.dart';
 import '../services/localization_service.dart';
+import '../services/logging_service.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
 
@@ -30,7 +31,7 @@ class SeriesProvider with ChangeNotifier {
   List<Map<String, dynamic>> _glossary = [];
   String _language = 'en';
   JkdThemeMode _themeMode = JkdThemeMode.system;
-  Color _themeColor = Colors.red;
+  Color _themeColor = Colors.blue;
   bool _voiceEnabled = false;
   bool _developerMode = false;
   String? _projectPath;
@@ -64,6 +65,7 @@ class SeriesProvider with ChangeNotifier {
   Future<void> _init() async {
     _isLoading = true;
     notifyListeners();
+    LoggingService.log('Initializing SeriesProvider...');
     final prefs = await _dbService.getSettings();
 
     // Language
@@ -102,7 +104,7 @@ class SeriesProvider with ChangeNotifier {
       try {
         _themeColor = Color(int.parse(prefs['theme_color']!));
       } catch (_) {
-        _themeColor = Colors.red;
+        _themeColor = Colors.blue;
       }
     }
 
@@ -205,10 +207,12 @@ class SeriesProvider with ChangeNotifier {
   Future<void> loadSeries() async {
     _isLoading = true;
     notifyListeners();
+    LoggingService.log('Loading series from database...');
     _filteredCache.clear();
     _series = await _dbService.getAllSeries();
     _isLoading = false;
     notifyListeners();
+    LoggingService.log('Loaded ${_series.length} series.');
   }
 
   /// Get glossary items by category from the pre-loaded cache

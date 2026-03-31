@@ -311,7 +311,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                   border: InputBorder.none,
                                   isDense: true,
                                 ),
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
                                 onChanged: (val) => setModalState(
                                   () => _glossarySearchQuery = val,
                                 ),
@@ -323,55 +326,88 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.pop(context),
                             style: IconButton.styleFrom(
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[200],
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TabBar(
-                      isScrollable: true,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      labelColor: Theme.of(context).primaryColor,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: [
-                        Tab(
-                          text: LocalizationService.translate('punches', lang),
-                          icon: Icon(_getCategoryIcon('punch')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('kicks', lang),
-                          icon: Icon(_getCategoryIcon('kick')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('packs', lang),
-                          icon: Icon(_getCategoryIcon('packs')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('trapping', lang),
-                          icon: Icon(_getCategoryIcon('trapping')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('move', lang),
-                          icon: Icon(_getCategoryIcon('move')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate(
-                            'jkd_moves',
-                            lang,
-                          ),
-                          icon: const Icon(Icons.directions_run),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('general', lang),
-                          icon: Icon(_getCategoryIcon('general')),
-                        ),
-                        Tab(
-                          text: LocalizationService.translate('other', lang),
-                          icon: Icon(_getCategoryIcon('other')),
-                        ),
-                      ],
+                    Builder(
+                      builder: (context) {
+                        final isDark =
+                            Theme.of(context).brightness == Brightness.dark;
+                        return TabBar(
+                          isScrollable: true,
+                          indicatorSize: TabBarIndicatorSize.label,
+                          indicatorColor: isDark
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).primaryColor,
+                          labelColor: isDark
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
+                          unselectedLabelColor: Colors.grey,
+                          tabs: [
+                            Tab(
+                              text: LocalizationService.translate(
+                                'punches',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('punch')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'kicks',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('kick')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'packs',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('packs')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'trapping',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('trapping')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate('move', lang),
+                              icon: Icon(_getCategoryIcon('move')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'jkd_moves',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('jkd_moves')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'general',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('general')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
+                                'other',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('other')),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     Expanded(
                       child: TabBarView(
@@ -446,14 +482,17 @@ class _SeriesListScreenState extends State<SeriesListScreen>
               item['translations'],
             );
             final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
+            final isDark = Theme.of(context).brightness == Brightness.dark;
 
             return Card(
               elevation: 0,
-              color: Colors.grey[50],
+              color: isDark ? Colors.grey[900] : Colors.grey[50],
               margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.grey[200]!),
+                side: BorderSide(
+                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
@@ -468,12 +507,12 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withValues(alpha: 0.1),
+                          ).colorScheme.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
                           _getCategoryIcon(category),
-                          color: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.primary,
                           size: 24,
                         ),
                       ),
@@ -484,16 +523,19 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                           children: [
                             Text(
                               item['name'],
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                             if (translation.isNotEmpty)
                               Text(
                                 translation,
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                   fontSize: 14,
                                 ),
                               ),
@@ -898,68 +940,86 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             preferredSize: const Size.fromHeight(48),
             child: Material(
               elevation: 2.0,
-              child: TabBar(
-                isScrollable: true,
-                indicatorColor: Theme.of(context).primaryColor,
-                indicatorWeight: 3,
-                tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/icon/jfgf.png',
-                          width: 28,
-                          height: 28,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Jun Fan Gung Fu'),
-                      ],
+              color: Theme.of(context).appBarTheme.backgroundColor,
+              child: Builder(
+                builder: (context) {
+                  final isDark =
+                      Theme.of(context).brightness == Brightness.dark;
+                  return TabBar(
+                    isScrollable: true,
+                    indicatorColor: isDark
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).primaryColor,
+                    indicatorWeight: 4,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    labelColor: isDark
+                        ? Colors.white
+                        : Theme.of(context).primaryColor,
+                    unselectedLabelColor: Colors.grey,
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/icon/jfkb.png',
-                          width: 28,
-                          height: 28,
+                    tabs: [
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icon/jfgf.png',
+                              width: 28,
+                              height: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Jun Fan Gung Fu'),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        const Text('Jun Fan Kick Boxing'),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/icon/JKD.png',
-                          width: 28,
-                          height: 28,
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icon/jfkb.png',
+                              width: 28,
+                              height: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Jun Fan Kick Boxing'),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        const Text('JKD Moves'),
-                      ],
-                    ),
-                  ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/icon/kali.png',
-                          width: 28,
-                          height: 28,
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icon/JKD.png',
+                              width: 28,
+                              height: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('JKD Moves'),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        const Text('Kali'),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icon/kali.png',
+                              width: 28,
+                              height: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Kali'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

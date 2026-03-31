@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import '../models/move.dart';
 import '../models/series.dart';
 import '../utils/translation_utils.dart';
+import 'logging_service.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -40,15 +41,17 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
+    LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    LoggingService.log('Upgrading database from $oldVersion to $newVersion');
     if (oldVersion < 2) {
       await db.execute(
         'CREATE TABLE IF NOT EXISTS voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)',
@@ -178,6 +181,12 @@ class DatabaseService {
           'Migration warning: sub_letter column may already exist - $e',
         );
       }
+    }
+    if (oldVersion < 13) {
+      // Re-seed system series to ensure they have correct categories and data
+      // Note: deleting from 'series' will cascade delete to 'series_moves' due to FK
+      await db.delete('series', where: 'is_system = 1');
+      await _seedSeries(db);
     }
   }
 

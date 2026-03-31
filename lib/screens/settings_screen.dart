@@ -11,6 +11,7 @@ import '../services/export_service.dart';
 import '../services/import_service.dart';
 import '../services/media_backup_service.dart';
 import '../services/database_service.dart';
+import '../services/logging_service.dart';
 import '../models/series.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -742,6 +743,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _showLogsModal(BuildContext context, String lang) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    LocalizationService.translate('logs_title', lang),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    LoggingService.allLogs.isEmpty
+                        ? 'No logs available.'
+                        : LoggingService.allLogs,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    String? path = await LoggingService.saveLogsToDevice();
+                    if (path != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${LocalizationService.translate('logs_saved', lang)}: $path',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.save),
+                  label: Text(LocalizationService.translate('save_logs', lang)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SeriesProvider>(
@@ -1058,18 +1127,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.history_edu),
+                title: Text(LocalizationService.translate('view_logs', lang)),
+                onTap: () => _showLogsModal(context, lang),
+              ),
+              const Divider(),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
                     Text(
-                      'JKD v1.0',
-                      style: const TextStyle(color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Author: Antoine Giniès',
+                      'Antoine Giniès - v1.0.4+2',
                       style: const TextStyle(
                         color: Colors.grey,
                         fontStyle: FontStyle.italic,
