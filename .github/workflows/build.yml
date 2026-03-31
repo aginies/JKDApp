@@ -156,14 +156,21 @@ jobs:
           VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
           echo "Version detected: $VERSION"
           cd build/macos/Build/Products/Release
-          zip -r ../../../../JKDNotes-v$VERSION-macOS.zip "JKD_Notes.app"
-          cd ../../../../
-          ls -la JKDNotes-v$VERSION-macOS.zip
+          zip -r "JKD_Notes.app.zip" "JKD_Notes.app"
+          mv "JKD_Notes.app.zip" "../../../../../JKDNotes-v$VERSION-macOS.zip"
+          cd ../../../../../
+          ls -la JKDNotes-v*.zip
+      - name: Verify macOS package
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files matching pattern:"
+          ls -la JKDNotes-v*.zip || echo "No files found!"
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-release-zip
-          path: JKDNotes-v*-macOS.zip
+          path: ./JKDNotes-v*-macOS.zip
           if-no-files-found: error
 
   build-windows:
