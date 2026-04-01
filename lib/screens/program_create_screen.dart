@@ -44,11 +44,18 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
       // Load day configs from existing program
       _dayConfigs = widget.program!.days.map((day) {
+
+        // Use seriesAssignments if available (new format), otherwise convert from seriesIds (old format)
+        final assignments = day.seriesAssignments?.map((assignment) {
+          return _SeriesAssignment(
+            seriesId: assignment.seriesId,
+            itemRange: assignment.itemRange,
+          );
+        }).toList() ?? day.seriesIds.map((id) => _SeriesAssignment(seriesId: id)).toList();
+
         return _DayConfig(
           dayNumber: day.dayNumber,
-          seriesAssignments: day.seriesIds
-              .map((id) => _SeriesAssignment(seriesId: id))
-              .toList(),
+          seriesAssignments: assignments,
           notes: day.notes ?? '',
           isRestDay: day.isRestDay,
         );
@@ -98,11 +105,15 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
           _dayConfigs = _dayConfigs.sublist(0, newCount);
         }
       });
+      _updateDescription();
     }
   }
 
   Future<void> _saveProgram() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     if (_dayConfigs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add at least one day to the program')),
@@ -116,14 +127,23 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
     // Create program days
     final days = _dayConfigs.map((config) {
+      // Convert internal _SeriesAssignment to model SeriesAssignment
+      final assignments = config.seriesAssignments
+          .where((a) => a.seriesId != null)
+          .map((a) => SeriesAssignment(
+                seriesId: a.seriesId!,
+                itemRange: a.itemRange,
+              ))
+          .toList();
+
+      for (var a in assignments) {
+        debugPrint('  - Series ${a.seriesId}, range: ${a.itemRange}');
+      }
+
       return ProgramDay(
         programId: widget.program?.id ?? 0,
         dayNumber: config.dayNumber,
-        seriesIds: config.seriesAssignments
-            .map((a) => a.seriesId)
-            .where((id) => id != null)
-            .cast<int>()
-            .toList(),
+        seriesAssignments: assignments,
         notes: config.notes.isEmpty ? null : config.notes,
         isRestDay: config.isRestDay,
       );
@@ -160,7 +180,7 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
           Navigator.pop(context, true);
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -320,15 +340,33 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                     items: [
                       DropdownMenuItem(
                         value: 'beginner',
-                        child: Text(LocalizationService.translate('beginner', lang)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.school, size: 20, color: Colors.green),
+                            const SizedBox(width: 12),
+                            Text(LocalizationService.translate('beginner', lang)),
+                          ],
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'intermediate',
-                        child: Text(LocalizationService.translate('intermediate', lang)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            const SizedBox(width: 12),
+                            Text(LocalizationService.translate('intermediate', lang)),
+                          ],
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'advanced',
-                        child: Text(LocalizationService.translate('advanced', lang)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.military_tech, size: 20, color: Colors.red),
+                            const SizedBox(width: 12),
+                            Text(LocalizationService.translate('advanced', lang)),
+                          ],
+                        ),
                       ),
                     ],
                     onChanged: (value) {
@@ -433,6 +471,7 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                         _dayConfigs[index].seriesAssignments.clear();
                       }
                     });
+                    _updateDescription();
                   },
                 ),
                 const Divider(),
@@ -474,9 +513,11 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                       child: ListTile(
                         leading: const Icon(Icons.fitness_center),
                         title: Text(series.title),
-                        subtitle: assignment.itemRange != null
-                            ? Text('Items ${assignment.itemRange}')
-                            : null,
+                        subtitle: Text(
+                          assignment.itemRange != null
+                              ? 'Items ${assignment.itemRange}'
+                              : LocalizationService.translate('practice_all_items', lang),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -492,6 +533,7 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                                       .seriesAssignments
                                       .removeAt(assignIndex);
                                 });
+                                _updateDescription();
                               },
                             ),
                           ],
@@ -535,6 +577,11 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
               _SeriesAssignment(seriesId: selected.id),
             );
       });
+
+
+      // Immediately prompt for range selection
+      final assignIndex = _dayConfigs[dayIndex].seriesAssignments.length - 1;
+      await _editSeriesRange(dayIndex, assignIndex);
     }
   }
 
@@ -542,7 +589,8 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     final assignment = _dayConfigs[dayIndex].seriesAssignments[assignIndex];
     final series = _allSeries.firstWhere((s) => s.id == assignment.seriesId);
 
-    final result = await showDialog<String>(
+
+    final result = await showDialog<String?>(
       context: context,
       builder: (context) => _RangePickerDialog(
         seriesTitle: series.title,
@@ -551,10 +599,63 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       ),
     );
 
+
+    // result can be:
+    // - null: user cancelled
+    // - "": user selected "practice all items"
+    // - "1-4": user selected a range
     if (result != null && mounted) {
+      final newItemRange = result.isEmpty ? null : result;
       setState(() {
-        _dayConfigs[dayIndex].seriesAssignments[assignIndex].itemRange = result;
+        _dayConfigs[dayIndex].seriesAssignments[assignIndex].itemRange = newItemRange;
       });
+      _updateDescription();
+    } else {
+    }
+  }
+
+  void _updateDescription() {
+
+    // Auto-generate description based on selected series
+    final seriesByDay = <int, List<String>>{};
+
+    for (final dayConfig in _dayConfigs) {
+      if (dayConfig.isRestDay || dayConfig.seriesAssignments.isEmpty) continue;
+
+      final seriesList = <String>[];
+      for (final assignment in dayConfig.seriesAssignments) {
+        if (assignment.seriesId == null) continue;
+        final series = _allSeries.firstWhere(
+          (s) => s.id == assignment.seriesId,
+          orElse: () => JkdSeries(id: 0, title: 'Unknown', category: 'Other', moves: []),
+        );
+
+        if (assignment.itemRange != null) {
+          seriesList.add('${series.title} (${assignment.itemRange})');
+        } else {
+          seriesList.add(series.title);
+        }
+      }
+
+      if (seriesList.isNotEmpty) {
+        seriesByDay[dayConfig.dayNumber] = seriesList;
+      }
+    }
+
+    // Build description
+    final descriptionParts = <String>[];
+    seriesByDay.forEach((day, series) {
+      descriptionParts.add('Day $day: ${series.join(", ")}');
+    });
+
+    if (descriptionParts.isNotEmpty) {
+      // Show first 5 days instead of 3 for better overview
+      final newDescription = descriptionParts.take(5).join('. ') +
+          (descriptionParts.length > 5 ? '...' : '.');
+      _descriptionController.text = newDescription;
+    } else {
+      // No series assigned, clear description
+      _descriptionController.text = '';
     }
   }
 }
@@ -643,14 +744,22 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
   @override
   void initState() {
     super.initState();
+    print('  - seriesTitle: ${widget.seriesTitle}');
+    print('  - totalMoves: ${widget.totalMoves}');
+    print('  - currentRange: ${widget.currentRange}');
+
     if (widget.currentRange != null) {
       _useAllItems = false;
       final parts = widget.currentRange!.split('-');
       final start = double.parse(parts[0]);
       final end = double.parse(parts.length > 1 ? parts[1] : parts[0]);
       _currentRange = RangeValues(start, end);
+      print('  - Parsed range: $start-$end');
+      print('  - _useAllItems: false');
     } else {
       _currentRange = RangeValues(1, widget.totalMoves.toDouble());
+      print('  - No current range, defaulting to 1-${widget.totalMoves}');
+      print('  - _useAllItems: true');
     }
   }
 
@@ -724,12 +833,18 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
         ),
         TextButton(
           onPressed: () {
+            print('  - _useAllItems: $_useAllItems');
+            print('  - _currentRange: ${_currentRange.start.round()}-${_currentRange.end.round()}');
+
             if (_useAllItems) {
-              Navigator.pop(context, null); // null means all items
+              print('  - Returning: "" (empty string for all items)');
+              Navigator.pop(context, ""); // empty string means all items
             } else {
               final start = _currentRange.start.round();
               final end = _currentRange.end.round();
-              Navigator.pop(context, '$start-$end');
+              final result = '$start-$end';
+              print('  - Returning: "$result"');
+              Navigator.pop(context, result);
             }
           },
           child: const Text('OK'),

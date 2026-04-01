@@ -38,7 +38,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Rebuild to show/hide FAB based on tab
     });
@@ -1014,20 +1014,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Image.asset(
-                              'assets/icon/kali.png',
-                              width: 28,
-                              height: 28,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Kali'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
                             const Icon(Icons.calendar_month, size: 28),
                             const SizedBox(width: 8),
                             Text(
@@ -1052,11 +1038,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             _buildSeriesList('Jun Fan Gung Fu', lang),
             _buildSeriesList('Jun Fan Kick Boxing', lang),
             _buildSeriesList('JKD Moves', lang),
-            _buildSeriesList('Kali', lang),
             const ProgramsListScreen(),
           ],
         ),
-        floatingActionButton: _tabController.index == 4
+        floatingActionButton: _tabController.index == 3
           ? null // Hide FAB on Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),

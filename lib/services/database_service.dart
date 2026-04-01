@@ -47,7 +47,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -270,6 +270,21 @@ class DatabaseService {
         );
       }
     }
+
+    if (oldVersion < 16) {
+      // Add series_assignments column to store detailed series assignments with item ranges
+      // Format: JSON array like [{"series_id": 1, "item_range": "1-4"}, {"series_id": 3, "item_range": null}]
+      try {
+        await db.execute(
+          'ALTER TABLE program_days ADD COLUMN series_assignments TEXT',
+        );
+        debugPrint('Migration v16: Added series_assignments column to program_days');
+      } catch (e) {
+        debugPrint(
+          'Migration warning: series_assignments column may already exist - $e',
+        );
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -349,6 +364,7 @@ class DatabaseService {
         program_id INTEGER NOT NULL,
         day_number INTEGER NOT NULL,
         series_ids TEXT NOT NULL,
+        series_assignments TEXT,
         notes TEXT,
         is_rest_day INTEGER DEFAULT 0,
         FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE
@@ -547,6 +563,7 @@ class DatabaseService {
               'program_id': programId,
               'day_number': day['day_number'] ?? 1,
               'series_ids': json.encode(resolvedIds),
+              'series_assignments': null, // System programs don't have item ranges
               'notes': day['notes'],
               'is_rest_day': day['is_rest_day'] ?? 0,
             });
@@ -912,13 +929,7 @@ class DatabaseService {
 
     // Insert program days
     for (final day in program.days) {
-      await db.insert('program_days', {
-        'program_id': programId,
-        'day_number': day.dayNumber,
-        'series_ids': json.encode(day.seriesIds),
-        'notes': day.notes,
-        'is_rest_day': day.isRestDay ? 1 : 0,
-      });
+      await db.insert('program_days', day.copyWith(programId: programId).toMap());
     }
 
     return programId;
@@ -955,13 +966,7 @@ class DatabaseService {
 
     // Insert new program days
     for (final day in program.days) {
-      await db.insert('program_days', {
-        'program_id': program.id,
-        'day_number': day.dayNumber,
-        'series_ids': json.encode(day.seriesIds),
-        'notes': day.notes,
-        'is_rest_day': day.isRestDay ? 1 : 0,
-      });
+      await db.insert('program_days', day.copyWith(programId: program.id).toMap());
     }
   }
 

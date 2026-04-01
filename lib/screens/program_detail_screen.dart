@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
@@ -105,9 +110,36 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                 }
               },
             ),
-          if (_progress != null && _progress!.isActive)
-            PopupMenuButton(
-              itemBuilder: (context) => [
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                onTap: () => Future.delayed(
+                  const Duration(milliseconds: 100),
+                  () => _shareJson(provider, lang),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.share),
+                    const SizedBox(width: 12),
+                    Text(LocalizationService.translate('share_json', lang)),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                onTap: () => Future.delayed(
+                  const Duration(milliseconds: 100),
+                  () => _saveJsonToFile(provider, lang),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.save),
+                    const SizedBox(width: 12),
+                    Text(LocalizationService.translate('save_to_device', lang)),
+                  ],
+                ),
+              ),
+              if (_progress != null && _progress!.isActive)
                 PopupMenuItem(
                   onTap: () => _abandonProgram(context, provider, lang),
                   child: Row(
@@ -118,8 +150,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                     ],
                   ),
                 ),
-              ],
-            ),
+            ],
+          ),
         ],
       ),
       body: _isLoading
@@ -375,6 +407,96 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       }
     }
   }
+
+  Map<String, dynamic> _buildProgramJson(SeriesProvider provider) {
+    // Build JSON structure
+    final days = widget.program.days.map((day) {
+      // Get series titles instead of IDs
+      final seriesTitles = day.seriesIds
+          .map((seriesId) {
+            final series = provider.series.firstWhere(
+              (s) => s.id == seriesId,
+              orElse: () => provider.series.first,
+            );
+            return series.title;
+          })
+          .toList();
+
+      return {
+        'day_number': day.dayNumber,
+        'series_ids': seriesTitles,
+        'notes': day.notes ?? '',
+        'is_rest_day': day.isRestDay ? 1 : 0,
+      };
+    }).toList();
+
+    return {
+      'title': widget.program.title,
+      'description': widget.program.description,
+      'difficulty_level': widget.program.difficultyLevel,
+      'duration_days': widget.program.durationDays,
+      'is_system': widget.program.isSystem ? 1 : 0,
+      'days': days,
+    };
+  }
+
+  Future<void> _shareJson(SeriesProvider provider, String lang) async {
+    try {
+      final programJson = _buildProgramJson(provider);
+      final jsonString = const JsonEncoder.withIndent('  ').convert([programJson]);
+
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsString(jsonString);
+
+      if (mounted) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Training Program: ${widget.program.title}',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${LocalizationService.translate('error', lang)}: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveJsonToFile(SeriesProvider provider, String lang) async {
+    try {
+      final programJson = _buildProgramJson(provider);
+      final jsonString = const JsonEncoder.withIndent('  ').convert([programJson]);
+
+      // Ask user to select a directory
+      final String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+      if (selectedDirectory == null) {
+        // User cancelled
+        return;
+      }
+
+      final fileName = '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
+      final file = File('$selectedDirectory/$fileName');
+      await file.writeAsString(jsonString);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${LocalizationService.translate('export_success', lang)} $selectedDirectory/$fileName'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${LocalizationService.translate('error', lang)}: $e')),
+        );
+      }
+    }
+  }
 }
 
 class _DayCard extends StatefulWidget {
@@ -463,16 +585,22 @@ class _DayCardState extends State<_DayCard> {
             setState(() => _isExpanded = expanded);
           },
           children: [
-            if (!widget.day.isRestDay && widget.day.seriesIds.isNotEmpty)
+            if (!widget.day.isRestDay && widget.day.seriesAssignments != null && widget.day.seriesAssignments!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: widget.day.seriesIds.map((id) {
+                  children: widget.day.seriesAssignments!.map((assignment) {
                     final series = provider.series.firstWhere(
-                      (s) => s.id == id,
+                      (s) => s.id == assignment.seriesId,
                       orElse: () => provider.series.first,
                     );
+
+                    // Build display text with range if available
+                    final displayText = assignment.itemRange != null
+                        ? '${series.title} (${assignment.itemRange})'
+                        : series.title;
+
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
@@ -485,7 +613,7 @@ class _DayCardState extends State<_DayCard> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              series.title,
+                              displayText,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ),
