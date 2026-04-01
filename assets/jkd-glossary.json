@@ -168,6 +168,12 @@
     {"name": "Backend Six Heaven", "translations": {"en": "Backend Six High", "fr": "Backend Six Haut"}, "possible_level": "H", "removal": {}},
     {"name": "Backend Six Standard", "translations": {"en": "Backend Six H M H", "fr": "Backend Six H M H"}, "possible_level": "H,M", "removal": {}},
     {"name": "Backend Six Earth", "translations": {"en": "Backend Six Low", "fr": "Backend Six Bas"}, "possible_level": "L", "removal": {}},
+    {"name": "Wings", "translations": {"en": "Wings", "fr": "Aile en couverture"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Shield", "translations": {"en": "Shield", "fr": "Bouclier"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Pluma", "translations": {"en": "Pluma", "fr": "Pluma (poitne kali)"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Roof Block", "translations": {"en": "Roof Block", "fr": "Toit Bouclier"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Ridondo", "translations": {"en": "Ridondo", "fr": "Ridondo"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Ordabis Motion", "translations": {"en": "Ordabis Motion", "fr": "Mouvement Ordabis"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Upword Six count", "translations": {"en": "Upword Six count", "fr": "Six count ascendant"}, "possible_level": "M", "removal": {}},
     {"name": "Ordabis Motion", "translations": {"en": "Ordabis Motion", "fr": "Mouvement Ordabis"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Sang Kite", "translations": {"en": "Sang Kite", "fr": "Sang Kite"}, "possible_level": "H,M,L", "removal": {}}
