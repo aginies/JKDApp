@@ -5,16 +5,10 @@ class SeriesAssignment {
   final int seriesId;
   final String? itemRange; // e.g., "1-4" or null for all items
 
-  SeriesAssignment({
-    required this.seriesId,
-    this.itemRange,
-  });
+  SeriesAssignment({required this.seriesId, this.itemRange});
 
   Map<String, dynamic> toMap() {
-    return {
-      'series_id': seriesId,
-      'item_range': itemRange,
-    };
+    return {'series_id': seriesId, 'item_range': itemRange};
   }
 
   factory SeriesAssignment.fromMap(Map<String, dynamic> map) {
@@ -30,7 +24,8 @@ class ProgramDay {
   final int programId;
   final int dayNumber;
   final List<int> seriesIds; // Deprecated: kept for backward compatibility
-  final List<SeriesAssignment>? seriesAssignments; // New: detailed assignments with ranges
+  final List<SeriesAssignment>?
+  seriesAssignments; // New: detailed assignments with ranges
   final String? notes; // Optional guidance for the day
   final bool isRestDay;
 
@@ -42,7 +37,9 @@ class ProgramDay {
     this.seriesAssignments,
     this.notes,
     this.isRestDay = false,
-  }) : seriesIds = seriesIds ?? (seriesAssignments?.map((a) => a.seriesId).toList() ?? []);
+  }) : seriesIds =
+           seriesIds ??
+           (seriesAssignments?.map((a) => a.seriesId).toList() ?? []);
 
   Map<String, dynamic> toMap() {
     final assignmentsJson = seriesAssignments != null

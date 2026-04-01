@@ -17,10 +17,7 @@ import 'program_create_screen.dart';
 class ProgramDetailScreen extends StatefulWidget {
   final TrainingProgram program;
 
-  const ProgramDetailScreen({
-    super.key,
-    required this.program,
-  });
+  const ProgramDetailScreen({super.key, required this.program});
 
   @override
   State<ProgramDetailScreen> createState() => _ProgramDetailScreenState();
@@ -40,7 +37,9 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
   Future<void> _loadProgress() async {
     setState(() => _isLoading = true);
     try {
-      final progress = await _programService.getUserProgress(widget.program.id!);
+      final progress = await _programService.getUserProgress(
+        widget.program.id!,
+      );
       setState(() {
         _progress = progress;
         _isLoading = false;
@@ -101,7 +100,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProgramCreateScreen(program: widget.program),
+                    builder: (context) =>
+                        ProgramCreateScreen(program: widget.program),
                   ),
                 );
                 if (result == true && mounted) {
@@ -272,10 +272,14 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () => _startProgram(context, provider, lang),
+                          onPressed: () =>
+                              _startProgram(context, provider, lang),
                           icon: const Icon(Icons.play_arrow),
                           label: Text(
-                            LocalizationService.translate('start_program', lang),
+                            LocalizationService.translate(
+                              'start_program',
+                              lang,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -304,7 +308,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       itemBuilder: (context, index) {
         final day = widget.program.days[index];
         final isCurrentDay = _progress?.currentDay == day.dayNumber;
-        final isCompleted = _progress?.completedDays.contains(day.dayNumber) ?? false;
+        final isCompleted =
+            _progress?.completedDays.contains(day.dayNumber) ?? false;
         final isPast = (_progress?.currentDay ?? 1) > day.dayNumber;
 
         return _DayCard(
@@ -364,9 +369,9 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -412,15 +417,13 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
     // Build JSON structure
     final days = widget.program.days.map((day) {
       // Get series titles instead of IDs
-      final seriesTitles = day.seriesIds
-          .map((seriesId) {
-            final series = provider.series.firstWhere(
-              (s) => s.id == seriesId,
-              orElse: () => provider.series.first,
-            );
-            return series.title;
-          })
-          .toList();
+      final seriesTitles = day.seriesIds.map((seriesId) {
+        final series = provider.series.firstWhere(
+          (s) => s.id == seriesId,
+          orElse: () => provider.series.first,
+        );
+        return series.title;
+      }).toList();
 
       return {
         'day_number': day.dayNumber,
@@ -443,23 +446,29 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
   Future<void> _shareJson(SeriesProvider provider, String lang) async {
     try {
       final programJson = _buildProgramJson(provider);
-      final jsonString = const JsonEncoder.withIndent('  ').convert([programJson]);
+      final jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert([programJson]);
 
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
+      final fileName =
+          '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
       if (mounted) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Training Program: ${widget.program.title}',
-        );
+        await Share.shareXFiles([
+          XFile(file.path),
+        ], subject: 'Training Program: ${widget.program.title}');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${LocalizationService.translate('error', lang)}: $e')),
+          SnackBar(
+            content: Text(
+              '${LocalizationService.translate('error', lang)}: $e',
+            ),
+          ),
         );
       }
     }
@@ -468,31 +477,41 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
   Future<void> _saveJsonToFile(SeriesProvider provider, String lang) async {
     try {
       final programJson = _buildProgramJson(provider);
-      final jsonString = const JsonEncoder.withIndent('  ').convert([programJson]);
+      final jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert([programJson]);
 
       // Ask user to select a directory
-      final String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      final String? selectedDirectory = await FilePicker.platform
+          .getDirectoryPath();
 
       if (selectedDirectory == null) {
         // User cancelled
         return;
       }
 
-      final fileName = '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
+      final fileName =
+          '${widget.program.title.toLowerCase().replaceAll(' ', '-')}.json';
       final file = File('$selectedDirectory/$fileName');
       await file.writeAsString(jsonString);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${LocalizationService.translate('export_success', lang)} $selectedDirectory/$fileName'),
+            content: Text(
+              '${LocalizationService.translate('export_success', lang)} $selectedDirectory/$fileName',
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${LocalizationService.translate('error', lang)}: $e')),
+          SnackBar(
+            content: Text(
+              '${LocalizationService.translate('error', lang)}: $e',
+            ),
+          ),
         );
       }
     }
@@ -570,7 +589,9 @@ class _DayCardState extends State<_DayCard> {
                 ? '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}: ${LocalizationService.translate('rest_day', widget.lang)}'
                 : '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}',
             style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: widget.isCurrentDay ? FontWeight.bold : FontWeight.normal,
+              fontWeight: widget.isCurrentDay
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
           subtitle: widget.day.notes != null
@@ -585,7 +606,9 @@ class _DayCardState extends State<_DayCard> {
             setState(() => _isExpanded = expanded);
           },
           children: [
-            if (!widget.day.isRestDay && widget.day.seriesAssignments != null && widget.day.seriesAssignments!.isNotEmpty)
+            if (!widget.day.isRestDay &&
+                widget.day.seriesAssignments != null &&
+                widget.day.seriesAssignments!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(

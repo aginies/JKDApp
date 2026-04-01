@@ -5,8 +5,10 @@ class UserProgramProgress {
   final int programId;
   final DateTime startedAt;
   final int currentDay;
-  final List<int> completedDays; // Array of day numbers that have been completed
-  final Map<int, int> todaysSeriesCompletionCounts; // Map of series ID to completion count for current day
+  final List<int>
+  completedDays; // Array of day numbers that have been completed
+  final Map<int, int>
+  todaysSeriesCompletionCounts; // Map of series ID to completion count for current day
   final String status; // 'active', 'paused', 'completed', 'abandoned'
   final DateTime? completedAt;
 
@@ -23,8 +25,8 @@ class UserProgramProgress {
     this.status = 'active',
     this.completedAt,
     int? totalDays,
-  })  : startedAt = startedAt ?? DateTime.now(),
-        _totalDays = totalDays;
+  }) : startedAt = startedAt ?? DateTime.now(),
+       _totalDays = totalDays;
 
   /// Calculate completion percentage (0.0 to 1.0)
   double getCompletionPercentage(int totalDays) {
@@ -100,7 +102,10 @@ class UserProgramProgress {
     };
   }
 
-  factory UserProgramProgress.fromMap(Map<String, dynamic> map, {int? totalDays}) {
+  factory UserProgramProgress.fromMap(
+    Map<String, dynamic> map, {
+    int? totalDays,
+  }) {
     List<int> parsedCompletedDays = [];
     if (map['completed_days'] != null) {
       try {
@@ -116,14 +121,13 @@ class UserProgramProgress {
     Map<int, int> parsedTodaysCounts = {};
     if (map['todays_completed_series_ids'] != null) {
       try {
-        final decoded = json.decode(map['todays_completed_series_ids'] as String);
+        final decoded = json.decode(
+          map['todays_completed_series_ids'] as String,
+        );
         if (decoded is Map) {
           // Convert Map<String, dynamic> to Map<int, int>
           parsedTodaysCounts = decoded.map(
-            (key, value) => MapEntry(
-              int.parse(key.toString()),
-              value as int,
-            ),
+            (key, value) => MapEntry(int.parse(key.toString()), value as int),
           );
         }
       } catch (e) {
@@ -165,7 +169,8 @@ class UserProgramProgress {
       startedAt: startedAt ?? this.startedAt,
       currentDay: currentDay ?? this.currentDay,
       completedDays: completedDays ?? this.completedDays,
-      todaysSeriesCompletionCounts: todaysSeriesCompletionCounts ?? this.todaysSeriesCompletionCounts,
+      todaysSeriesCompletionCounts:
+          todaysSeriesCompletionCounts ?? this.todaysSeriesCompletionCounts,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       totalDays: totalDays ?? _totalDays,

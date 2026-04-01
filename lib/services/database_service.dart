@@ -278,7 +278,9 @@ class DatabaseService {
         await db.execute(
           'ALTER TABLE program_days ADD COLUMN series_assignments TEXT',
         );
-        debugPrint('Migration v16: Added series_assignments column to program_days');
+        debugPrint(
+          'Migration v16: Added series_assignments column to program_days',
+        );
       } catch (e) {
         debugPrint(
           'Migration warning: series_assignments column may already exist - $e',
@@ -563,7 +565,8 @@ class DatabaseService {
               'program_id': programId,
               'day_number': day['day_number'] ?? 1,
               'series_ids': json.encode(resolvedIds),
-              'series_assignments': null, // System programs don't have item ranges
+              'series_assignments':
+                  null, // System programs don't have item ranges
               'notes': day['notes'],
               'is_rest_day': day['is_rest_day'] ?? 0,
             });
@@ -929,7 +932,10 @@ class DatabaseService {
 
     // Insert program days
     for (final day in program.days) {
-      await db.insert('program_days', day.copyWith(programId: programId).toMap());
+      await db.insert(
+        'program_days',
+        day.copyWith(programId: programId).toMap(),
+      );
     }
 
     return programId;
@@ -966,7 +972,10 @@ class DatabaseService {
 
     // Insert new program days
     for (final day in program.days) {
-      await db.insert('program_days', day.copyWith(programId: program.id).toMap());
+      await db.insert(
+        'program_days',
+        day.copyWith(programId: program.id).toMap(),
+      );
     }
   }
 
@@ -1084,7 +1093,9 @@ class DatabaseService {
     }
 
     // Increment completion count for this series
-    final updatedCounts = Map<int, int>.from(activeProgress.todaysSeriesCompletionCounts);
+    final updatedCounts = Map<int, int>.from(
+      activeProgress.todaysSeriesCompletionCounts,
+    );
     updatedCounts[seriesId] = (updatedCounts[seriesId] ?? 0) + 1;
 
     // Convert to string keys for JSON encoding
@@ -1106,9 +1117,9 @@ class DatabaseService {
     );
 
     // Count how many series are fully complete (2+ reps)
-    final completedSeriesCount = currentDayData.seriesIds.where(
-      (id) => (updatedCounts[id] ?? 0) >= 2,
-    ).length;
+    final completedSeriesCount = currentDayData.seriesIds
+        .where((id) => (updatedCounts[id] ?? 0) >= 2)
+        .length;
 
     if (allSeriesComplete) {
       // Auto-mark day complete
@@ -1121,7 +1132,9 @@ class DatabaseService {
           'dayCompleted': true,
           'dayNumber': activeProgress.currentDay,
           'streak': updatedProgress.getCurrentStreak(),
-          'progress': updatedProgress.getCompletionPercentage(program.durationDays),
+          'progress': updatedProgress.getCompletionPercentage(
+            program.durationDays,
+          ),
         };
       }
     }

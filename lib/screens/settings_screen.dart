@@ -948,6 +948,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               SwitchListTile(
+                secondary: const Icon(Icons.translate),
+                title: Text(
+                  LocalizationService.translate('show_translation', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('show_translation_desc', lang),
+                ),
+                value: provider.showTranslation,
+                onChanged: (val) => provider.setShowTranslation(val),
+              ),
+              SwitchListTile(
                 secondary: const Icon(Icons.mic),
                 title: Text(
                   LocalizationService.translate('voice_recognition', lang),

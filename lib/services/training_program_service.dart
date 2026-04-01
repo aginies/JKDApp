@@ -31,11 +31,8 @@ class TrainingProgramService {
 
     final day = program.days.firstWhere(
       (d) => d.dayNumber == dayNumber,
-      orElse: () => ProgramDay(
-        programId: programId,
-        dayNumber: dayNumber,
-        seriesIds: [],
-      ),
+      orElse: () =>
+          ProgramDay(programId: programId, dayNumber: dayNumber, seriesIds: []),
     );
 
     // Get full series objects
@@ -54,11 +51,7 @@ class TrainingProgramService {
       series.add(matchingSeries);
     }
 
-    return {
-      'program': program,
-      'day': day,
-      'series': series,
-    };
+    return {'program': program, 'day': day, 'series': series};
   }
 
   /// Start a new program
@@ -153,8 +146,9 @@ class TrainingProgramService {
       throw Exception('Program not found');
     }
 
-    final completionPercentage =
-        matchingProgress.getCompletionPercentage(program.durationDays);
+    final completionPercentage = matchingProgress.getCompletionPercentage(
+      program.durationDays,
+    );
     final currentStreak = matchingProgress.getCurrentStreak();
     final completedCount = matchingProgress.completedDays.length;
     final remainingDays = program.durationDays - completedCount;

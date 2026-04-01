@@ -45,10 +45,22 @@ class ProgramCalendarWidget extends StatelessWidget {
           ),
           calendarBuilders: CalendarBuilders(
             defaultBuilder: (context, day, focusedDay) {
-              return _buildDayCell(context, day, startDate, currentDay, completedDays);
+              return _buildDayCell(
+                context,
+                day,
+                startDate,
+                currentDay,
+                completedDays,
+              );
             },
             todayBuilder: (context, day, focusedDay) {
-              return _buildDayCell(context, day, startDate, currentDay, completedDays);
+              return _buildDayCell(
+                context,
+                day,
+                startDate,
+                currentDay,
+                completedDays,
+              );
             },
           ),
           onDaySelected: (selectedDay, focusedDay) {
@@ -74,10 +86,7 @@ class ProgramCalendarWidget extends StatelessWidget {
     // Determine if this day is part of the program
     if (dayNumber < 1 || dayNumber > program.durationDays) {
       return Center(
-        child: Text(
-          '${day.day}',
-          style: TextStyle(color: theme.disabledColor),
-        ),
+        child: Text('${day.day}', style: TextStyle(color: theme.disabledColor)),
       );
     }
 
@@ -130,11 +139,7 @@ class ProgramCalendarWidget extends StatelessWidget {
             Positioned(
               top: 2,
               right: 2,
-              child: Icon(
-                icon,
-                size: 12,
-                color: textColor,
-              ),
+              child: Icon(icon, size: 12, color: textColor),
             ),
         ],
       ),
@@ -154,14 +159,8 @@ class ProgramCalendarWidget extends StatelessWidget {
           label: 'Completed',
           icon: Icons.check,
         ),
-        _LegendItem(
-          color: theme.colorScheme.primary,
-          label: 'Current',
-        ),
-        _LegendItem(
-          color: Colors.red.withOpacity(0.3),
-          label: 'Missed',
-        ),
+        _LegendItem(color: theme.colorScheme.primary, label: 'Current'),
+        _LegendItem(color: Colors.red.withOpacity(0.3), label: 'Missed'),
         _LegendItem(
           color: theme.colorScheme.surfaceContainerHighest,
           label: 'Upcoming',
@@ -176,11 +175,7 @@ class _LegendItem extends StatelessWidget {
   final String label;
   final IconData? icon;
 
-  const _LegendItem({
-    required this.color,
-    required this.label,
-    this.icon,
-  });
+  const _LegendItem({required this.color, required this.label, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -201,10 +196,7 @@ class _LegendItem extends StatelessWidget {
               : null,
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall,
-        ),
+        Text(label, style: theme.textTheme.bodySmall),
       ],
     );
   }

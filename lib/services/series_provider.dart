@@ -37,6 +37,7 @@ class SeriesProvider with ChangeNotifier {
   Color _themeColor = Colors.blue;
   bool _voiceEnabled = false;
   bool _developerMode = false;
+  bool _showTranslation = true;
   String? _projectPath;
   double _speechRate = 0.25;
   String _searchQuery = '';
@@ -57,6 +58,7 @@ class SeriesProvider with ChangeNotifier {
   Color get themeColor => _themeColor;
   bool get voiceEnabled => _voiceEnabled;
   bool get developerMode => _developerMode;
+  bool get showTranslation => _showTranslation;
   String? get projectPath => _projectPath;
   double get speechRate => _speechRate;
   String get searchQuery => _searchQuery;
@@ -94,6 +96,9 @@ class SeriesProvider with ChangeNotifier {
     // Developer Mode
     _developerMode = (prefs['developer_mode'] ?? '0') == '1';
     _projectPath = prefs['project_path'];
+
+    // Translation (Enabled by default)
+    _showTranslation = (prefs['show_translation'] ?? '1') == '1';
 
     // Speech Rate
     if (prefs.containsKey('speech_rate')) {
@@ -181,6 +186,12 @@ class SeriesProvider with ChangeNotifier {
     _developerMode = enabled;
     await _dbService.saveSetting('developer_mode', enabled ? '1' : '0');
     await loadSeries();
+    notifyListeners();
+  }
+
+  void setShowTranslation(bool enabled) async {
+    _showTranslation = enabled;
+    await _dbService.saveSetting('show_translation', enabled ? '1' : '0');
     notifyListeners();
   }
 

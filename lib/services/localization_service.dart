@@ -133,14 +133,16 @@ class LocalizationService {
       'resume': 'Resume',
       'warning': 'Warning',
       'abandon': 'Abandon',
-      'abandon_current_program': 'You already have an active program. Abandon current program first?',
+      'abandon_current_program':
+          'You already have an active program. Abandon current program first?',
       'program_started': 'Program started successfully!',
       'no_programs_found': 'No programs found',
       'progress': 'Progress',
       'daily_schedule': 'Daily Schedule',
       'start_program': 'Start Program',
       'abandon_program': 'Abandon Program',
-      'abandon_program_confirm': 'Are you sure you want to abandon this program? Your progress will be lost.',
+      'abandon_program_confirm':
+          'Are you sure you want to abandon this program? Your progress will be lost.',
       'rest_day': 'Rest Day',
       'create_program': 'Create Program',
       'edit_program': 'Edit Program',
@@ -155,6 +157,8 @@ class LocalizationService {
       'assigned_series': 'Assigned Series',
       'daily_config': 'Daily Schedule Configuration',
       'export_json': 'Export JSON',
+      'show_translation': 'Show Translation',
+      'show_translation_desc': 'Display translation below each action',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -289,14 +293,16 @@ class LocalizationService {
       'resume': 'Reprendre',
       'warning': 'Attention',
       'abandon': 'Abandonner',
-      'abandon_current_program': 'Vous avez déjà un programme actif. Abandonner le programme actuel d\'abord ?',
+      'abandon_current_program':
+          'Vous avez déjà un programme actif. Abandonner le programme actuel d\'abord ?',
       'program_started': 'Programme démarré avec succès !',
       'no_programs_found': 'Aucun programme trouvé',
       'progress': 'Progrès',
       'daily_schedule': 'Programme Quotidien',
       'start_program': 'Démarrer le Programme',
       'abandon_program': 'Abandonner le Programme',
-      'abandon_program_confirm': 'Êtes-vous sûr de vouloir abandonner ce programme ? Votre progrès sera perdu.',
+      'abandon_program_confirm':
+          'Êtes-vous sûr de vouloir abandonner ce programme ? Votre progrès sera perdu.',
       'rest_day': 'Jour de Repos',
       'create_program': 'Créer un Programme',
       'edit_program': 'Modifier le Programme',
@@ -311,6 +317,8 @@ class LocalizationService {
       'assigned_series': 'Séries Assignées',
       'daily_config': 'Configuration du Programme Quotidien',
       'export_json': 'Exporter JSON',
+      'show_translation': 'Afficher la Traduction',
+      'show_translation_desc': 'Afficher la traduction sous chaque action',
     },
   };
 

@@ -1,11 +1,47 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../models/move.dart';
+import '../../../services/series_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../services/localization_service.dart';
 import '../controllers/training_controller.dart';
 import 'move_display_widgets.dart';
 
 /// Displays the list of moves in a series with edit controls
 class MoveListDisplayWidget {
+  /// Helper to find translation in glossary if move translations are empty
+  static String _getEffectiveTranslation(
+    Move move,
+    String language,
+    List<Map<String, dynamic>> glossary,
+  ) {
+    final t = move.getTranslation(language);
+    if (t.isNotEmpty) return t;
+
+    // Fallback to glossary search if move translations are empty
+    if (move.isCombo) {
+      return move.subMoves
+          .map((m) => _getEffectiveTranslation(m, language, glossary))
+          .where((s) => s.isNotEmpty)
+          .join(' + ');
+    }
+
+    final entry = glossary.firstWhere(
+      (e) => e['name'].toString().toLowerCase() == move.name.toLowerCase(),
+      orElse: () => {},
+    );
+
+    if (entry.isNotEmpty && entry['translations'] != null) {
+      try {
+        final Map<String, dynamic> trans = json.decode(entry['translations']);
+        return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+      } catch (_) {
+        return '';
+      }
+    }
+    return '';
+  }
+
   /// Builds the move list tiles
   static List<Widget> buildTiles({
     required List<Move> moves,
@@ -19,7 +55,11 @@ class MoveListDisplayWidget {
     required VoidCallback Function(int index) onDelete,
     required Function(String category, String moveName) onShowMediaGallery,
     required Function(List<Move> movesToInsert, int atIndex) onSetState,
+    bool showTranslation = false,
   }) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final glossary = provider.glossary;
+
     // Calculate display numbers excluding 'move' category items
     int currentMainNumber = 0;
     final List<int> displayNumbers = [];
@@ -54,7 +94,11 @@ class MoveListDisplayWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  final t = moves[i].getTranslation(language);
+                  final t = _getEffectiveTranslation(
+                    moves[i],
+                    language,
+                    glossary,
+                  );
                   if (t.isNotEmpty) {
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +153,11 @@ class MoveListDisplayWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Tooltip(
-                                  message: moves[i].getTranslation(language),
+                                  message: _getEffectiveTranslation(
+                                    moves[i],
+                                    language,
+                                    glossary,
+                                  ),
                                   child: Text(
                                     moves[i].name,
                                     style: const TextStyle(
@@ -149,6 +197,31 @@ class MoveListDisplayWidget {
                               ],
                             ],
                           ),
+                          if (showTranslation && !moves[i].isCombo)
+                            Builder(
+                              builder: (context) {
+                                final t = _getEffectiveTranslation(
+                                  moves[i],
+                                  language,
+                                  glossary,
+                                );
+                                if (t.isEmpty) return const SizedBox.shrink();
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 2.0,
+                                    left: 36.0,
+                                  ),
+                                  child: Text(
+                                    t,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           if (moves[i].isCombo)
                             Padding(
                               padding: const EdgeInsets.only(
@@ -265,6 +338,34 @@ class MoveListDisplayWidget {
                                             ],
                                           ),
                                         ),
+                                        if (showTranslation)
+                                          Builder(
+                                            builder: (context) {
+                                              final t =
+                                                  _getEffectiveTranslation(
+                                                    sub,
+                                                    language,
+                                                    glossary,
+                                                  );
+                                              if (t.isEmpty) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 2.0,
+                                                  left: 24.0,
+                                                ),
+                                                child: Text(
+                                                  t,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         if (sub.counterName != null)
                                           Padding(
                                             padding: const EdgeInsets.only(
@@ -404,9 +505,6 @@ class MoveListDisplayWidget {
                             ),
                         ],
                       ),
-                      subtitle: (moves[i].isCombo)
-                          ? null
-                          : Text(moves[i].getTranslation(language)),
                       trailing: isEditing
                           ? Row(
                               mainAxisSize: MainAxisSize.min,

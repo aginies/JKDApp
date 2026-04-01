@@ -33,7 +33,10 @@ class TrainingProgram {
     };
   }
 
-  factory TrainingProgram.fromMap(Map<String, dynamic> map, {List<ProgramDay>? days}) {
+  factory TrainingProgram.fromMap(
+    Map<String, dynamic> map, {
+    List<ProgramDay>? days,
+  }) {
     return TrainingProgram(
       id: map['id'] as int?,
       title: map['title'] as String? ?? 'Untitled Program',

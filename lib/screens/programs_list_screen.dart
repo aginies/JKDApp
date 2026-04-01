@@ -37,9 +37,9 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading programs: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading programs: $e')));
       }
     }
   }
@@ -195,20 +195,20 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _filteredPrograms.isEmpty
-              ? Center(
-                  child: Text(
-                    LocalizationService.translate('no_programs_found', lang),
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _filteredPrograms.length,
-                  itemBuilder: (context, index) {
-                    final program = _filteredPrograms[index];
-                    return _buildProgramCard(context, program, provider);
-                  },
-                ),
+          ? Center(
+              child: Text(
+                LocalizationService.translate('no_programs_found', lang),
+                style: theme.textTheme.bodyLarge,
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _filteredPrograms.length,
+              itemBuilder: (context, index) {
+                final program = _filteredPrograms[index];
+                return _buildProgramCard(context, program, provider);
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
@@ -237,7 +237,8 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     final difficultyIcon = _getDifficultyIcon(program.difficultyLevel);
 
     // Check if user has progress on this program
-    final hasActiveProgram = provider.hasActiveProgram &&
+    final hasActiveProgram =
+        provider.hasActiveProgram &&
         provider.activeProgram?.programId == program.id;
 
     return Card(
@@ -272,8 +273,10 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: difficultyColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -282,11 +285,7 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          difficultyIcon,
-                          size: 16,
-                          color: difficultyColor,
-                        ),
+                        Icon(difficultyIcon, size: 16, color: difficultyColor),
                         const SizedBox(width: 4),
                         Text(
                           _capitalizeDifficulty(program.difficultyLevel),
@@ -299,7 +298,11 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Icon(Icons.calendar_today, size: 16, color: theme.colorScheme.secondary),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: theme.colorScheme.secondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '${program.durationDays} ${LocalizationService.translate('days', lang)}',
@@ -320,8 +323,9 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                   children: [
                     Expanded(
                       child: LinearProgressIndicator(
-                        value: provider.activeProgram!
-                            .getCompletionPercentage(program.durationDays),
+                        value: provider.activeProgram!.getCompletionPercentage(
+                          program.durationDays,
+                        ),
                         backgroundColor:
                             theme.colorScheme.surfaceContainerHighest,
                       ),
@@ -361,7 +365,10 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: Text(
-                                  LocalizationService.translate('warning', lang),
+                                  LocalizationService.translate(
+                                    'warning',
+                                    lang,
+                                  ),
                                 ),
                                 content: Text(
                                   LocalizationService.translate(
@@ -373,13 +380,19 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, false),
                                     child: Text(
-                                      LocalizationService.translate('cancel', lang),
+                                      LocalizationService.translate(
+                                        'cancel',
+                                        lang,
+                                      ),
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx, true),
                                     child: Text(
-                                      LocalizationService.translate('abandon', lang),
+                                      LocalizationService.translate(
+                                        'abandon',
+                                        lang,
+                                      ),
                                     ),
                                   ),
                                 ],

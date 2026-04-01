@@ -94,8 +94,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           // Check if this series completion is part of active program
           final provider = Provider.of<SeriesProvider>(context, listen: false);
           if (widget.series != null && widget.series!.id != null) {
-            final completionInfo =
-                await provider.recordSeriesCompletion(widget.series!.id!);
+            final completionInfo = await provider.recordSeriesCompletion(
+              widget.series!.id!,
+            );
             if (completionInfo != null && mounted) {
               _showCompletionDialog(completionInfo, provider);
             }
@@ -528,17 +529,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.celebration,
-                color: Colors.amber,
-                size: 80,
-              ),
+              const Icon(Icons.celebration, color: Colors.amber, size: 80),
               const SizedBox(height: 16),
               Text(
                 '${LocalizationService.translate('day', lang)} $dayNumber ${LocalizationService.translate('finish', lang)}!',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -575,15 +572,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       // Series completed but day not finished yet
       final completedSeries = completionInfo['completedSeries'] as int;
       final totalSeries = completionInfo['totalSeries'] as int;
-      final currentSeriesCount = completionInfo['currentSeriesCount'] as int? ?? 0;
+      final currentSeriesCount =
+          completionInfo['currentSeriesCount'] as int? ?? 0;
 
       String message;
       if (currentSeriesCount >= 2) {
         // Series is fully complete (2 reps done)
-        message = '${LocalizationService.translate('finish', lang)}! ✓ ($completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)})';
+        message =
+            '${LocalizationService.translate('finish', lang)}! ✓ ($completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)})';
       } else {
         // Series partially complete (1 rep done)
-        message = '${LocalizationService.translate('finish', lang)}! ($currentSeriesCount/2 reps) - $completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)}';
+        message =
+            '${LocalizationService.translate('finish', lang)}! ($currentSeriesCount/2 reps) - $completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)}';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2379,6 +2379,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   List<Widget> _buildMoveListTiles(String lang) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
     return MoveListDisplayWidget.buildTiles(
       moves: _moves,
       language: lang,
@@ -2386,6 +2387,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       trainingController: _trainingController,
       context: context,
       category: _selectedCategory,
+      showTranslation: provider.showTranslation,
       onEdit: (index) => () {
         if (_moves[index].isCombo) {
           _pickMove(initialMoves: _moves[index].subMoves, seriesIndex: index);

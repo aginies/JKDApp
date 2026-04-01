@@ -881,167 +881,161 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     }
 
     return Scaffold(
-        appBar: AppBar(
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Hero(
-              tag: 'app_logo',
-              child: RotationTransition(
-                turns: _rotationController,
-                child: Image.asset('assets/icon/JKD.png'),
-              ),
+      appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Hero(
+            tag: 'app_logo',
+            child: RotationTransition(
+              turns: _rotationController,
+              child: Image.asset('assets/icon/JKD.png'),
             ),
           ),
-          title: _isSearching
-              ? TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: LocalizationService.translate(
-                      'search_hint',
-                      lang,
+        ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: LocalizationService.translate('search_hint', lang),
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) =>
+                    context.read<SeriesProvider>().setSearchQuery(val),
+              )
+            : Text(LocalizationService.translate('library_title', lang)),
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  context.read<SeriesProvider>().setSearchQuery('');
+                }
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.mic_external_on, color: Colors.blueAccent),
+            onPressed: () => _showVoiceNotesModal(context, lang),
+            tooltip: LocalizationService.translate('voice_notes', lang),
+          ),
+          IconButton(
+            icon: const Icon(Icons.menu_book, color: Colors.orangeAccent),
+            onPressed: () => _showGlossaryModal(context, lang),
+            tooltip: 'Glossary',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Material(
+            elevation: 2.0,
+            color: Theme.of(context).appBarTheme.backgroundColor,
+            child: Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  indicatorColor: isDark
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).primaryColor,
+                  indicatorWeight: 4,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelColor: isDark
+                      ? Colors.white
+                      : Theme.of(context).primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/icon/jfgf.png',
+                            width: 28,
+                            height: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Jun Fan Gung Fu'),
+                        ],
+                      ),
                     ),
-                    border: InputBorder.none,
-                  ),
-                  onChanged: (val) =>
-                      context.read<SeriesProvider>().setSearchQuery(val),
-                )
-              : Text(LocalizationService.translate('library_title', lang)),
-          actions: [
-            IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
-              onPressed: () {
-                setState(() {
-                  _isSearching = !_isSearching;
-                  if (!_isSearching) {
-                    _searchController.clear();
-                    context.read<SeriesProvider>().setSearchQuery('');
-                  }
-                });
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.mic_external_on, color: Colors.blueAccent),
-              onPressed: () => _showVoiceNotesModal(context, lang),
-              tooltip: LocalizationService.translate('voice_notes', lang),
-            ),
-            IconButton(
-              icon: const Icon(Icons.menu_book, color: Colors.orangeAccent),
-              onPressed: () => _showGlossaryModal(context, lang),
-              tooltip: 'Glossary',
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/icon/jfkb.png',
+                            width: 28,
+                            height: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Jun Fan Kick Boxing'),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/icon/JKD.png',
+                            width: 28,
+                            height: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('JKD Moves'),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_month, size: 28),
+                          const SizedBox(width: 8),
+                          Text(
+                            LocalizationService.translate(
+                              'training_programs',
+                              lang,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
-          ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Material(
-              elevation: 2.0,
-              color: Theme.of(context).appBarTheme.backgroundColor,
-              child: Builder(
-                builder: (context) {
-                  final isDark =
-                      Theme.of(context).brightness == Brightness.dark;
-                  return TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    indicatorColor: isDark
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).primaryColor,
-                    indicatorWeight: 4,
-                    indicatorSize: TabBarIndicatorSize.label,
-                    labelColor: isDark
-                        ? Colors.white
-                        : Theme.of(context).primaryColor,
-                    unselectedLabelColor: Colors.grey,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    tabs: [
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/icon/jfgf.png',
-                              width: 28,
-                              height: 28,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Jun Fan Gung Fu'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/icon/jfkb.png',
-                              width: 28,
-                              height: 28,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Jun Fan Kick Boxing'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/icon/JKD.png',
-                              width: 28,
-                              height: 28,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('JKD Moves'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.calendar_month, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              LocalizationService.translate(
-                                'training_programs',
-                                lang,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildSeriesList('Jun Fan Gung Fu', lang),
-            _buildSeriesList('Jun Fan Kick Boxing', lang),
-            _buildSeriesList('JKD Moves', lang),
-            const ProgramsListScreen(),
-          ],
-        ),
-        floatingActionButton: _tabController.index == 3
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildSeriesList('Jun Fan Gung Fu', lang),
+          _buildSeriesList('Jun Fan Kick Boxing', lang),
+          _buildSeriesList('JKD Moves', lang),
+          const ProgramsListScreen(),
+        ],
+      ),
+      floatingActionButton: _tabController.index == 3
           ? null // Hide FAB on Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),
@@ -1082,7 +1076,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     return Column(
       children: [
         // Show Active Program Card on first tab
-        if (category == 'Jun Fan Gung Fu' && hasActiveProgram && activeProgram != null && activeProgramDetails != null)
+        if (category == 'Jun Fan Gung Fu' &&
+            hasActiveProgram &&
+            activeProgram != null &&
+            activeProgramDetails != null)
           ActiveProgramCard(
             progress: activeProgram,
             program: activeProgramDetails,

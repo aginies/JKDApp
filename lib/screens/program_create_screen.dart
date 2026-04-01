@@ -44,14 +44,15 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
       // Load day configs from existing program
       _dayConfigs = widget.program!.days.map((day) {
-
         // Use seriesAssignments if available (new format), otherwise convert from seriesIds (old format)
-        final assignments = day.seriesAssignments?.map((assignment) {
-          return _SeriesAssignment(
-            seriesId: assignment.seriesId,
-            itemRange: assignment.itemRange,
-          );
-        }).toList() ?? day.seriesIds.map((id) => _SeriesAssignment(seriesId: id)).toList();
+        final assignments =
+            day.seriesAssignments?.map((assignment) {
+              return _SeriesAssignment(
+                seriesId: assignment.seriesId,
+                itemRange: assignment.itemRange,
+              );
+            }).toList() ??
+            day.seriesIds.map((id) => _SeriesAssignment(seriesId: id)).toList();
 
         return _DayConfig(
           dayNumber: day.dayNumber,
@@ -93,12 +94,14 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
         if (newCount > _dayConfigs.length) {
           // Add more days
           for (int i = _dayConfigs.length; i < newCount; i++) {
-            _dayConfigs.add(_DayConfig(
-              dayNumber: i + 1,
-              seriesAssignments: [],
-              notes: '',
-              isRestDay: false,
-            ));
+            _dayConfigs.add(
+              _DayConfig(
+                dayNumber: i + 1,
+                seriesAssignments: [],
+                notes: '',
+                isRestDay: false,
+              ),
+            );
           }
         } else if (newCount < _dayConfigs.length) {
           // Remove days
@@ -130,10 +133,10 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       // Convert internal _SeriesAssignment to model SeriesAssignment
       final assignments = config.seriesAssignments
           .where((a) => a.seriesId != null)
-          .map((a) => SeriesAssignment(
-                seriesId: a.seriesId!,
-                itemRange: a.itemRange,
-              ))
+          .map(
+            (a) =>
+                SeriesAssignment(seriesId: a.seriesId!, itemRange: a.itemRange),
+          )
           .toList();
 
       return ProgramDay(
@@ -162,7 +165,11 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
         await db.createProgram(program);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(LocalizationService.translate('program_started', lang))),
+            SnackBar(
+              content: Text(
+                LocalizationService.translate('program_started', lang),
+              ),
+            ),
           );
           Navigator.pop(context, true);
         }
@@ -171,16 +178,20 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
         await db.updateProgram(program);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(LocalizationService.translate('series_updated', lang))),
+            SnackBar(
+              content: Text(
+                LocalizationService.translate('series_updated', lang),
+              ),
+            ),
           );
           Navigator.pop(context, true);
         }
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -224,27 +235,29 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       'days': days,
     };
 
-    final jsonString = const JsonEncoder.withIndent('  ').convert([programJson]);
+    final jsonString = const JsonEncoder.withIndent(
+      '  ',
+    ).convert([programJson]);
 
     // Save to file
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${_titleController.text.toLowerCase().replaceAll(' ', '-')}.json';
+      final fileName =
+          '${_titleController.text.toLowerCase().replaceAll(' ', '-')}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
       if (mounted) {
         // Share the file
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Training Program: ${_titleController.text}',
-        );
+        await Share.shareXFiles([
+          XFile(file.path),
+        ], subject: 'Training Program: ${_titleController.text}');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export error: $e')));
       }
     }
   }
@@ -310,7 +323,10 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
             TextFormField(
               controller: _descriptionController,
               decoration: InputDecoration(
-                labelText: LocalizationService.translate('program_description', lang),
+                labelText: LocalizationService.translate(
+                  'program_description',
+                  lang,
+                ),
                 border: const OutlineInputBorder(),
               ),
               maxLines: 3,
@@ -330,7 +346,10 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                   child: DropdownButtonFormField<String>(
                     value: _selectedDifficulty,
                     decoration: InputDecoration(
-                      labelText: LocalizationService.translate('difficulty', lang),
+                      labelText: LocalizationService.translate(
+                        'difficulty',
+                        lang,
+                      ),
                       border: const OutlineInputBorder(),
                     ),
                     items: [
@@ -338,9 +357,15 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                         value: 'beginner',
                         child: Row(
                           children: [
-                            const Icon(Icons.school, size: 20, color: Colors.green),
+                            const Icon(
+                              Icons.school,
+                              size: 20,
+                              color: Colors.green,
+                            ),
                             const SizedBox(width: 12),
-                            Text(LocalizationService.translate('beginner', lang)),
+                            Text(
+                              LocalizationService.translate('beginner', lang),
+                            ),
                           ],
                         ),
                       ),
@@ -348,9 +373,18 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                         value: 'intermediate',
                         child: Row(
                           children: [
-                            const Icon(Icons.trending_up, size: 20, color: Colors.orange),
+                            const Icon(
+                              Icons.trending_up,
+                              size: 20,
+                              color: Colors.orange,
+                            ),
                             const SizedBox(width: 12),
-                            Text(LocalizationService.translate('intermediate', lang)),
+                            Text(
+                              LocalizationService.translate(
+                                'intermediate',
+                                lang,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -358,9 +392,15 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                         value: 'advanced',
                         child: Row(
                           children: [
-                            const Icon(Icons.military_tech, size: 20, color: Colors.red),
+                            const Icon(
+                              Icons.military_tech,
+                              size: 20,
+                              color: Colors.red,
+                            ),
                             const SizedBox(width: 12),
-                            Text(LocalizationService.translate('advanced', lang)),
+                            Text(
+                              LocalizationService.translate('advanced', lang),
+                            ),
                           ],
                         ),
                       ),
@@ -423,7 +463,12 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     );
   }
 
-  Widget _buildDayCard(_DayConfig config, int index, ThemeData theme, String lang) {
+  Widget _buildDayCard(
+    _DayConfig config,
+    int index,
+    ThemeData theme,
+    String lang,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ExpansionTile(
@@ -483,7 +528,10 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.add),
-                        tooltip: LocalizationService.translate('add_series', lang),
+                        tooltip: LocalizationService.translate(
+                          'add_series',
+                          lang,
+                        ),
                         onPressed: () => _addSeriesToDay(index),
                       ),
                     ],
@@ -512,22 +560,26 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                         subtitle: Text(
                           assignment.itemRange != null
                               ? 'Items ${assignment.itemRange}'
-                              : LocalizationService.translate('practice_all_items', lang),
+                              : LocalizationService.translate(
+                                  'practice_all_items',
+                                  lang,
+                                ),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _editSeriesRange(index, assignIndex),
+                              onPressed: () =>
+                                  _editSeriesRange(index, assignIndex),
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete, size: 20),
                               onPressed: () {
                                 setState(() {
-                                  _dayConfigs[index]
-                                      .seriesAssignments
-                                      .removeAt(assignIndex);
+                                  _dayConfigs[index].seriesAssignments.removeAt(
+                                    assignIndex,
+                                  );
                                 });
                                 _updateDescription();
                               },
@@ -570,10 +622,9 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     if (selected != null && mounted) {
       setState(() {
         _dayConfigs[dayIndex].seriesAssignments.add(
-              _SeriesAssignment(seriesId: selected.id),
-            );
+          _SeriesAssignment(seriesId: selected.id),
+        );
       });
-
 
       // Immediately prompt for range selection
       final assignIndex = _dayConfigs[dayIndex].seriesAssignments.length - 1;
@@ -585,7 +636,6 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     final assignment = _dayConfigs[dayIndex].seriesAssignments[assignIndex];
     final series = _allSeries.firstWhere((s) => s.id == assignment.seriesId);
 
-
     final result = await showDialog<String?>(
       context: context,
       builder: (context) => _RangePickerDialog(
@@ -595,7 +645,6 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       ),
     );
 
-
     // result can be:
     // - null: user cancelled
     // - "": user selected "practice all items"
@@ -603,15 +652,14 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     if (result != null && mounted) {
       final newItemRange = result.isEmpty ? null : result;
       setState(() {
-        _dayConfigs[dayIndex].seriesAssignments[assignIndex].itemRange = newItemRange;
+        _dayConfigs[dayIndex].seriesAssignments[assignIndex].itemRange =
+            newItemRange;
       });
       _updateDescription();
-    } else {
-    }
+    } else {}
   }
 
   void _updateDescription() {
-
     // Auto-generate description based on selected series
     final seriesByDay = <int, List<String>>{};
 
@@ -623,7 +671,8 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
         if (assignment.seriesId == null) continue;
         final series = _allSeries.firstWhere(
           (s) => s.id == assignment.seriesId,
-          orElse: () => JkdSeries(id: 0, title: 'Unknown', category: 'Other', moves: []),
+          orElse: () =>
+              JkdSeries(id: 0, title: 'Unknown', category: 'Other', moves: []),
         );
 
         if (assignment.itemRange != null) {
@@ -646,7 +695,8 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
     if (descriptionParts.isNotEmpty) {
       // Show first 5 days instead of 3 for better overview
-      final newDescription = descriptionParts.take(5).join('. ') +
+      final newDescription =
+          descriptionParts.take(5).join('. ') +
           (descriptionParts.length > 5 ? '...' : '.');
       _descriptionController.text = newDescription;
     } else {
@@ -701,7 +751,9 @@ class _SeriesPickerDialog extends StatelessWidget {
             return ListTile(
               leading: const Icon(Icons.fitness_center),
               title: Text(series.title),
-              subtitle: Text('${series.category} • ${series.moves.length} moves'),
+              subtitle: Text(
+                '${series.category} • ${series.moves.length} moves',
+              ),
               onTap: () => Navigator.pop(context, series),
             );
           },
@@ -772,7 +824,9 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-            title: Text(LocalizationService.translate('practice_all_items', lang)),
+            title: Text(
+              LocalizationService.translate('practice_all_items', lang),
+            ),
             value: _useAllItems,
             onChanged: (value) {
               setState(() => _useAllItems = value);
@@ -808,7 +862,10 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('1', style: theme.textTheme.bodySmall),
-                Text(widget.totalMoves.toString(), style: theme.textTheme.bodySmall),
+                Text(
+                  widget.totalMoves.toString(),
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
             ),
           ],
@@ -836,4 +893,3 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
     );
   }
 }
-

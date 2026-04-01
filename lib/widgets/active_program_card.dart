@@ -20,7 +20,9 @@ class ActiveProgramCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final theme = Theme.of(context);
-    final completionPercentage = progress.getCompletionPercentage(program.durationDays);
+    final completionPercentage = progress.getCompletionPercentage(
+      program.durationDays,
+    );
     final currentStreak = progress.getCurrentStreak();
 
     return Card(
@@ -158,9 +160,8 @@ class ActiveProgramCard extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SeriesDetailScreen(
-                                    series: series.first,
-                                  ),
+                                  builder: (context) =>
+                                      SeriesDetailScreen(series: series.first),
                                 ),
                               );
                             }
