@@ -28,6 +28,7 @@ class DatabaseService {
     'assets/jkd-series-loyda-jfk.json',
     'assets/jkd-series-trapping-base.json',
     'assets/jkd-series-footwork.json',
+    'assets/jkd-series-abc.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -47,7 +48,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 16,
+      version: 17,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -286,6 +287,15 @@ class DatabaseService {
           'Migration warning: series_assignments column may already exist - $e',
         );
       }
+    }
+
+    if (oldVersion < 17) {
+      // Re-seed glossary and series to include the new ABC series and missing kicks
+      await db.delete('glossary');
+      await _seedGlossary(db);
+      await db.delete('series', where: 'is_system = 1');
+      await _seedSeries(db);
+      debugPrint('Migration v17: Re-seeded glossary and system series');
     }
   }
 

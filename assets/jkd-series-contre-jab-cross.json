@@ -2,20 +2,116 @@
   {
     "title": "Contre Jab Cross",
     "category": "Jun Fan Gung Fu",
-    "type": "Attack",
+    "type": "Defense",
     "attack_method": "SDA",
-    "notes": "Description",
+    "notes": "Defensive responses to Jab-Cross combinations.",
     "is_system": 1,
     "moves": [
       {
-        "name": "Jab",
-        "category": "punch",
+        "name": "Combo: Shoulder Roll",
+        "category": "combo",
         "side": "L",
         "level": "High",
         "repetitions": 1,
-        "sub_moves_json": null
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Shoulder Roll\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Pari Nan Tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Pari Nan Tek\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "Combo: Inside Wedge",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross (Open)\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Open Cross\\\",\\\"fr\\\":\\\"Cross ouvert\\\"}\",\"counter_name\":\"Inside Wedge\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Low line hit",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Low line Hit\",\"counter_category\":\"punch\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "Combo: High line Hit Internal",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"High line Hit Internal\",\"counter_category\":\"punch\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: High line Hit External",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_letter": "a",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"High line Hit External\",\"counter_category\":\"punch\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Biu Ji",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Biu Jee\",\"counter_category\":\"punch\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Biu Ji, Oum Sao",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Biu Jee, Oum Sao\",\"counter_category\":\"trapping\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Woang Pack, Biu Ji, Nan Tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Woang Pack Sao, Biu Jee, Nan Tek\",\"counter_category\":\"trapping\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "Combo: Woang Pack, Biu Ji",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Cross\\\",\\\"fr\\\":\\\"Cross\\\"}\",\"counter_name\":\"Woang Pack Sao, Biu Jee\",\"counter_category\":\"trapping\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Shoulder Stop",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross (Open)\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Open Cross\\\",\\\"fr\\\":\\\"Cross ouvert\\\"}\",\"counter_name\":\"Shoulder Stop\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Insinida",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross (Open)\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Open Cross\\\",\\\"fr\\\":\\\"Cross ouvert\\\"}\",\"counter_name\":\"Insinida\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Combo: Bob and Wave",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Cross (Open)\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Open Cross\\\",\\\"fr\\\":\\\"Cross ouvert\\\"}\",\"counter_name\":\"Bob and Wave\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
       }
     ]
   }
 ]
-

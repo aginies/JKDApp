@@ -4,18 +4,153 @@
     "category": "Jun Fan Gung Fu",
     "type": "Attack",
     "attack_method": "SDA",
-    "notes": "Description",
+    "notes": "Traditional 18 kicks of Jeet Kune Do",
     "is_system": 1,
     "moves": [
       {
-        "name": "Jab",
-        "category": "punch",
+        "name": "Jeet Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Jeet Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Jik Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Jik Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Nan Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Nan Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Juk Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Juk Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Gwa Tek",
+        "category": "kick",
         "side": "L",
         "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Gwa Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "So Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Low",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou So Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Low",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Jun Juk Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Jun Juk Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Mid",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Jun Gwa Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Jun Gwa Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "High",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Jun So Tek",
+        "category": "kick",
+        "side": "R",
+        "level": "Low",
+        "repetitions": 1,
+        "sub_moves_json": null
+      },
+      {
+        "name": "Hou Jun So Tek",
+        "category": "kick",
+        "side": "L",
+        "level": "Low",
         "repetitions": 1,
         "sub_moves_json": null
       }
     ]
   }
 ]
-
