@@ -7,6 +7,7 @@ import '../services/series_provider.dart';
 import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import '../widgets/program_calendar_widget.dart';
+import 'program_create_screen.dart';
 
 class ProgramDetailScreen extends StatefulWidget {
   final TrainingProgram program;
@@ -87,6 +88,23 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       appBar: AppBar(
         title: Text(widget.program.title),
         actions: [
+          if (!widget.program.isSystem)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: LocalizationService.translate('edit', lang),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProgramCreateScreen(program: widget.program),
+                  ),
+                );
+                if (result == true && mounted) {
+                  // Reload program data
+                  Navigator.pop(context);
+                }
+              },
+            ),
           if (_progress != null && _progress!.isActive)
             PopupMenuButton(
               itemBuilder: (context) => [

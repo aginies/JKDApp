@@ -22,13 +22,14 @@ class SeriesListScreen extends StatefulWidget {
 }
 
 class _SeriesListScreenState extends State<SeriesListScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   final VoiceNoteService _voiceNoteService = VoiceNoteService();
   final MediaService _mediaService = MediaService();
   String _glossarySearchQuery = '';
   late AnimationController _rotationController;
+  late TabController _tabController;
 
   @override
   void initState() {
@@ -37,6 +38,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
+    _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Rebuild to show/hide FAB based on tab
+    });
   }
 
   @override
@@ -44,6 +49,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     _searchController.dispose();
     _voiceNoteService.dispose();
     _rotationController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -874,9 +880,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       _rotationController.stop();
     }
 
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           leading: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -948,6 +952,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                   final isDark =
                       Theme.of(context).brightness == Brightness.dark;
                   return TabBar(
+                    controller: _tabController,
                     isScrollable: true,
                     indicatorColor: isDark
                         ? Theme.of(context).colorScheme.primary
@@ -1042,6 +1047,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           ),
         ),
         body: TabBarView(
+          controller: _tabController,
           children: [
             _buildSeriesList('Jun Fan Gung Fu', lang),
             _buildSeriesList('Jun Fan Kick Boxing', lang),
@@ -1050,21 +1056,22 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             const ProgramsListScreen(),
           ],
         ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(right: 120.0),
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SeriesDetailScreen(),
-                ),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ),
-      ),
+        floatingActionButton: _tabController.index == 4
+          ? null // Hide FAB on Training Programs tab
+          : Padding(
+              padding: const EdgeInsets.only(right: 120.0),
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SeriesDetailScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
+            ),
     );
   }
 

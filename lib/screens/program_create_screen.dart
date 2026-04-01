@@ -250,12 +250,16 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.program == null ? 'Create Program' : 'Edit Program'),
+        title: Text(
+          widget.program == null
+              ? LocalizationService.translate('create_program', lang)
+              : LocalizationService.translate('edit_program', lang),
+        ),
         actions: [
           if (isDeveloperMode)
             IconButton(
               icon: const Icon(Icons.code),
-              tooltip: 'Export JSON',
+              tooltip: LocalizationService.translate('export_json', lang),
               onPressed: _exportToJson,
             ),
           IconButton(
@@ -273,9 +277,9 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
             // Title
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Program Title',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationService.translate('program_title', lang),
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -289,9 +293,9 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
             // Description
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationService.translate('program_description', lang),
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
               validator: (value) {
@@ -309,9 +313,9 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedDifficulty,
-                    decoration: const InputDecoration(
-                      labelText: 'Difficulty',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: LocalizationService.translate('difficulty', lang),
+                      border: const OutlineInputBorder(),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -359,14 +363,14 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
             // Days configuration
             Text(
-              'Daily Schedule',
+              LocalizationService.translate('daily_schedule', lang),
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Configure what to practice each day',
+              LocalizationService.translate('daily_config', lang),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.secondary,
               ),
@@ -438,13 +442,13 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
                   Row(
                     children: [
                       Text(
-                        'Assigned Series',
+                        LocalizationService.translate('assigned_series', lang),
                         style: theme.textTheme.titleSmall,
                       ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.add),
-                        tooltip: 'Add Series',
+                        tooltip: LocalizationService.translate('add_series', lang),
                         onPressed: () => _addSeriesToDay(index),
                       ),
                     ],
@@ -585,8 +589,11 @@ class _SeriesPickerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+
     return AlertDialog(
-      title: const Text('Select Series'),
+      title: Text(LocalizationService.translate('select_series', lang)),
       content: SizedBox(
         width: double.maxFinite,
         child: ListView.builder(
@@ -630,9 +637,8 @@ class _RangePickerDialog extends StatefulWidget {
 }
 
 class _RangePickerDialogState extends State<_RangePickerDialog> {
-  late TextEditingController _startController;
-  late TextEditingController _endController;
   bool _useAllItems = true;
+  late RangeValues _currentRange;
 
   @override
   void initState() {
@@ -640,62 +646,72 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
     if (widget.currentRange != null) {
       _useAllItems = false;
       final parts = widget.currentRange!.split('-');
-      _startController = TextEditingController(text: parts[0]);
-      _endController = TextEditingController(text: parts.length > 1 ? parts[1] : parts[0]);
+      final start = double.parse(parts[0]);
+      final end = double.parse(parts.length > 1 ? parts[1] : parts[0]);
+      _currentRange = RangeValues(start, end);
     } else {
-      _startController = TextEditingController(text: '1');
-      _endController = TextEditingController(text: widget.totalMoves.toString());
+      _currentRange = RangeValues(1, widget.totalMoves.toDouble());
     }
   }
 
   @override
-  void dispose() {
-    _startController.dispose();
-    _endController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+
     return AlertDialog(
-      title: Text('Items Range: ${widget.seriesTitle}'),
+      title: Text(
+        '${LocalizationService.translate('items_range', lang)}: ${widget.seriesTitle}',
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Total moves in series: ${widget.totalMoves}'),
+          Text(
+            'Total moves in series: ${widget.totalMoves}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.secondary,
+            ),
+          ),
           const SizedBox(height: 16),
           SwitchListTile(
-            title: const Text('Practice all items'),
+            title: Text(LocalizationService.translate('practice_all_items', lang)),
             value: _useAllItems,
             onChanged: (value) {
               setState(() => _useAllItems = value);
             },
           ),
           if (!_useAllItems) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+            Text(
+              '${LocalizationService.translate('from', lang)}: ${_currentRange.start.round()} - ${LocalizationService.translate('to', lang)}: ${_currentRange.end.round()}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            RangeSlider(
+              min: 1,
+              max: widget.totalMoves.toDouble(),
+              divisions: widget.totalMoves - 1,
+              values: _currentRange,
+              labels: RangeLabels(
+                _currentRange.start.round().toString(),
+                _currentRange.end.round().toString(),
+              ),
+              onChanged: (RangeValues values) {
+                setState(() {
+                  _currentRange = values;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _startController,
-                    decoration: const InputDecoration(
-                      labelText: 'From',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _endController,
-                    decoration: const InputDecoration(
-                      labelText: 'To',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
+                Text('1', style: theme.textTheme.bodySmall),
+                Text(widget.totalMoves.toString(), style: theme.textTheme.bodySmall),
               ],
             ),
           ],
@@ -704,15 +720,15 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(LocalizationService.translate('cancel', lang)),
         ),
         TextButton(
           onPressed: () {
             if (_useAllItems) {
               Navigator.pop(context, null); // null means all items
             } else {
-              final start = int.tryParse(_startController.text) ?? 1;
-              final end = int.tryParse(_endController.text) ?? widget.totalMoves;
+              final start = _currentRange.start.round();
+              final end = _currentRange.end.round();
               Navigator.pop(context, '$start-$end');
             }
           },
@@ -722,3 +738,4 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
     );
   }
 }
+

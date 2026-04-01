@@ -5,6 +5,7 @@ import '../services/series_provider.dart';
 import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import 'program_detail_screen.dart';
+import 'program_create_screen.dart';
 
 class ProgramsListScreen extends StatefulWidget {
   const ProgramsListScreen({super.key});
