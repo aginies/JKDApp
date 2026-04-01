@@ -492,7 +492,7 @@ class MoveListDisplayWidget {
                                                       const Icon(
                                                         Icons
                                                             .subdirectory_arrow_right,
-                                                        size: 22,
+                                                        size: 28,
                                                         color: Colors.orange,
                                                       ),
                                                       Icon(
@@ -508,12 +508,13 @@ class MoveListDisplayWidget {
                                                       ),
                                                       Text(
                                                         sub.counterName!,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontSize: 13,
-                                                          color: Colors
-                                                              .orangeAccent,
+                                                          color: Theme.of(context)
+                                                              .colorScheme
+                                                              .secondary,
                                                           fontWeight:
-                                                              FontWeight.w500,
+                                                              FontWeight.bold,
                                                         ),
                                                       ),
                                                       MoveDisplayWidgets.sideCircle(
@@ -558,10 +559,13 @@ class MoveListDisplayWidget {
                                                               const TextStyle(
                                                                 fontSize: 11,
                                                                 color: Colors
-                                                                    .orange,
+                                                                    .grey,
                                                                 fontStyle:
                                                                     FontStyle
                                                                         .italic,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
                                                               ),
                                                         ),
                                                       );
@@ -673,8 +677,9 @@ class MoveListDisplayWidget {
                                             ct,
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Colors.orange,
+                                              color: Colors.grey,
                                               fontStyle: FontStyle.italic,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         );

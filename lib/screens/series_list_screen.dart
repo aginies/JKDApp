@@ -13,6 +13,7 @@ import 'series_list/widgets/random_reader_widget.dart';
 import '../models/series.dart';
 import '../utils/translation_utils.dart';
 import '../widgets/active_program_card.dart';
+import '../utils/category_utils.dart';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -54,26 +55,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
   }
 
   IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'punch':
-        return Icons.sports_mma;
-      case 'kick':
-        return Icons.sports_martial_arts;
-      case 'packs':
-        return Icons.front_hand;
-      case 'trapping':
-        return Icons.back_hand;
-      case 'move':
-        return Icons.directions_walk;
-      case 'jkd_moves':
-        return Icons.directions_run;
-      case 'general':
-        return Icons.info_outline;
-      case 'other':
-        return Icons.more_horiz;
-      default:
-        return Icons.help_outline;
-    }
+    return CategoryUtils.getCategoryIcon(category);
   }
 
   void _showMediaGallery(String category, String moveName) {
@@ -280,7 +262,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                 ),
               ),
               child: DefaultTabController(
-                length: 8,
+                length: 9,
                 child: Column(
                   children: [
                     // Handle bar for the bottom sheet
@@ -401,6 +383,13 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                             ),
                             Tab(
                               text: LocalizationService.translate(
+                                'kali',
+                                lang,
+                              ),
+                              icon: Icon(_getCategoryIcon('kali')),
+                            ),
+                            Tab(
+                              text: LocalizationService.translate(
                                 'general',
                                 lang,
                               ),
@@ -426,6 +415,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                           _buildGlossaryList('trapping', lang),
                           _buildGlossaryList('move', lang),
                           _buildGlossaryList('jkd_moves', lang),
+                          _buildGlossaryList('kali', lang),
                           _buildGlossaryList('general', lang),
                           _buildGlossaryList('other', lang),
                         ],

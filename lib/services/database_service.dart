@@ -306,6 +306,43 @@ class DatabaseService {
       await _seedSeries(db);
       debugPrint('Migration v18: Re-seeded glossary and system series');
     }
+
+    if (oldVersion < 19) {
+      // Re-seed training programs to include new footwork programs
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v19: Re-seeded system training programs');
+    }
+
+    if (oldVersion < 20) {
+      // Re-seed training programs to include Basic Hits
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v20: Re-seeded system training programs');
+    }
+
+    if (oldVersion < 21) {
+      // Re-seed training programs to include Counters programs
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v21: Re-seeded system training programs');
+    }
+
+    if (oldVersion < 22) {
+      // Re-seed training programs to include 3 & 4 Counts programs
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v22: Re-seeded system training programs');
+    }
+
+    if (oldVersion < 23) {
+      // Re-seed glossary to include Kali techniques
+      await db.delete('glossary');
+      await _seedGlossary(db);
+      await db.delete('series', where: 'is_system = 1');
+      await _seedSeries(db);
+      debugPrint('Migration v23: Re-seeded glossary and system series');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -530,21 +567,21 @@ class DatabaseService {
   }
 
   Future<void> _seedTrainingPrograms(Database db) async {
-    // Check if programs already exist
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM training_programs'),
-    );
-    if (count != null && count > 0) {
-      LoggingService.log('Training programs already seeded, skipping');
-      return;
-    }
-
     LoggingService.log('Seeding training programs from assets...');
 
     final List<String> programFiles = [
       'assets/training_programs/30-day-jkd-fundamentals.json',
       'assets/training_programs/2-week-trapping-intensive.json',
-      'assets/training_programs/footwork-fundamentals-2-weeks.json',
+      'assets/training_programs/footwork-beginner-2-weeks.json',
+      'assets/training_programs/footwork-advanced-2-weeks.json',
+      'assets/training_programs/footwork-expert-2-weeks.json',
+      'assets/training_programs/basic-hits-2-weeks.json',
+      'assets/training_programs/counters-beginner-2-weeks.json',
+      'assets/training_programs/counters-advanced-2-weeks.json',
+      'assets/training_programs/counters-expert-2-weeks.json',
+      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
+      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
+      'assets/training_programs/3-4-counts-expert-2-weeks.json',
       'assets/training_programs/advanced-combos-45-days.json',
     ];
 
@@ -580,12 +617,33 @@ class DatabaseService {
               }
             }
 
+            // Handle detailed assignments if present
+            final List<Map<String, dynamic>> assignments = [];
+            if (day['assignments'] != null) {
+              for (var assign in day['assignments']) {
+                final title = assign['title'];
+                if (title != null && seriesTitleMap.containsKey(title)) {
+                  assignments.add({
+                    'series_id': seriesTitleMap[title],
+                    'item_range': assign['range'],
+                  });
+                }
+              }
+            }
+
+            // If no assignments specified but series_ids are, create default assignments
+            if (assignments.isEmpty && resolvedIds.isNotEmpty) {
+              for (var id in resolvedIds) {
+                assignments.add({'series_id': id, 'item_range': null});
+              }
+            }
+
             await db.insert('program_days', {
               'program_id': programId,
               'day_number': day['day_number'] ?? 1,
               'series_ids': json.encode(resolvedIds),
               'series_assignments':
-                  null, // System programs don't have item ranges
+                  assignments.isNotEmpty ? json.encode(assignments) : null,
               'notes': day['notes'],
               'is_rest_day': day['is_rest_day'] ?? 0,
             });

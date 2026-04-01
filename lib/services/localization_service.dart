@@ -180,6 +180,7 @@ class LocalizationService {
       'trapping': 'Trapping',
       'move': 'Déplacement',
       'jkd_moves': 'Déplacements JKD',
+      'kali': 'Kali',
       'general': 'Général',
       'other': 'Autre',
       'left': 'Gauche',
@@ -292,6 +293,7 @@ class LocalizationService {
       'series_updated': 'Série mise à jour avec succès !',
       'confirm_clone': 'Êtes-vous sûr de vouloir cloner cette série ?',
       'training_programs': 'Programmes d\'Entraînement',
+      'training': 'Entraînement',
       'active_training': 'Entraînement Actif',
       'no_active_training':
           'Aucun programme actif. Sélectionnez un programme dans l\'onglet "Programmes d\'Entraînement" pour commencer.',
@@ -300,6 +302,7 @@ class LocalizationService {
       'intermediate': 'Intermédiaire',
       'advanced': 'Avancé',
       'days': 'jours',
+      'weeks': 'semaines',
       'day': 'Jour',
       'resume': 'Reprendre',
       'warning': 'Attention',

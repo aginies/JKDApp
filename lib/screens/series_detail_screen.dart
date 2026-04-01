@@ -863,7 +863,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
           return DefaultTabController(
             key: ValueKey(isCounterMode),
-            length: 8,
+            length: 9,
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.95,
               child: Column(
@@ -999,6 +999,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   ),
                                   Tab(
                                     text: LocalizationService.translate(
+                                      'kali',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'kali',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'kali',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
                                       'other',
                                       lang,
                                     ),
@@ -1099,6 +1114,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     icon: const Icon(
                                       Icons.directions_run,
                                       color: Colors.blue,
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'kali',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'kali',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'kali',
+                                          ),
                                     ),
                                   ),
                                   Tab(
@@ -1279,6 +1309,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _buildGlossaryWithScroll('trapping', setS, lang),
                               _buildGlossaryWithScroll('move', setS, lang),
                               _buildGlossaryWithScroll('jkd_moves', setS, lang),
+                              _buildGlossaryWithScroll('kali', setS, lang),
                               _buildGlossaryWithScroll('other', setS, lang),
                               _buildCustomTextTab(setS, lang),
                             ],

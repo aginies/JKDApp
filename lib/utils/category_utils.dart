@@ -12,11 +12,13 @@ class CategoryUtils {
       case 'packs':
         return Icons.front_hand;
       case 'trapping':
-        return Icons.back_hand;
+        return Icons.sports_kabaddi;
       case 'move':
         return Icons.directions_walk;
       case 'jkd_moves':
         return Icons.directions_run;
+      case 'kali':
+        return Icons.change_history;
       case 'text':
         return Icons.text_fields;
       case 'other':
@@ -41,6 +43,8 @@ class CategoryUtils {
         return Colors.pink;
       case 'jkd_moves':
         return Colors.blue;
+      case 'kali':
+        return Colors.brown;
       case 'text':
         return Colors.teal;
       case 'combo':

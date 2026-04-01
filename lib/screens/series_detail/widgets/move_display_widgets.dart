@@ -94,10 +94,12 @@ class MoveDisplayWidgets {
           return 2;
         case 'jkd_moves':
           return 3;
-        case 'other':
+        case 'kali':
           return 4;
-        case 'text':
+        case 'other':
           return 5;
+        case 'text':
+          return 6;
         default:
           return -1;
       }
@@ -116,10 +118,12 @@ class MoveDisplayWidgets {
         return 4;
       case 'jkd_moves':
         return 5;
-      case 'other':
+      case 'kali':
         return 6;
-      case 'text':
+      case 'other':
         return 7;
+      case 'text':
+        return 8;
       default:
         return -1;
     }

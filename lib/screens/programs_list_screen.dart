@@ -30,6 +30,33 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     setState(() => _isLoading = true);
     try {
       final programs = await _programService.getAllPrograms();
+
+      // Sort programs: System first, then by difficulty, then by title
+      programs.sort((a, b) {
+        // System programs first
+        if (a.isSystem != b.isSystem) {
+          return a.isSystem ? -1 : 1;
+        }
+
+        // Then by difficulty level
+        const difficultyOrder = {
+          'beginner': 0,
+          'intermediate': 1,
+          'advanced': 2,
+          'expert': 3,
+        };
+
+        final diffA = difficultyOrder[a.difficultyLevel.toLowerCase()] ?? 99;
+        final diffB = difficultyOrder[b.difficultyLevel.toLowerCase()] ?? 99;
+
+        if (diffA != diffB) {
+          return diffA.compareTo(diffB);
+        }
+
+        // Finally by title
+        return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+      });
+
       setState(() {
         _programs = programs;
         _isLoading = false;
@@ -54,26 +81,30 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
   }
 
   Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
+    switch (difficulty.toLowerCase()) {
       case 'beginner':
         return Colors.green;
       case 'intermediate':
         return Colors.orange;
       case 'advanced':
         return Colors.red;
+      case 'expert':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
   }
 
   IconData _getDifficultyIcon(String difficulty) {
-    switch (difficulty) {
+    switch (difficulty.toLowerCase()) {
       case 'beginner':
         return Icons.school;
       case 'intermediate':
         return Icons.trending_up;
       case 'advanced':
         return Icons.military_tech;
+      case 'expert':
+        return Icons.workspace_premium;
       default:
         return Icons.help_outline;
     }
@@ -188,6 +219,28 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                   ],
                 ),
               ),
+              PopupMenuItem(
+                value: 'expert',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.workspace_premium,
+                      color: _selectedDifficulty == 'expert'
+                          ? _getDifficultyColor('expert')
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      LocalizationService.translate('expert', lang),
+                      style: TextStyle(
+                        fontWeight: _selectedDifficulty == 'expert'
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -264,7 +317,10 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      program.title,
+                      program.title.replaceAll(
+                        'Weeks',
+                        LocalizationService.translate('weeks', lang),
+                      ),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -291,7 +347,10 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                         Icon(difficultyIcon, size: 16, color: difficultyColor),
                         const SizedBox(width: 4),
                         Text(
-                          _capitalizeDifficulty(program.difficultyLevel),
+                          LocalizationService.translate(
+                            program.difficultyLevel.toLowerCase(),
+                            lang,
+                          ),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: difficultyColor,
                             fontWeight: FontWeight.bold,

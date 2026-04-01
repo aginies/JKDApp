@@ -81,6 +81,7 @@ class VoiceParsingService {
       'special',
       'general',
       'other',
+      'kali',
     };
 
     // Load all glossary items in one query instead of 7 sequential queries
