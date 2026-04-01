@@ -1,0 +1,124 @@
+[
+  {
+    "title": "Counters Expert - 2 Weeks",
+    "description": "The complete defensive system. Master the full Contre Jab Cross (13) and Contre Jab Hook (27) series.",
+    "difficulty_level": "advanced",
+    "duration_days": 14,
+    "is_system": 1,
+    "days": [
+      {
+        "day_number": 1,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" }
+        ],
+        "notes": "Review Jab-Cross series. Ensure perfect timing and structure for all 13 counters.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 2,
+        "assignments": [
+          { "title": "Contre Jab Hook", "range": "1-14" }
+        ],
+        "notes": "Review intermediate Jab-Hook counters. Focus on closing distance.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 3,
+        "assignments": [
+          { "title": "Contre Jab Hook", "range": "15-20" }
+        ],
+        "notes": "COUNTERS 15-20 (Jab-Hook): Defensive responses to LEFT HOOK attacks. Shoulder stops, biceps stops, John Wayne.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 4,
+        "series_ids": [],
+        "notes": "Rest day. Review the technical differences between Right and Left Hook defenses.",
+        "is_rest_day": 1
+      },
+      {
+        "day_number": 5,
+        "assignments": [
+          { "title": "Contre Jab Hook", "range": "21-27" }
+        ],
+        "notes": "COUNTERS 21-27 (Jab-Hook): Advanced kicking ripostes and trapping flows for Left Hook. Full series complete.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 6,
+        "assignments": [
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "FULL SERIES: Flow through all 27 Jab-Hook defensive responses.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 7,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" },
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "TOTAL DEFENSE: Integration of both full series. Flow through 40 advanced counters.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 8,
+        "series_ids": [],
+        "notes": "Week 1 complete! Expert mastery targets reached.",
+        "is_rest_day": 1
+      },
+      {
+        "day_number": 9,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" }
+        ],
+        "notes": "Increased volume. Focus on precision, speed, and non-telegraphed ripostes.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 10,
+        "assignments": [
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "Increased volume. Ensure total control and confidence in all entries.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 11,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" },
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "Complex flow. Practice responding to diverse and mixed attack lines.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 12,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" },
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "Endurance day. High repetitions of all 40 counters in sequence.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 13,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" },
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "Expert speed training. Respond with explosive and precise timing.",
+        "is_rest_day": 0
+      },
+      {
+        "day_number": 14,
+        "assignments": [
+          { "title": "Contre Jab Cross", "range": "1-13" },
+          { "title": "Contre Jab Hook", "range": "1-27" }
+        ],
+        "notes": "Expert Graduation! You have mastered the complete JKD counter system.",
+        "is_rest_day": 0
+      }
+    ]
+  }
+]
