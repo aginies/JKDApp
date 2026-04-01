@@ -11,6 +11,9 @@ class PickerState extends ChangeNotifier {
   // Special action selections per glossary item ID
   final Map<int, String?> _selectedSpecials = {};
 
+  // Simultaneous (+) selections per glossary item ID
+  final Map<int, bool> _selectedSimultaneous = {};
+
   // Currently active item in the picker
   int? _pendingActionItemId;
 
@@ -41,10 +44,14 @@ class PickerState extends ChangeNotifier {
   // Selected sub-letter (a, b, c, ...)
   String? _selectedSubLetter;
 
+  // Global simultaneous mode toggle
+  bool _globalSimultaneousMode = false;
+
   // Getters
   Map<int, String> get selectedSides => _selectedSides;
   Map<int, bool> get selectedFeints => _selectedFeints;
   Map<int, String?> get selectedSpecials => _selectedSpecials;
+  Map<int, bool> get selectedSimultaneous => _selectedSimultaneous;
   int? get pendingActionItemId => _pendingActionItemId;
   String? get pendingLevel => _pendingLevel;
   int? get editingSeriesIndex => _editingSeriesIndex;
@@ -55,6 +62,7 @@ class PickerState extends ChangeNotifier {
   Map<String, dynamic>? get pendingAttackMove => _pendingAttackMove;
   int? get lastScrolledItemId => _lastScrolledItemId;
   String? get selectedSubLetter => _selectedSubLetter;
+  bool get globalSimultaneousMode => _globalSimultaneousMode;
 
   bool get isEditingMode => _editingComboItemIndex != null;
 
@@ -71,6 +79,11 @@ class PickerState extends ChangeNotifier {
 
   void setSelectedSpecial(int id, String? special) {
     _selectedSpecials[id] = special;
+    notifyListeners();
+  }
+
+  void setSelectedSimultaneous(int id, bool isSimultaneous) {
+    _selectedSimultaneous[id] = isSimultaneous;
     notifyListeners();
   }
 
@@ -124,12 +137,18 @@ class PickerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setGlobalSimultaneousMode(bool value) {
+    _globalSimultaneousMode = value;
+    notifyListeners();
+  }
+
   /// Activates a glossary item and clears conflicting selections
   void activateGlossaryItem(int itemId) {
     if (_pendingActionItemId != itemId) {
       _selectedSides.clear();
       _selectedFeints.clear();
       _selectedSpecials.clear();
+      _selectedSimultaneous.clear();
       _pendingActionItemId = itemId;
       _pendingLevel = null;
       notifyListeners();
@@ -141,6 +160,8 @@ class PickerState extends ChangeNotifier {
     _selectedSides.clear();
     _selectedFeints.clear();
     _selectedSpecials.clear();
+    _selectedSimultaneous.clear();
+    _globalSimultaneousMode = false;
     _pendingActionItemId = null;
     _pendingLevel = null;
     _editingSeriesIndex = null;

@@ -1218,6 +1218,16 @@ class DatabaseService {
     );
   }
 
+  Future<Map<String, dynamic>?> getGlossaryItem(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'glossary',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
   Future<void> resetDatabase() async {
     if (_database != null) {
       await _database!.close();

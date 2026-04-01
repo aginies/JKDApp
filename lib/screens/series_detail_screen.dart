@@ -25,6 +25,7 @@ import 'series_detail/widgets/combo_card_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
 import '../utils/string_utils.dart';
+import '../utils/translation_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
@@ -235,16 +236,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  void _addItemToCombo(Move item, StateSetter setS) {
-    setS(() {
-      _currentCombo.add(item);
-      _comboListKey.currentState?.insertItem(
-        _currentCombo.length - 1,
-        duration: const Duration(
-          milliseconds: SeriesDetailConstants.comboAnimationMs,
-        ),
-      );
-    });
+  void _addItemToCombo(Move item) {
+    _currentCombo.add(item);
+    _comboListKey.currentState?.insertItem(
+      _currentCombo.length - 1,
+      duration: const Duration(
+        milliseconds: SeriesDetailConstants.comboAnimationMs,
+      ),
+    );
     // Auto-scroll to end after animation
     Future.delayed(
       const Duration(milliseconds: SeriesDetailConstants.comboAnimationMs + 50),
@@ -262,6 +261,59 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
+  void _addCombinedActionToCombo(Move newItem, {bool isCounter = false}) {
+    if (_currentCombo.isEmpty) {
+      _addItemToCombo(newItem);
+      return;
+    }
+
+    final lastIndex = _currentCombo.length - 1;
+    final lastMove = _currentCombo[lastIndex];
+
+    if (isCounter) {
+      // Appending to counter side
+      if (lastMove.counterName == null) {
+        // If no counter yet, just set it
+        _currentCombo[lastIndex] = lastMove.copyWith(
+          counterName: newItem.name,
+          counterCategory: newItem.category,
+          counterSide: newItem.side,
+          counterLevel: newItem.level,
+          counterSpecialAction: newItem.specialAction,
+          counterGlossaryId: newItem.glossaryId,
+        );
+      } else {
+        // Append to existing counter name
+        _currentCombo[lastIndex] = lastMove.copyWith(
+          counterName: '${lastMove.counterName} + ${newItem.name}',
+        );
+      }
+    } else {
+      // Appending to hit (primary) side
+      if (lastMove.category == 'simultaneous') {
+        final updatedSubMoves = List<Move>.from(lastMove.subMoves)
+          ..add(newItem);
+        _currentCombo[lastIndex] = lastMove.copyWith(
+          subMoves: updatedSubMoves,
+          name: updatedSubMoves.map((m) => m.name).join(' + '),
+        );
+      } else {
+        _currentCombo[lastIndex] = Move(
+          name: '${lastMove.name} + ${newItem.name}',
+          category: 'simultaneous',
+          subMoves: [lastMove, newItem],
+          // Preserve counter if it exists
+          counterName: lastMove.counterName,
+          counterCategory: lastMove.counterCategory,
+          counterSide: lastMove.counterSide,
+          counterLevel: lastMove.counterLevel,
+          counterSpecialAction: lastMove.counterSpecialAction,
+          counterGlossaryId: lastMove.counterGlossaryId,
+        );
+      }
+    }
+  }
+
   void _handleEditComboItem(
     int index,
     bool isCounter,
@@ -276,7 +328,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     });
 
     if (!mounted) return;
-    final cat = isCounter ? (m.counterCategory ?? '') : m.category;
+    String cat = isCounter ? (m.counterCategory ?? '') : m.category;
+
+    // For simultaneous moves, use the first sub-move's category for tab navigation
+    if (!isCounter && cat == 'simultaneous' && m.subMoves.isNotEmpty) {
+      cat = m.subMoves.first.category;
+    }
+
     final t = MoveDisplayWidgets.getTabIndexForCategory(
       cat,
       isCounter: isCounter,
@@ -300,6 +358,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           animation: animation,
           onRemove: () {},
           onEdit: (idx, isCounter) {},
+          onShowMediaGallery: (cat, name) {},
           isRemoving: true,
         ),
         duration: const Duration(
@@ -736,7 +795,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     });
   }
 
-  void _pickMove({List<Move>? initialMoves, int? seriesIndex}) async {
+  void _pickMove({
+    List<Move>? initialMoves,
+    int? seriesIndex,
+    bool autoEditFirst = false,
+  }) async {
     _resetPickerState();
     if (initialMoves != null) {
       _currentCombo.addAll(initialMoves);
@@ -748,6 +811,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             duration: const Duration(milliseconds: 400),
           );
         }
+        if (autoEditFirst && initialMoves.isNotEmpty) {
+          _pickerState.setEditingComboItemIndex(0);
+          _pickerState.setIsEditingCounter(false);
+        }
       });
     }
     _pickerState.setEditingSeriesIndex(seriesIndex);
@@ -757,7 +824,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         seriesIndex < _moves.length) {
       _pickerState.setSelectedSubLetter(_moves[seriesIndex].subLetter);
     }
-    _pickerState.setEditingComboItemIndex(null);
+    if (!autoEditFirst) {
+      _pickerState.setEditingComboItemIndex(null);
+    }
     setState(() => _pickerState.setIsPickerOpen(true));
     await showModalBottomSheet(
       context: context,
@@ -770,6 +839,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           ).voiceEnabled;
           final isCounterMode = _pickerState.pendingAttackMove != null;
 
+          // If auto-editing first item, handle tab navigation here
+          if (autoEditFirst && _currentCombo.isNotEmpty) {
+            String cat = _currentCombo.first.category;
+            if (cat == 'simultaneous' &&
+                _currentCombo.first.subMoves.isNotEmpty) {
+              cat = _currentCombo.first.subMoves.first.category;
+            }
+            final t = MoveDisplayWidgets.getTabIndexForCategory(cat);
+            if (t != -1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (DefaultTabController.of(ctx).index != t) {
+                  DefaultTabController.of(ctx).animateTo(t);
+                }
+              });
+            }
+            autoEditFirst = false; // Prevent re-triggering on rebuilds
+          }
+
           final availableSubLetters = _getAvailableSubLetters(
             _pickerState.targetSeriesIndex,
             _pickerState.editingSeriesIndex,
@@ -777,7 +864,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
           return DefaultTabController(
             key: ValueKey(isCounterMode),
-            length: isCounterMode ? 6 : 8,
+            length: 8,
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.95,
               child: Column(
@@ -806,161 +893,281 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ],
                       ),
                     ),
-                  TabBar(
-                    isScrollable: true,
-                    tabs: isCounterMode
-                        ? [
-                            Tab(
-                              text: LocalizationService.translate(
-                                'packs',
-                                lang,
-                              ),
-                              icon: Icon(
-                                Icons.front_hand,
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'packs',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'trapping',
-                                lang,
-                              ),
-                              icon: Icon(
-                                Icons.back_hand,
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'trapping',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate('move', lang),
-                              icon: Icon(
-                                Icons.directions_run,
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'move',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'jkd_moves',
-                                lang,
-                              ),
-                              icon: const Icon(
-                                Icons.directions_run,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'other',
-                                lang,
-                              ),
-                              icon: Icon(
-                                Icons.more_horiz,
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'other',
-                                ),
-                              ),
-                            ),
-                            const Tab(
-                              text: 'Text',
-                              icon: Icon(Icons.text_fields),
-                            ),
-                          ]
-                        : [
-                            Tab(
-                              text: LocalizationService.translate(
-                                'punches',
-                                lang,
-                              ),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('punch'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'punch',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'kicks',
-                                lang,
-                              ),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('kick'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'kick',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'packs',
-                                lang,
-                              ),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('packs'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'packs',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'trapping',
-                                lang,
-                              ),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('trapping'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'trapping',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate('move', lang),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('move'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'move',
-                                ),
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'jkd_moves',
-                                lang,
-                              ),
-                              icon: const Icon(
-                                Icons.directions_run,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'other',
-                                lang,
-                              ),
-                              icon: Icon(
-                                MoveDisplayWidgets.getCategoryIcon('other'),
-                                color: MoveDisplayWidgets.getCategoryColor(
-                                  'other',
-                                ),
-                              ),
-                            ),
-                            const Tab(
-                              text: 'Text',
-                              icon: Icon(Icons.text_fields, color: Colors.teal),
-                            ),
-                          ],
+                  Row(
+                    children: [
+                      if (_currentCombo.isNotEmpty &&
+                          _pickerState.editingComboItemIndex == null)
+                        IconButton(
+                          icon: Icon(
+                            _pickerState.globalSimultaneousMode
+                                ? Icons.add_circle
+                                : Icons.add_circle_outline,
+                            color: _pickerState.globalSimultaneousMode
+                                ? Colors.blue
+                                : Colors.grey,
+                            size: 28,
+                          ),
+                          onPressed: () => setS(() {
+                            _pickerState.setGlobalSimultaneousMode(
+                              !_pickerState.globalSimultaneousMode,
+                            );
+                          }),
+                          tooltip: 'Simultaneous Mode',
+                        ),
+                      Expanded(
+                        child: TabBar(
+                          isScrollable: true,
+                          tabs: isCounterMode
+                              ? [
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'punches',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'punch',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'punch',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'kicks',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'kick',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'kick',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'packs',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      Icons.front_hand,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'packs',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'trapping',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      Icons.back_hand,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'trapping',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'move',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      Icons.directions_run,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'move',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'jkd_moves',
+                                      lang,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.directions_run,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'other',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      Icons.more_horiz,
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'other',
+                                          ),
+                                    ),
+                                  ),
+                                  const Tab(
+                                    text: 'Text',
+                                    icon: Icon(Icons.text_fields),
+                                  ),
+                                ]
+                              : [
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'punches',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'punch',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'punch',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'kicks',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'kick',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'kick',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'packs',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'packs',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'packs',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'trapping',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'trapping',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'trapping',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'move',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'move',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'move',
+                                          ),
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'jkd_moves',
+                                      lang,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.directions_run,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                  Tab(
+                                    text: LocalizationService.translate(
+                                      'other',
+                                      lang,
+                                    ),
+                                    icon: Icon(
+                                      MoveDisplayWidgets.getCategoryIcon(
+                                        'other',
+                                      ),
+                                      color:
+                                          MoveDisplayWidgets.getCategoryColor(
+                                            'other',
+                                          ),
+                                    ),
+                                  ),
+                                  const Tab(
+                                    text: 'Text',
+                                    icon: Icon(
+                                      Icons.text_fields,
+                                      color: Colors.teal,
+                                    ),
+                                  ),
+                                ],
+                        ),
+                      ),
+                    ],
                   ),
                   Expanded(
                     child: TabBarView(
                       children: isCounterMode
                           ? [
                               _buildCounterGlossaryList(
+                                'punch',
+                                setS,
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
+                              ),
+                              _buildCounterGlossaryList(
+                                'kick',
+                                setS,
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
+                              ),
+                              _buildCounterGlossaryList(
                                 'packs',
                                 setS,
                                 _pickerState.pendingAttackMove!['item'],
@@ -973,6 +1180,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 1,
                                 setS,
                                 lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                               _buildCounterGlossaryList(
                                 'trapping',
@@ -987,6 +1197,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 1,
                                 setS,
                                 lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                               _buildCounterGlossaryList(
                                 'move',
@@ -1001,6 +1214,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 1,
                                 setS,
                                 lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                               _buildCounterGlossaryList(
                                 'jkd_moves',
@@ -1015,6 +1231,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 1,
                                 setS,
                                 lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                               _buildCounterGlossaryList(
                                 'other',
@@ -1029,6 +1248,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 1,
                                 setS,
                                 lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                               _buildCustomTextTab(
                                 setS,
@@ -1046,6 +1268,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     _pickerState.pendingAttackMove!['tr'],
                                 reps: 1,
                                 pickerModalState: setS,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
                               ),
                             ]
                           : [
@@ -1110,6 +1335,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     Map<String, String>? attackTranslations,
     int? reps,
     StateSetter? pickerModalState,
+    bool isSimultaneous = false,
   }) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -1141,21 +1367,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_customMoveController.text.isEmpty) return;
-                _addCounterMove(
-                  {'name': _customMoveController.text},
-                  'text',
-                  '',
-                  attackItem!,
-                  attackCategory!,
-                  side!,
-                  level!,
-                  isFeint!,
-                  special,
-                  attackTranslations!,
-                  {},
-                  reps!,
-                  pickerModalState!,
-                );
+                setS(() {
+                  _addCounterMove(
+                    {'name': _customMoveController.text},
+                    'text',
+                    '',
+                    attackItem!,
+                    attackCategory!,
+                    side!,
+                    level!,
+                    isFeint!,
+                    special,
+                    attackTranslations!,
+                    {},
+                    reps!,
+                    isSimultaneous: isSimultaneous,
+                  );
+                });
               },
               child: Text(LocalizationService.translate('add', lang)),
             ),
@@ -1430,6 +1658,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       onRemove: () => _removeItemFromCombo(idx, setS, lang),
                       onEdit: (index, isCounter) =>
                           _handleEditComboItem(index, isCounter, setS, ctx),
+                      onShowMediaGallery: _showMediaGallery,
                       isSelected:
                           _pickerState.editingComboItemIndex == idx &&
                           !_pickerState.isEditingCounter,
@@ -1758,7 +1987,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 ),
                                 selected: isF,
                                 onSelected: (v) => setS(
-                                  () => _pickerState.selectedFeints[id] = v,
+                                  () => _pickerState.setSelectedFeint(id, v),
                                 ),
                               ),
                               ActionChip(
@@ -1827,8 +2056,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     Map<String, String> aTr,
     int reps,
     StateSetter pickerS,
-    String lang,
-  ) {
+    String lang, {
+    bool isSimultaneous = false,
+  }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final glossaryFuture = _glossaryFutures.putIfAbsent(cat, () async {
       final items = await DatabaseService().getGlossaryByCategory(cat);
@@ -1926,21 +2156,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       const SizedBox(height: 8),
                       if (cat == 'move')
                         ElevatedButton(
-                          onPressed: () => _addCounterMove(
-                            item,
-                            cat,
-                            '',
-                            attack,
-                            aCat,
-                            aSide,
-                            aLev,
-                            aF,
-                            aS,
-                            aTr,
-                            tr,
-                            reps,
-                            pickerS,
-                          ),
+                          onPressed: () => setS(() {
+                            _addCounterMove(
+                              item,
+                              cat,
+                              '',
+                              attack,
+                              aCat,
+                              aSide,
+                              aLev,
+                              aF,
+                              aS,
+                              aTr,
+                              tr,
+                              reps,
+                              isSimultaneous: isSimultaneous,
+                            );
+                          }),
                           child: Text(
                             LocalizationService.translate('add', lang),
                           ),
@@ -1953,21 +2185,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               LocalizationService.translate('left', lang),
                               'L',
                               Colors.blue,
-                              () => _addCounterMove(
-                                item,
-                                cat,
-                                'L',
-                                attack,
-                                aCat,
-                                aSide,
-                                aLev,
-                                aF,
-                                aS,
-                                aTr,
-                                tr,
-                                reps,
-                                pickerS,
-                              ),
+                              () => setS(() {
+                                _addCounterMove(
+                                  item,
+                                  cat,
+                                  'L',
+                                  attack,
+                                  aCat,
+                                  aSide,
+                                  aLev,
+                                  aF,
+                                  aS,
+                                  aTr,
+                                  tr,
+                                  reps,
+                                  isSimultaneous: isSimultaneous,
+                                );
+                              }),
                               lang,
                               id,
                             ),
@@ -1975,21 +2209,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               LocalizationService.translate('right', lang),
                               'R',
                               Colors.red,
-                              () => _addCounterMove(
-                                item,
-                                cat,
-                                'R',
-                                attack,
-                                aCat,
-                                aSide,
-                                aLev,
-                                aF,
-                                aS,
-                                aTr,
-                                tr,
-                                reps,
-                                pickerS,
-                              ),
+                              () => setS(() {
+                                _addCounterMove(
+                                  item,
+                                  cat,
+                                  'R',
+                                  attack,
+                                  aCat,
+                                  aSide,
+                                  aLev,
+                                  aF,
+                                  aS,
+                                  aTr,
+                                  tr,
+                                  reps,
+                                  isSimultaneous: isSimultaneous,
+                                );
+                              }),
                               lang,
                               id,
                             ),
@@ -2038,66 +2274,45 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 if (pL.contains('H'))
                                   _counterLevelButton(
                                     'High',
-                                    item,
-                                    cat,
-                                    side,
-                                    attack,
-                                    aCat,
-                                    aSide,
-                                    aLev,
-                                    aF,
-                                    aS,
-                                    aTr,
-                                    tr,
-                                    reps,
-                                    spec,
-                                    pickerS,
+                                    id,
+                                    setS,
                                     lang,
                                     withArrow: true,
                                   ),
                                 if (pL.contains('M'))
                                   _counterLevelButton(
                                     'Mid',
-                                    item,
-                                    cat,
-                                    side,
-                                    attack,
-                                    aCat,
-                                    aSide,
-                                    aLev,
-                                    aF,
-                                    aS,
-                                    aTr,
-                                    tr,
-                                    reps,
-                                    spec,
-                                    pickerS,
+                                    id,
+                                    setS,
                                     lang,
                                     withArrow: true,
                                   ),
                                 if (pL.contains('L'))
                                   _counterLevelButton(
                                     'Low',
-                                    item,
-                                    cat,
-                                    side,
-                                    attack,
-                                    aCat,
-                                    aSide,
-                                    aLev,
-                                    aF,
-                                    aS,
-                                    aTr,
-                                    tr,
-                                    reps,
-                                    spec,
-                                    pickerS,
+                                    id,
+                                    setS,
                                     lang,
                                     withArrow: true,
                                   ),
                               ],
                             ),
                           ],
+                        ),
+                      if (_pickerState.pendingActionItemId == id)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: _buildWorkflowButtons(
+                            item,
+                            cat,
+                            side,
+                            _pickerState.pendingLevel ?? '',
+                            aF,
+                            spec,
+                            tr,
+                            setS,
+                            lang,
+                          ),
                         ),
                     ],
                   ),
@@ -2164,6 +2379,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     bool isCustom = false,
   }) {
     final bool isE = _pickerState.editingComboItemIndex != null;
+    final bool isCounterMode = _pickerState.pendingAttackMove != null;
+    final bool isSimEnabled = _pickerState.globalSimultaneousMode;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -2212,12 +2430,36 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       counterSpecialAction: ex?.counterSpecialAction,
                     );
                   }
+
                   if (isE) {
                     _currentCombo[_pickerState.editingComboItemIndex!] = n;
                     _pickerState.setEditingComboItemIndex(null);
                     _pickerState.setIsEditingCounter(false);
+                  } else if (isCounterMode) {
+                    final bool effectiveSim =
+                        isSimEnabled ||
+                        (_pickerState.pendingAttackMove!['sim'] ?? false);
+
+                    _addCounterMove(
+                      it,
+                      cat,
+                      sd,
+                      _pickerState.pendingAttackMove!['item'],
+                      _pickerState.pendingAttackMove!['cat'],
+                      _pickerState.pendingAttackMove!['sd'],
+                      _pickerState.pendingAttackMove!['lv'],
+                      _pickerState.pendingAttackMove!['f'],
+                      _pickerState.pendingAttackMove!['sp'],
+                      _pickerState.pendingAttackMove!['tr'],
+                      tr,
+                      1,
+                      cLevelOverride: lv,
+                      isSimultaneous: effectiveSim,
+                    );
+                  } else if (isSimEnabled) {
+                    _addCombinedActionToCombo(n);
                   } else {
-                    _addItemToCombo(n, setS);
+                    _addItemToCombo(n);
                   }
                   _pickerState.setPendingActionItem(null);
                   _pickerState.setPendingLevel(null);
@@ -2226,44 +2468,49 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               child: Text(
                 isE
                     ? LocalizationService.translate('update_item', lang)
-                    : LocalizationService.translate('next', lang),
+                    : (isCounterMode
+                          ? LocalizationService.translate('add', lang)
+                          : LocalizationService.translate('next', lang)),
                 style: const TextStyle(fontSize: 12),
               ),
             ),
-            const SizedBox(width: 6),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36),
-              ),
-              onPressed: () {
-                setS(() {
-                  _pickerState.setPendingAttackMove({
-                    'item': isCustom
-                        ? {
-                            'name': _customMoveController.text,
-                            'translations': '{}',
-                            'hit_type': 'both',
-                          }
-                        : it,
-                    'cat': cat,
-                    'sd': sd,
-                    'lv': lv,
-                    'f': f,
-                    'sp': sp,
-                    'tr': tr,
+            if (!isCounterMode && !isE) ...[
+              const SizedBox(width: 6),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  minimumSize: const Size(0, 36),
+                ),
+                onPressed: () {
+                  setS(() {
+                    _pickerState.setPendingAttackMove({
+                      'item': isCustom
+                          ? {
+                              'name': _customMoveController.text,
+                              'translations': '{}',
+                              'hit_type': 'both',
+                            }
+                          : it,
+                      'cat': cat,
+                      'sd': sd,
+                      'lv': lv,
+                      'f': f,
+                      'sp': sp,
+                      'tr': tr,
+                      'sim': isSimEnabled,
+                    });
+                    _pickerState.setPendingActionItem(null);
+                    _pickerState.setPendingLevel(null);
                   });
-                  _pickerState.setPendingActionItem(null);
-                  _pickerState.setPendingLevel(null);
-                });
-              },
-              child: Text(
-                LocalizationService.translate('answer', lang),
-                style: const TextStyle(fontSize: 12),
+                },
+                child: Text(
+                  LocalizationService.translate('answer', lang),
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
-            ),
+            ],
           ],
         ),
         Row(
@@ -2313,8 +2560,30 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   }
                   if (isE) {
                     _currentCombo[_pickerState.editingComboItemIndex!] = n;
+                  } else if (isCounterMode) {
+                    final bool effectiveSim =
+                        isSimEnabled ||
+                        (_pickerState.pendingAttackMove!['sim'] ?? false);
+                    _addCounterMove(
+                      it,
+                      cat,
+                      sd,
+                      _pickerState.pendingAttackMove!['item'],
+                      _pickerState.pendingAttackMove!['cat'],
+                      _pickerState.pendingAttackMove!['sd'],
+                      _pickerState.pendingAttackMove!['lv'],
+                      _pickerState.pendingAttackMove!['f'],
+                      _pickerState.pendingAttackMove!['sp'],
+                      _pickerState.pendingAttackMove!['tr'],
+                      tr,
+                      1,
+                      cLevelOverride: lv,
+                      isSimultaneous: effectiveSim,
+                    );
+                  } else if (isSimEnabled) {
+                    _addCombinedActionToCombo(n);
                   } else {
-                    _addItemToCombo(n, setS);
+                    _addItemToCombo(n);
                   }
                 });
                 _finishAndAddCombo();
@@ -2400,110 +2669,137 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     String? asp,
     Map<String, String> atr,
     Map<String, String> ctr,
-    int r,
-    StateSetter pS, {
+    int r, {
     String? cLevelOverride,
+    bool isSimultaneous = false,
   }) {
-    pS(() {
-      final isE = _pickerState.editingComboItemIndex != null;
-      if (isE && _pickerState.isEditingCounter) {
-        final ex = _currentCombo[_pickerState.editingComboItemIndex!];
-        _currentCombo[_pickerState.editingComboItemIndex!] = Move(
-          glossaryId: ex.glossaryId,
-          counterGlossaryId: c['id'],
-          name: ex.name,
-          category: ex.category,
-          translations: ex.translations,
-          side: ex.side,
-          level: ex.level,
-          isFeint: ex.isFeint,
-          specialAction: ex.specialAction,
-          repetitions: ex.repetitions,
-          counterName: c['name'],
-          counterCategory: cat,
-          counterSide: cs,
-          counterLevel: cLevelOverride ?? ex.level,
-          counterSpecialAction: null,
-        );
+    final isE = _pickerState.editingComboItemIndex != null;
+    final bool isSimModeActive = _pickerState.globalSimultaneousMode;
+
+    if (isE && _pickerState.isEditingCounter) {
+      final ex = _currentCombo[_pickerState.editingComboItemIndex!];
+      _currentCombo[_pickerState.editingComboItemIndex!] = Move(
+        glossaryId: ex.glossaryId,
+        counterGlossaryId: c['id'],
+        name: ex.name,
+        category: ex.category,
+        translations: ex.translations,
+        side: ex.side,
+        level: ex.level,
+        isFeint: ex.isFeint,
+        specialAction: ex.specialAction,
+        repetitions: ex.repetitions,
+        counterName: c['name'],
+        counterCategory: cat,
+        counterSide: cs,
+        counterLevel: cLevelOverride ?? ex.level,
+        counterSpecialAction: null,
+      );
+      _pickerState.setEditingComboItemIndex(null);
+      _pickerState.setIsEditingCounter(false);
+    } else {
+      final n = Move(
+        glossaryId: at['id'],
+        counterGlossaryId: c['id'],
+        name: at['name'],
+        category: ac,
+        translations: atr,
+        side: as,
+        level: al,
+        isFeint: af,
+        specialAction: asp,
+        repetitions: r,
+        counterName: c['name'],
+        counterCategory: cat,
+        counterSide: cs,
+        counterLevel: cLevelOverride ?? al,
+        counterSpecialAction: null,
+      );
+      if (isE) {
+        _currentCombo[_pickerState.editingComboItemIndex!] = n;
         _pickerState.setEditingComboItemIndex(null);
-        _pickerState.setIsEditingCounter(false);
-      } else {
-        final n = Move(
-          glossaryId: at['id'],
-          counterGlossaryId: c['id'],
-          name: at['name'],
-          category: ac,
-          translations: atr,
-          side: as,
-          level: al,
-          isFeint: af,
-          specialAction: asp,
-          repetitions: r,
-          counterName: c['name'],
-          counterCategory: cat,
-          counterSide: cs,
-          counterLevel: cLevelOverride ?? al,
-          counterSpecialAction: null,
-        );
-        if (isE) {
-          _currentCombo[_pickerState.editingComboItemIndex!] = n;
-          _pickerState.setEditingComboItemIndex(null);
+      } else if (isSimultaneous) {
+        // Check if the last move already has a counter (adding simultaneous answer)
+        final bool lastMoveHasCounter =
+            _currentCombo.isNotEmpty && _currentCombo.last.counterName != null;
+
+        if (lastMoveHasCounter) {
+          // Just add the counter to combine with existing counter
+          final counterMove = Move(
+            glossaryId: c['id'],
+            name: c['name'],
+            category: cat,
+            translations: ctr,
+            side: cs,
+            level: cLevelOverride ?? al,
+            repetitions: 1,
+          );
+          _addCombinedActionToCombo(counterMove, isCounter: true);
         } else {
-          _addItemToCombo(n, pS);
+          // Add the attack part simultaneously first
+          final attackMove = Move(
+            glossaryId: at['id'],
+            name: at['name'],
+            category: ac,
+            translations: atr,
+            side: as,
+            level: al,
+            isFeint: af,
+            specialAction: asp,
+            repetitions: r,
+          );
+          _addCombinedActionToCombo(attackMove);
+
+          // Then add the counter part to that same group
+          final counterMove = Move(
+            glossaryId: c['id'],
+            name: c['name'],
+            category: cat,
+            translations: ctr,
+            side: cs,
+            level: cLevelOverride ?? al,
+            repetitions: 1,
+          );
+          _addCombinedActionToCombo(counterMove, isCounter: true);
         }
+      } else {
+        _addItemToCombo(n);
       }
-      _pickerState.setPendingAttackMove(null);
-      _pickerState.setPendingActionItem(null);
-      _pickerState.setPendingLevel(null);
-    });
-    if (_pickerState.editingComboItemIndex != null) {
-      Navigator.pop(context);
     }
+
+    // Keep counter mode active if simultaneous mode is still enabled
+    // so user can add more simultaneous answers
+    if (!isSimModeActive) {
+      _pickerState.setPendingAttackMove(null);
+    }
+    _pickerState.setPendingActionItem(null);
+    _pickerState.setPendingLevel(null);
   }
 
   Widget _counterLevelButton(
     String l,
-    Map<String, dynamic> c,
-    String cat,
-    String cs,
-    Map<String, dynamic> at,
-    String ac,
-    String as,
-    String al,
-    bool af,
-    String? asp,
-    Map<String, String> atr,
-    Map<String, String> ctr,
-    int r,
-    String? csp,
-    StateSetter pS,
+    int id,
+    StateSetter setS,
     String lang, {
     bool withArrow = false,
   }) {
     IconData icon = l == 'High'
         ? Icons.north_east
         : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
+    final bool sel =
+        _pickerState.pendingActionItemId == id &&
+        _pickerState.pendingLevel == l;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: const Size(60, 32),
+        backgroundColor: sel ? Theme.of(context).primaryColor : null,
+        foregroundColor: sel ? Colors.white : null,
       ),
-      onPressed: () => _addCounterMove(
-        c,
-        cat,
-        cs,
-        at,
-        ac,
-        as,
-        al,
-        af,
-        asp,
-        atr,
-        ctr,
-        r,
-        pS,
-        cLevelOverride: l,
-      ),
+      onPressed: () => setS(() {
+        _activateGlossaryItem(id);
+        _pickerState.setPendingLevel(sel ? '' : l);
+      }),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -2570,7 +2866,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       category: _selectedCategory,
       showTranslation: provider.showTranslation,
       onEdit: (index) => () {
-        if (_moves[index].isCombo) {
+        if (_moves[index].category == 'simultaneous') {
+          _pickMove(
+            initialMoves: _moves[index].subMoves,
+            seriesIndex: index,
+            autoEditFirst: true,
+          );
+        } else if (_moves[index].isCombo) {
           _pickMove(initialMoves: _moves[index].subMoves, seriesIndex: index);
         } else {
           _pickMove(initialMoves: [_moves[index]], seriesIndex: index);

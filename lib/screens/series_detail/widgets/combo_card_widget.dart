@@ -12,6 +12,7 @@ class ComboCardWidget extends StatelessWidget {
   final Animation<double> animation;
   final VoidCallback onRemove;
   final Function(int index, bool isCounter) onEdit;
+  final Function(String category, String moveName) onShowMediaGallery;
   final bool isSelected;
   final bool isCounterSelected;
   final bool isRemoving;
@@ -24,6 +25,7 @@ class ComboCardWidget extends StatelessWidget {
     required this.animation,
     required this.onRemove,
     required this.onEdit,
+    required this.onShowMediaGallery,
     this.isSelected = false,
     this.isCounterSelected = false,
     this.isRemoving = false,
@@ -100,58 +102,128 @@ class ComboCardWidget extends StatelessWidget {
   }
 
   Widget _buildAttackSection() {
+    final bool isSimultaneous = move.category == 'simultaneous';
+
     return GestureDetector(
       onTap: isRemoving
           ? null
           : () async {
-              int? gid = move.glossaryId;
-              gid ??= await _findGlossaryId(move.category, move.name);
+              // If it's a simultaneous group, we "go to the first item" 
+              // by editing the group but ideally we'd want to pick the component.
+              // For now, it triggers the standard edit which will use the group's first hit
+              // if we implement auto-selection logic in the parent.
               onEdit(index, false);
             },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                MoveDisplayWidgets.getCategoryIcon(move.category),
-                size: 22,
-                color: MoveDisplayWidgets.getCategoryColor(move.category),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${index + 1}. ${move.name}',
+          if (isSimultaneous)
+            Wrap(
+              spacing: 4,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  '${index + 1}.',
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
+                    color: Colors.grey,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              if (move.side.isNotEmpty)
-                MoveDisplayWidgets.sideCircle(
-                  LocalizationService.translate(
-                    move.side == 'L' ? 'left' : 'right',
-                    language,
-                  ).substring(0, 1),
-                  move.side,
-                  mini: true,
+                ...move.subMoves.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final m = e.value;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildMoveThumbnail(m),
+                      if (idx < move.subMoves.length - 1)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 2.0),
+                          child: Text(
+                            '+',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                    ],
+                  );
+                }),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Icon(
+                  MoveDisplayWidgets.getCategoryIcon(move.category),
+                  size: 22,
+                  color: MoveDisplayWidgets.getCategoryColor(move.category),
                 ),
-              MoveDisplayWidgets.levelIcon(move.level, size: 10, mini: true),
-              if (move.isFeint)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: MoveDisplayWidgets.drawBox(mini: true),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    '${index + 1}. ${move.name}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-            ],
-          ),
+              ],
+            ),
+          if (!isSimultaneous)
+            Row(
+              children: [
+                if (move.side.isNotEmpty)
+                  MoveDisplayWidgets.sideCircle(
+                    LocalizationService.translate(
+                      move.side == 'L' ? 'left' : 'right',
+                      language,
+                    ).substring(0, 1),
+                    move.side,
+                    mini: true,
+                  ),
+                MoveDisplayWidgets.levelIcon(move.level, size: 10, mini: true),
+                if (move.isFeint)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4.0),
+                    child: MoveDisplayWidgets.drawBox(mini: true),
+                  ),
+              ],
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMoveThumbnail(Move m) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          MoveDisplayWidgets.getCategoryIcon(m.category),
+          size: 16,
+          color: MoveDisplayWidgets.getCategoryColor(m.category),
+        ),
+        const SizedBox(width: 2),
+        Text(
+          m.name,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+        ),
+        if (m.side.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 2.0),
+            child: MoveDisplayWidgets.sideCircle(
+              LocalizationService.translate(
+                m.side == 'L' ? 'left' : 'right',
+                language,
+              ).substring(0, 1),
+              m.side,
+              mini: true,
+            ),
+          ),
+      ],
     );
   }
 
