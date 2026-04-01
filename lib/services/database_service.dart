@@ -5,6 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/move.dart';
 import '../models/series.dart';
+import '../models/training_program.dart';
+import '../models/program_day.dart';
+import '../models/user_program_progress.dart';
 import '../utils/translation_utils.dart';
 import 'logging_service.dart';
 
@@ -44,7 +47,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -188,6 +191,71 @@ class DatabaseService {
       await db.delete('series', where: 'is_system = 1');
       await _seedSeries(db);
     }
+    if (oldVersion < 14) {
+      // Add training programs tables
+      await db.execute('''
+        CREATE TABLE training_programs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          description TEXT,
+          difficulty_level TEXT,
+          duration_days INTEGER NOT NULL,
+          is_system INTEGER DEFAULT 1,
+          created_at TEXT
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE program_days (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          program_id INTEGER NOT NULL,
+          day_number INTEGER NOT NULL,
+          series_ids TEXT NOT NULL,
+          notes TEXT,
+          is_rest_day INTEGER DEFAULT 0,
+          FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE user_program_progress (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          program_id INTEGER NOT NULL,
+          started_at TEXT NOT NULL,
+          current_day INTEGER DEFAULT 1,
+          completed_days TEXT,
+          status TEXT DEFAULT 'active',
+          completed_at TEXT,
+          FOREIGN KEY (program_id) REFERENCES training_programs(id)
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE day_completions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          progress_id INTEGER NOT NULL,
+          day_number INTEGER NOT NULL,
+          completed_at TEXT NOT NULL,
+          duration_seconds INTEGER,
+          notes TEXT,
+          FOREIGN KEY (progress_id) REFERENCES user_program_progress(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes for performance
+      await db.execute(
+        'CREATE INDEX idx_program_days_program_id ON program_days(program_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_user_progress_status ON user_program_progress(status)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_day_completions_progress_id ON day_completions(progress_id)',
+      );
+
+      // Seed training programs from JSON assets
+      await _seedTrainingPrograms(db);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -248,8 +316,69 @@ class DatabaseService {
       'CREATE INDEX idx_glossary_position ON glossary(position)',
     );
 
+    // Training programs tables
+    await db.execute('''
+      CREATE TABLE training_programs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        difficulty_level TEXT,
+        duration_days INTEGER NOT NULL,
+        is_system INTEGER DEFAULT 1,
+        created_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE program_days (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        program_id INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        series_ids TEXT NOT NULL,
+        notes TEXT,
+        is_rest_day INTEGER DEFAULT 0,
+        FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE user_program_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        program_id INTEGER NOT NULL,
+        started_at TEXT NOT NULL,
+        current_day INTEGER DEFAULT 1,
+        completed_days TEXT,
+        status TEXT DEFAULT 'active',
+        completed_at TEXT,
+        FOREIGN KEY (program_id) REFERENCES training_programs(id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE day_completions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        progress_id INTEGER NOT NULL,
+        day_number INTEGER NOT NULL,
+        completed_at TEXT NOT NULL,
+        duration_seconds INTEGER,
+        notes TEXT,
+        FOREIGN KEY (progress_id) REFERENCES user_program_progress(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX idx_program_days_program_id ON program_days(program_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_user_progress_status ON user_program_progress(status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_day_completions_progress_id ON day_completions(progress_id)',
+    );
+
     await _seedGlossary(db);
     await _seedSeries(db);
+    await _seedTrainingPrograms(db);
   }
 
   Future<void> _seedGlossary(Database db) async {
@@ -346,6 +475,89 @@ class DatabaseService {
         debugPrint('Error seeding series from $seriesFile: $e');
       }
     }
+  }
+
+  Future<void> _seedTrainingPrograms(Database db) async {
+    // Check if programs already exist
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM training_programs'),
+    );
+    if (count != null && count > 0) {
+      LoggingService.log('Training programs already seeded, skipping');
+      return;
+    }
+
+    LoggingService.log('Seeding training programs from assets...');
+
+    final List<String> programFiles = [
+      'assets/training_programs/30-day-jkd-fundamentals.json',
+      'assets/training_programs/2-week-trapping-intensive.json',
+      'assets/training_programs/footwork-fundamentals-2-weeks.json',
+      'assets/training_programs/advanced-combos-45-days.json',
+    ];
+
+    // Build a map of series titles to IDs for resolving references
+    final seriesTitleMap = await _buildSeriesTitleMap(db);
+
+    for (final programFile in programFiles) {
+      try {
+        final String programResponse = await rootBundle.loadString(programFile);
+        final List<dynamic> programsData = json.decode(programResponse);
+
+        for (var programJson in programsData) {
+          // Insert program
+          final int programId = await db.insert('training_programs', {
+            'title': programJson['title'],
+            'description': programJson['description'] ?? '',
+            'difficulty_level': programJson['difficulty_level'] ?? 'beginner',
+            'duration_days': programJson['duration_days'] ?? 1,
+            'is_system': programJson['is_system'] ?? 1,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          // Insert program days
+          final days = programJson['days'] as List<dynamic>? ?? [];
+          for (var day in days) {
+            // Resolve series titles to IDs
+            final seriesTitles = day['series_ids'] as List<dynamic>? ?? [];
+            final List<int> resolvedIds = [];
+
+            for (var title in seriesTitles) {
+              if (title is String && seriesTitleMap.containsKey(title)) {
+                resolvedIds.add(seriesTitleMap[title]!);
+              }
+            }
+
+            await db.insert('program_days', {
+              'program_id': programId,
+              'day_number': day['day_number'] ?? 1,
+              'series_ids': json.encode(resolvedIds),
+              'notes': day['notes'],
+              'is_rest_day': day['is_rest_day'] ?? 0,
+            });
+          }
+
+          LoggingService.log(
+            'Seeded program: ${programJson['title']} with ${days.length} days',
+          );
+        }
+      } catch (e) {
+        debugPrint('Error seeding training programs from $programFile: $e');
+      }
+    }
+
+    LoggingService.log('Training programs seeding complete');
+  }
+
+  Future<Map<String, int>> _buildSeriesTitleMap(Database db) async {
+    final List<Map<String, dynamic>> series = await db.query('series');
+    final Map<String, int> titleMap = {};
+    for (var entry in series) {
+      if (entry['title'] != null && entry['id'] != null) {
+        titleMap[entry['title'] as String] = entry['id'] as int;
+      }
+    }
+    return titleMap;
   }
 
   Future<Map<String, Map<String, dynamic>>> _buildGlossaryNameMap(
@@ -545,6 +757,246 @@ class DatabaseService {
   Future<void> deleteVoiceRecord(int id) async {
     final db = await database;
     await db.delete('voice_records', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ============================================================
+  // Training Programs CRUD Methods
+  // ============================================================
+
+  /// Get all training programs with their days
+  Future<List<TrainingProgram>> getAllPrograms() async {
+    final db = await database;
+    final List<Map<String, dynamic>> programMaps = await db.query(
+      'training_programs',
+      orderBy: 'difficulty_level, title',
+    );
+
+    List<TrainingProgram> programs = [];
+    for (var programMap in programMaps) {
+      final days = await getProgramDays(programMap['id'] as int);
+      programs.add(TrainingProgram.fromMap(programMap, days: days));
+    }
+
+    return programs;
+  }
+
+  /// Get a specific training program by ID
+  Future<TrainingProgram?> getProgramById(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'training_programs',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (results.isEmpty) return null;
+
+    final days = await getProgramDays(id);
+    return TrainingProgram.fromMap(results.first, days: days);
+  }
+
+  /// Get all days for a specific program
+  Future<List<ProgramDay>> getProgramDays(int programId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> dayMaps = await db.query(
+      'program_days',
+      where: 'program_id = ?',
+      whereArgs: [programId],
+      orderBy: 'day_number',
+    );
+
+    return dayMaps.map((map) => ProgramDay.fromMap(map)).toList();
+  }
+
+  /// Insert a new training program with its days
+  Future<int> insertProgram(TrainingProgram program) async {
+    final db = await database;
+    final programId = await db.insert('training_programs', program.toMap());
+
+    for (var day in program.days) {
+      await db.insert(
+        'program_days',
+        day.copyWith(programId: programId).toMap(),
+      );
+    }
+
+    return programId;
+  }
+
+  /// Get user's progress for a specific program
+  Future<UserProgramProgress?> getUserProgress(int programId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'user_program_progress',
+      where: 'program_id = ? AND status = ?',
+      whereArgs: [programId, 'active'],
+    );
+
+    if (results.isEmpty) return null;
+
+    // Get total days for completion percentage calculation
+    final program = await getProgramById(programId);
+    return UserProgramProgress.fromMap(
+      results.first,
+      totalDays: program?.durationDays,
+    );
+  }
+
+  /// Get the currently active program progress (if any)
+  Future<UserProgramProgress?> getActiveProgress() async {
+    final db = await database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'user_program_progress',
+      where: 'status = ?',
+      whereArgs: ['active'],
+      limit: 1,
+    );
+
+    if (results.isEmpty) return null;
+
+    final progress = results.first;
+    final program = await getProgramById(progress['program_id'] as int);
+    return UserProgramProgress.fromMap(
+      progress,
+      totalDays: program?.durationDays,
+    );
+  }
+
+  /// Get all user progress records
+  Future<List<UserProgramProgress>> getAllUserProgress() async {
+    final db = await database;
+    final List<Map<String, dynamic>> progressMaps = await db.query(
+      'user_program_progress',
+      orderBy: 'started_at DESC',
+    );
+
+    List<UserProgramProgress> progressList = [];
+    for (var map in progressMaps) {
+      final program = await getProgramById(map['program_id'] as int);
+      progressList.add(
+        UserProgramProgress.fromMap(map, totalDays: program?.durationDays),
+      );
+    }
+
+    return progressList;
+  }
+
+  /// Start a new program
+  Future<int> startProgram(int programId) async {
+    final db = await database;
+    return await db.insert('user_program_progress', {
+      'program_id': programId,
+      'started_at': DateTime.now().toIso8601String(),
+      'current_day': 1,
+      'completed_days': json.encode([]),
+      'status': 'active',
+    });
+  }
+
+  /// Mark a day as complete
+  Future<void> markDayComplete(
+    int progressId,
+    int dayNumber, {
+    int? durationSeconds,
+    String? notes,
+  }) async {
+    final db = await database;
+
+    // Get current progress
+    final List<Map<String, dynamic>> progressResults = await db.query(
+      'user_program_progress',
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+
+    if (progressResults.isEmpty) return;
+
+    final progress = UserProgramProgress.fromMap(progressResults.first);
+
+    // Add to completed days if not already there
+    final updatedCompletedDays = List<int>.from(progress.completedDays);
+    if (!updatedCompletedDays.contains(dayNumber)) {
+      updatedCompletedDays.add(dayNumber);
+    }
+
+    // Update current day to next day
+    final program = await getProgramById(progress.programId);
+    final nextDay = dayNumber + 1;
+    final isCompleted = program != null && nextDay > program.durationDays;
+
+    // Update progress
+    await db.update(
+      'user_program_progress',
+      {
+        'completed_days': json.encode(updatedCompletedDays),
+        'current_day': isCompleted ? dayNumber : nextDay,
+        'status': isCompleted ? 'completed' : 'active',
+        'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+      },
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+
+    // Record day completion
+    await db.insert('day_completions', {
+      'progress_id': progressId,
+      'day_number': dayNumber,
+      'completed_at': DateTime.now().toIso8601String(),
+      'duration_seconds': durationSeconds,
+      'notes': notes,
+    });
+  }
+
+  /// Pause a program
+  Future<void> pauseProgram(int progressId) async {
+    final db = await database;
+    await db.update(
+      'user_program_progress',
+      {'status': 'paused'},
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+  }
+
+  /// Resume a paused program
+  Future<void> resumeProgram(int progressId) async {
+    final db = await database;
+    await db.update(
+      'user_program_progress',
+      {'status': 'active'},
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+  }
+
+  /// Abandon a program
+  Future<void> abandonProgram(int progressId) async {
+    final db = await database;
+    await db.update(
+      'user_program_progress',
+      {'status': 'abandoned'},
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+  }
+
+  /// Skip a day (doesn't mark as complete, just advances current day)
+  Future<void> skipDay(int progressId, int dayNumber) async {
+    final db = await database;
+    final List<Map<String, dynamic>> progressResults = await db.query(
+      'user_program_progress',
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+
+    if (progressResults.isEmpty) return;
+
+    await db.update(
+      'user_program_progress',
+      {'current_day': dayNumber + 1},
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
   }
 
   Future<void> resetDatabase() async {
