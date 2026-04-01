@@ -14,8 +14,8 @@
     {"name": "High line Hit External", "translations": {"en": "High line Punch External", "fr": "Frappe ligne haute Externe"}, "hit_type": "both", "possible_level": "M", "removal": {}},
     {"name": "Gwa Chuie", "translations": {"en": "Back fist", "fr": "Coup de poing arriere"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Jang", "translations": {"en": "Elbow strike", "fr": "Coup de coude"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
-    {"name": "Biu Jee", "translations": {"en": "Thrusting finger", "fr": "Poussée des doigts"}, "hit_type": "closed", "possible_level": "H", "removal": {}},
-    {"name": "Biu Sao Da", "translations": {"en": "Thrusting fingers with hit", "fr": "Poussée doigts + coup"}, "possible_level": "H", "removal": {}},
+    {"name": "Biu Jee", "translations": {"en": "Thrusting fingers Hit", "fr": "Poussée des doigts Frappe"}, "hit_type": "closed", "possible_level": "H", "removal": {}},
+    {"name": "Biu Sao", "translations": {"en": "Thrusting fingers", "fr": "Poussée doigts, dégraffage"}, "possible_level": "H", "removal": {}},
     {"name": "Fu Jao", "translations": {"en": "Claw hand strike", "fr": "Coup de main de griffe"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
     {"name": "Sot Kil", "translations": {"en": "Hammer fist", "fr": "Coup de Poing marteau"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Choap Chuie", "translations": {"en": "Half knuckle fist punch", "fr": "Coup de poing demi-poing"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
@@ -24,7 +24,7 @@
     {"name": "Sat Sao", "translations": {"en": "Slicing hand", "fr": "Trancher avec la main"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Jom Sao", "translations": {"en": "Palm up chop", "fr": "Couper avec la main"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Jik Chung Chuie", "translations": {"en": "Vertical fist blast", "fr": "Coup de poing vertical"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
-    {"name": "Swing", "translations": {"en": "Swing punch", "fr": "Coup de poing circulaire large"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
+    {"name": "Swing", "translations": {"en": "Swing punch", "fr": "Claque main avant puis retour"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Chung Chuie", "translations": {"en": "Vertical fist", "fr": "Poing Vertical"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Ping Chuie", "translations": {"en": "Horizontal fist punch", "fr": "Coup de point horizontal"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Jeet", "translations": {"en": "Stop hit, intercepting hit", "fr": "Intercepter le coup"}, "hit_type": "open", "possible_level": "H,M,L", "removal": {}}
@@ -61,7 +61,7 @@
   ],
   "packs": [
     {"name": "Pak Sao", "translations": {"en": "Slapping hand", "fr": "Gifler with la main"}, "possible_type_attack": "both", "possible_level": "H,M", "removal": {}},
-    {"name": "Pari Nan Tek", "translations": {"en": "Pack + Nan Tek", "fr": "Pack + coup pieds latéral"}, "possible_type_attack": "both", "possible_level": "H", "removal": {}},
+    {"name": "Parry Nan Tek", "translations": {"en": "Pack + Nan Tek", "fr": "Pack + coup pieds latéral"}, "possible_type_attack": "both", "possible_level": "H", "removal": {}},
     {"name": "Shoulder Roll", "translations": {"en": "Shoulder roll", "fr": "Rotation d'épaule"}, "possible_type_attack": "both", "possible_level": "H", "removal": {}},
     {"name": "Insinida", "translations": {"en": "Insinida (Diagonal entry)", "fr": "Insinida (Entrée diagonale)"}, "possible_type_attack": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Inside Wedge", "translations": {"en": "Pack Insidge wedge", "fr": "Pack interieur"}, "possible_type_attack": "open", "possible_level": "H", "removal": {}},
@@ -85,13 +85,15 @@
   "trapping": [
     {"name": "Central Pack", "translations": {"en": "Central Pack", "fr": "Pak central"}, "possible_level": "H,M", "removal": {}},
     {"name": "Pass-through Pack", "translations": {"en": "Pass-through Pack", "fr": "Pak traversant"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Vertical Locking", "translations": {"en": "Vertical Locking", "fr": "Blocage Vertical"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Through Locking", "translations": {"en": "Through Locking", "fr": "Blocage traversant"}, "possible_level": "H,M", "removal": {}},
     {"name": "Tan Sao", "translations": {"en": "Palm up hand", "fr": "Paume vers le haut"}, "possible_level": "H,M", "removal": {}},
-    {"name": "Li Sao", "translations": {"en": "Pulling hand without grabbing", "fr": "Main tirante (sans attraper)"}, "possible_level": "H,M", "removal": {}},
-    {"name": "Lop Sao", "translations": {"en": "Pulling hand", "fr": "Saisir la main"}, "possible_level": "H,M", "removal": {}},
-    {"name": "Fook Sao", "translations": {"en": "Bridge-on hand", "fr": "Poignet plié"}, "possible_level": "H,M", "removal": {}},
     {"name": "Bong Sao", "translations": {"en": "Wing arm", "fr": "Parade du coude"}, "possible_level": "H", "removal": {}},
+    {"name": "Lop Sao", "translations": {"en": "Pulling hand", "fr": "Saisir la main"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Li Sao", "translations": {"en": "Pulling hand without grabbing", "fr": "Main tirante (sans attraper)"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Fook Sao", "translations": {"en": "Bridge-on hand", "fr": "Poignet plié"}, "possible_level": "H,M", "removal": {}},
     {"name": "Biu Sao", "translations": {"en": "Thrusting hand", "fr": "Main jaillissante"}, "possible_level": "H,M", "removal": {}},
-    {"name": "Oum Sao", "translations": {"en": "Wrapping hand", "fr": "Main enveloppante"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Huen Sao", "translations": {"en": "Circular Parade hand", "fr": "Parade circulaire main"}, "possible_level": "H,M", "removal": {}},
     {"name": "Poon Sao", "translations": {"en": "Forearm winding (rotation)", "fr": "Enroulement (rotation) bras"}, "possible_level": "H,M", "removal": {}}
   ],
   "jkd_moves": [
@@ -107,7 +109,8 @@
     {"name": "Step forward", "translations": {"en": "Step forward", "fr": "Avancer"}, "possible_level": "", "removal": {}},
     {"name": "Toy Ma", "translations": {"en": "Move back", "fr": "Reculer"}, "possible_level": "", "removal": {}},
     {"name": "Toy Gerk", "translations": {"en": "Move the leg Back", "fr": "Reculer jambe en arrière"}, "possible_level": "", "removal": {}},
-    {"name": "Lateral step", "translations": {"en": "Lateral step", "fr": "Déplacement Latéral"}, "possible_direction": "L,R", "possible_level": "", "removal": {}}
+    {"name": "Lateral step", "translations": {"en": "Lateral step", "fr": "Déplacement Latéral"}, "possible_direction": "L,R", "possible_level": "", "removal": {}},
+    {"name": "Jab Step 3 Ways", "translations": {"en": "Step 3 ways", "fr": "Les 3 voies"}, "possible_direction": "L,R", "possible_level": "", "removal": {}}
   ],
   "general": [
     {"name": "Kwoon", "translations": {"en": "School, gym", "fr": "École, gymnase"}, "possible_level": "", "removal": {}},
@@ -130,7 +133,7 @@
     {"name": "Phon Sao", "translations": {"en": "Trapping hands", "fr": "Piéger les mains"}, "possible_level": "", "removal": {}},
     {"name": "Lin Sil Die Dar", "translations": {"en": "Simultaneous defense/attack", "fr": "Défense/attaque simultanées"}, "possible_level": "", "removal": {}},
     {"name": "Tek", "translations": {"en": "Kick", "fr": "Coup de pied"}, "possible_level": "", "removal": {}},
-    {"name": "Jung Seen", "translations": {"en": "Center line", "fr": "Ligne médiane"}, "possible_level": "", "removal": {}},
+    {"name": "Jung Sin", "translations": {"en": "Center line", "fr": "Ligne médiane"}, "possible_level": "", "removal": {}},
     {"name": "Mook Jong", "translations": {"en": "Wooden Dummy", "fr": "Mannequin en bois"}, "possible_level": "", "removal": {}},
     {"name": "Sil Lim Tao", "translations": {"en": "Fist Wing Chun form", "fr": "Méthode Wing Chun"}, "possible_level": "", "removal": {}},
     {"name": "Bi Jong", "translations": {"en": "On guard position", "fr": "En position de garde"}, "possible_level": "", "removal": {}},
@@ -149,5 +152,24 @@
     {"name": "Fook Da", "translations": {"en": "Arm resting with hit", "fr": "Appui bras + coup"}, "possible_level": "H,M", "removal": {}},
     {"name": "Goang Da", "translations": {"en": "Low block with hit", "fr": "Blocage bas + coup"}, "possible_level": "L", "removal": {}},
     {"name": "Boang Da", "translations": {"en": "Wing arm with hit", "fr": "Parade aile + coup"}, "possible_level": "H", "removal": {}}
+  ],
+  "kali": [
+    {"name": "Cob Cob", "translations": {"en": "Cob Cob (2 hits)", "fr": "Cob Cob (2 coups)"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Pay Pay", "translations": {"en": "Pay Pay (3 hits)", "fr": "Pay Pay (3 coups)"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Ikis", "translations": {"en": "X pattern", "fr": "Ikis (en X)"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Dos Ikis", "translations": {"en": "Double X (4 hits)", "fr": "Dos Ikis (Double X, 4 coups)"}, "possible_level": "H,L", "removal": {}},
+    {"name": "H L H (through)", "translations": {"en": "High Low High (Last through)", "fr": "H L H (Dernier traversant)"}, "possible_level": "H,L", "removal": {}},
+    {"name": "Umbrella Heaven", "translations": {"en": "Umbrella High", "fr": "Umbrella Haut Haut Haut"}, "possible_level": "H", "removal": {}},
+    {"name": "Umbrella Standard", "translations": {"en": "Umbrella H M H", "fr": "Umbrella Haut Milieu Haut"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Umbrella Earth", "translations": {"en": "Umbrella Low", "fr": "Umbrella Bas"}, "possible_level": "L", "removal": {}},
+    {"name": "Even Six Heaven", "translations": {"en": "Even Six Heaven", "fr": "Even Six Haut"}, "possible_level": "H", "removal": {}},
+    {"name": "Even Six Standard", "translations": {"en": "Even Six H M H", "fr": "Even Six H M H"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Even Six Earth", "translations": {"en": "Even Six Low", "fr": "Even Six Bas"}, "possible_level": "L", "removal": {}},
+    {"name": "Backend Six Heaven", "translations": {"en": "Backend Six High", "fr": "Backend Six Haut"}, "possible_level": "H", "removal": {}},
+    {"name": "Backend Six Standard", "translations": {"en": "Backend Six H M H", "fr": "Backend Six H M H"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Backend Six Earth", "translations": {"en": "Backend Six Low", "fr": "Backend Six Bas"}, "possible_level": "L", "removal": {}},
+    {"name": "Upword Six count", "translations": {"en": "Upword Six count", "fr": "Six count ascendant"}, "possible_level": "M", "removal": {}},
+    {"name": "Ordabis Motion", "translations": {"en": "Ordabis Motion", "fr": "Mouvement Ordabis"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Sang Kite", "translations": {"en": "Sang Kite", "fr": "Sang Kite"}, "possible_level": "H,M,L", "removal": {}}
   ]
 }
