@@ -89,21 +89,43 @@ class VoiceInputDialog {
             if (currentOptions.isEmpty) return;
 
             setS(() {
-              final idx = selectedIndices[0] ?? 0;
-              if (idx < currentOptions[0].length) {
-                final selectedMove = currentOptions[0][idx].move;
-
-                if (buildingMove == null) {
-                  buildingMove = selectedMove;
-                } else {
-                  buildingMove = buildingMove!.copyWith(
-                    counterName: selectedMove.name,
-                    counterCategory: selectedMove.category,
-                    counterSide: selectedMove.side,
-                    counterLevel: selectedMove.level,
-                    counterSpecialAction: selectedMove.specialAction,
-                  );
+              List<Move> selectedMoves = [];
+              for (int i = 0; i < currentOptions.length; i++) {
+                final idx = selectedIndices[i] ?? 0;
+                if (idx < currentOptions[i].length) {
+                  selectedMoves.add(currentOptions[i][idx].move);
                 }
+              }
+
+              if (selectedMoves.isEmpty) return;
+
+              Move selectedMove;
+              if (selectedMoves.length == 1) {
+                selectedMove = selectedMoves.first;
+              } else {
+                selectedMove = Move(
+                  name: selectedMoves.map((m) => m.name).join(' + '),
+                  category: 'simultaneous',
+                  subMoves: selectedMoves,
+                  translations: {
+                    'en': selectedMoves.map((m) => m.name).join(' + '),
+                    'fr': selectedMoves
+                        .map((m) => m.getTranslation('fr'))
+                        .join(' + '),
+                  },
+                );
+              }
+
+              if (buildingMove == null) {
+                buildingMove = selectedMove;
+              } else {
+                buildingMove = buildingMove!.copyWith(
+                  counterName: selectedMove.name,
+                  counterCategory: selectedMove.category,
+                  counterSide: selectedMove.side,
+                  counterLevel: selectedMove.level,
+                  counterSpecialAction: selectedMove.specialAction,
+                );
               }
               recognizedText = '';
               currentOptions = [];
@@ -524,7 +546,7 @@ class VoiceInputDialog {
 
                           // PART 3: Current matching / Selection
                           Expanded(
-                            flex: 2,
+                            flex: 3,
                             child: Container(
                               width: double.infinity,
                               color: Colors.black.withValues(alpha: 0.05),
@@ -541,7 +563,7 @@ class VoiceInputDialog {
                                       fontSize: 14,
                                       color: Colors.blueGrey,
                                     ),
-                                    maxLines: 1,
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 8),

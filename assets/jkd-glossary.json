@@ -20,7 +20,7 @@
     {"name": "Sot Kil", "translations": {"en": "Hammer fist", "fr": "Coup de Poing marteau"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Choap Chuie", "translations": {"en": "Half knuckle fist punch", "fr": "Coup de poing demi-poing"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
     {"name": "Yun Jeong", "translations": {"en": "Vertical palm smash", "fr": "Coup de paume vertical"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
-    {"name": "Jao Sao", "translations": {"en": "Running hand palm smash", "fr": "Running main palm smash"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
+    {"name": "Jao Sao", "translations": {"en": "Running hand palm smash", "fr": "Pousser avec la paume de la main"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Sat Sao", "translations": {"en": "Slicing hand", "fr": "Trancher avec la main"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Jom Sao", "translations": {"en": "Palm up chop", "fr": "Couper avec la main"}, "hit_type": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Jik Chung Chuie", "translations": {"en": "Vertical fist blast", "fr": "Coup de poing vertical"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},

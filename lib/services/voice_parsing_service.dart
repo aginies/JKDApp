@@ -42,6 +42,7 @@ class VoiceParsingService {
   final List<String> _nextKeywords = [
     'next',
     'then',
+    'and',
     'suivant',
     'ensuite',
     'puis',
@@ -54,6 +55,7 @@ class VoiceParsingService {
     'reponse',
     'contre',
   ];
+  final List<String> _comboKeywords = ['plus', '+'];
 
   Future<bool> init() async {
     if (!_isInitialized) {
@@ -133,9 +135,9 @@ class VoiceParsingService {
   List<Move> parseSentenceToCombo(String sentence, String language) {
     if (sentence.trim().isEmpty) return [];
 
-    // Normalize string: lowercase, remove punctuation
+    // Normalize string: lowercase, remove punctuation but keep +
     String normalized = sentence.toLowerCase().replaceAll(
-      RegExp(r'[^\w\sàâäéèêëîïôöùûüç]'),
+      RegExp(r'[^\w\sàâäéèêëîïôöùûüç+]'),
       '',
     );
 
@@ -147,77 +149,109 @@ class VoiceParsingService {
     for (String segment in moveSegments) {
       if (segment.trim().isEmpty) continue;
 
-      // Split segment into attack and optional counter
-      List<String> attackAndCounter = _splitByKeywords(
-        segment,
-        _answerKeywords,
-        limit: 2,
-      );
-
-      String attackPhrase = attackAndCounter[0];
-      String counterPhrase = attackAndCounter.length > 1
-          ? attackAndCounter[1]
-          : '';
-
-      // Parse Attack
-      ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
-      GlossaryEntry? matchedAttack = _findBestMatch(
-        attackAttrs.remainingText,
-        language,
-      );
-
-      if (matchedAttack != null) {
-        String? cName;
-        String? cCategory;
-        String? cSide;
-        String? cLevel;
-
-        // Parse Counter if it exists
-        if (counterPhrase.trim().isNotEmpty) {
-          ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
-          var matchedCounter = _findBestMatch(
-            counterAttrs.remainingText,
-            language,
-          );
-
-          if (matchedCounter != null) {
-            cName = matchedCounter.name;
-            cCategory = matchedCounter.category;
-            cSide = counterAttrs.side.isNotEmpty ? counterAttrs.side : null;
-            cLevel = _resolveLevel(
-              counterAttrs.level,
-              matchedCounter.restrictedLevel,
-            );
-            if (cLevel.isEmpty) {
-              cLevel = _resolveLevel(
-                attackAttrs.level,
-                matchedAttack.restrictedLevel,
-              );
-            }
-          }
+      // Handle combination (simultaneous) within segment
+      List<String> comboParts = _splitByKeywords(segment, _comboKeywords);
+      if (comboParts.length > 1) {
+        List<Move> subMoves = [];
+        for (String part in comboParts) {
+          Move? m = _parseSingleMove(part, language);
+          if (m != null) subMoves.add(m);
         }
 
-        combo.add(
-          Move(
-            name: matchedAttack.name,
-            category: matchedAttack.category,
-            translations: matchedAttack.translations,
-            side: attackAttrs.side,
-            level: _resolveLevel(
-              attackAttrs.level,
-              matchedAttack.restrictedLevel,
-            ),
-            repetitions: 1,
-            counterName: cName,
-            counterCategory: cCategory,
-            counterSide: cSide,
-            counterLevel: cLevel,
-          ),
-        );
+        if (subMoves.isNotEmpty) {
+          if (subMoves.length == 1) {
+            combo.add(subMoves.first);
+          } else {
+            combo.add(
+              Move(
+                name: subMoves.map((m) => m.name).join(' + '),
+                category: 'simultaneous',
+                subMoves: subMoves,
+                translations: {
+                  'en': subMoves.map((m) => m.name).join(' + '),
+                  'fr': subMoves.map((m) => m.getTranslation('fr')).join(' + '),
+                },
+              ),
+            );
+          }
+        }
+        continue;
+      }
+
+      Move? move = _parseSingleMove(segment, language);
+      if (move != null) {
+        combo.add(move);
       }
     }
 
     return combo;
+  }
+
+  Move? _parseSingleMove(String phrase, String language) {
+    // Split segment into attack and optional counter
+    List<String> attackAndCounter = _splitByKeywords(
+      phrase,
+      _answerKeywords,
+      limit: 2,
+    );
+
+    String attackPhrase = attackAndCounter[0];
+    String counterPhrase = attackAndCounter.length > 1
+        ? attackAndCounter[1]
+        : '';
+
+    // Parse Attack
+    ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
+    GlossaryEntry? matchedAttack = _findBestMatch(
+      attackAttrs.remainingText,
+      language,
+    );
+
+    if (matchedAttack != null) {
+      String? cName;
+      String? cCategory;
+      String? cSide;
+      String? cLevel;
+
+      // Parse Counter if it exists
+      if (counterPhrase.trim().isNotEmpty) {
+        ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
+        var matchedCounter = _findBestMatch(
+          counterAttrs.remainingText,
+          language,
+        );
+
+        if (matchedCounter != null) {
+          cName = matchedCounter.name;
+          cCategory = matchedCounter.category;
+          cSide = counterAttrs.side.isNotEmpty ? counterAttrs.side : null;
+          cLevel = _resolveLevel(
+            counterAttrs.level,
+            matchedCounter.restrictedLevel,
+          );
+          if (cLevel.isEmpty) {
+            cLevel = _resolveLevel(
+              attackAttrs.level,
+              matchedAttack.restrictedLevel,
+            );
+          }
+        }
+      }
+
+      return Move(
+        name: matchedAttack.name,
+        category: matchedAttack.category,
+        translations: matchedAttack.translations,
+        side: attackAttrs.side,
+        level: _resolveLevel(attackAttrs.level, matchedAttack.restrictedLevel),
+        repetitions: 1,
+        counterName: cName,
+        counterCategory: cCategory,
+        counterSide: cSide,
+        counterLevel: cLevel,
+      );
+    }
+    return null;
   }
 
   String _resolveLevel(String requestedLevel, String? restrictedLevel) {
@@ -235,7 +269,7 @@ class VoiceParsingService {
     if (sentence.trim().isEmpty) return [];
 
     String normalized = sentence.toLowerCase().replaceAll(
-      RegExp(r'[^\w\sàâäéèêëîïôöùûüç]'),
+      RegExp(r'[^\w\sàâäéèêëîïôöùûüç+]'),
       '',
     );
 
@@ -245,77 +279,83 @@ class VoiceParsingService {
     for (String segment in moveSegments) {
       if (segment.trim().isEmpty) continue;
 
-      List<String> attackAndCounter = _splitByKeywords(
-        segment,
-        _answerKeywords,
-        limit: 2,
-      );
+      // For options, we don't automatically create simultaneous moves
+      // but we split by combo keywords to give options for each part
+      List<String> comboParts = _splitByKeywords(segment, _comboKeywords);
 
-      String attackPhrase = attackAndCounter[0];
-      String counterPhrase = attackAndCounter.length > 1
-          ? attackAndCounter[1]
-          : '';
+      for (String part in comboParts) {
+        List<String> attackAndCounter = _splitByKeywords(
+          part,
+          _answerKeywords,
+          limit: 2,
+        );
 
-      ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
-      var topAttacks = findTopMatches(attackAttrs.remainingText, language);
+        String attackPhrase = attackAndCounter[0];
+        String counterPhrase = attackAndCounter.length > 1
+            ? attackAndCounter[1]
+            : '';
 
-      if (topAttacks.isEmpty) continue;
+        ParsedAttributes attackAttrs = _extractAttributes(attackPhrase);
+        var topAttacks = findTopMatches(attackAttrs.remainingText, language);
 
-      List<MoveOption> segmentOptions = [];
+        if (topAttacks.isEmpty) continue;
 
-      for (var attackEntry in topAttacks) {
-        String? cName;
-        String? cCategory;
-        String? cSide;
-        String? cLevel;
+        List<MoveOption> segmentOptions = [];
 
-        if (counterPhrase.trim().isNotEmpty) {
-          ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
-          var topCounters = findTopMatches(
-            counterAttrs.remainingText,
-            language,
-          );
+        for (var attackEntry in topAttacks) {
+          String? cName;
+          String? cCategory;
+          String? cSide;
+          String? cLevel;
 
-          if (topCounters.isNotEmpty) {
-            var matchedCounter = topCounters.first.entry;
-            cName = matchedCounter.name;
-            cCategory = matchedCounter.category;
-            cSide = counterAttrs.side.isNotEmpty ? counterAttrs.side : null;
-            cLevel = _resolveLevel(
-              counterAttrs.level,
-              matchedCounter.restrictedLevel,
+          if (counterPhrase.trim().isNotEmpty) {
+            ParsedAttributes counterAttrs = _extractAttributes(counterPhrase);
+            var topCounters = findTopMatches(
+              counterAttrs.remainingText,
+              language,
             );
-            if (cLevel.isEmpty) {
+
+            if (topCounters.isNotEmpty) {
+              var matchedCounter = topCounters.first.entry;
+              cName = matchedCounter.name;
+              cCategory = matchedCounter.category;
+              cSide = counterAttrs.side.isNotEmpty ? counterAttrs.side : null;
               cLevel = _resolveLevel(
-                attackAttrs.level,
-                attackEntry.entry.restrictedLevel,
+                counterAttrs.level,
+                matchedCounter.restrictedLevel,
               );
+              if (cLevel.isEmpty) {
+                cLevel = _resolveLevel(
+                  attackAttrs.level,
+                  attackEntry.entry.restrictedLevel,
+                );
+              }
             }
           }
-        }
 
-        segmentOptions.add(
-          MoveOption(
-            move: Move(
-              name: attackEntry.entry.name,
-              category: attackEntry.entry.category,
-              translations: attackEntry.entry.translations,
-              side: attackAttrs.side,
-              level: _resolveLevel(
-                attackAttrs.level,
-                attackEntry.entry.restrictedLevel,
+          segmentOptions.add(
+            MoveOption(
+              move: Move(
+                name: attackEntry.entry.name,
+                category: attackEntry.entry.category,
+                translations: attackEntry.entry.translations,
+                side: attackAttrs.side,
+                level: _resolveLevel(
+                  attackAttrs.level,
+                  attackEntry.entry.restrictedLevel,
+                ),
+                repetitions: 1,
+                counterName: cName,
+                counterCategory: cCategory,
+                counterSide: cSide,
+                counterLevel: cLevel,
               ),
-              repetitions: 1,
-              counterName: cName,
-              counterCategory: cCategory,
-              counterSide: cSide,
-              counterLevel: cLevel,
+              score: attackEntry.score,
             ),
-            score: attackEntry.score,
-          ),
-        );
+          );
+        }
+        results.add(segmentOptions);
       }
-      results.add(segmentOptions);
     }
     return results;
   }
@@ -378,7 +418,18 @@ class VoiceParsingService {
     List<String> keywords, {
     int? limit,
   }) {
-    String pattern = r'\b(' + keywords.join('|') + r')\b';
+    // Build pattern: use word boundaries for word-only keywords,
+    // and just escape for others (like '+')
+    String pattern = keywords
+        .map((k) {
+          final escaped = RegExp.escape(k);
+          if (RegExp(r'^\w+$').hasMatch(k)) {
+            return r'\b' + escaped + r'\b';
+          }
+          return escaped;
+        })
+        .join('|');
+
     final regExp = RegExp(pattern);
 
     if (limit == 2) {

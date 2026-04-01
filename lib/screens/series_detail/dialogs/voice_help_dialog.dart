@@ -41,10 +41,15 @@ class VoiceHelpDialog extends StatelessWidget {
               Icons.height,
             ),
             _buildHelpSection(
+              language == 'fr' ? 'Combinaison' : 'Combination',
+              language == 'fr' ? 'plus, +' : 'plus, +',
+              Icons.add,
+            ),
+            _buildHelpSection(
               language == 'fr' ? 'Enchaînement' : 'Next Move',
               language == 'fr'
-                  ? 'suivant, ensuite, puis, et, next, then'
-                  : 'next, then',
+                  ? 'suivant, ensuite, puis, et, next, then, and'
+                  : 'next, then, and',
               Icons.arrow_forward,
             ),
             _buildHelpSection(
@@ -63,6 +68,12 @@ class VoiceHelpDialog extends StatelessWidget {
             _buildExample(
               language == 'fr' ? '"gauche jab haut"' : '"left jab high"',
               language == 'fr' ? 'Jab gauche niveau haut' : 'Left high jab',
+            ),
+            _buildExample(
+              language == 'fr' ? '"jab plus cross"' : '"jab plus cross"',
+              language == 'fr'
+                  ? 'Jab et cross en simultané'
+                  : 'Jab and cross simultaneously',
             ),
             _buildExample(
               language == 'fr'
