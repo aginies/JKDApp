@@ -25,7 +25,6 @@ import 'series_detail/widgets/combo_card_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
 import '../utils/string_utils.dart';
-import '../utils/translation_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;

@@ -108,7 +108,7 @@ class ComboCardWidget extends StatelessWidget {
       onTap: isRemoving
           ? null
           : () async {
-              // If it's a simultaneous group, we "go to the first item" 
+              // If it's a simultaneous group, we "go to the first item"
               // by editing the group but ideally we'd want to pick the component.
               // For now, it triggers the standard edit which will use the group's first hit
               // if we implement auto-selection logic in the parent.

@@ -42,6 +42,78 @@ class MoveListDisplayWidget {
     return '';
   }
 
+  /// Helper to find counter translation in glossary
+  /// First tries counterGlossaryId, then falls back to counterName lookup
+  static String _getEffectiveCounterTranslation(
+    Move move,
+    String language,
+    List<Map<String, dynamic>> glossary,
+  ) {
+    if (move.counterName == null) return '';
+
+    // Handle simultaneous counters (separated by " + ")
+    if (move.counterName!.contains(' + ')) {
+      final counterNames = move.counterName!.split(' + ');
+      return counterNames
+          .map((name) {
+            final entry = glossary.firstWhere(
+              (e) =>
+                  e['name'].toString().toLowerCase() ==
+                  name.trim().toLowerCase(),
+              orElse: () => {},
+            );
+            if (entry.isNotEmpty && entry['translations'] != null) {
+              try {
+                final Map<String, dynamic> trans = json.decode(
+                  entry['translations'],
+                );
+                return trans[language] ??
+                    trans['en'] ??
+                    trans['fr'] ??
+                    name.trim();
+              } catch (_) {
+                return name.trim();
+              }
+            }
+            return name.trim();
+          })
+          .join(' + ');
+    }
+
+    // First try to find by counterGlossaryId
+    if (move.counterGlossaryId != null) {
+      final entry = glossary.firstWhere(
+        (e) => e['id'] == move.counterGlossaryId,
+        orElse: () => {},
+      );
+      if (entry.isNotEmpty && entry['translations'] != null) {
+        try {
+          final Map<String, dynamic> trans = json.decode(entry['translations']);
+          return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+        } catch (_) {
+          // Fall through to name-based lookup
+        }
+      }
+    }
+
+    // Fallback to glossary search by counterName
+    final entry = glossary.firstWhere(
+      (e) =>
+          e['name'].toString().toLowerCase() == move.counterName!.toLowerCase(),
+      orElse: () => {},
+    );
+
+    if (entry.isNotEmpty && entry['translations'] != null) {
+      try {
+        final Map<String, dynamic> trans = json.decode(entry['translations']);
+        return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+      } catch (_) {
+        return '';
+      }
+    }
+    return '';
+  }
+
   /// Builds the content row for a move (icon, name, side, level, etc.)
   static Widget _buildMoveContent(
     Move sub,
@@ -52,10 +124,7 @@ class MoveListDisplayWidget {
     VoidCallback? onEdit,
   }) {
     return InkWell(
-      onDoubleTap: onEdit ?? () => onShowMediaGallery(
-        sub.category,
-        sub.name,
-      ),
+      onDoubleTap: onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
       child: Wrap(
         spacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -67,10 +136,7 @@ class MoveListDisplayWidget {
           ),
           Text(
             sub.name,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
           ),
           MoveDisplayWidgets.sideCircle(
             LocalizationService.translate(
@@ -80,16 +146,11 @@ class MoveListDisplayWidget {
             sub.side,
             mini: iconSize < 28,
           ),
-          MoveDisplayWidgets.levelIcon(
-            sub.level,
-            size: iconSize / 2,
-          ),
+          MoveDisplayWidgets.levelIcon(sub.level, size: iconSize / 2),
           if (sub.isFeint)
             Padding(
               padding: const EdgeInsets.only(left: 4.0),
-              child: MoveDisplayWidgets.drawBox(
-                mini: iconSize < 28,
-              ),
+              child: MoveDisplayWidgets.drawBox(mini: iconSize < 28),
             ),
           if (sub.specialAction != null)
             Chip(
@@ -345,8 +406,9 @@ class MoveListDisplayWidget {
                                             language,
                                             onShowMediaGallery,
                                             subDisplayNumber: subDisplayNumber,
-                                            onEdit:
-                                                isEditing ? onEdit(i) : null,
+                                            onEdit: isEditing
+                                                ? onEdit(i)
+                                                : null,
                                           )
                                         else
                                           Row(
@@ -370,10 +432,9 @@ class MoveListDisplayWidget {
                                                 sub,
                                                 language,
                                                 onShowMediaGallery,
-                                                onEdit:
-                                                    isEditing
-                                                        ? onEdit(i)
-                                                        : null,
+                                                onEdit: isEditing
+                                                    ? onEdit(i)
+                                                    : null,
                                               ),
                                             ],
                                           ),
@@ -411,61 +472,102 @@ class MoveListDisplayWidget {
                                               top: 4.0,
                                               left: 0.0,
                                             ),
-                                            child: InkWell(
-                                              onDoubleTap: () =>
-                                                  onShowMediaGallery(
-                                                    sub.counterCategory ?? '',
-                                                    sub.counterName!,
-                                                  ),
-                                              child: Wrap(
-                                                spacing: 6,
-                                                crossAxisAlignment:
-                                                    WrapCrossAlignment.center,
-                                                children: [
-                                                  const Icon(
-                                                    Icons
-                                                        .subdirectory_arrow_right,
-                                                    size: 22,
-                                                    color: Colors.orange,
-                                                  ),
-                                                  Icon(
-                                                    MoveDisplayWidgets.getCategoryIcon(
-                                                      sub.counterCategory ?? '',
-                                                    ),
-                                                    size: 22,
-                                                    color:
-                                                        MoveDisplayWidgets.getCategoryColor(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                InkWell(
+                                                  onDoubleTap: () =>
+                                                      onShowMediaGallery(
+                                                        sub.counterCategory ??
+                                                            '',
+                                                        sub.counterName!,
+                                                      ),
+                                                  child: Wrap(
+                                                    spacing: 6,
+                                                    crossAxisAlignment:
+                                                        WrapCrossAlignment
+                                                            .center,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons
+                                                            .subdirectory_arrow_right,
+                                                        size: 22,
+                                                        color: Colors.orange,
+                                                      ),
+                                                      Icon(
+                                                        MoveDisplayWidgets.getCategoryIcon(
                                                           sub.counterCategory ??
                                                               '',
                                                         ),
+                                                        size: 22,
+                                                        color: MoveDisplayWidgets.getCategoryColor(
+                                                          sub.counterCategory ??
+                                                              '',
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        sub.counterName!,
+                                                        style: const TextStyle(
+                                                          fontSize: 13,
+                                                          color: Colors
+                                                              .orangeAccent,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                      MoveDisplayWidgets.sideCircle(
+                                                        LocalizationService.translate(
+                                                          sub.counterSide == 'L'
+                                                              ? 'left'
+                                                              : 'right',
+                                                          language,
+                                                        ).substring(0, 1),
+                                                        sub.counterSide ?? '',
+                                                        mini: true,
+                                                      ),
+                                                      MoveDisplayWidgets.levelIcon(
+                                                        sub.counterLevel ?? '',
+                                                        size: 10,
+                                                        mini: true,
+                                                      ),
+                                                    ],
                                                   ),
-                                                  Text(
-                                                    sub.counterName!,
-                                                    style: const TextStyle(
-                                                      fontSize: 13,
-                                                      color:
-                                                          Colors.orangeAccent,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
+                                                ),
+                                                if (showTranslation)
+                                                  Builder(
+                                                    builder: (context) {
+                                                      final ct =
+                                                          _getEffectiveCounterTranslation(
+                                                            sub,
+                                                            language,
+                                                            glossary,
+                                                          );
+                                                      if (ct.isEmpty) {
+                                                        return const SizedBox.shrink();
+                                                      }
+                                                      return Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              top: 2.0,
+                                                              left: 28.0,
+                                                            ),
+                                                        child: Text(
+                                                          ct,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 11,
+                                                                color: Colors
+                                                                    .orange,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
-                                                  MoveDisplayWidgets.sideCircle(
-                                                    LocalizationService.translate(
-                                                      sub.counterSide == 'L'
-                                                          ? 'left'
-                                                          : 'right',
-                                                      language,
-                                                    ).substring(0, 1),
-                                                    sub.counterSide ?? '',
-                                                    mini: true,
-                                                  ),
-                                                  MoveDisplayWidgets.levelIcon(
-                                                    sub.counterLevel ?? '',
-                                                    size: 10,
-                                                    mini: true,
-                                                  ),
-                                                ],
-                                              ),
+                                              ],
                                             ),
                                           ),
                                       ],
@@ -474,77 +576,115 @@ class MoveListDisplayWidget {
                                 }).toList(),
                               ),
                             ),
-                            if (moves[i].category != 'combo' &&
+                          if (moves[i].category != 'combo' &&
                               moves[i].counterName != null)
                             Padding(
                               padding: const EdgeInsets.only(
                                 top: 4.0,
                                 left: 0.0,
                               ),
-                              child: InkWell(
-                                onDoubleTap: () => onShowMediaGallery(
-                                  moves[i].counterCategory ?? '',
-                                  moves[i].counterName!,
-                                ),
-                                child: Wrap(
-                                  spacing: 4,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.subdirectory_arrow_right,
-                                      size: 28,
-                                      color: Colors.orange,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  InkWell(
+                                    onDoubleTap: () => onShowMediaGallery(
+                                      moves[i].counterCategory ?? '',
+                                      moves[i].counterName!,
                                     ),
-                                    Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        moves[i].counterCategory ?? '',
-                                      ),
-                                      size: 28,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
+                                    child: Wrap(
+                                      spacing: 4,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.subdirectory_arrow_right,
+                                          size: 28,
+                                          color: Colors.orange,
+                                        ),
+                                        Icon(
+                                          MoveDisplayWidgets.getCategoryIcon(
                                             moves[i].counterCategory ?? '',
                                           ),
-                                    ),
-                                    Text(
-                                      moves[i].counterName!,
-                                      style: const TextStyle(
-                                        color: Colors.orangeAccent,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    MoveDisplayWidgets.sideCircle(
-                                      LocalizationService.translate(
-                                        moves[i].counterSide == 'L'
-                                            ? 'left'
-                                            : 'right',
-                                        language,
-                                      ).substring(0, 1),
-                                      moves[i].counterSide ?? '',
-                                      mini: true,
-                                    ),
-                                    MoveDisplayWidgets.levelIcon(
-                                      moves[i].counterLevel ?? '',
-                                      size: 10,
-                                      mini: true,
-                                    ),
-                                    if (moves[i].counterSpecialAction != null)
-                                      Chip(
-                                        label: Text(
-                                          moves[i].counterSpecialAction!,
-                                          style: const TextStyle(fontSize: 8),
+                                          size: 28,
+                                          color:
+                                              MoveDisplayWidgets.getCategoryColor(
+                                                moves[i].counterCategory ?? '',
+                                              ),
                                         ),
-                                        backgroundColor: Colors.purple
-                                            .withValues(alpha: 0.2),
-                                        padding: EdgeInsets.zero,
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                  ],
-                                ),
+                                        Text(
+                                          moves[i].counterName!,
+                                          style: const TextStyle(
+                                            color: Colors.orangeAccent,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        MoveDisplayWidgets.sideCircle(
+                                          LocalizationService.translate(
+                                            moves[i].counterSide == 'L'
+                                                ? 'left'
+                                                : 'right',
+                                            language,
+                                          ).substring(0, 1),
+                                          moves[i].counterSide ?? '',
+                                          mini: true,
+                                        ),
+                                        MoveDisplayWidgets.levelIcon(
+                                          moves[i].counterLevel ?? '',
+                                          size: 10,
+                                          mini: true,
+                                        ),
+                                        if (moves[i].counterSpecialAction !=
+                                            null)
+                                          Chip(
+                                            label: Text(
+                                              moves[i].counterSpecialAction!,
+                                              style: const TextStyle(
+                                                fontSize: 8,
+                                              ),
+                                            ),
+                                            backgroundColor: Colors.purple
+                                                .withValues(alpha: 0.2),
+                                            padding: EdgeInsets.zero,
+                                            materialTapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (showTranslation)
+                                    Builder(
+                                      builder: (context) {
+                                        final ct =
+                                            _getEffectiveCounterTranslation(
+                                              moves[i],
+                                              language,
+                                              glossary,
+                                            );
+                                        if (ct.isEmpty) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 2.0,
+                                            left: 32.0,
+                                          ),
+                                          child: Text(
+                                            ct,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.orange,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                ],
                               ),
                             ),
-                            ],
-                            ),
+                        ],
+                      ),
                       trailing: isEditing
                           ? Row(
                               mainAxisSize: MainAxisSize.min,
