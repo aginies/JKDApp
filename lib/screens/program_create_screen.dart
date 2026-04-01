@@ -136,10 +136,6 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
               ))
           .toList();
 
-      for (var a in assignments) {
-        debugPrint('  - Series ${a.seriesId}, range: ${a.itemRange}');
-      }
-
       return ProgramDay(
         programId: widget.program?.id ?? 0,
         dayNumber: config.dayNumber,
@@ -744,22 +740,14 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
   @override
   void initState() {
     super.initState();
-    print('  - seriesTitle: ${widget.seriesTitle}');
-    print('  - totalMoves: ${widget.totalMoves}');
-    print('  - currentRange: ${widget.currentRange}');
-
     if (widget.currentRange != null) {
       _useAllItems = false;
       final parts = widget.currentRange!.split('-');
       final start = double.parse(parts[0]);
       final end = double.parse(parts.length > 1 ? parts[1] : parts[0]);
       _currentRange = RangeValues(start, end);
-      print('  - Parsed range: $start-$end');
-      print('  - _useAllItems: false');
     } else {
       _currentRange = RangeValues(1, widget.totalMoves.toDouble());
-      print('  - No current range, defaulting to 1-${widget.totalMoves}');
-      print('  - _useAllItems: true');
     }
   }
 
@@ -833,17 +821,12 @@ class _RangePickerDialogState extends State<_RangePickerDialog> {
         ),
         TextButton(
           onPressed: () {
-            print('  - _useAllItems: $_useAllItems');
-            print('  - _currentRange: ${_currentRange.start.round()}-${_currentRange.end.round()}');
-
             if (_useAllItems) {
-              print('  - Returning: "" (empty string for all items)');
               Navigator.pop(context, ""); // empty string means all items
             } else {
               final start = _currentRange.start.round();
               final end = _currentRange.end.round();
               final result = '$start-$end';
-              print('  - Returning: "$result"');
               Navigator.pop(context, result);
             }
           },

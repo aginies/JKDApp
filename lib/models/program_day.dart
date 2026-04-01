@@ -49,15 +49,6 @@ class ProgramDay {
         ? json.encode(seriesAssignments!.map((a) => a.toMap()).toList())
         : null;
 
-    // Debug: Log what we're saving
-    if (seriesAssignments != null) {
-      debugPrint('DEBUG ProgramDay.toMap: Day $dayNumber has ${seriesAssignments!.length} assignments');
-      for (var a in seriesAssignments!) {
-        print('  - seriesId: ${a.seriesId}, itemRange: ${a.itemRange}');
-      }
-      print('  - JSON: $assignmentsJson');
-    }
-
     return {
       'id': id,
       'program_id': programId,
@@ -70,9 +61,6 @@ class ProgramDay {
   }
 
   factory ProgramDay.fromMap(Map<String, dynamic> map) {
-    debugPrint('DEBUG ProgramDay.fromMap: Loading day ${map['day_number']}');
-    print('  - Raw series_assignments: ${map['series_assignments']}');
-
     List<int> parsedSeriesIds = [];
     if (map['series_ids'] != null) {
       try {
@@ -90,23 +78,15 @@ class ProgramDay {
     if (map['series_assignments'] != null) {
       try {
         final decoded = json.decode(map['series_assignments'] as String);
-        print('  - Decoded series_assignments: $decoded');
         if (decoded is List) {
           parsedAssignments = decoded
               .map((e) => SeriesAssignment.fromMap(e as Map<String, dynamic>))
               .toList();
-          print('  - Parsed ${parsedAssignments.length} assignments');
-          for (var a in parsedAssignments) {
-            print('    * seriesId: ${a.seriesId}, itemRange: ${a.itemRange}');
-          }
         }
       } catch (e) {
-        print('  - Error parsing series_assignments: $e');
         // If parsing fails, fall back to creating assignments from seriesIds
         parsedAssignments = null;
       }
-    } else {
-      print('  - series_assignments is null, creating from seriesIds');
     }
 
     // If no assignments but we have seriesIds, create basic assignments
@@ -114,7 +94,6 @@ class ProgramDay {
       parsedAssignments = parsedSeriesIds
           .map((id) => SeriesAssignment(seriesId: id))
           .toList();
-      print('  - Created ${parsedAssignments.length} basic assignments from seriesIds');
     }
 
     return ProgramDay(
