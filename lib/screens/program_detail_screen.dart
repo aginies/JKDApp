@@ -375,6 +375,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
     SeriesProvider provider,
     String lang,
   ) async {
+    final navigator = Navigator.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -400,10 +401,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
 
     if (confirm == true) {
       await provider.abandonActiveProgram();
-      if (!mounted) return;
       _loadProgress();
-      if (!mounted) return;
-      Navigator.pop(context);
+      navigator.pop();
     }
   }
 
@@ -461,9 +460,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${LocalizationService.translate('error', lang)}: $e',
-          ),
+          content: Text('${LocalizationService.translate('error', lang)}: $e'),
         ),
       );
     }
@@ -502,9 +499,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${LocalizationService.translate('error', lang)}: $e',
-          ),
+          content: Text('${LocalizationService.translate('error', lang)}: $e'),
         ),
       );
     }

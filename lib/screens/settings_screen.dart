@@ -244,9 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            LocalizationService.translate('import_success', lang),
-          ),
+          content: Text(LocalizationService.translate('import_success', lang)),
         ),
       );
     } else {
