@@ -241,16 +241,19 @@ class MoveListDisplayWidget {
   }) {
     return Wrap(
       spacing: 8,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.start,
       children: [
         if (subDisplayNumber != null)
-          Text(
-            '$subDisplayNumber.',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              '$subDisplayNumber.',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
           ),
         ...move.chain.asMap().entries.map((e) {
@@ -258,9 +261,11 @@ class MoveListDisplayWidget {
           final m = e.value;
           return Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildMoveContent(
                     m,
@@ -272,20 +277,20 @@ class MoveListDisplayWidget {
                   ),
                   if (m.counterName != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2.0, left: 16.0),
+                      padding: const EdgeInsets.only(top: 2.0, left: 12.0),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.subdirectory_arrow_right,
-                            size: 16,
+                            size: 18,
                             color: Colors.orange,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             m.counterName!,
                             style: TextStyle(
-                              fontSize: fontSize - 2,
+                              fontSize: fontSize - 1,
                               color: Theme.of(context).colorScheme.secondary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -297,10 +302,10 @@ class MoveListDisplayWidget {
               ),
               if (idx < move.chain.length - 1)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                   child: Icon(
                     Icons.arrow_forward,
-                    size: iconSize * 0.6,
+                    size: iconSize * 0.7,
                     color: Colors.teal,
                   ),
                 ),
@@ -418,7 +423,7 @@ class MoveListDisplayWidget {
                                   fontSize: 16,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 )
-                              else if (moves[i].category == 'chain')
+                              else if (moves[i].category == 'chain' || moves[i].isChain)
                                 _buildChainContent(
                                   context,
                                   moves[i],

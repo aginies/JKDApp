@@ -83,10 +83,11 @@
     {"name": "Half Pack", "translations": {"en": "Short Slapping hand", "fr": "Demi Pak"}, "possible_type_attack": "both", "possible_level": "H,M", "removal": {}}
   ],
   "trapping": [
-    {"name": "Central Pack", "translations": {"en": "Central Pack", "fr": "Pak central"}, "possible_level": "H,M", "removal": {}},
-    {"name": "Pass-through Pack", "translations": {"en": "Pass-through Pack", "fr": "Pak traversant"}, "possible_level": "H,M", "removal": {}},
     {"name": "Vertical Locking", "translations": {"en": "Vertical Locking", "fr": "Blocage Vertical"}, "possible_level": "H,M", "removal": {}},
     {"name": "Through Locking", "translations": {"en": "Through Locking", "fr": "Blocage traversant"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Catch Arm", "translations": {"en": "Catch Arm", "fr": "Attraper Bras"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Central Pack", "translations": {"en": "Central Pack", "fr": "Pak central"}, "possible_level": "H,M", "removal": {}},
+    {"name": "Pass-through Pack", "translations": {"en": "Pass-through Pack", "fr": "Pak traversant"}, "possible_level": "H,M", "removal": {}},
     {"name": "Tan Sao", "translations": {"en": "Palm up hand", "fr": "Paume vers le haut"}, "possible_level": "H,M", "removal": {}},
     {"name": "Bong Sao", "translations": {"en": "Wing arm", "fr": "Parade du coude"}, "possible_level": "H", "removal": {}},
     {"name": "Lop Sao", "translations": {"en": "Pulling hand", "fr": "Saisir la main"}, "possible_level": "H,M", "removal": {}},

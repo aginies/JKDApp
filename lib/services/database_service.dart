@@ -557,8 +557,10 @@ class DatabaseService {
               'counter_level': move['counter_level'],
               'counter_special_action': move['counter_special_action'],
               'sub_moves_json': move['sub_moves_json'],
+              'chain_json': move['chain_json'],
               'position': i,
-            });
+              });
+
           }
         }
       } catch (e) {
@@ -724,7 +726,7 @@ class DatabaseService {
         m.id as m_id, m.series_id, m.glossary_id, m.counter_glossary_id, m.name, m.category as m_category, 
         m.side, m.level, m.sub_letter, m.is_feint, m.special_action, m.translations, m.repetitions, 
         m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
-        m.sub_moves_json, m.position
+        m.sub_moves_json, m.chain_json, m.position
       FROM series s
       LEFT JOIN series_moves m ON s.id = m.series_id
       ORDER BY s.id, m.position
@@ -768,6 +770,7 @@ class DatabaseService {
             counterLevel: row['counter_level'] as String?,
             counterSpecialAction: row['counter_special_action'] as String?,
             subMoves: _parseSubMoves(row['sub_moves_json']),
+            chain: _parseChain(row['chain_json']),
           ),
         );
       }
@@ -782,6 +785,17 @@ class DatabaseService {
       return decoded.map((m) => Move.fromMap(m)).toList();
     } catch (e) {
       debugPrint('Error parsing sub_moves_json: $e');
+      return [];
+    }
+  }
+
+  List<Move> _parseChain(dynamic jsonStr) {
+    if (jsonStr == null || jsonStr.toString().isEmpty) return [];
+    try {
+      final List<dynamic> decoded = json.decode(jsonStr.toString());
+      return decoded.map((m) => Move.fromMap(m)).toList();
+    } catch (e) {
+      debugPrint('Error parsing chain_json: $e');
       return [];
     }
   }

@@ -1156,6 +1156,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                 ],
                         ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.help_outline, color: Colors.blue),
+                        onPressed: () => _showWorkflowHelp(context, lang),
+                        tooltip: 'Help',
+                      ),
                     ],
                   ),
                   Expanded(
@@ -1695,6 +1700,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           Expanded(
             child: hasPendingChain
                 ? ListView.builder(
+                    key: ValueKey('chain_\${_pickerState.pendingChain.length}'),
                     controller: _comboScrollController,
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2309,6 +2315,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _pickerState.setPendingActionItem(null);
                                   _pickerState.setPendingLevel(null);
                                   _pickerState.setPendingAttackMove(null);
+                                  
+                                  // Scroll to end of preview
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    _comboScrollController.animateTo(
+                                      _comboScrollController.position.maxScrollExtent,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeOut,
+                                    );
+                                  });
                                 });
                               },
                               child: const Icon(Icons.arrow_forward, size: 18),
@@ -2419,6 +2434,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _pickerState.setPendingActionItem(null);
                                   _pickerState.setPendingLevel(null);
                                   _pickerState.setPendingAttackMove(null);
+                                  
+                                  // Scroll to end of preview
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    _comboScrollController.animateTo(
+                                      _comboScrollController.position.maxScrollExtent,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeOut,
+                                    );
+                                  });
                                 });
                               },
                               child: const Icon(Icons.arrow_forward, size: 16),
@@ -2739,6 +2763,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     _pickerState.setPendingLevel(null);
                     _pickerState.setPendingAttackMove(null);
                     _customMoveController.clear();
+
+                    // Scroll to end of preview
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _comboScrollController.animateTo(
+                        _comboScrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    });
                   });
                 },
                 child: const Icon(Icons.arrow_forward, size: 18),
@@ -3115,15 +3148,29 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       if (_currentCombo.length == 1) {
         finalMove = _currentCombo.first;
       } else {
-        final bool isChain = _currentCombo.any((m) => m.category == 'chain');
-        finalMove = Move(
-          name: isChain
-              ? _currentCombo.map((m) => m.name).join(' -> ')
-              : 'Combo: ${_currentCombo.first.name} + ...',
-          category: isChain ? 'chain' : 'combo',
-          subMoves: isChain ? [] : List.from(_currentCombo),
-          chain: isChain ? List.from(_currentCombo) : [],
-        );
+        final bool containsChain = _currentCombo.any((m) => m.isChain);
+        if (containsChain) {
+          // Flatten chains to prevent nesting
+          List<Move> flattenedChain = [];
+          for (var m in _currentCombo) {
+            if (m.isChain) {
+              flattenedChain.addAll(m.chain);
+            } else {
+              flattenedChain.add(m);
+            }
+          }
+          finalMove = Move(
+            name: flattenedChain.map((m) => m.name).join(' -> '),
+            category: 'chain',
+            chain: flattenedChain,
+          );
+        } else {
+          finalMove = Move(
+            name: 'Combo: ${_currentCombo.first.name} + ...',
+            category: 'combo',
+            subMoves: List.from(_currentCombo),
+          );
+        }
       }
 
       // Apply sub-letter if selected
