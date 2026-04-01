@@ -97,6 +97,3 @@ flutter run
 
 ## Contributors
 - **Antoine Giniès** (Author & Lead Developer)
-
-## Version
-Current version: **1.0.4+2**
