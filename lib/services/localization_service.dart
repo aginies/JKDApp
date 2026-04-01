@@ -162,6 +162,11 @@ class LocalizationService {
       'export_json': 'Export JSON',
       'show_translation': 'Show Translation',
       'show_translation_desc': 'Display translation below each action',
+      'about': 'About',
+      'license_info':
+          'JKD Training Library  Copyright (C) 2026  Antoine Giniès\n\nThis program comes with ABSOLUTELY NO WARRANTY.\n\nThis is free software, and you are welcome to redistribute it under certain conditions.',
+      'close': 'Close',
+      'report_bug': 'Report bug to',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -325,6 +330,11 @@ class LocalizationService {
       'export_json': 'Exporter JSON',
       'show_translation': 'Afficher la Traduction',
       'show_translation_desc': 'Afficher la traduction sous chaque action',
+      'about': 'À propos',
+      'license_info':
+          'JKD Training Library  Copyright (C) 2026  Antoine Giniès\n\nCe programme est fourni sans ABSOLUMENT AUCUNE GARANTIE.\n\nC\'est un logiciel libre, et vous êtes invité à le redistribuer sous certaines conditions.',
+      'close': 'Fermer',
+      'report_bug': 'Signaler un bug à',
     },
   };
 

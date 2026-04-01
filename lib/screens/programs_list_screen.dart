@@ -209,19 +209,22 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                 return _buildProgramCard(context, program, provider);
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ProgramCreateScreen(),
-            ),
-          );
-          if (result == true) {
-            _loadPrograms();
-          }
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 120.0),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProgramCreateScreen(),
+              ),
+            );
+            if (result == true) {
+              _loadPrograms();
+            }
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

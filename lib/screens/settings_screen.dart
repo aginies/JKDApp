@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/export_service.dart';
@@ -801,6 +802,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showAboutModal(BuildContext context, String lang) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(LocalizationService.translate('about', lang)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.fitness_center, size: 48, color: Colors.blue),
+            const SizedBox(height: 16),
+            Text(
+              'v1.3.0+2',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              LocalizationService.translate('license_info', lang),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              icon: const Icon(Icons.open_in_new, size: 16),
+              label: const Text('GPLv3 License'),
+              onPressed: () async {
+                final url = Uri.parse(
+                  'https://www.gnu.org/licenses/gpl-3.0.html',
+                );
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(LocalizationService.translate('close', lang)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SeriesProvider>(
@@ -1134,17 +1183,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.bug_report, color: Colors.orange),
+                title: Text(
+                  '${LocalizationService.translate('report_bug', lang)}: ag@ginies.org',
+                ),
+                onTap: () async {
+                  final url = Uri.parse(
+                    'mailto:ag@ginies.org?subject=JKD App Bug Report',
+                  );
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  }
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text(
-                      'Antoine Giniès - v1.0.4+2',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontStyle: FontStyle.italic,
+                    InkWell(
+                      onTap: () => _showAboutModal(context, lang),
+                      child: const Text(
+                        'Antoine Giniès - v1.3.0+2',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
