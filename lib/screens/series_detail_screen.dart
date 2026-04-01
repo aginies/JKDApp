@@ -1473,7 +1473,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             Map<String, String> tr = {};
             if (item['translations'] != null) {
               try {
-                tr = Map<String, String>.from(json.decode(item['translations']));
+                tr = Map<String, String>.from(
+                  json.decode(item['translations']),
+                );
               } catch (_) {
                 tr = {};
               }
@@ -1516,7 +1518,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         ],
                       ),
-                      if (provider.showTranslation && cat != 'move' && translation.isNotEmpty)
+                      if (provider.showTranslation &&
+                          cat != 'move' &&
+                          translation.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 40.0),
                           child: Text(
@@ -1755,13 +1759,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         ],
                       ),
-                      if (provider.showTranslation && cat != 'move' && tr.isNotEmpty)
+                      if (provider.showTranslation &&
+                          cat != 'move' &&
+                          tr.isNotEmpty)
                         Builder(
                           builder: (context) {
-                            final translation = tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
-                            if (translation.isEmpty) return const SizedBox.shrink();
+                            final translation =
+                                tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
+                            if (translation.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
                             return Padding(
-                              padding: const EdgeInsets.only(left: 36.0, top: 2.0),
+                              padding: const EdgeInsets.only(
+                                left: 36.0,
+                                top: 2.0,
+                              ),
                               child: Text(
                                 translation,
                                 style: const TextStyle(

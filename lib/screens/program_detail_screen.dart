@@ -104,10 +104,9 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                         ProgramCreateScreen(program: widget.program),
                   ),
                 );
-                if (result == true && mounted) {
-                  // Reload program data
-                  Navigator.pop(context);
-                }
+                if (result != true || !context.mounted) return;
+                // Reload program data
+                Navigator.pop(context);
               },
             ),
           PopupMenuButton(
@@ -178,7 +177,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: difficultyColor.withOpacity(0.1),
+                                color: difficultyColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: difficultyColor,
@@ -299,8 +298,6 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
     SeriesProvider provider,
     String lang,
   ) {
-    final theme = Theme.of(context);
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -357,22 +354,19 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
     // Start program
     try {
       await provider.startProgram(widget.program.id!);
-      if (mounted) {
-        await _loadProgress();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              LocalizationService.translate('program_started', lang),
-            ),
-          ),
-        );
-      }
+      if (!context.mounted) return;
+      await _loadProgress();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(LocalizationService.translate('program_started', lang)),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -406,10 +400,10 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
 
     if (confirm == true) {
       await provider.abandonActiveProgram();
-      if (mounted) {
-        await _loadProgress();
-        Navigator.pop(context);
-      }
+      if (!mounted) return;
+      _loadProgress();
+      if (!mounted) return;
+      Navigator.pop(context);
     }
   }
 
@@ -456,21 +450,22 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      if (mounted) {
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], subject: 'Training Program: ${widget.program.title}');
-      }
+      if (!mounted) return;
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Training Program: ${widget.program.title}',
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${LocalizationService.translate('error', lang)}: $e',
-            ),
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${LocalizationService.translate('error', lang)}: $e',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -495,25 +490,23 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       final file = File('$selectedDirectory/$fileName');
       await file.writeAsString(jsonString);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${LocalizationService.translate('export_success', lang)} $selectedDirectory/$fileName',
-            ),
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${LocalizationService.translate('export_success', lang)} $selectedDirectory/$fileName',
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${LocalizationService.translate('error', lang)}: $e',
-            ),
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${LocalizationService.translate('error', lang)}: $e',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 }
@@ -551,18 +544,18 @@ class _DayCardState extends State<_DayCard> {
     Color? iconColor;
 
     if (widget.isCompleted) {
-      backgroundColor = Colors.green.withOpacity(0.1);
+      backgroundColor = Colors.green.withValues(alpha: 0.1);
       borderColor = Colors.green;
       leadingIcon = Icons.check_circle;
       iconColor = Colors.green;
     } else if (widget.isCurrentDay) {
-      backgroundColor = theme.colorScheme.primary.withOpacity(0.1);
+      backgroundColor = theme.colorScheme.primary.withValues(alpha: 0.1);
       borderColor = theme.colorScheme.primary;
       leadingIcon = Icons.play_circle;
       iconColor = theme.colorScheme.primary;
     } else if (widget.isPast) {
-      backgroundColor = Colors.red.withOpacity(0.05);
-      borderColor = Colors.red.withOpacity(0.3);
+      backgroundColor = Colors.red.withValues(alpha: 0.05);
+      borderColor = Colors.red.withValues(alpha: 0.3);
       leadingIcon = Icons.cancel;
       iconColor = Colors.red;
     } else {

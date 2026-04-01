@@ -101,14 +101,14 @@ class ProgramCalendarWidget extends StatelessWidget {
     IconData? icon;
 
     if (isCompleted) {
-      backgroundColor = Colors.green.withOpacity(0.7);
+      backgroundColor = Colors.green.withValues(alpha: 0.7);
       textColor = Colors.white;
       icon = Icons.check;
     } else if (isCurrent) {
       backgroundColor = theme.colorScheme.primary;
       textColor = Colors.white;
     } else if (isPast && !isCompleted) {
-      backgroundColor = Colors.red.withOpacity(0.3);
+      backgroundColor = Colors.red.withValues(alpha: 0.3);
       textColor = theme.colorScheme.onSurface;
     } else if (isFuture) {
       backgroundColor = theme.colorScheme.surfaceContainerHighest;
@@ -155,12 +155,12 @@ class ProgramCalendarWidget extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         _LegendItem(
-          color: Colors.green.withOpacity(0.7),
+          color: Colors.green.withValues(alpha: 0.7),
           label: 'Completed',
           icon: Icons.check,
         ),
         _LegendItem(color: theme.colorScheme.primary, label: 'Current'),
-        _LegendItem(color: Colors.red.withOpacity(0.3), label: 'Missed'),
+        _LegendItem(color: Colors.red.withValues(alpha: 0.3), label: 'Missed'),
         _LegendItem(
           color: theme.colorScheme.surfaceContainerHighest,
           label: 'Upcoming',

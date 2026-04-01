@@ -278,7 +278,7 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: difficultyColor.withOpacity(0.1),
+                      color: difficultyColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: difficultyColor, width: 1),
                     ),

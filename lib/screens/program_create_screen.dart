@@ -163,36 +163,35 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       if (widget.program == null) {
         // Create new program
         await db.createProgram(program);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('program_started', lang),
-              ),
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('program_started', lang),
             ),
-          );
-          Navigator.pop(context, true);
-        }
+          ),
+        );
+        if (!mounted) return;
+        Navigator.pop(context, true);
       } else {
         // Update existing program
         await db.updateProgram(program);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('series_updated', lang),
-              ),
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('series_updated', lang),
             ),
-          );
-          Navigator.pop(context, true);
-        }
+          ),
+        );
+        if (!mounted) return;
+        Navigator.pop(context, true);
       }
-    } catch (e, stackTrace) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -247,18 +246,19 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
-      if (mounted) {
-        // Share the file
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], subject: 'Training Program: ${_titleController.text}');
-      }
+      if (!mounted) return;
+      // Share the file
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Training Program: ${_titleController.text}',
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Export error: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export error: $e')));
     }
   }
 
@@ -344,7 +344,7 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedDifficulty,
+                    initialValue: _selectedDifficulty,
                     decoration: InputDecoration(
                       labelText: LocalizationService.translate(
                         'difficulty',

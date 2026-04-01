@@ -152,7 +152,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       toExport,
                       fileName: fileName,
                     );
-                    if (context.mounted) Navigator.pop(context);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
                   },
                   child: Text(LocalizationService.translate('share', lang)),
                 ),
@@ -188,40 +189,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fileName: fileName,
                       customDirectory: selectedDirectory,
                     );
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      if (path != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${LocalizationService.translate('export_success', lang)} $path',
-                            ),
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    if (path != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${LocalizationService.translate('export_success', lang)} $path',
                           ),
-                        );
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(
-                              LocalizationService.translate('error', lang),
-                            ),
-                            content: Text(
-                              'Failed to export series. Please ensure:\n'
-                              '• You have write permission to the selected directory\n'
-                              '• There is enough disk space\n'
-                              '• The directory path is valid',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text(
-                                  LocalizationService.translate('finish', lang),
-                                ),
+                        ),
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(
+                            LocalizationService.translate('error', lang),
+                          ),
+                          content: Text(
+                            'Failed to export series. Please ensure:\n'
+                            '• You have write permission to the selected directory\n'
+                            '• There is enough disk space\n'
+                            '• The directory path is valid',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                LocalizationService.translate('finish', lang),
                               ),
-                            ],
-                          ),
-                        );
-                      }
+                            ),
+                          ],
+                        ),
+                      );
                     }
                   },
                   child: Text(
@@ -238,38 +238,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _handleImport(BuildContext context, String lang) async {
     final success = await ImportService.importSeries();
-    if (context.mounted) {
-      if (success) {
-        await Provider.of<SeriesProvider>(context, listen: false).loadSeries();
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('import_success', lang),
-              ),
-            ),
-          );
-        }
-      } else {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(LocalizationService.translate('error', lang)),
-            content: Text(
-              'Failed to import series. Please ensure:\n'
-              '• The file is a valid JSON format\n'
-              '• The file contains series data\n'
-              '• You have permission to read the file',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(LocalizationService.translate('finish', lang)),
-              ),
-            ],
+    if (!context.mounted) return;
+    if (success) {
+      await Provider.of<SeriesProvider>(context, listen: false).loadSeries();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            LocalizationService.translate('import_success', lang),
           ),
-        );
-      }
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(LocalizationService.translate('error', lang)),
+          content: const Text(
+            'Failed to import series. Please ensure:\n'
+            '• The file is a valid JSON format\n'
+            '• The file contains series data\n'
+            '• You have permission to read the file',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(LocalizationService.translate('finish', lang)),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -310,35 +308,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final path = await ExportService.exportGlossaryToJson(
         customDirectory: targetDir,
       );
-      if (context.mounted) {
-        if (path != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${LocalizationService.translate('export_success', lang)} $path',
-              ),
+      if (!context.mounted) return;
+      if (path != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${LocalizationService.translate('export_success', lang)} $path',
             ),
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: const Text(
-                'Failed to export glossary. Please ensure:\n'
-                '• You have write permission to the selected directory\n'
-                '• There is enough disk space\n'
-                '• The directory path is valid',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: const Text(
+              'Failed to export glossary. Please ensure:\n'
+              '• You have write permission to the selected directory\n'
+              '• There is enough disk space\n'
+              '• The directory path is valid',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -398,36 +395,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (proceed == true) {
       final success = await ImportService.importGlossary();
-      if (context.mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('import_success', lang),
-              ),
+      if (!context.mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('import_success', lang),
             ),
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: const Text(
-                'Failed to import glossary. Please ensure:\n'
-                '• The file is a valid JSON format\n'
-                '• The file contains glossary data\n'
-                '• You have permission to read the file\n\n'
-                'Warning: Importing glossary replaces all existing glossary items.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: const Text(
+              'Failed to import glossary. Please ensure:\n'
+              '• The file is a valid JSON format\n'
+              '• The file contains glossary data\n'
+              '• You have permission to read the file\n\n'
+              'Warning: Importing glossary replaces all existing glossary items.',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -497,29 +493,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (path != null) {
-        // ignore: deprecated_member_use
-        await Share.shareXFiles([XFile(path)], text: 'JKD Media Backup');
+        await SharePlus.instance.share(
+          ShareParams(files: [XFile(path)], text: 'JKD Media Backup'),
+        );
       } else {
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: const Text(
-                'Failed to create media backup. Please ensure:\n'
-                '• The media directory exists and is accessible\n'
-                '• There is enough disk space for the backup\n'
-                '• You have permission to read the media files',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+        if (!context.mounted) return;
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: const Text(
+              'Failed to create media backup. Please ensure:\n'
+              '• The media directory exists and is accessible\n'
+              '• There is enough disk space for the backup\n'
+              '• You have permission to read the media files',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     } else if (proceed == 'save') {
       String? saveDir = await FilePicker.platform.getDirectoryPath();
@@ -531,35 +527,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
         zipFileName: zipFileName,
       );
 
-      if (context.mounted) {
-        if (path != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${LocalizationService.translate('backup_success', lang)} $path',
-              ),
+      if (!context.mounted) return;
+      if (path != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${LocalizationService.translate('backup_success', lang)} $path',
             ),
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: const Text(
-                'Failed to save media backup. Please ensure:\n'
-                '• The media directory exists and is accessible\n'
-                '• You have write permission to the target directory\n'
-                '• There is enough disk space for the backup',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: const Text(
+              'Failed to save media backup. Please ensure:\n'
+              '• The media directory exists and is accessible\n'
+              '• You have write permission to the target directory\n'
+              '• There is enough disk space for the backup',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -623,36 +618,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         targetPath,
         zipPath,
       );
-      if (context.mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('restore_success', lang),
-              ),
+      if (!context.mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('restore_success', lang),
             ),
-          );
-        } else {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: const Text(
-                'Failed to restore media from backup. Please ensure:\n'
-                '• The ZIP file is a valid media backup\n'
-                '• The ZIP file is not corrupted\n'
-                '• You have write permission to the media directory\n'
-                '• There is enough disk space',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: const Text(
+              'Failed to restore media from backup. Please ensure:\n'
+              '• The ZIP file is a valid media backup\n'
+              '• The ZIP file is not corrupted\n'
+              '• You have write permission to the media directory\n'
+              '• There is enough disk space',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -708,37 +702,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Reload series from the reset database
         await provider.loadSeries();
 
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                LocalizationService.translate('reset_db_success', lang),
-              ),
-              backgroundColor: Colors.green,
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('reset_db_success', lang),
             ),
-          );
-        }
+            backgroundColor: Colors.green,
+          ),
+        );
       } catch (e) {
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(LocalizationService.translate('error', lang)),
-              content: Text(
-                'Failed to reset database. This is a critical error.\n\n'
-                'Error details: $e\n\n'
-                'Please try restarting the app. If the problem persists, '
-                'you may need to reinstall the app.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
+        if (!context.mounted) return;
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(LocalizationService.translate('error', lang)),
+            content: Text(
+              'Failed to reset database. This is a critical error.\n\n'
+              'Error details: $e\n\n'
+              'Please try restarting the app. If the problem persists, '
+              'you may need to reinstall the app.',
             ),
-          );
-        }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(LocalizationService.translate('finish', lang)),
+              ),
+            ],
+          ),
+        );
       }
     }
   }
@@ -790,15 +782,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     String? path = await LoggingService.saveLogsToDevice();
-                    if (path != null && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${LocalizationService.translate('logs_saved', lang)}: $path',
-                          ),
+                    if (path == null || !context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${LocalizationService.translate('logs_saved', lang)}: $path',
                         ),
-                      );
-                    }
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.save),
                   label: Text(LocalizationService.translate('save_logs', lang)),
