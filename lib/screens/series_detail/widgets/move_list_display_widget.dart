@@ -67,11 +67,10 @@ class MoveListDisplayWidget {
       if (moves[i].category != 'move') {
         if (moves[i].subLetter == null) {
           currentMainNumber++;
-        } else if (currentMainNumber == 0) {
-          // If the very first item has a sub-letter, we start at 1
-          currentMainNumber = 1;
         }
-        displayNumbers.add(currentMainNumber);
+        int effective = currentMainNumber;
+        if (effective == 0) effective = 1;
+        displayNumbers.add(effective);
       } else {
         displayNumbers.add(0); // 0 means no number for move items
       }

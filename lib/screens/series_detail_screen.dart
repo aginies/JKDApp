@@ -153,10 +153,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       if (_moves[i].category != 'move') {
         if (_moves[i].subLetter == null) {
           currentMainNumber++;
-        } else if (currentMainNumber == 0) {
-          currentMainNumber = 1;
         }
-        displayNumbers.add(currentMainNumber);
+        int effective = currentMainNumber;
+        if (effective == 0) effective = 1;
+        displayNumbers.add(effective);
       } else {
         displayNumbers.add(0);
       }
@@ -184,21 +184,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
   String _getDisplayNumber(int index) {
     if (index < 0 || index >= _moves.length) return '';
-    
+
     int currentMainNumber = 0;
     for (int i = 0; i <= index; i++) {
       if (_moves[i].category != 'move') {
         if (_moves[i].subLetter == null) {
           currentMainNumber++;
-        } else if (currentMainNumber == 0) {
-          currentMainNumber = 1;
         }
       }
     }
-    
+
+    int effectiveMain = currentMainNumber;
+    if (effectiveMain == 0) effectiveMain = 1;
+
     final sub = _moves[index].subLetter ?? '';
     if (_moves[index].category == 'move') return '';
-    return '$currentMainNumber$sub';
+    return '$effectiveMain$sub';
   }
 
   void _normalizeSubLetters() {
