@@ -1368,6 +1368,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               onPressed: () {
                 if (_customMoveController.text.isEmpty) return;
                 setS(() {
+                  final bool effectiveSim =
+                      isSimultaneous || _pickerState.globalSimultaneousMode;
                   _addCounterMove(
                     {'name': _customMoveController.text},
                     'text',
@@ -1381,7 +1383,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     attackTranslations!,
                     {},
                     reps!,
-                    isSimultaneous: isSimultaneous,
+                    isSimultaneous: effectiveSim,
                   );
                 });
               },
@@ -2157,6 +2159,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       if (cat == 'move')
                         ElevatedButton(
                           onPressed: () => setS(() {
+                            final bool effectiveSim =
+                                isSimultaneous ||
+                                _pickerState.globalSimultaneousMode;
                             _addCounterMove(
                               item,
                               cat,
@@ -2170,7 +2175,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               aTr,
                               tr,
                               reps,
-                              isSimultaneous: isSimultaneous,
+                              isSimultaneous: effectiveSim,
                             );
                           }),
                           child: Text(
@@ -2186,6 +2191,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               'L',
                               Colors.blue,
                               () => setS(() {
+                                final bool effectiveSim =
+                                    isSimultaneous ||
+                                    _pickerState.globalSimultaneousMode;
                                 _addCounterMove(
                                   item,
                                   cat,
@@ -2199,7 +2207,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   aTr,
                                   tr,
                                   reps,
-                                  isSimultaneous: isSimultaneous,
+                                  isSimultaneous: effectiveSim,
                                 );
                               }),
                               lang,
@@ -2210,6 +2218,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               'R',
                               Colors.red,
                               () => setS(() {
+                                final bool effectiveSim =
+                                    isSimultaneous ||
+                                    _pickerState.globalSimultaneousMode;
                                 _addCounterMove(
                                   item,
                                   cat,
@@ -2223,7 +2234,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   aTr,
                                   tr,
                                   reps,
-                                  isSimultaneous: isSimultaneous,
+                                  isSimultaneous: effectiveSim,
                                 );
                               }),
                               lang,
