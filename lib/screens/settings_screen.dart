@@ -813,7 +813,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Icon(Icons.fitness_center, size: 48, color: Colors.blue),
             const SizedBox(height: 16),
             Text(
-              'v1.3.0+2',
+              '1.5.0+2',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -1204,7 +1204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     InkWell(
                       onTap: () => _showAboutModal(context, lang),
                       child: const Text(
-                        'Antoine Giniès - v1.5.0+2',
+                        'Antoine Giniès - 1.5.0+2',
                         style: TextStyle(
                           color: Colors.grey,
                           fontStyle: FontStyle.italic,

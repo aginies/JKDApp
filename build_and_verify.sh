@@ -27,6 +27,7 @@ function show_help() {
     echo "  format_check      - Check if dart files are formatted"
     echo "  run_tests         - Run flutter tests"
     echo "  quality_checks    - Run format check, analyze and tests"
+    echo "  update_version    - Update app version in all files (usage: ./build_and_verify.sh update_version 1.5.1+3)"
     echo "  build_apk         - Build release APK"
     echo "  build_macos       - Build release macOS (macOS only)"
     echo "  build_windows     - Build release Windows (Windows only)"
@@ -82,6 +83,31 @@ function quality_checks() {
     $FLUTTER_PATH analyze || { echo "[ERROR] Analysis failed. Fix issues before building."; exit 1; }
     run_tests
     echo "[SUCCESS] Quality checks passed."
+}
+
+function update_version() {
+    local NEW_VERSION=$1
+    if [ -z "$NEW_VERSION" ]; then
+        echo "[ERROR] Please provide a new version number (e.g., 1.5.1+3)"
+        exit 1
+    fi
+
+    echo "[INFO] Updating version to $NEW_VERSION..."
+
+    # 1. Update pubspec.yaml
+    sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+
+    # 2. Update settings_screen.dart (both occurrences)
+    # Match pattern vX.X.X+X or vX.X.X
+    sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+\(+[0-9]\+\)\?/$NEW_VERSION/g" lib/screens/settings_screen.dart
+
+    # 3. Update logging_service.dart
+    sed -i "s/appVersion = \".*\"/appVersion = \"$NEW_VERSION\"/" lib/services/logging_service.dart
+
+    # 4. Update README.md
+    sed -i "s/Recent Updates (v.*)/Recent Updates (v$NEW_VERSION)/" README.md
+
+    echo "[SUCCESS] Version updated to $NEW_VERSION in all files."
 }
 
 function build_apk() {
@@ -170,11 +196,17 @@ function all() {
 if [ $# -eq 0 ]; then
     show_help
 else
-    for func in "$@"; do
+    while [ $# -gt 0 ]; do
+        func=$1
         if [ "$func" == "help" ]; then
             show_help
+            shift
+        elif [ "$func" == "update_version" ]; then
+            update_version "$2"
+            shift 2
         elif declare -f "$func" > /dev/null; then
             "$func"
+            shift
         else
             echo "[ERROR] Function '$func' not found."
             exit 1
