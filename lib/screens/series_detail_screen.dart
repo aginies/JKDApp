@@ -1385,6 +1385,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       cat,
       () => ScrollController(),
     );
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
 
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(cat),
@@ -1467,8 +1468,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 sL = pL.contains('L');
             final String pD = item['possible_direction'] ?? '';
             final bool hasDirection = pD.isNotEmpty;
-            final Map<String, String> tr =
-                (item['parsed_translations'] as Map<String, String>?) ?? {};
+
+            // Parse translations from JSON string
+            Map<String, String> tr = {};
+            if (item['translations'] != null) {
+              try {
+                tr = Map<String, String>.from(json.decode(item['translations']));
+              } catch (_) {
+                tr = {};
+              }
+            }
             final translation = tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1507,7 +1516,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         ],
                       ),
-                      if (cat != 'move' && translation.isNotEmpty)
+                      if (provider.showTranslation && cat != 'move' && translation.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 40.0),
                           child: Text(
@@ -1515,6 +1524,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ),
@@ -1677,6 +1687,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     StateSetter pickerS,
     String lang,
   ) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
     final glossaryFuture = _glossaryFutures.putIfAbsent(cat, () async {
       final items = await DatabaseService().getGlossaryByCategory(cat);
       return items.map((item) {
@@ -1744,6 +1755,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ),
                         ],
                       ),
+                      if (provider.showTranslation && cat != 'move' && tr.isNotEmpty)
+                        Builder(
+                          builder: (context) {
+                            final translation = tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
+                            if (translation.isEmpty) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(left: 36.0, top: 2.0),
+                              child: Text(
+                                translation,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       const SizedBox(height: 8),
                       if (cat == 'move')
                         ElevatedButton(
