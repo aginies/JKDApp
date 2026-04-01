@@ -25,6 +25,7 @@ class Move {
   final String? counterCategory;
 
   final List<Move> subMoves;
+  final List<Move> chain;
 
   Move({
     this.id,
@@ -46,11 +47,16 @@ class Move {
     this.counterSpecialAction,
     this.counterCategory,
     this.subMoves = const [],
+    this.chain = const [],
   }) : uKey = uKey ?? const Uuid().v4();
 
   bool get isCombo => subMoves.isNotEmpty;
+  bool get isChain => chain.isNotEmpty;
 
   String getTranslation(String lang) {
+    if (isChain) {
+      return chain.map((m) => m.getTranslation(lang)).join(' -> ');
+    }
     if (isCombo) {
       return subMoves.map((m) => m.getTranslation(lang)).join(' + ');
     }
@@ -79,6 +85,9 @@ class Move {
       'sub_moves_json': subMoves.isNotEmpty
           ? json.encode(subMoves.map((m) => m.toMap()).toList())
           : null,
+      'chain_json': chain.isNotEmpty
+          ? json.encode(chain.map((m) => m.toMap()).toList())
+          : null,
     };
   }
 
@@ -99,13 +108,27 @@ class Move {
       }
     }
 
+    List<Move> chainItems = [];
+    if (map['chain_json'] != null) {
+      try {
+        final decoded = json.decode(map['chain_json']);
+        if (decoded is List) {
+          chainItems = decoded
+              .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('Error parsing chain_json: $e');
+      }
+    }
+
     return Move(
       id: map['id'],
       glossaryId: map['glossary_id'],
       counterGlossaryId: map['counter_glossary_id'],
       uKey: map['uKey'] ?? (map['id']?.toString() ?? const Uuid().v4()),
-      name: map['name'] ?? (subs.isNotEmpty ? 'Combo' : ''),
-      category: map['category'] ?? '',
+      name: map['name'] ?? (subs.isNotEmpty ? 'Combo' : (chainItems.isNotEmpty ? 'Chain' : '')),
+      category: map['category'] ?? (chainItems.isNotEmpty ? 'chain' : ''),
       side: map['side'] ?? '',
       level: map['level'] ?? '',
       subLetter: map['sub_letter'],
@@ -119,6 +142,7 @@ class Move {
       counterSpecialAction: map['counter_special_action'],
       counterCategory: map['counter_category'],
       subMoves: subs,
+      chain: chainItems,
     );
   }
 
@@ -142,6 +166,7 @@ class Move {
     String? counterSpecialAction,
     String? counterCategory,
     List<Move>? subMoves,
+    List<Move>? chain,
   }) {
     return Move(
       id: id ?? this.id,
@@ -165,6 +190,7 @@ class Move {
       counterSpecialAction: counterSpecialAction ?? this.counterSpecialAction,
       counterCategory: counterCategory ?? this.counterCategory,
       subMoves: subMoves ?? this.subMoves,
+      chain: chain ?? this.chain,
     );
   }
 

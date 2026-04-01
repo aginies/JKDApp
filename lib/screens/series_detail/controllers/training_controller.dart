@@ -332,7 +332,11 @@ class TrainingController {
       }
     }
 
-    if (!move.isCombo) {
+    if (move.isChain) {
+      for (var m in move.chain) {
+        addMoveLines(m);
+      }
+    } else if (!move.isCombo) {
       addMoveLines(move);
     } else {
       for (var sub in move.subMoves) {

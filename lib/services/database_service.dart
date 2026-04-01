@@ -48,11 +48,12 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 18,
+      version: 24,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
+
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     LoggingService.log('Upgrading database from $oldVersion to $newVersion');
@@ -369,7 +370,7 @@ class DatabaseService {
 
     await db.execute('''
       CREATE TABLE series_moves (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, sub_letter TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, sub_moves_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, sub_letter TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, sub_moves_json TEXT, chain_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
 

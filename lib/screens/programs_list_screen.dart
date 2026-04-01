@@ -110,11 +110,6 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     }
   }
 
-  String _capitalizeDifficulty(String difficulty) {
-    if (difficulty.isEmpty) return difficulty;
-    return difficulty[0].toUpperCase() + difficulty.substring(1);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../models/move.dart';
 
 /// Manages the state of the move picker modal
 class PickerState extends ChangeNotifier {
@@ -38,6 +39,9 @@ class PickerState extends ChangeNotifier {
   // Pending attack move data when selecting counter
   Map<String, dynamic>? _pendingAttackMove;
 
+  // Chain of sequential moves being built
+  final List<Move> _pendingChain = [];
+
   // Last scrolled item ID to prevent re-scrolling
   int? _lastScrolledItemId;
 
@@ -60,6 +64,7 @@ class PickerState extends ChangeNotifier {
   bool get isEditingCounter => _isEditingCounter;
   bool get isPickerOpen => _isPickerOpen;
   Map<String, dynamic>? get pendingAttackMove => _pendingAttackMove;
+  List<Move> get pendingChain => _pendingChain;
   int? get lastScrolledItemId => _lastScrolledItemId;
   String? get selectedSubLetter => _selectedSubLetter;
   bool get globalSimultaneousMode => _globalSimultaneousMode;
@@ -142,6 +147,16 @@ class PickerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addToPendingChain(Move move) {
+    _pendingChain.add(move);
+    notifyListeners();
+  }
+
+  void clearPendingChain() {
+    _pendingChain.clear();
+    notifyListeners();
+  }
+
   /// Activates a glossary item and clears conflicting selections
   void activateGlossaryItem(int itemId) {
     if (_pendingActionItemId != itemId) {
@@ -169,6 +184,7 @@ class PickerState extends ChangeNotifier {
     _editingComboItemIndex = null;
     _isEditingCounter = false;
     _pendingAttackMove = null;
+    _pendingChain.clear();
     _lastScrolledItemId = null;
     _selectedSubLetter = null;
     notifyListeners();

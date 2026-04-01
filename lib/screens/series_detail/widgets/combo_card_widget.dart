@@ -103,15 +103,12 @@ class ComboCardWidget extends StatelessWidget {
 
   Widget _buildAttackSection() {
     final bool isSimultaneous = move.category == 'simultaneous';
+    final bool isChain = move.category == 'chain';
 
     return GestureDetector(
       onTap: isRemoving
           ? null
           : () async {
-              // If it's a simultaneous group, we "go to the first item"
-              // by editing the group but ideally we'd want to pick the component.
-              // For now, it triggers the standard edit which will use the group's first hit
-              // if we implement auto-selection logic in the parent.
               onEdit(index, false);
             },
       child: Column(
@@ -151,6 +148,41 @@ class ComboCardWidget extends StatelessWidget {
                 }),
               ],
             )
+          else if (isChain)
+            Wrap(
+              spacing: 4,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  '${index + 1}.',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                ...move.chain.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final m = e.value;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildMoveThumbnail(m),
+                      if (idx < move.chain.length - 1)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 2.0),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            size: 10,
+                            color: Colors.teal,
+                          ),
+                        ),
+                    ],
+                  );
+                }),
+              ],
+            )
           else
             Row(
               children: [
@@ -172,7 +204,7 @@ class ComboCardWidget extends StatelessWidget {
                 ),
               ],
             ),
-          if (!isSimultaneous)
+          if (!isSimultaneous && !isChain)
             Row(
               children: [
                 if (move.side.isNotEmpty)

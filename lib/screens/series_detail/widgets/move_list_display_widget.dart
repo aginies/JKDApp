@@ -26,6 +26,13 @@ class MoveListDisplayWidget {
           .join(' + ');
     }
 
+    if (move.isChain) {
+      return move.chain
+          .map((m) => _getEffectiveTranslation(m, language, glossary))
+          .where((s) => s.isNotEmpty)
+          .join(' -> ');
+    }
+
     final entry = glossary.firstWhere(
       (e) => e['name'].toString().toLowerCase() == move.name.toLowerCase(),
       orElse: () => {},
@@ -221,6 +228,89 @@ class MoveListDisplayWidget {
     );
   }
 
+  /// Builds the content for a sequential chain of moves
+  static Widget _buildChainContent(
+    BuildContext context,
+    Move move,
+    String language,
+    Function(String category, String moveName) onShowMediaGallery, {
+    double iconSize = 24,
+    double fontSize = 14,
+    int? subDisplayNumber,
+    VoidCallback? onEdit,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (subDisplayNumber != null)
+          Text(
+            '$subDisplayNumber.',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+        ...move.chain.asMap().entries.map((e) {
+          final idx = e.key;
+          final m = e.value;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildMoveContent(
+                    m,
+                    language,
+                    onShowMediaGallery,
+                    iconSize: iconSize,
+                    fontSize: fontSize,
+                    onEdit: onEdit,
+                  ),
+                  if (m.counterName != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0, left: 16.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.subdirectory_arrow_right,
+                            size: 16,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            m.counterName!,
+                            style: TextStyle(
+                              fontSize: fontSize - 2,
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              if (idx < move.chain.length - 1)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    size: iconSize * 0.6,
+                    color: Colors.teal,
+                  ),
+                ),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
   /// Builds the move list tiles
   static List<Widget> buildTiles({
     required List<Move> moves,
@@ -328,6 +418,16 @@ class MoveListDisplayWidget {
                                   fontSize: 16,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 )
+                              else if (moves[i].category == 'chain')
+                                _buildChainContent(
+                                  context,
+                                  moves[i],
+                                  language,
+                                  onShowMediaGallery,
+                                  iconSize: 32,
+                                  fontSize: 16,
+                                  onEdit: isEditing ? onEdit(i) : null,
+                                )
                               else if (!moves[i].isCombo) ...[
                                 _buildMoveContent(
                                   moves[i],
@@ -342,7 +442,8 @@ class MoveListDisplayWidget {
                           ),
                           if (showTranslation &&
                               !moves[i].isCombo &&
-                              moves[i].category != 'simultaneous')
+                              moves[i].category != 'simultaneous' &&
+                              moves[i].category != 'chain')
                             Builder(
                               builder: (context) {
                                 final t = _getEffectiveTranslation(
@@ -393,6 +494,7 @@ class MoveListDisplayWidget {
                                   }
                                   final bool isSimultaneous =
                                       sub.category == 'simultaneous';
+                                  final bool isChain = sub.category == 'chain';
 
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 6.0),
@@ -402,6 +504,17 @@ class MoveListDisplayWidget {
                                       children: [
                                         if (isSimultaneous)
                                           _buildSimultaneousContent(
+                                            sub,
+                                            language,
+                                            onShowMediaGallery,
+                                            subDisplayNumber: subDisplayNumber,
+                                            onEdit: isEditing
+                                                ? onEdit(i)
+                                                : null,
+                                          )
+                                        else if (isChain)
+                                          _buildChainContent(
+                                            context,
                                             sub,
                                             language,
                                             onShowMediaGallery,
@@ -581,6 +694,7 @@ class MoveListDisplayWidget {
                               ),
                             ),
                           if (moves[i].category != 'combo' &&
+                              moves[i].category != 'chain' &&
                               moves[i].counterName != null)
                             Padding(
                               padding: const EdgeInsets.only(
@@ -617,9 +731,11 @@ class MoveListDisplayWidget {
                                         ),
                                         Text(
                                           moves[i].counterName!,
-                                          style: const TextStyle(
-                                            color: Colors.orangeAccent,
-                                            fontWeight: FontWeight.w500,
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         MoveDisplayWidgets.sideCircle(

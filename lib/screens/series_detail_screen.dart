@@ -1265,6 +1265,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                     false,
                               ),
                               _buildCounterGlossaryList(
+                                'kali',
+                                setS,
+                                _pickerState.pendingAttackMove!['item'],
+                                _pickerState.pendingAttackMove!['cat'],
+                                _pickerState.pendingAttackMove!['sd'],
+                                _pickerState.pendingAttackMove!['lv'],
+                                _pickerState.pendingAttackMove!['f'],
+                                _pickerState.pendingAttackMove!['sp'],
+                                _pickerState.pendingAttackMove!['tr'],
+                                1,
+                                setS,
+                                lang,
+                                isSimultaneous:
+                                    _pickerState.pendingAttackMove!['sim'] ??
+                                    false,
+                              ),
+                              _buildCounterGlossaryList(
                                 'other',
                                 setS,
                                 _pickerState.pendingAttackMove!['item'],
@@ -1430,7 +1447,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     bool voiceEnabled,
     List<String> availableSubLetters,
   ) {
-    final double h = _currentCombo.any((m) => m.category == 'move') ? 198 : 190;
+    final bool hasPendingChain = _pickerState.pendingChain.isNotEmpty;
+    final double h =
+        (_currentCombo.any((m) => m.category == 'move') || hasPendingChain)
+            ? 198
+            : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
       width: double.infinity,
@@ -1469,7 +1490,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         child: Text(
                           _pickerState.editingSeriesIndex != null
                               ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_getDisplayNumber(_pickerState.editingSeriesIndex!)}'
-                              : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
+                              : (hasPendingChain
+                                  ? 'BUILDING CHAIN'
+                                  : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
@@ -1670,10 +1693,42 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             ),
           ),
           Expanded(
-            child: Stack(
-              children: [
-                AnimatedList(
-                  key: _comboListKey,
+            child: hasPendingChain
+                ? ListView.builder(
+                    controller: _comboScrollController,
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: _pickerState.pendingChain.length,
+                    itemBuilder: (context, idx) {
+                      final m = _pickerState.pendingChain[idx];
+                      return Row(
+                        children: [
+                          ComboCardWidget(
+                            move: m,
+                            index: idx,
+                            language: lang,
+                            animation: const AlwaysStoppedAnimation(1.0),
+                            onRemove: () {},
+                            onEdit: (_, _) {},
+                            onShowMediaGallery: _showMediaGallery,
+                          ),
+                          if (idx < _pickerState.pendingChain.length - 1)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  )
+                : Stack(
+                    children: [
+                      AnimatedList(
+                        key: _comboListKey,
                   controller: _comboScrollController,
                   scrollDirection: Axis.horizontal,
                   initialItemCount: _currentCombo.length,
@@ -2187,34 +2242,84 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ),
                       const SizedBox(height: 8),
                       if (cat == 'move')
-                        ElevatedButton(
-                          onPressed: () => setS(() {
-                            final bool effectiveSim =
-                                isSimultaneous ||
-                                _pickerState.globalSimultaneousMode;
-                            _addCounterMove(
-                              item,
-                              cat,
-                              '',
-                              attack,
-                              aCat,
-                              aSide,
-                              aLev,
-                              aF,
-                              aS,
-                              aTr,
-                              tr,
-                              reps,
-                              isSimultaneous: effectiveSim,
-                            );
-                          }),
-                          child: Text(
-                            LocalizationService.translate('add', lang),
-                          ),
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => setS(() {
+                                final bool effectiveSim =
+                                    isSimultaneous ||
+                                    _pickerState.globalSimultaneousMode;
+                                _addCounterMove(
+                                  item,
+                                  cat,
+                                  '',
+                                  attack,
+                                  aCat,
+                                  aSide,
+                                  aLev,
+                                  aF,
+                                  aS,
+                                  aTr,
+                                  tr,
+                                  reps,
+                                  isSimultaneous: effectiveSim,
+                                );
+                              }),
+                              child: Text(
+                                LocalizationService.translate('add', lang),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(0, 36),
+                              ),
+                              onPressed: () {
+                                setS(() {
+                                  final counterMove = Move(
+                                    glossaryId:
+                                        _pickerState.pendingAttackMove!['item']['id'],
+                                    name:
+                                        _pickerState.pendingAttackMove!['item']['name'],
+                                    category:
+                                        _pickerState.pendingAttackMove!['cat'],
+                                    translations:
+                                        _pickerState.pendingAttackMove!['tr'],
+                                    side: _pickerState.pendingAttackMove!['sd'],
+                                    level:
+                                        _pickerState.pendingAttackMove!['lv'],
+                                    isFeint:
+                                        _pickerState.pendingAttackMove!['f'],
+                                    specialAction:
+                                        _pickerState.pendingAttackMove!['sp'],
+                                    repetitions: 1,
+                                    counterName: item['name'],
+                                    counterCategory: cat,
+                                    counterSide: '',
+                                    counterLevel: '',
+                                    counterSpecialAction: null,
+                                    counterGlossaryId: id,
+                                  );
+                                  _pickerState.addToPendingChain(counterMove);
+                                  _pickerState.setPendingActionItem(null);
+                                  _pickerState.setPendingLevel(null);
+                                  _pickerState.setPendingAttackMove(null);
+                                });
+                              },
+                              child: const Icon(Icons.arrow_forward, size: 18),
+                            ),
+                          ],
                         )
                       else if (cat == 'trapping' || cat == 'packs')
                         Wrap(
                           spacing: 4,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             _sideButtonWithArrow(
                               LocalizationService.translate('left', lang),
@@ -2269,6 +2374,54 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               }),
                               lang,
                               id,
+                            ),
+                            const SizedBox(width: 4),
+                            // CHAIN BUTTON (->)
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(0, 32),
+                              ),
+                              onPressed: () {
+                                setS(() {
+                                  final side =
+                                      _pickerState.selectedSides[id] ?? 'L';
+                                  final counterMove = Move(
+                                    glossaryId:
+                                        _pickerState.pendingAttackMove!['item']['id'],
+                                    name:
+                                        _pickerState.pendingAttackMove!['item']['name'],
+                                    category:
+                                        _pickerState.pendingAttackMove!['cat'],
+                                    translations:
+                                        _pickerState.pendingAttackMove!['tr'],
+                                    side: _pickerState.pendingAttackMove!['sd'],
+                                    level:
+                                        _pickerState.pendingAttackMove!['lv'],
+                                    isFeint:
+                                        _pickerState.pendingAttackMove!['f'],
+                                    specialAction:
+                                        _pickerState.pendingAttackMove!['sp'],
+                                    repetitions: 1,
+                                    counterName: item['name'],
+                                    counterCategory: cat,
+                                    counterSide: side,
+                                    counterLevel:
+                                        _pickerState.pendingLevel ?? '',
+                                    counterSpecialAction: spec,
+                                    counterGlossaryId: id,
+                                  );
+                                  _pickerState.addToPendingChain(counterMove);
+                                  _pickerState.setPendingActionItem(null);
+                                  _pickerState.setPendingLevel(null);
+                                  _pickerState.setPendingAttackMove(null);
+                                });
+                              },
+                              child: const Icon(Icons.arrow_forward, size: 16),
                             ),
                           ],
                         )
@@ -2476,45 +2629,121 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     _currentCombo[_pickerState.editingComboItemIndex!] = n;
                     _pickerState.setEditingComboItemIndex(null);
                     _pickerState.setIsEditingCounter(false);
-                  } else if (isCounterMode) {
-                    final bool effectiveSim =
-                        isSimEnabled ||
-                        (_pickerState.pendingAttackMove!['sim'] ?? false);
-
-                    _addCounterMove(
-                      it,
-                      cat,
-                      sd,
-                      _pickerState.pendingAttackMove!['item'],
-                      _pickerState.pendingAttackMove!['cat'],
-                      _pickerState.pendingAttackMove!['sd'],
-                      _pickerState.pendingAttackMove!['lv'],
-                      _pickerState.pendingAttackMove!['f'],
-                      _pickerState.pendingAttackMove!['sp'],
-                      _pickerState.pendingAttackMove!['tr'],
-                      tr,
-                      1,
-                      cLevelOverride: lv,
-                      isSimultaneous: effectiveSim,
-                    );
-                  } else if (isSimEnabled) {
-                    _addCombinedActionToCombo(n);
                   } else {
-                    _addItemToCombo(n);
+                    Move interaction;
+                    if (isCounterMode) {
+                      interaction = Move(
+                        glossaryId:
+                            _pickerState.pendingAttackMove!['item']['id'],
+                        name: _pickerState.pendingAttackMove!['item']['name'],
+                        category: _pickerState.pendingAttackMove!['cat'],
+                        translations: _pickerState.pendingAttackMove!['tr'],
+                        side: _pickerState.pendingAttackMove!['sd'],
+                        level: _pickerState.pendingAttackMove!['lv'],
+                        isFeint: _pickerState.pendingAttackMove!['f'],
+                        specialAction: _pickerState.pendingAttackMove!['sp'],
+                        repetitions: 1,
+                        counterName:
+                            isCustom ? _customMoveController.text : it['name'],
+                        counterCategory: cat,
+                        counterSide: sd,
+                        counterLevel: lv,
+                        counterSpecialAction: sp,
+                        counterGlossaryId: isCustom ? null : it['id'],
+                      );
+                    } else {
+                      interaction = n;
+                    }
+
+                    if (_pickerState.pendingChain.isNotEmpty) {
+                      final finalChain =
+                          List<Move>.from(_pickerState.pendingChain)
+                            ..add(interaction);
+                      final chainMove = Move(
+                        name: finalChain.map((m) => m.name).join(' -> '),
+                        category: 'chain',
+                        chain: finalChain,
+                      );
+                      _addItemToCombo(chainMove);
+                      _pickerState.clearPendingChain();
+                    } else if (isSimEnabled) {
+                      _addCombinedActionToCombo(interaction);
+                    } else {
+                      _addItemToCombo(interaction);
+                    }
                   }
                   _pickerState.setPendingActionItem(null);
                   _pickerState.setPendingLevel(null);
+                  _pickerState.setPendingAttackMove(null);
                 });
               },
               child: Text(
                 isE
                     ? LocalizationService.translate('update_item', lang)
                     : (isCounterMode
-                          ? LocalizationService.translate('add', lang)
-                          : LocalizationService.translate('next', lang)),
+                        ? LocalizationService.translate('add', lang)
+                        : LocalizationService.translate('next', lang)),
                 style: const TextStyle(fontSize: 12),
               ),
             ),
+            if (!isE) ...[
+              const SizedBox(width: 6),
+              // CHAIN BUTTON (->)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 36),
+                ),
+                onPressed: () {
+                  setS(() {
+                    Move interaction;
+                    if (isCounterMode) {
+                      interaction = Move(
+                        glossaryId:
+                            _pickerState.pendingAttackMove!['item']['id'],
+                        name: _pickerState.pendingAttackMove!['item']['name'],
+                        category: _pickerState.pendingAttackMove!['cat'],
+                        translations: _pickerState.pendingAttackMove!['tr'],
+                        side: _pickerState.pendingAttackMove!['sd'],
+                        level: _pickerState.pendingAttackMove!['lv'],
+                        isFeint: _pickerState.pendingAttackMove!['f'],
+                        specialAction: _pickerState.pendingAttackMove!['sp'],
+                        repetitions: 1,
+                        counterName:
+                            isCustom ? _customMoveController.text : it['name'],
+                        counterCategory: cat,
+                        counterSide: sd,
+                        counterLevel: lv,
+                        counterSpecialAction: sp,
+                        counterGlossaryId: isCustom ? null : it['id'],
+                      );
+                    } else {
+                      interaction = Move(
+                        glossaryId: isCustom ? null : it['id'],
+                        name:
+                            isCustom ? _customMoveController.text : it['name'],
+                        category: cat,
+                        translations: tr,
+                        side: sd,
+                        level: lv,
+                        isFeint: f,
+                        specialAction: sp,
+                        repetitions: 1,
+                      );
+                    }
+
+                    _pickerState.addToPendingChain(interaction);
+                    _pickerState.setPendingActionItem(null);
+                    _pickerState.setPendingLevel(null);
+                    _pickerState.setPendingAttackMove(null);
+                    _customMoveController.clear();
+                  });
+                },
+                child: const Icon(Icons.arrow_forward, size: 18),
+              ),
+            ],
             if (!isCounterMode && !isE) ...[
               const SizedBox(width: 6),
               ElevatedButton(
@@ -2601,30 +2830,50 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   }
                   if (isE) {
                     _currentCombo[_pickerState.editingComboItemIndex!] = n;
-                  } else if (isCounterMode) {
-                    final bool effectiveSim =
-                        isSimEnabled ||
-                        (_pickerState.pendingAttackMove!['sim'] ?? false);
-                    _addCounterMove(
-                      it,
-                      cat,
-                      sd,
-                      _pickerState.pendingAttackMove!['item'],
-                      _pickerState.pendingAttackMove!['cat'],
-                      _pickerState.pendingAttackMove!['sd'],
-                      _pickerState.pendingAttackMove!['lv'],
-                      _pickerState.pendingAttackMove!['f'],
-                      _pickerState.pendingAttackMove!['sp'],
-                      _pickerState.pendingAttackMove!['tr'],
-                      tr,
-                      1,
-                      cLevelOverride: lv,
-                      isSimultaneous: effectiveSim,
-                    );
-                  } else if (isSimEnabled) {
-                    _addCombinedActionToCombo(n);
                   } else {
-                    _addItemToCombo(n);
+                    // Finalize interaction
+                    Move interaction;
+                    if (isCounterMode) {
+                      interaction = Move(
+                        glossaryId:
+                            _pickerState.pendingAttackMove!['item']['id'],
+                        name: _pickerState.pendingAttackMove!['item']['name'],
+                        category: _pickerState.pendingAttackMove!['cat'],
+                        translations: _pickerState.pendingAttackMove!['tr'],
+                        side: _pickerState.pendingAttackMove!['sd'],
+                        level: _pickerState.pendingAttackMove!['lv'],
+                        isFeint: _pickerState.pendingAttackMove!['f'],
+                        specialAction: _pickerState.pendingAttackMove!['sp'],
+                        repetitions: 1,
+                        counterName:
+                            isCustom ? _customMoveController.text : it['name'],
+                        counterCategory: cat,
+                        counterSide: sd,
+                        counterLevel: lv,
+                        counterSpecialAction: sp,
+                        counterGlossaryId: isCustom ? null : it['id'],
+                      );
+                    } else {
+                      interaction = n;
+                    }
+
+                    // Handle chain finalization on "Finish"
+                    if (_pickerState.pendingChain.isNotEmpty) {
+                      final finalChain =
+                          List<Move>.from(_pickerState.pendingChain)
+                            ..add(interaction);
+                      final chainMove = Move(
+                        name: finalChain.map((m) => m.name).join(' -> '),
+                        category: 'chain',
+                        chain: finalChain,
+                      );
+                      _addItemToCombo(chainMove);
+                      _pickerState.clearPendingChain();
+                    } else if (isSimEnabled) {
+                      _addCombinedActionToCombo(interaction);
+                    } else {
+                      _addItemToCombo(interaction);
+                    }
                   }
                 });
                 _finishAndAddCombo();
@@ -2646,6 +2895,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               onPressed: () => setS(() {
                 if (isE) _pickerState.setEditingComboItemIndex(null);
                 _pickerState.setPendingActionItem(null);
+                _pickerState.setPendingAttackMove(null);
+                _pickerState.clearPendingChain();
               }),
               child: Text(
                 LocalizationService.translate('cancel', lang),
@@ -2860,13 +3111,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   void _finishAndAddCombo() {
     if (_currentCombo.isEmpty) return;
     setState(() {
-      Move finalMove = _currentCombo.length == 1
-          ? _currentCombo.first
-          : Move(
-              name: 'Combo: ${_currentCombo.first.name} + ...',
-              category: 'combo',
-              subMoves: List.from(_currentCombo),
-            );
+      Move finalMove;
+      if (_currentCombo.length == 1) {
+        finalMove = _currentCombo.first;
+      } else {
+        final bool isChain = _currentCombo.any((m) => m.category == 'chain');
+        finalMove = Move(
+          name: isChain
+              ? _currentCombo.map((m) => m.name).join(' -> ')
+              : 'Combo: ${_currentCombo.first.name} + ...',
+          category: isChain ? 'chain' : 'combo',
+          subMoves: isChain ? [] : List.from(_currentCombo),
+          chain: isChain ? List.from(_currentCombo) : [],
+        );
+      }
 
       // Apply sub-letter if selected
       finalMove = finalMove.copyWith(subLetter: _pickerState.selectedSubLetter);
