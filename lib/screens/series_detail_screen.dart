@@ -28,7 +28,8 @@ import '../utils/string_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
-  const SeriesDetailScreen({super.key, this.series});
+  final String? itemRange; // e.g., "1-4"
+  const SeriesDetailScreen({super.key, this.series, this.itemRange});
 
   @override
   State<SeriesDetailScreen> createState() => _SeriesDetailScreenState();
@@ -71,7 +72,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       _selectedCategory = widget.series!.category;
       _selectedType = widget.series!.type;
       _selectedMethod = widget.series!.attackMethod;
-      _moves = List.from(widget.series!.moves);
+
+      if (widget.itemRange != null) {
+        // Parse range like "1-4"
+        final parts = widget.itemRange!.split('-');
+        if (parts.length == 2) {
+          final start = int.tryParse(parts[0]) ?? 1;
+          final end = int.tryParse(parts[1]) ?? widget.series!.moves.length;
+
+          // Filter moves based on range (1-indexed)
+          final startIdx = (start - 1).clamp(0, widget.series!.moves.length);
+          final endIdx = end.clamp(startIdx, widget.series!.moves.length);
+
+          _moves = widget.series!.moves.sublist(startIdx, endIdx);
+        } else {
+          _moves = List.from(widget.series!.moves);
+        }
+      } else {
+        _moves = List.from(widget.series!.moves);
+      }
     } else {
       _isEditing = true;
     }
