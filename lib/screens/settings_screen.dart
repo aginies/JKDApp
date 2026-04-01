@@ -697,8 +697,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       try {
         await DatabaseService().resetDatabase();
 
-        // Reload series from the reset database
+        // Reload series and active program from the reset database
         await provider.loadSeries();
+        await provider.loadActiveProgram();
 
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1076,6 +1077,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _handleMediaRestore(context, lang, provider.galleryPath),
               ),
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.history_edu),
+                title: Text(LocalizationService.translate('view_logs', lang)),
+                onTap: () => _showLogsModal(context, lang),
+              ),
+              const Divider(),
               SwitchListTile(
                 secondary: const Icon(Icons.edit_note),
                 title: Text(
@@ -1126,12 +1133,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => _handleResetDatabase(context, lang, provider),
                 ),
               ],
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.history_edu),
-                title: Text(LocalizationService.translate('view_logs', lang)),
-                onTap: () => _showLogsModal(context, lang),
-              ),
               const Divider(),
               Padding(
                 padding: const EdgeInsets.all(16.0),

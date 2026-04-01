@@ -1103,45 +1103,72 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        _pickerState.editingSeriesIndex != null
-                            ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_pickerState.editingSeriesIndex! + 1}'
-                            : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                          color: Colors.blueAccent,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: _pickerState.editingSeriesIndex != null
+                                ? Colors.blueAccent.withValues(alpha: 0.5)
+                                : Colors.grey.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Text(
+                          _pickerState.editingSeriesIndex != null
+                              ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_pickerState.editingSeriesIndex! + 1}'
+                              : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       if (_pickerState.editingSeriesIndex != null) ...[
                         const SizedBox(width: 8),
-                        DropdownButton<int>(
-                          value: _pickerState.targetSeriesIndex != null
-                              ? _pickerState.targetSeriesIndex! + 1
-                              : 1,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color,
-                          ),
-                          isDense: true,
-                          underline: const SizedBox(),
-                          items: List.generate(
-                            _moves.length,
-                            (i) => DropdownMenuItem(
-                              value: i + 1,
-                              child: Text('${i + 1}'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.5),
                             ),
-                          ).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setS(
-                                () =>
-                                    _pickerState.setTargetSeriesIndex(val - 1),
-                              );
-                            }
-                          },
+                          ),
+                          child: DropdownButton<int>(
+                            value: _pickerState.targetSeriesIndex != null
+                                ? _pickerState.targetSeriesIndex! + 1
+                                : 1,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade300,
+                            ),
+                            isDense: true,
+                            underline: const SizedBox(),
+                            dropdownColor: Colors.black87,
+                            items: List.generate(
+                              _moves.length,
+                              (i) => DropdownMenuItem(
+                                value: i + 1,
+                                child: Text('${i + 1}'),
+                              ),
+                            ).toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setS(
+                                  () =>
+                                      _pickerState.setTargetSeriesIndex(
+                                        val - 1,
+                                      ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                       ],
                       const SizedBox(width: 8),
@@ -1149,8 +1176,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: Colors.black,
                           borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1165,14 +1195,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: _pickerState.selectedSubLetter != null
-                                    ? Colors.orangeAccent
-                                    : Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.color,
+                                color: Colors.grey.shade300,
                               ),
                               isDense: true,
                               underline: const SizedBox(),
+                              dropdownColor: Colors.black87,
                               items: [
                                 const DropdownMenuItem(
                                   value: '_',
@@ -1198,6 +1225,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ],
                         ),
                       ),
+
                     ],
                   ),
                   Row(
@@ -2420,14 +2448,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       }
 
       if (_pickerState.editingSeriesIndex != null) {
-        _moves.removeAt(_pickerState.editingSeriesIndex!);
+        final int oldIdx = _pickerState.editingSeriesIndex!;
         int target =
-            _pickerState.targetSeriesIndex ?? _pickerState.editingSeriesIndex!;
-        if (target >= _moves.length) {
-          _moves.add(finalMove);
-        } else {
-          _moves.insert(target, finalMove);
+            _pickerState.targetSeriesIndex ?? oldIdx;
+
+        _moves.removeAt(oldIdx);
+
+        // Clamping to avoid index out of bounds after removal
+        if (target > _moves.length) {
+          target = _moves.length;
         }
+
+        _moves.insert(target, finalMove);
       } else {
         _moves.add(finalMove);
       }

@@ -38,7 +38,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Rebuild to show/hide FAB based on tab
     });
@@ -966,6 +966,21 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.play_circle_fill, size: 28),
+                          const SizedBox(width: 8),
+                          Text(
+                            LocalizationService.translate(
+                              'active_training',
+                              lang,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Image.asset(
                             'assets/icon/jfgf.png',
                             width: 28,
@@ -1029,14 +1044,16 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
+          _buildActiveTrainingTab(lang),
           _buildSeriesList('Jun Fan Gung Fu', lang),
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('JKD Moves', lang),
           const ProgramsListScreen(),
         ],
       ),
-      floatingActionButton: _tabController.index == 3
-          ? null // Hide FAB on Training Programs tab
+      floatingActionButton:
+          _tabController.index == 0 || _tabController.index == 4
+          ? null // Hide FAB on Active Training and Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),
               child: FloatingActionButton(
@@ -1054,6 +1071,54 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     );
   }
 
+  Widget _buildActiveTrainingTab(String lang) {
+    final provider = context.watch<SeriesProvider>();
+    final hasActiveProgram = provider.hasActiveProgram;
+    final activeProgram = provider.activeProgram;
+    final activeProgramDetails = provider.activeProgramDetails;
+
+    if (!hasActiveProgram ||
+        activeProgram == null ||
+        activeProgramDetails == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.fitness_center, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                LocalizationService.translate('no_active_training', lang),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () =>
+                    _tabController.animateTo(4), // Go to Training Programs tab
+                child: Text(
+                  LocalizationService.translate('start_program', lang),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          ActiveProgramCard(
+            progress: activeProgram,
+            program: activeProgramDetails,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSeriesList(String category, String lang) {
     // Only listen to filtered series for this specific category
     final filtered = context.select(
@@ -1062,8 +1127,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     final provider = context.watch<SeriesProvider>();
     final hasActiveProgram = provider.hasActiveProgram;
-    final activeProgram = provider.activeProgram;
-    final activeProgramDetails = provider.activeProgramDetails;
 
     if (filtered.isEmpty && !hasActiveProgram) {
       return Center(
@@ -1075,15 +1138,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Column(
       children: [
-        // Show Active Program Card on first tab
-        if (category == 'Jun Fan Gung Fu' &&
-            hasActiveProgram &&
-            activeProgram != null &&
-            activeProgramDetails != null)
-          ActiveProgramCard(
-            progress: activeProgram,
-            program: activeProgramDetails,
-          ),
         if (category == 'JKD Moves') RandomReaderWidget(language: lang),
         Expanded(
           child: ListView.builder(

@@ -88,7 +88,7 @@ class LocalizationService {
       'processing': 'Processing image...',
       'clone': 'Clone',
       'cloned': 'cloned',
-      'manage_series': 'Manage Series',
+      'manage_series': 'Manage Series Developer',
       'manage_series_desc':
           'Enable cloning, deleting and advanced synchronization',
       'expert_mode': 'Expert Mode',
@@ -124,6 +124,9 @@ class LocalizationService {
       'series_updated': 'Series updated successfully!',
       'confirm_clone': 'Are you sure you want to clone this series?',
       'training_programs': 'Training Programs',
+      'active_training': 'Active Training',
+      'no_active_training':
+          'No active training program. Select a program from the Training Programs tab to start.',
       'all': 'All',
       'beginner': 'Beginner',
       'intermediate': 'Intermediate',
@@ -248,7 +251,7 @@ class LocalizationService {
       'processing': 'Traitement de l\'image...',
       'clone': 'Cloner',
       'cloned': 'copie',
-      'manage_series': 'Gérer les séries',
+      'manage_series': 'Gérer les séries Developer',
       'manage_series_desc':
           'Activer le clonage, la suppression et la synchronisation avancée',
       'expert_mode': 'Mode Expert',
@@ -284,6 +287,9 @@ class LocalizationService {
       'series_updated': 'Série mise à jour avec succès !',
       'confirm_clone': 'Êtes-vous sûr de vouloir cloner cette série ?',
       'training_programs': 'Programmes d\'Entraînement',
+      'active_training': 'Entraînement Actif',
+      'no_active_training':
+          'Aucun programme actif. Sélectionnez un programme dans l\'onglet "Programmes d\'Entraînement" pour commencer.',
       'all': 'Tous',
       'beginner': 'Débutant',
       'intermediate': 'Intermédiaire',

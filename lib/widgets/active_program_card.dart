@@ -269,10 +269,8 @@ class ActiveProgramCard extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SeriesDetailScreen(
-                              series: s,
-                              itemRange: range,
-                            ),
+                            builder: (context) =>
+                                SeriesDetailScreen(series: s, itemRange: range),
                           ),
                         );
                       },

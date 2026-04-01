@@ -569,9 +569,9 @@ class MoveListDisplayWidget {
                             )
                           else
                             Text(
-                              moves[i].subLetter!,
+                              '${displayNumbers[i]}${moves[i].subLetter}',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w900,
                                 color: Colors.yellowAccent,
                                 height: 1.0,
