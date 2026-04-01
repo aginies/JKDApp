@@ -152,8 +152,9 @@ class Move {
       category: category ?? this.category,
       side: side ?? this.side,
       level: level ?? this.level,
-      subLetter:
-          subLetter == _sentinel ? this.subLetter : (subLetter as String?),
+      subLetter: subLetter == _sentinel
+          ? this.subLetter
+          : (subLetter as String?),
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,

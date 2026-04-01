@@ -171,15 +171,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
     for (int i = 0; i < _moves.length; i++) {
       if (i == editingIndex) continue; // Exclude the one we are editing
-      if (displayNumbers[i] == targetMainNumber && _moves[i].subLetter != null) {
+      if (displayNumbers[i] == targetMainNumber &&
+          _moves[i].subLetter != null) {
         takenLetters.add(_moves[i].subLetter!);
       }
     }
 
-    return 'abcdefg'
-        .split('')
-        .where((l) => !takenLetters.contains(l))
-        .toList();
+    return 'abcdefg'.split('').where((l) => !takenLetters.contains(l)).toList();
   }
 
   String _getDisplayNumber(int index) {
@@ -1252,10 +1250,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             onChanged: (val) {
                               if (val != null) {
                                 setS(
-                                  () =>
-                                      _pickerState.setTargetSeriesIndex(
-                                        val - 1,
-                                      ),
+                                  () => _pickerState.setTargetSeriesIndex(
+                                    val - 1,
+                                  ),
                                 );
                               }
                             },
@@ -1284,12 +1281,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             DropdownButton<String>(
                               value:
                                   (availableSubLetters.contains(
-                                            _pickerState.selectedSubLetter,
-                                          ) ||
-                                          _pickerState.selectedSubLetter ==
-                                              null)
-                                      ? (_pickerState.selectedSubLetter ?? '_')
-                                      : '_',
+                                        _pickerState.selectedSubLetter,
+                                      ) ||
+                                      _pickerState.selectedSubLetter == null)
+                                  ? (_pickerState.selectedSubLetter ?? '_')
+                                  : '_',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -1321,8 +1317,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ],
                         ),
                       ),
-
-
                     ],
                   ),
                   Row(
@@ -2538,14 +2532,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             );
 
       // Apply sub-letter if selected
-      finalMove = finalMove.copyWith(
-        subLetter: _pickerState.selectedSubLetter,
-      );
+      finalMove = finalMove.copyWith(subLetter: _pickerState.selectedSubLetter);
 
       if (_pickerState.editingSeriesIndex != null) {
         final int oldIdx = _pickerState.editingSeriesIndex!;
-        int target =
-            _pickerState.targetSeriesIndex ?? oldIdx;
+        int target = _pickerState.targetSeriesIndex ?? oldIdx;
 
         _moves.removeAt(oldIdx);
 
@@ -2558,7 +2549,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       } else {
         _moves.add(finalMove);
       }
-      
+
       _normalizeSubLetters();
 
       _currentCombo.clear();
@@ -3147,7 +3138,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
                               final movedItem = _moves.removeAt(oldIndex);
                               _moves.insert(newIndex, movedItem);
-                              
+
                               _normalizeSubLetters();
                             });
                           },
