@@ -966,21 +966,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.play_circle_fill, size: 28),
-                          const SizedBox(width: 8),
-                          Text(
-                            LocalizationService.translate(
-                              'active_training',
-                              lang,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
                           Image.asset(
                             'assets/icon/jfgf.png',
                             width: 28,
@@ -1023,6 +1008,21 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.play_circle_fill, size: 28),
+                          const SizedBox(width: 8),
+                          Text(
+                            LocalizationService.translate(
+                              'active_training',
+                              lang,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           const Icon(Icons.calendar_month, size: 28),
                           const SizedBox(width: 8),
                           Text(
@@ -1044,15 +1044,15 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildActiveTrainingTab(lang),
           _buildSeriesList('Jun Fan Gung Fu', lang),
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('JKD Moves', lang),
+          _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
       ),
       floatingActionButton:
-          _tabController.index == 0 || _tabController.index == 4
+          _tabController.index == 3 || _tabController.index == 4
           ? null // Hide FAB on Active Training and Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),
