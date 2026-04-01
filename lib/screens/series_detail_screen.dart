@@ -143,6 +143,81 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     super.dispose();
   }
 
+  List<String> _getAvailableSubLetters(int? targetIndex, int? editingIndex) {
+    if (targetIndex == null) return 'abcdefg'.split('');
+
+    // Calculate display numbers for current moves
+    int currentMainNumber = 0;
+    final List<int> displayNumbers = [];
+    for (int i = 0; i < _moves.length; i++) {
+      if (_moves[i].category != 'move') {
+        if (_moves[i].subLetter == null) {
+          currentMainNumber++;
+        } else if (currentMainNumber == 0) {
+          currentMainNumber = 1;
+        }
+        displayNumbers.add(currentMainNumber);
+      } else {
+        displayNumbers.add(0);
+      }
+    }
+
+    if (targetIndex < 0 || targetIndex >= displayNumbers.length) {
+      return 'abcdefg'.split('');
+    }
+
+    final targetMainNumber = displayNumbers[targetIndex];
+    final takenLetters = <String>{};
+
+    for (int i = 0; i < _moves.length; i++) {
+      if (i == editingIndex) continue; // Exclude the one we are editing
+      if (displayNumbers[i] == targetMainNumber && _moves[i].subLetter != null) {
+        takenLetters.add(_moves[i].subLetter!);
+      }
+    }
+
+    return 'abcdefg'
+        .split('')
+        .where((l) => !takenLetters.contains(l))
+        .toList();
+  }
+
+  String _getDisplayNumber(int index) {
+    if (index < 0 || index >= _moves.length) return '';
+    
+    int currentMainNumber = 0;
+    for (int i = 0; i <= index; i++) {
+      if (_moves[i].category != 'move') {
+        if (_moves[i].subLetter == null) {
+          currentMainNumber++;
+        } else if (currentMainNumber == 0) {
+          currentMainNumber = 1;
+        }
+      }
+    }
+    
+    final sub = _moves[index].subLetter ?? '';
+    if (_moves[index].category == 'move') return '';
+    return '$currentMainNumber$sub';
+  }
+
+  void _normalizeSubLetters() {
+    int subIndex = 0;
+    for (int i = 0; i < _moves.length; i++) {
+      if (_moves[i].category == 'move') continue;
+
+      if (_moves[i].subLetter == null) {
+        subIndex = 0;
+      } else {
+        const letters = 'abcdefghijklmnopqrstuvwxyz';
+        if (subIndex < letters.length) {
+          _moves[i] = _moves[i].copyWith(subLetter: letters[subIndex]);
+          subIndex++;
+        }
+      }
+    }
+  }
+
   void _scrollToIndex(int index) {
     if (!_movesScrollController.hasClients) return;
 
@@ -696,6 +771,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
           ).voiceEnabled;
           final isCounterMode = _pickerState.pendingAttackMove != null;
 
+          final availableSubLetters = _getAvailableSubLetters(
+            _pickerState.targetSeriesIndex,
+            _pickerState.editingSeriesIndex,
+          );
+
           return DefaultTabController(
             key: ValueKey(isCounterMode),
             length: isCounterMode ? 6 : 8,
@@ -703,7 +783,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
               height: MediaQuery.of(context).size.height * 0.95,
               child: Column(
                 children: [
-                  _buildComboPreview(setS, lang, voiceEnabled),
+                  _buildComboPreview(
+                    setS,
+                    lang,
+                    voiceEnabled,
+                    availableSubLetters,
+                  ),
                   if (isCounterMode)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -1080,7 +1165,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     );
   }
 
-  Widget _buildComboPreview(StateSetter setS, String lang, bool voiceEnabled) {
+  Widget _buildComboPreview(
+    StateSetter setS,
+    String lang,
+    bool voiceEnabled,
+    List<String> availableSubLetters,
+  ) {
     final double h = _currentCombo.any((m) => m.category == 'move') ? 198 : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
@@ -1119,7 +1209,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ),
                         child: Text(
                           _pickerState.editingSeriesIndex != null
-                              ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_pickerState.editingSeriesIndex! + 1}'
+                              ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_getDisplayNumber(_pickerState.editingSeriesIndex!)}'
                               : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
@@ -1155,7 +1245,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               _moves.length,
                               (i) => DropdownMenuItem(
                                 value: i + 1,
-                                child: Text('${i + 1}'),
+                                child: Text(_getDisplayNumber(i)),
                               ),
                             ).toList(),
                             onChanged: (val) {
@@ -1191,7 +1281,14 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                             ),
                             const SizedBox(width: 4),
                             DropdownButton<String>(
-                              value: _pickerState.selectedSubLetter ?? '_',
+                              value:
+                                  (availableSubLetters.contains(
+                                            _pickerState.selectedSubLetter,
+                                          ) ||
+                                          _pickerState.selectedSubLetter ==
+                                              null)
+                                      ? (_pickerState.selectedSubLetter ?? '_')
+                                      : '_',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -1205,14 +1302,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   value: '_',
                                   child: Text('_'),
                                 ),
-                                ...'abcdefg'
-                                    .split('')
-                                    .map(
-                                      (l) => DropdownMenuItem(
-                                        value: l,
-                                        child: Text(l),
-                                      ),
-                                    ),
+                                ...availableSubLetters.map(
+                                  (l) => DropdownMenuItem(
+                                    value: l,
+                                    child: Text(l),
+                                  ),
+                                ),
                               ],
                               onChanged: (val) {
                                 setS(
@@ -1225,6 +1320,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           ],
                         ),
                       ),
+
 
                     ],
                   ),
@@ -2441,11 +2537,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
             );
 
       // Apply sub-letter if selected
-      if (_pickerState.selectedSubLetter != null) {
-        finalMove = finalMove.copyWith(
-          subLetter: _pickerState.selectedSubLetter,
-        );
-      }
+      finalMove = finalMove.copyWith(
+        subLetter: _pickerState.selectedSubLetter,
+      );
 
       if (_pickerState.editingSeriesIndex != null) {
         final int oldIdx = _pickerState.editingSeriesIndex!;
@@ -2463,6 +2557,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
       } else {
         _moves.add(finalMove);
       }
+      
+      _normalizeSubLetters();
+
       _currentCombo.clear();
       _pickerState.setEditingSeriesIndex(null);
       _pickerState.setTargetSeriesIndex(null);
@@ -3046,8 +3143,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           onReorder: (oldIndex, newIndex) {
                             setState(() {
                               if (newIndex > oldIndex) newIndex -= 1;
-                              final item = _moves.removeAt(oldIndex);
-                              _moves.insert(newIndex, item);
+
+                              final movedItem = _moves.removeAt(oldIndex);
+                              _moves.insert(newIndex, movedItem);
+                              
+                              _normalizeSubLetters();
                             });
                           },
                           children: _buildMoveListTiles(lang),

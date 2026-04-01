@@ -131,7 +131,7 @@ class Move {
     String? category,
     String? side,
     String? level,
-    String? subLetter,
+    Object? subLetter = _sentinel,
     bool? isFeint,
     String? specialAction,
     Map<String, String>? translations,
@@ -152,7 +152,8 @@ class Move {
       category: category ?? this.category,
       side: side ?? this.side,
       level: level ?? this.level,
-      subLetter: subLetter ?? this.subLetter,
+      subLetter:
+          subLetter == _sentinel ? this.subLetter : (subLetter as String?),
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,
@@ -165,4 +166,6 @@ class Move {
       subMoves: subMoves ?? this.subMoves,
     );
   }
+
+  static const _sentinel = Object();
 }
