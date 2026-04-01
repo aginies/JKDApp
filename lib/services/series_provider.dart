@@ -422,6 +422,17 @@ class SeriesProvider with ChangeNotifier {
     await loadActiveProgram();
   }
 
+  /// Record a series completion and auto-mark day complete if all series done
+  /// Returns completion info: {dayCompleted: bool, streak: int, progress: double}
+  Future<Map<String, dynamic>?> recordSeriesCompletion(int seriesId) async {
+    final result = await _programService.recordSeriesCompletion(seriesId);
+    if (result != null) {
+      // Reload active program to get updated state
+      await loadActiveProgram();
+    }
+    return result;
+  }
+
   /// Pause the active program
   Future<void> pauseActiveProgram() async {
     if (_activeProgram == null) return;

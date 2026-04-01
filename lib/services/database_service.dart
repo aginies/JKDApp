@@ -47,7 +47,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 14,
+      version: 15,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -256,6 +256,20 @@ class DatabaseService {
       // Seed training programs from JSON assets
       await _seedTrainingPrograms(db);
     }
+
+    if (oldVersion < 15) {
+      // Add todays_completed_series_ids column to track series completion counts for today
+      // Format: JSON map like {"1": 2, "3": 1} where key is series ID and value is completion count
+      try {
+        await db.execute(
+          'ALTER TABLE user_program_progress ADD COLUMN todays_completed_series_ids TEXT DEFAULT "{}"',
+        );
+      } catch (e) {
+        debugPrint(
+          'Migration warning: todays_completed_series_ids column may already exist - $e',
+        );
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -348,6 +362,7 @@ class DatabaseService {
         started_at TEXT NOT NULL,
         current_day INTEGER DEFAULT 1,
         completed_days TEXT,
+        todays_completed_series_ids TEXT DEFAULT '{}',
         status TEXT DEFAULT 'active',
         completed_at TEXT,
         FOREIGN KEY (program_id) REFERENCES training_programs(id)
@@ -881,6 +896,86 @@ class DatabaseService {
     return progressList;
   }
 
+  /// Create a new training program (user-created)
+  Future<int> createProgram(TrainingProgram program) async {
+    final db = await database;
+
+    // Insert program
+    final programId = await db.insert('training_programs', {
+      'title': program.title,
+      'description': program.description,
+      'difficulty_level': program.difficultyLevel,
+      'duration_days': program.durationDays,
+      'is_system': program.isSystem ? 1 : 0,
+      'created_at': program.createdAt.toIso8601String(),
+    });
+
+    // Insert program days
+    for (final day in program.days) {
+      await db.insert('program_days', {
+        'program_id': programId,
+        'day_number': day.dayNumber,
+        'series_ids': json.encode(day.seriesIds),
+        'notes': day.notes,
+        'is_rest_day': day.isRestDay ? 1 : 0,
+      });
+    }
+
+    return programId;
+  }
+
+  /// Update an existing training program
+  Future<void> updateProgram(TrainingProgram program) async {
+    if (program.id == null) {
+      throw Exception('Cannot update program without ID');
+    }
+
+    final db = await database;
+
+    // Update program
+    await db.update(
+      'training_programs',
+      {
+        'title': program.title,
+        'description': program.description,
+        'difficulty_level': program.difficultyLevel,
+        'duration_days': program.durationDays,
+        'is_system': program.isSystem ? 1 : 0,
+      },
+      where: 'id = ?',
+      whereArgs: [program.id],
+    );
+
+    // Delete old program days
+    await db.delete(
+      'program_days',
+      where: 'program_id = ?',
+      whereArgs: [program.id],
+    );
+
+    // Insert new program days
+    for (final day in program.days) {
+      await db.insert('program_days', {
+        'program_id': program.id,
+        'day_number': day.dayNumber,
+        'series_ids': json.encode(day.seriesIds),
+        'notes': day.notes,
+        'is_rest_day': day.isRestDay ? 1 : 0,
+      });
+    }
+  }
+
+  /// Delete a training program
+  Future<void> deleteProgram(int programId) async {
+    final db = await database;
+    // CASCADE delete will automatically remove program_days
+    await db.delete(
+      'training_programs',
+      where: 'id = ?',
+      whereArgs: [programId],
+    );
+  }
+
   /// Start a new program
   Future<int> startProgram(int programId) async {
     final db = await database;
@@ -945,6 +1040,93 @@ class DatabaseService {
       'duration_seconds': durationSeconds,
       'notes': notes,
     });
+
+    // Reset today's series completion counts for the new day
+    await db.update(
+      'user_program_progress',
+      {'todays_completed_series_ids': json.encode({})},
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
+  }
+
+  /// Record a series completion and auto-mark day complete if all series done
+  /// Requires 2 completions per series before counting as complete
+  /// Returns a map with: {dayCompleted: bool, streak: int, progress: double}
+  Future<Map<String, dynamic>?> recordSeriesCompletion(int seriesId) async {
+    final db = await database;
+
+    // Get active program
+    final activeProgress = await getActiveProgress();
+    if (activeProgress == null) return null; // No active program
+
+    // Get today's assigned series
+    final program = await getProgramById(activeProgress.programId);
+    if (program == null) return null;
+
+    final currentDayData = program.days.firstWhere(
+      (day) => day.dayNumber == activeProgress.currentDay,
+      orElse: () => ProgramDay(
+        programId: activeProgress.programId,
+        dayNumber: activeProgress.currentDay,
+        seriesIds: [],
+      ),
+    );
+
+    // Check if this series is in today's assignment
+    if (!currentDayData.seriesIds.contains(seriesId)) {
+      return null; // Not part of today's program
+    }
+
+    // Increment completion count for this series
+    final updatedCounts = Map<int, int>.from(activeProgress.todaysSeriesCompletionCounts);
+    updatedCounts[seriesId] = (updatedCounts[seriesId] ?? 0) + 1;
+
+    // Convert to string keys for JSON encoding
+    final countsAsStrings = updatedCounts.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+
+    // Update the progress record
+    await db.update(
+      'user_program_progress',
+      {'todays_completed_series_ids': json.encode(countsAsStrings)},
+      where: 'id = ?',
+      whereArgs: [activeProgress.id],
+    );
+
+    // Check if all series for today have been completed at least 2 times
+    final allSeriesComplete = currentDayData.seriesIds.every(
+      (id) => (updatedCounts[id] ?? 0) >= 2,
+    );
+
+    // Count how many series are fully complete (2+ reps)
+    final completedSeriesCount = currentDayData.seriesIds.where(
+      (id) => (updatedCounts[id] ?? 0) >= 2,
+    ).length;
+
+    if (allSeriesComplete) {
+      // Auto-mark day complete
+      await markDayComplete(activeProgress.id!, activeProgress.currentDay);
+
+      // Reload progress to get updated values
+      final updatedProgress = await getActiveProgress();
+      if (updatedProgress != null) {
+        return {
+          'dayCompleted': true,
+          'dayNumber': activeProgress.currentDay,
+          'streak': updatedProgress.getCurrentStreak(),
+          'progress': updatedProgress.getCompletionPercentage(program.durationDays),
+        };
+      }
+    }
+
+    return {
+      'dayCompleted': false,
+      'completedSeries': completedSeriesCount,
+      'totalSeries': currentDayData.seriesIds.length,
+      'currentSeriesCount': updatedCounts[seriesId] ?? 0,
+    };
   }
 
   /// Pause a program

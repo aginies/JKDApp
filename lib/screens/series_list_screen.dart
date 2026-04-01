@@ -8,9 +8,11 @@ import '../services/database_service.dart';
 import '../services/media_service.dart';
 import 'series_detail_screen.dart';
 import 'settings_screen.dart';
+import 'programs_list_screen.dart';
 import 'series_list/widgets/random_reader_widget.dart';
 import '../models/series.dart';
 import '../utils/translation_utils.dart';
+import '../widgets/active_program_card.dart';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -873,7 +875,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     }
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           leading: Padding(
@@ -1017,6 +1019,21 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                           ],
                         ),
                       ),
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.calendar_month, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              LocalizationService.translate(
+                                'training_programs',
+                                lang,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -1030,6 +1047,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             _buildSeriesList('Jun Fan Kick Boxing', lang),
             _buildSeriesList('JKD Moves', lang),
             _buildSeriesList('Kali', lang),
+            const ProgramsListScreen(),
           ],
         ),
         floatingActionButton: Padding(
@@ -1056,7 +1074,12 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       (SeriesProvider p) => p.getFilteredSeries(category),
     );
 
-    if (filtered.isEmpty) {
+    final provider = context.watch<SeriesProvider>();
+    final hasActiveProgram = provider.hasActiveProgram;
+    final activeProgram = provider.activeProgram;
+    final activeProgramDetails = provider.activeProgramDetails;
+
+    if (filtered.isEmpty && !hasActiveProgram) {
       return Center(
         child: Text(
           '${LocalizationService.translate('no_series', lang)} $category',
@@ -1066,6 +1089,12 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Column(
       children: [
+        // Show Active Program Card on first tab
+        if (category == 'Jun Fan Gung Fu' && hasActiveProgram && activeProgram != null && activeProgramDetails != null)
+          ActiveProgramCard(
+            progress: activeProgram,
+            program: activeProgramDetails,
+          ),
         if (category == 'JKD Moves') RandomReaderWidget(language: lang),
         Expanded(
           child: ListView.builder(

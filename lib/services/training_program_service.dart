@@ -221,4 +221,13 @@ class TrainingProgramService {
       'series': series,
     };
   }
+
+  /// Record series completion and auto-mark day complete if all series done
+  /// Returns completion info or null if not part of active program
+  Future<Map<String, dynamic>?> recordSeriesCompletion(int seriesId) async {
+    LoggingService.log(
+      'TrainingProgramService: Recording completion of series $seriesId',
+    );
+    return await _db.recordSeriesCompletion(seriesId);
+  }
 }

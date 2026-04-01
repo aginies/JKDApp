@@ -64,3 +64,4 @@ flutter:
   assets:
     - assets/
     - assets/icon/
+    - assets/training_programs/

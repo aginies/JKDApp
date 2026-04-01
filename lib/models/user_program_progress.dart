@@ -6,6 +6,7 @@ class UserProgramProgress {
   final DateTime startedAt;
   final int currentDay;
   final List<int> completedDays; // Array of day numbers that have been completed
+  final Map<int, int> todaysSeriesCompletionCounts; // Map of series ID to completion count for current day
   final String status; // 'active', 'paused', 'completed', 'abandoned'
   final DateTime? completedAt;
 
@@ -18,6 +19,7 @@ class UserProgramProgress {
     DateTime? startedAt,
     this.currentDay = 1,
     this.completedDays = const [],
+    this.todaysSeriesCompletionCounts = const {},
     this.status = 'active',
     this.completedAt,
     int? totalDays,
@@ -81,12 +83,18 @@ class UserProgramProgress {
   bool get isAbandoned => status == 'abandoned';
 
   Map<String, dynamic> toMap() {
+    // Convert Map<int, int> to Map<String, int> for JSON encoding
+    final countsAsStrings = todaysSeriesCompletionCounts.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+
     return {
       'id': id,
       'program_id': programId,
       'started_at': startedAt.toIso8601String(),
       'current_day': currentDay,
       'completed_days': json.encode(completedDays),
+      'todays_completed_series_ids': json.encode(countsAsStrings),
       'status': status,
       'completed_at': completedAt?.toIso8601String(),
     };
@@ -105,6 +113,24 @@ class UserProgramProgress {
       }
     }
 
+    Map<int, int> parsedTodaysCounts = {};
+    if (map['todays_completed_series_ids'] != null) {
+      try {
+        final decoded = json.decode(map['todays_completed_series_ids'] as String);
+        if (decoded is Map) {
+          // Convert Map<String, dynamic> to Map<int, int>
+          parsedTodaysCounts = decoded.map(
+            (key, value) => MapEntry(
+              int.parse(key.toString()),
+              value as int,
+            ),
+          );
+        }
+      } catch (e) {
+        parsedTodaysCounts = {};
+      }
+    }
+
     return UserProgramProgress(
       id: map['id'] as int?,
       programId: map['program_id'] as int? ?? 0,
@@ -113,6 +139,7 @@ class UserProgramProgress {
           : DateTime.now(),
       currentDay: map['current_day'] as int? ?? 1,
       completedDays: parsedCompletedDays,
+      todaysSeriesCompletionCounts: parsedTodaysCounts,
       status: map['status'] as String? ?? 'active',
       completedAt: map['completed_at'] != null
           ? DateTime.parse(map['completed_at'] as String)
@@ -127,6 +154,7 @@ class UserProgramProgress {
     DateTime? startedAt,
     int? currentDay,
     List<int>? completedDays,
+    Map<int, int>? todaysSeriesCompletionCounts,
     String? status,
     DateTime? completedAt,
     int? totalDays,
@@ -137,6 +165,7 @@ class UserProgramProgress {
       startedAt: startedAt ?? this.startedAt,
       currentDay: currentDay ?? this.currentDay,
       completedDays: completedDays ?? this.completedDays,
+      todaysSeriesCompletionCounts: todaysSeriesCompletionCounts ?? this.todaysSeriesCompletionCounts,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       totalDays: totalDays ?? _totalDays,
