@@ -5,9 +5,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../models/series.dart';
 import '../models/move.dart';
+import '../models/user_program_progress.dart';
+import '../models/training_program.dart';
 import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
+import '../services/training_program_service.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
 
@@ -39,10 +42,15 @@ class SeriesProvider with ChangeNotifier {
   String _searchQuery = '';
   String? _galleryPath;
   bool _isLoading = false;
+  UserProgramProgress? _activeProgram;
+  TrainingProgram? _activeProgramDetails;
 
   final DatabaseService _dbService = DatabaseService();
+  final TrainingProgramService _programService = TrainingProgramService();
 
   List<JkdSeries> get series => _series;
+  UserProgramProgress? get activeProgram => _activeProgram;
+  TrainingProgram? get activeProgramDetails => _activeProgramDetails;
   List<Map<String, dynamic>> get glossary => _glossary;
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
@@ -118,6 +126,7 @@ class SeriesProvider with ChangeNotifier {
     await _initGalleryDirectories();
     await loadGlossary();
     await loadSeries();
+    await loadActiveProgram();
   }
 
   Future<void> _initGalleryDirectories() async {
@@ -359,5 +368,93 @@ class SeriesProvider with ChangeNotifier {
     }
     _filteredCache[category] = filtered;
     return filtered;
+  }
+
+  // ============================================================
+  // Training Program Methods
+  // ============================================================
+
+  /// Load the currently active training program (if any)
+  Future<void> loadActiveProgram() async {
+    LoggingService.log('Loading active training program...');
+    try {
+      _activeProgram = await _programService.getActiveProgress();
+      if (_activeProgram != null) {
+        _activeProgramDetails = await _programService.getProgramById(
+          _activeProgram!.programId,
+        );
+        LoggingService.log(
+          'Active program loaded: ${_activeProgramDetails?.title ?? "Unknown"}',
+        );
+      } else {
+        _activeProgramDetails = null;
+        LoggingService.log('No active program found');
+      }
+      notifyListeners();
+    } catch (e) {
+      LoggingService.log('Error loading active program: $e');
+      _activeProgram = null;
+      _activeProgramDetails = null;
+    }
+  }
+
+  /// Start a new training program
+  Future<void> startProgram(int programId) async {
+    await _programService.startProgram(programId);
+    await loadActiveProgram();
+  }
+
+  /// Mark a day as complete in the active program
+  Future<void> markDayComplete(
+    int dayNumber, {
+    int? durationSeconds,
+    String? notes,
+  }) async {
+    if (_activeProgram == null) {
+      throw Exception('No active program to mark complete');
+    }
+    await _programService.markDayComplete(
+      _activeProgram!.id!,
+      dayNumber,
+      durationSeconds: durationSeconds,
+      notes: notes,
+    );
+    await loadActiveProgram();
+  }
+
+  /// Pause the active program
+  Future<void> pauseActiveProgram() async {
+    if (_activeProgram == null) return;
+    await _programService.pauseProgram(_activeProgram!.id!);
+    await loadActiveProgram();
+  }
+
+  /// Resume the active program
+  Future<void> resumeActiveProgram() async {
+    if (_activeProgram == null) return;
+    await _programService.resumeProgram(_activeProgram!.id!);
+    await loadActiveProgram();
+  }
+
+  /// Abandon the active program
+  Future<void> abandonActiveProgram() async {
+    if (_activeProgram == null) return;
+    await _programService.abandonProgram(_activeProgram!.id!);
+    await loadActiveProgram();
+  }
+
+  /// Skip a day in the active program
+  Future<void> skipDay(int dayNumber) async {
+    if (_activeProgram == null) return;
+    await _programService.skipDay(_activeProgram!.id!, dayNumber);
+    await loadActiveProgram();
+  }
+
+  /// Check if there's an active program
+  bool get hasActiveProgram => _activeProgram != null;
+
+  /// Get today's assignment details (program, day, series)
+  Future<Map<String, dynamic>?> getTodaysAssignment() async {
+    return await _programService.getTodaysAssignment();
   }
 }
