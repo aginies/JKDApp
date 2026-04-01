@@ -15,6 +15,7 @@
     {"name": "Gwa Chuie", "translations": {"en": "Back fist", "fr": "Coup de poing arriere"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Jang", "translations": {"en": "Elbow strike", "fr": "Coup de coude"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Biu Jee", "translations": {"en": "Thrusting finger", "fr": "Poussée des doigts"}, "hit_type": "closed", "possible_level": "H", "removal": {}},
+    {"name": "Biu Sao Da", "translations": {"en": "Thrusting fingers with hit", "fr": "Poussée doigts + coup"}, "possible_level": "H", "removal": {}},
     {"name": "Fu Jao", "translations": {"en": "Claw hand strike", "fr": "Coup de main de griffe"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
     {"name": "Sot Kil", "translations": {"en": "Hammer fist", "fr": "Coup de Poing marteau"}, "hit_type": "closed", "possible_level": "H,M,L", "removal": {}},
     {"name": "Choap Chuie", "translations": {"en": "Half knuckle fist punch", "fr": "Coup de poing demi-poing"}, "hit_type": "closed", "possible_level": "H,M", "removal": {}},
@@ -89,6 +90,7 @@
     {"name": "Lop Sao", "translations": {"en": "Pulling hand", "fr": "Saisir la main"}, "possible_level": "H,M", "removal": {}},
     {"name": "Fook Sao", "translations": {"en": "Bridge-on hand", "fr": "Poignet plié"}, "possible_level": "H,M", "removal": {}},
     {"name": "Bong Sao", "translations": {"en": "Wing arm", "fr": "Parade du coude"}, "possible_level": "H", "removal": {}},
+    {"name": "Biu Sao", "translations": {"en": "Thrusting hand", "fr": "Main jaillissante"}, "possible_level": "H,M", "removal": {}},
     {"name": "Oum Sao", "translations": {"en": "Wrapping hand", "fr": "Main enveloppante"}, "possible_level": "H,M", "removal": {}},
     {"name": "Poon Sao", "translations": {"en": "Forearm winding (rotation)", "fr": "Enroulement (rotation) bras"}, "possible_level": "H,M", "removal": {}}
   ],
@@ -146,7 +148,6 @@
     {"name": "Tan Da", "translations": {"en": "Palm up hand with hit", "fr": "Paume vers le haut avec coup"}, "possible_level": "H,M", "removal": {}},
     {"name": "Fook Da", "translations": {"en": "Arm resting with hit", "fr": "Appui bras + coup"}, "possible_level": "H,M", "removal": {}},
     {"name": "Goang Da", "translations": {"en": "Low block with hit", "fr": "Blocage bas + coup"}, "possible_level": "L", "removal": {}},
-    {"name": "Biu Da", "translations": {"en": "Thrusting fingers with hit", "fr": "Poussée doigts + coup"}, "possible_level": "H", "removal": {}},
     {"name": "Boang Da", "translations": {"en": "Wing arm with hit", "fr": "Parade aile + coup"}, "possible_level": "H", "removal": {}}
   ]
 }

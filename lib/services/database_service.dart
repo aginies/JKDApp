@@ -48,7 +48,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 17,
+      version: 18,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -296,6 +296,15 @@ class DatabaseService {
       await db.delete('series', where: 'is_system = 1');
       await _seedSeries(db);
       debugPrint('Migration v17: Re-seeded glossary and system series');
+    }
+
+    if (oldVersion < 18) {
+      // Re-seed glossary and series to include updated Contre Jab Hook and Biu Sao
+      await db.delete('glossary');
+      await _seedGlossary(db);
+      await db.delete('series', where: 'is_system = 1');
+      await _seedSeries(db);
+      debugPrint('Migration v18: Re-seeded glossary and system series');
     }
   }
 

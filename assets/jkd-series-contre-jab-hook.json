@@ -2,20 +2,203 @@
   {
     "title": "Contre Jab Hook",
     "category": "Jun Fan Gung Fu",
-    "type": "Attack",
+    "type": "Defense",
     "attack_method": "SDA",
-    "notes": "Description",
+    "notes": "Defense against Jab followed by Hook (Right or Left).",
     "is_system": 1,
     "moves": [
       {
-        "name": "Jab",
-        "category": "punch",
+        "name": "Cover coude",
+        "category": "combo",
         "side": "L",
         "level": "High",
-        "repetitions": 1,
-        "sub_moves_json": null
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Shoulder Roll\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Inside Wedge",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Inside Wedge\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Insinida",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Insinida\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Bob wave",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Bob and Wave\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Shoulder stop, coups genoux",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Shoulder stop, knee, guard change\",\"counter_category\":\"trapping\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "White cover (en avançant)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_letter": "a",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"White cover forward\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Panatukan (en avançant)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_letter": "b",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Panatukan forward\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Silat",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_letter": "c",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Silat\",\"counter_category\":\"packs\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Shoulder stop, coup genoux, tirer",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Shoulder stop, knee, pull arm\",\"counter_category\":\"trapping\",\"counter_side\":\"L\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "AR Side tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou Juk Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "AV Jeet tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Jeet Tek\",\"counter_category\":\"kick\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "AV Nan tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Nan Tek\",\"counter_category\":\"kick\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "AR Dum tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou Dum Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Low\"}]"
+      },
+      {
+        "name": "AR Loy tek",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou So Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Low\"}]"
+      },
+      {
+        "name": "Shoulder stop (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Shoulder Stop\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Biceps stop",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Biceps Stop\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "John wayne",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"John Wayne\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Inside wedge (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Inside Wedge\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Insinida (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Insinida\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Bob wave (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Bob and Wave\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "AR side tek (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou Juk Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "AV Jeet tek (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Jeet Tek\",\"counter_category\":\"kick\",\"counter_side\":\"L\",\"counter_level\":\"Mid\"}]"
+      },
+      {
+        "name": "AR Dum tek (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou Dum Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Low\"}]"
+      },
+      {
+        "name": "AR Loy Tek (L Hook)",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Hou So Tek\",\"counter_category\":\"kick\",\"counter_side\":\"R\",\"counter_level\":\"Low\"}]"
+      },
+      {
+        "name": "Won pack Bui Jee",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Woang Pack Sao, Biu Jee\",\"counter_category\":\"trapping\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Woang Pack, Bui Sao, Bui Jee",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Woang Pack Sao, Biu Sao, Biu Jee\",\"counter_category\":\"trapping\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
+      },
+      {
+        "name": "Woang pack Bui Jee, pack sao , Bui Jee",
+        "category": "combo",
+        "side": "L",
+        "level": "High",
+        "sub_moves_json": "[{\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Jab\\\",\\\"fr\\\":\\\"Jab\\\"}\",\"counter_name\":\"Pak Sao\",\"counter_category\":\"packs\",\"counter_side\":\"R\",\"counter_level\":\"High\"},{\"name\":\"Hook\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"High\",\"translations\":\"{\\\"en\\\":\\\"Hook\\\",\\\"fr\\\":\\\"Crochet\\\"}\",\"counter_name\":\"Woang Pack Sao, Biu Jee, Pak Sao, Biu Jee\",\"counter_category\":\"trapping\",\"counter_side\":\"R\",\"counter_level\":\"High\"}]"
       }
     ]
   }
 ]
-
