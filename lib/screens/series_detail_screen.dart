@@ -1904,11 +1904,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               child: const Icon(Icons.fullscreen_exit),
             )
           : (_isEditing
-              ? FloatingActionButton(
-                  onPressed: _showEditHelpDialog,
-                  child: const Icon(Icons.help_outline),
-                )
-              : null),
+                ? FloatingActionButton(
+                    onPressed: _showEditHelpDialog,
+                    child: const Icon(Icons.help_outline),
+                  )
+                : null),
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(
@@ -2238,7 +2238,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ),
                   ],
                 ],
-                if (!_isEditing && !_isFullscreen && _currentTrainingOptions == null) ...[
+                if (!_isEditing &&
+                    !_isFullscreen &&
+                    _currentTrainingOptions == null) ...[
                   Wrap(
                     spacing: 8,
                     children: [
