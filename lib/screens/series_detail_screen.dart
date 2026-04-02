@@ -81,8 +81,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final GlobalKey<AnimatedListState> _comboListKey =
       GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
-  final TransformationController _transformationController =
-      TransformationController();
   Timer? _scrollTimer;
   bool _isFullscreen = false;
 
@@ -1898,19 +1896,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
-      floatingActionButton: _isFullscreen
+      floatingActionButton: _isEditing
           ? FloatingActionButton(
-              heroTag: 'exit_fullscreen',
-              tooltip: LocalizationService.translate('exit_fullscreen', lang),
-              onPressed: () => setState(() => _isFullscreen = false),
-              child: const Icon(Icons.fullscreen_exit),
+              onPressed: _showEditHelpDialog,
+              child: const Icon(Icons.help_outline),
             )
-          : (_isEditing
-                ? FloatingActionButton(
-                    onPressed: _showEditHelpDialog,
-                    child: const Icon(Icons.help_outline),
-                  )
-                : null),
+          : null,
+
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(
@@ -1961,12 +1953,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       'training_mode',
                       lang,
                     ),
-                  ),
-                if (!_isEditing && widget.series != null)
-                  IconButton(
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () => setState(() => _isFullscreen = true),
-                    tooltip: LocalizationService.translate('fullscreen', lang),
                   ),
                 if (_isEditing)
                   IconButton(
@@ -2305,20 +2291,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           },
                           children: _buildMoveListTiles(lang),
                         )
-                      : InteractiveViewer(
-                          transformationController: _transformationController,
-                          panEnabled:
-                              false, // Standard scroll handles vertical movement
-                          scaleEnabled: Platform.isAndroid || Platform.isIOS,
-                          minScale: 0.4,
-                          maxScale: 3.0,
-                          boundaryMargin: const EdgeInsets.all(
-                            2000,
-                          ), // Allow zooming out
-                          child: ListView(
-                            controller: _movesScrollController,
-                            children: _buildMoveListTiles(lang),
-                          ),
+                      : ListView(
+                          controller: _movesScrollController,
+                          children: _buildMoveListTiles(lang),
                         ),
                 ),
               ],

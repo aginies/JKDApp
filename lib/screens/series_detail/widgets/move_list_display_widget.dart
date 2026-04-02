@@ -460,8 +460,8 @@ class MoveListDisplayWidget {
                                   moves[i],
                                   language,
                                   onShowMediaGallery,
-                                  iconSize: 32,
-                                  fontSize: 16,
+                                  iconSize: 28,
+                                  fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 )
                               else if (moves[i].category == 'chain' ||
@@ -471,8 +471,8 @@ class MoveListDisplayWidget {
                                   moves[i],
                                   language,
                                   onShowMediaGallery,
-                                  iconSize: 32,
-                                  fontSize: 16,
+                                  iconSize: 28,
+                                  fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 )
                               else if (!moves[i].isCombo) ...[
@@ -480,8 +480,8 @@ class MoveListDisplayWidget {
                                   moves[i],
                                   language,
                                   onShowMediaGallery,
-                                  iconSize: 32,
-                                  fontSize: 16,
+                                  iconSize: 28,
+                                  fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 ),
                               ],

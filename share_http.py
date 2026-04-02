@@ -165,7 +165,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             </div>
             <div class="file-meta">
                 <span class="file-size">{f["size"]}</span>
-                <a href="{f["url"]}" class="download-btn">⬇ Download</a>
+                <a href="{f["url"]}" class="download-btn">⬇ DL</a>
             </div>
         </div>'''
                 for f in files
