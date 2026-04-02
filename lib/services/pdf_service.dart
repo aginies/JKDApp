@@ -1,6 +1,8 @@
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+
 import '../models/series.dart';
 import '../models/move.dart';
 import 'localization_service.dart';
@@ -9,9 +11,42 @@ class PdfService {
   static Future<void> exportSeriesToPdf(JkdSeries series, String lang) async {
     final pdf = pw.Document();
 
+    final font = await PdfGoogleFonts.robotoRegular();
+    final boldFont = await PdfGoogleFonts.robotoBold();
+    final italicFont = await PdfGoogleFonts.robotoItalic();
+
+    // Load icons
+    final jfgfIcon = await _loadIcon('assets/icon/jfgf.png');
+    final jfkbIcon = await _loadIcon('assets/icon/jfkb.png');
+    final kaliIcon = await _loadIcon('assets/icon/kali.png');
+    final jkdIcon = await _loadIcon('assets/icon/JKD.png');
+
+    pw.ImageProvider? categoryIcon;
+    switch (series.category) {
+      case 'Jun Fan Gung Fu':
+        categoryIcon = jfgfIcon;
+        break;
+      case 'Jun Fan Kick Boxing':
+        categoryIcon = jfkbIcon;
+        break;
+      case 'Kali':
+        categoryIcon = kaliIcon;
+        break;
+      case 'JKD Moves':
+        categoryIcon = jkdIcon;
+        break;
+    }
+
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat.a4,
+          theme: pw.ThemeData.withFont(
+            base: font,
+            bold: boldFont,
+            italic: italicFont,
+          ),
+        ),
         build: (pw.Context context) {
           return [
             pw.Header(
@@ -26,13 +61,18 @@ class PdfService {
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
-                  pw.Text(
-                    series.category,
-                    style: const pw.TextStyle(
-                      fontSize: 12,
-                      color: PdfColors.grey700,
+                  pw.Row(children: [
+                    if (categoryIcon != null)
+                      pw.Image(categoryIcon, width: 32, height: 32),
+                    pw.SizedBox(width: 8),
+                    pw.Text(
+                      series.category,
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        color: PdfColors.grey700,
+                      ),
                     ),
-                  ),
+                  ]),
                 ],
               ),
             ),
@@ -48,12 +88,12 @@ class PdfService {
             pw.SizedBox(height: 10),
             pw.Text(
               '${LocalizationService.translate('type', lang)}: ${series.type}',
-              style: const pw.TextStyle(fontSize: 12),
+              style: pw.TextStyle(fontSize: 12),
             ),
             if (series.attackMethod != null)
               pw.Text(
                 '${LocalizationService.translate('method', lang)}: ${series.attackMethod}',
-                style: const pw.TextStyle(fontSize: 12),
+                style: pw.TextStyle(fontSize: 12),
               ),
             pw.SizedBox(height: 10),
             if (series.notes.isNotEmpty) ...[
@@ -88,106 +128,182 @@ class PdfService {
     );
   }
 
+  static Future<pw.MemoryImage> _loadIcon(String path) async {
+    final data = await rootBundle.load(path);
+    return pw.MemoryImage(data.buffer.asUint8List());
+  }
+
   static pw.Widget _buildMoveWidget(Move move, int index, String lang) {
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 10),
-      child: pw.Column(
+      margin: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Container(
-                width: 20,
-                height: 20,
-                decoration: const pw.BoxDecoration(
-                  color: PdfColors.red,
-                  shape: pw.BoxShape.circle,
+          // Number circle
+          pw.Container(
+            width: 22,
+            height: 22,
+            decoration: const pw.BoxDecoration(
+              color: PdfColors.redAccent,
+              shape: pw.BoxShape.circle,
+            ),
+            child: pw.Center(
+              child: pw.Text(
+                move.subLetter != null ? '$index${move.subLetter}' : '$index',
+                style: pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: move.subLetter != null ? 8 : 10,
+                  fontWeight: pw.FontWeight.bold,
                 ),
-                child: pw.Center(
-                  child: pw.Text(
-                    '$index',
-                    style: const pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 10,
-                    ),
+              ),
+            ),
+          ),
+          pw.SizedBox(width: 12),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                _buildMoveContent(move, lang),
+                if (move.counterName != null && !move.isCombo && !move.isChain)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(top: 4),
+                    child: _buildCounterRow(move, lang),
                   ),
-                ),
-              ),
-              pw.SizedBox(width: 10),
-              pw.Expanded(
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    if (!move.isCombo)
-                      _buildSingleMoveLine(move, lang)
-                    else ...[
-                      pw.Text(
-                        move.name,
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
-                      ...move.subMoves.map(
-                        (sub) => pw.Padding(
-                          padding: const pw.EdgeInsets.only(left: 15, top: 2),
-                          child: _buildSingleMoveLine(sub, lang, isSub: true),
-                        ),
-                      ),
-                    ],
-                    if (!move.isCombo && move.counterName != null)
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.only(left: 15, top: 2),
-                        child: pw.Text(
-                          '${LocalizationService.translate('answer', lang)}: ${move.counterName} (${move.counterSide ?? ''} ${move.counterLevel ?? ''})',
-                          style: const pw.TextStyle(
-                            fontSize: 10,
-                            color: PdfColors.orange900,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget _buildSingleMoveLine(
-    Move move,
-    String lang, {
-    bool isSub = false,
-  }) {
+  static pw.Widget _buildMoveContent(Move move, String lang, {bool isSub = false}) {
+    if (move.isCombo) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: move.subMoves.asMap().entries.map((e) {
+          final subIdx = e.key;
+          final sub = e.value;
+          return pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 4),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                if (!isSub)
+                  pw.Text('${subIdx + 1}. ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      _buildSingleMoveLine(sub, lang),
+                      if (sub.counterName != null)
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(top: 2, left: 10),
+                          child: _buildCounterRow(sub, lang),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+    }
+
+    if (move.isChain) {
+      return pw.Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: move.chain.asMap().entries.map((e) {
+          final idx = e.key;
+          final m = e.value;
+          return pw.Row(
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  _buildSingleMoveLine(m, lang),
+                  if (m.counterName != null)
+                     pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 2, left: 10),
+                        child: _buildCounterRow(m, lang),
+                      ),
+                ],
+              ),
+              if (idx < move.chain.length - 1)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 4),
+                  child: pw.Text('->', style: pw.TextStyle(color: PdfColors.teal, fontWeight: pw.FontWeight.bold)),
+                ),
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    return _buildSingleMoveLine(move, lang);
+  }
+
+  static pw.Widget _buildSingleMoveLine(Move move, String lang) {
     final side = move.side.isNotEmpty ? '(${move.side})' : '';
     final level = move.level.isNotEmpty
         ? LocalizationService.translate(move.level.toLowerCase(), lang)
         : '';
-    final special = move.specialAction != null ? '[${move.specialAction}]' : '';
+    final translation = move.translations[lang] ?? '';
+    final reps = move.repetitions > 1 ? ' x${move.repetitions}' : '';
 
     return pw.Row(
+      mainAxisSize: pw.MainAxisSize.min,
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
-        if (isSub)
-          pw.Text('> ', style: const pw.TextStyle(color: PdfColors.grey)),
         pw.Text(
           move.name,
-          style: pw.TextStyle(
-            fontWeight: pw.FontWeight.bold,
-            fontSize: isSub ? 10 : 12,
-          ),
+          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
         ),
-        pw.SizedBox(width: 5),
-        pw.Text(
-          '$side $level $special',
-          style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-        ),
-        if (move.counterName != null && isSub) ...[
-          pw.SizedBox(width: 10),
+        if (translation.isNotEmpty)
           pw.Text(
-            '-> ${move.counterName} (${move.counterSide ?? ''})',
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.orange800),
+            ' ($translation)',
+            style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic, color: PdfColors.grey700),
           ),
-        ],
+        pw.SizedBox(width: 4),
+        pw.Text(
+          '$side $level$reps',
+          style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _buildCounterRow(Move move, String lang) {
+    final counterSide = move.counterSide != null ? '(${move.counterSide})' : '';
+    final counterLevel = move.counterLevel != null
+        ? LocalizationService.translate(move.counterLevel!.toLowerCase(), lang)
+        : '';
+    final counterTranslation = move.counterTranslations[lang] ?? '';
+
+    return pw.Row(
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        pw.Text(
+          '-> ${LocalizationService.translate('answer', lang)}: ',
+          style: pw.TextStyle(fontSize: 10, color: PdfColors.orange900),
+        ),
+        pw.Text(
+          move.counterName!,
+          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.orange900),
+        ),
+        if (counterTranslation.isNotEmpty)
+          pw.Text(
+            ' ($counterTranslation)',
+            style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic, color: PdfColors.orange700),
+          ),
+        pw.SizedBox(width: 4),
+        pw.Text(
+          '$counterSide $counterLevel',
+          style: pw.TextStyle(fontSize: 9, color: PdfColors.orange700),
+        ),
       ],
     );
   }

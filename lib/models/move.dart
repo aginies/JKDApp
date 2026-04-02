@@ -23,6 +23,7 @@ class Move {
   final String? counterLevel;
   final String? counterSpecialAction;
   final String? counterCategory;
+  final Map<String, String> counterTranslations;
 
   final List<Move> subMoves;
   final List<Move> chain;
@@ -46,6 +47,7 @@ class Move {
     this.counterLevel,
     this.counterSpecialAction,
     this.counterCategory,
+    this.counterTranslations = const {},
     this.subMoves = const [],
     this.chain = const [],
   }) : uKey = uKey ?? const Uuid().v4();
@@ -82,6 +84,7 @@ class Move {
       'counter_level': counterLevel,
       'counter_special_action': counterSpecialAction,
       'counter_category': counterCategory,
+      'counter_translations': json.encode(counterTranslations),
       'sub_moves_json': subMoves.isNotEmpty
           ? json.encode(subMoves.map((m) => m.toMap()).toList())
           : null,
@@ -93,6 +96,7 @@ class Move {
 
   factory Move.fromMap(Map<String, dynamic> map) {
     final trans = TranslationUtils.parseTranslations(map['translations']);
+    final counterTrans = TranslationUtils.parseTranslations(map['counter_translations']);
 
     List<Move> subs = [];
     if (map['sub_moves_json'] != null) {
@@ -141,6 +145,7 @@ class Move {
       counterLevel: map['counter_level'],
       counterSpecialAction: map['counter_special_action'],
       counterCategory: map['counter_category'],
+      counterTranslations: counterTrans,
       subMoves: subs,
       chain: chainItems,
     );
@@ -165,6 +170,7 @@ class Move {
     String? counterLevel,
     String? counterSpecialAction,
     String? counterCategory,
+    Map<String, String>? counterTranslations,
     List<Move>? subMoves,
     List<Move>? chain,
   }) {
@@ -189,6 +195,7 @@ class Move {
       counterLevel: counterLevel ?? this.counterLevel,
       counterSpecialAction: counterSpecialAction ?? this.counterSpecialAction,
       counterCategory: counterCategory ?? this.counterCategory,
+      counterTranslations: counterTranslations ?? this.counterTranslations,
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
     );

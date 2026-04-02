@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter/services.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/export_service.dart';
@@ -802,6 +804,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showPrivacyPolicyModal(BuildContext context, String lang) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(lang == 'fr' ? 'Politique de Confidentialité' : 'Privacy Policy'),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: FutureBuilder(
+            future: rootBundle.loadString('PRIVACY_POLICY.md'),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Markdown(data: snapshot.data!);
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+          ),
+        );
+      },
+    );
+  }
+
   void _showAboutModal(BuildContext context, String lang) {
     showDialog(
       context: context,
@@ -1183,6 +1213,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip, color: Colors.blueAccent),
+                title: Text(lang == 'fr' ? 'Politique de Confidentialité' : 'Privacy Policy'),
+                onTap: () => _showPrivacyPolicyModal(context, lang),
+              ),
               ListTile(
                 leading: const Icon(Icons.bug_report, color: Colors.orange),
                 title: Text(

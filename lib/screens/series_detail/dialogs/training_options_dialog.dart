@@ -30,8 +30,8 @@ class TrainingOptionsDialog {
   ) async {
     int trainingStartIndex = 1;
     int trainingEndIndex = movesCount;
-    int trainingInterval = currentInterval;
-    int trainingComboInterval = currentComboInterval;
+    int trainingInterval = currentInterval.clamp(1, 12);
+    int trainingComboInterval = currentComboInterval.clamp(500, 4000);
     double trainingSpeechRate = currentSpeechRate;
     bool isLooping = false;
 
@@ -61,116 +61,115 @@ class TrainingOptionsDialog {
                 LocalizationService.translate('training_desc', language),
                 style: const TextStyle(color: Colors.grey),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              const SizedBox(height: 24),
+              // Moves Range Slider
+              Column(
                 children: [
-                  Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Start', style: TextStyle(fontSize: 12)),
-                      DropdownButton<int>(
-                        value: trainingStartIndex,
-                        items: List.generate(movesCount, (i) => i + 1)
-                            .map(
-                              (i) =>
-                                  DropdownMenuItem(value: i, child: Text('$i')),
-                            )
-                            .toList(),
-                        onChanged: (val) => setModalState(() {
-                          trainingStartIndex = val!;
-                          if (trainingEndIndex < trainingStartIndex) {
-                            trainingEndIndex = trainingStartIndex;
-                          }
-                        }),
+                      Text(
+                        'Moves: $trainingStartIndex - $trainingEndIndex',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Row(
+                        children: [
+                          const Text('Loop', style: TextStyle(fontSize: 12)),
+                          Switch(
+                            value: isLooping,
+                            onChanged: (val) =>
+                                setModalState(() => isLooping = val),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Column(
-                    children: [
-                      const Text('End', style: TextStyle(fontSize: 12)),
-                      DropdownButton<int>(
-                        value: trainingEndIndex,
-                        items: List.generate(movesCount, (i) => i + 1)
-                            .map(
-                              (i) =>
-                                  DropdownMenuItem(value: i, child: Text('$i')),
-                            )
-                            .toList(),
-                        onChanged: (val) => setModalState(() {
-                          trainingEndIndex = val!;
-                          if (trainingStartIndex > trainingEndIndex) {
-                            trainingEndIndex = trainingEndIndex;
+                  RangeSlider(
+                    values: RangeValues(
+                      trainingStartIndex.toDouble(),
+                      trainingEndIndex.toDouble(),
+                    ),
+                    min: 1,
+                    max: movesCount.toDouble(),
+                    divisions: movesCount > 1 ? movesCount - 1 : 1,
+                    labels: RangeLabels(
+                      trainingStartIndex.toString(),
+                      trainingEndIndex.toString(),
+                    ),
+                    onChanged: movesCount > 1
+                        ? (RangeValues values) {
+                            setModalState(() {
+                              trainingStartIndex = values.start.round();
+                              trainingEndIndex = values.end.round();
+                            });
                           }
-                        }),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('Loop', style: TextStyle(fontSize: 12)),
-                      Switch(
-                        value: isLooping,
-                        onChanged: (val) =>
-                            setModalState(() => isLooping = val),
-                      ),
-                    ],
+                        : null,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
+              // Interval Slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${LocalizationService.translate('interval', language)}: ',
+                  Expanded(
+                    child: Text(
+                      '${LocalizationService.translate('interval', language)}: ',
+                    ),
                   ),
                   SizedBox(
-                    width: 180,
+                    width: 200,
                     child: Slider(
                       value: trainingInterval.toDouble(),
-                      min: 3,
-                      max: 20,
-                      divisions: 17,
+                      min: 1,
+                      max: 12,
+                      divisions: 11,
                       label: trainingInterval.toString(),
                       onChanged: (val) =>
                           setModalState(() => trainingInterval = val.toInt()),
                     ),
                   ),
-                  Text('$trainingInterval s'),
+                  Text('$trainingInterval s', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 8),
+              // Combo Interval Slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${LocalizationService.translate('combo_interval', language)}: ',
+                  Expanded(
+                    child: Text(
+                      '${LocalizationService.translate('combo_interval', language)}: ',
+                    ),
                   ),
                   SizedBox(
-                    width: 180,
+                    width: 200,
                     child: Slider(
                       value: trainingComboInterval.toDouble(),
                       min: 500,
-                      max: 5000,
-                      divisions: 9,
+                      max: 4000,
+                      divisions: 7,
                       label: trainingComboInterval.toString(),
                       onChanged: (val) => setModalState(
                         () => trainingComboInterval = val.toInt(),
                       ),
                     ),
                   ),
-                  Text('$trainingComboInterval ms'),
+                  Text('$trainingComboInterval ms', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 8),
+              // Speech Rate Slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${LocalizationService.translate('speech_rate', language)}: ',
+                  Expanded(
+                    child: Text(
+                      '${LocalizationService.translate('speech_rate', language)}: ',
+                    ),
                   ),
                   SizedBox(
-                    width: 180,
+                    width: 200,
                     child: Slider(
                       value: trainingSpeechRate,
                       min: 0.1,
@@ -181,10 +180,10 @@ class TrainingOptionsDialog {
                           setModalState(() => trainingSpeechRate = val),
                     ),
                   ),
-                  Text(trainingSpeechRate.toStringAsFixed(2)),
+                  Text(trainingSpeechRate.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(

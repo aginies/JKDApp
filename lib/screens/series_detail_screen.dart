@@ -52,8 +52,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
 
   final FlutterTts _tts = FlutterTts();
   late TrainingController _trainingController;
-  int _trainingInterval = 7;
-  int _comboInterval = 2500;
+  int _trainingInterval = 3;
+  int _comboInterval = 1500;
   TrainingOptions? _currentTrainingOptions;
 
   // Service instances
