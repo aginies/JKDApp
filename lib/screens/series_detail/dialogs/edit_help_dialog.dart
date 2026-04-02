@@ -12,34 +12,66 @@ class EditHelpDialog {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(LocalizationService.translate('help', lang)),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: MediaQuery.of(context).size.height * 0.6,
-            child: FutureBuilder<String>(
-              future: rootBundle.loadString(assetPath),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Error loading help: ${snapshot.error}'),
-                  );
-                }
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                return Markdown(data: snapshot.data!, shrinkWrap: true);
-              },
+        final theme = Theme.of(context);
+        return Dialog(
+          insetPadding: const EdgeInsets.all(10),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppBar(
+                  title: Text(LocalizationService.translate('help', lang)),
+                  automaticallyImplyLeading: false,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: FutureBuilder<String>(
+                    future: rootBundle.loadString(assetPath),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text('Error loading help: ${snapshot.error}'),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return Markdown(
+                        data: snapshot.data!,
+                        styleSheet: MarkdownStyleSheet.fromTheme(theme)
+                            .copyWith(
+                              p: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                              ),
+                              h1: theme.textTheme.headlineMedium?.copyWith(
+                                fontSize: 18,
+                              ),
+                              h2: theme.textTheme.headlineSmall?.copyWith(
+                                fontSize: 16,
+                              ),
+                              h3: theme.textTheme.titleLarge?.copyWith(
+                                fontSize: 14,
+                              ),
+                              tableBody: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 11,
+                              ),
+                              listBullet: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 12,
+                              ),
+                            ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(LocalizationService.translate('close', lang)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
