@@ -155,11 +155,19 @@ After pressing **Answer**, you can use **+** and **->** to build complex counter
 6. Click **Next**
 7. Choose "Pack Sao (R)"
 8. Click **->**
-9. Choose "Jab (L)" -> **->**
-6. Click **Answer** -> Choose "Through Locking (L)" -> **Next**
-7. Choose "Bong Sao (L)" -> **Next**
-8. Choose "Lop Sao (R)" -> **->**
-9. Choose "Jab (L)" -> **->** -> **Next**
-10. Choose "Cross (R)" -> **Answer**
-11. Choose "Pak Sao (L)" -> **+**
-12. Choose "Jik Tek (R)" -> **Finish**
+9. Choose "Jab (L)"
+10. Click **Answer**
+11. Choose "Through Locking (L)"
+12. Click **Next**
+13. Choose "Bong Sao (L)"
+14. Click **->**
+15. Choose "Lop Sao (R)"
+16. Click **->**
+17. Choose "Jab (L)"
+18. Click **Next**
+19. Choose "Cross (R)"
+20. Click **Answer**
+21. Choose "Pak Sao (L)"
+22. Click **+**
+23. Choose "Jik Tek (R)"
+24. Click **Finish**
