@@ -43,7 +43,7 @@ class TrainingController {
   bool get isPaused => _isPaused;
   int get currentIndex => _currentIndex;
 
-  Future<void> initTts({double speechRate = 0.25}) async {
+  Future<void> initTts({double speechRate = 0.50}) async {
     if (Platform.isLinux) return;
     try {
       await _tts.setVolume(1.0);
@@ -125,7 +125,7 @@ class TrainingController {
     required int comboInterval,
     required bool isLooping,
     required String language,
-    double speechRate = 0.25,
+    double speechRate = 0.50,
   }) async {
     _moves = moves;
     _startIndex = startIndex;

@@ -42,7 +42,7 @@ class SeriesProvider with ChangeNotifier {
   bool _developerMode = false;
   bool _showTranslation = true;
   String? _projectPath;
-  double _speechRate = 0.25;
+  double _speechRate = 0.50;
   double _fontSizeScale = 1.0;
   String _searchQuery = '';
   String? _galleryPath;
@@ -353,6 +353,7 @@ class SeriesProvider with ChangeNotifier {
     if (_developerMode && _projectPath != null) {
       await _exportToProjectJson(series);
     }
+    _filteredCache.clear();
     await loadSeries();
   }
 
