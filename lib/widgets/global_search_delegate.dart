@@ -64,11 +64,11 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
         if (results.isEmpty)
           Center(
             child: Opacity(
-              opacity: 0.05,
+              opacity: 0.15,
               child: Image.asset(
                 'assets/icon/JKD.png',
-                width: 250,
-                height: 250,
+                width: 400,
+                height: 400,
               ),
             ),
           ),

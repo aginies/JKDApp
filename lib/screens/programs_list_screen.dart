@@ -374,10 +374,11 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
         );
       }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 }
