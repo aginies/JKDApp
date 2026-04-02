@@ -137,9 +137,9 @@ class MoveListDisplayWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Icon(
-            MoveDisplayWidgets.getCategoryIcon(sub.category),
+            MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
             size: iconSize,
-            color: MoveDisplayWidgets.getCategoryColor(sub.category),
+            color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
           ),
           Text(
             sub.name,

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../../../models/move.dart';
 
 /// Manages the state of the move picker modal
 class PickerState extends ChangeNotifier {
@@ -39,17 +38,11 @@ class PickerState extends ChangeNotifier {
   // Pending attack move data when selecting counter
   Map<String, dynamic>? _pendingAttackMove;
 
-  // Chain of sequential moves being built
-  final List<Move> _pendingChain = [];
-
   // Last scrolled item ID to prevent re-scrolling
   int? _lastScrolledItemId;
 
   // Selected sub-letter (a, b, c, ...)
   String? _selectedSubLetter;
-
-  // Global simultaneous mode toggle
-  bool _globalSimultaneousMode = false;
 
   // Requested tab index for programmatic tab navigation
   int? _requestedTabIndex;
@@ -67,10 +60,8 @@ class PickerState extends ChangeNotifier {
   bool get isEditingCounter => _isEditingCounter;
   bool get isPickerOpen => _isPickerOpen;
   Map<String, dynamic>? get pendingAttackMove => _pendingAttackMove;
-  List<Move> get pendingChain => _pendingChain;
   int? get lastScrolledItemId => _lastScrolledItemId;
   String? get selectedSubLetter => _selectedSubLetter;
-  bool get globalSimultaneousMode => _globalSimultaneousMode;
   int? get requestedTabIndex => _requestedTabIndex;
 
   bool get isEditingMode => _editingComboItemIndex != null;
@@ -146,11 +137,6 @@ class PickerState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setGlobalSimultaneousMode(bool value) {
-    _globalSimultaneousMode = value;
-    notifyListeners();
-  }
-
   void setRequestedTabIndex(int? index) {
     _requestedTabIndex = index;
     notifyListeners();
@@ -161,16 +147,6 @@ class PickerState extends ChangeNotifier {
     final index = _requestedTabIndex;
     _requestedTabIndex = null;
     return index;
-  }
-
-  void addToPendingChain(Move move) {
-    _pendingChain.add(move);
-    notifyListeners();
-  }
-
-  void clearPendingChain() {
-    _pendingChain.clear();
-    notifyListeners();
   }
 
   /// Activates a glossary item and clears conflicting selections
@@ -192,7 +168,6 @@ class PickerState extends ChangeNotifier {
     _selectedFeints.clear();
     _selectedSpecials.clear();
     _selectedSimultaneous.clear();
-    _globalSimultaneousMode = false;
     _pendingActionItemId = null;
     _pendingLevel = null;
     _editingSeriesIndex = null;
@@ -200,7 +175,6 @@ class PickerState extends ChangeNotifier {
     _editingComboItemIndex = null;
     _isEditingCounter = false;
     _pendingAttackMove = null;
-    _pendingChain.clear();
     _lastScrolledItemId = null;
     _selectedSubLetter = null;
     _requestedTabIndex = null;

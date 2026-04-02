@@ -49,10 +49,56 @@ class GlossaryUIBuilder {
     VoidCallback? onShowMediaGallery,
     VoidCallback? onActivateGlossaryItem,
     Function(int)? onPickSpecial,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onNext,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onChain,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onAnswer,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onFinish,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onNext,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onSimultaneous,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onChain,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onAnswer,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onFinish,
     VoidCallback? onCancel,
   }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
@@ -92,7 +138,7 @@ class GlossaryUIBuilder {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
-            
+
             // Build glossary item card
             return _buildGlossaryItemCard(
               context: context,
@@ -109,6 +155,7 @@ class GlossaryUIBuilder {
               onActivateGlossaryItem: onActivateGlossaryItem,
               onPickSpecial: onPickSpecial,
               onNext: onNext,
+              onSimultaneous: onSimultaneous,
               onChain: onChain,
               onAnswer: onAnswer,
               onFinish: onFinish,
@@ -169,10 +216,56 @@ class GlossaryUIBuilder {
     VoidCallback? onShowMediaGallery,
     VoidCallback? onActivateGlossaryItem,
     Function(int)? onPickSpecial,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onNext,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onChain,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onAnswer,
-    Function(Map<String, dynamic> item, String cat, String side, String level, bool isFeint, String? special, Map<String, String> translations)? onFinish,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onNext,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onSimultaneous,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onChain,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onAnswer,
+    Function(
+      Map<String, dynamic> item,
+      String cat,
+      String side,
+      String level,
+      bool isFeint,
+      String? special,
+      Map<String, String> translations,
+    )?
+    onFinish,
     VoidCallback? onCancel,
   }) {
     final id = item['id'];
@@ -185,10 +278,7 @@ class GlossaryUIBuilder {
     final translations = GlossaryDataService.parseTranslations(
       item['translations'],
     );
-    final translation = GlossaryDataService.getTranslation(
-      translations,
-      lang,
-    );
+    final translation = GlossaryDataService.getTranslation(translations, lang);
 
     // Item name (use English name for moves)
     final itemName = category == 'move'
@@ -292,14 +382,17 @@ class GlossaryUIBuilder {
           // Workflow buttons (when expanded) - OUTSIDE InkWell
           if (isExpanded)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 4.0,
+              ),
               child: GlossaryPickerWidgets.workflowButtons(
                 context,
                 pickerState?.editingComboItemIndex != null
                     ? LocalizationService.translate('update_item', lang)
                     : (isCounterMode
-                        ? LocalizationService.translate('add', lang)
-                        : LocalizationService.translate('next', lang)),
+                          ? LocalizationService.translate('add', lang)
+                          : LocalizationService.translate('next', lang)),
                 isCounterMode,
                 pickerState?.editingComboItemIndex != null,
                 lang: lang,
@@ -309,7 +402,31 @@ class GlossaryUIBuilder {
                   final currentSide = pickerState?.selectedSides[id] ?? '';
                   final currentFeint = pickerState?.selectedFeints[id] ?? false;
                   final currentSpecial = pickerState?.selectedSpecials[id];
-                  onNext?.call(item, category, currentSide, currentLevel, currentFeint, currentSpecial, translations);
+                  onNext?.call(
+                    item,
+                    category,
+                    currentSide,
+                    currentLevel,
+                    currentFeint,
+                    currentSpecial,
+                    translations,
+                  );
+                },
+                onSimultaneous: () {
+                  debugPrint('GlossaryUIBuilder: onSimultaneous (+) clicked');
+                  final currentLevel = pickerState?.pendingLevel ?? '';
+                  final currentSide = pickerState?.selectedSides[id] ?? '';
+                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  onSimultaneous?.call(
+                    item,
+                    category,
+                    currentSide,
+                    currentLevel,
+                    currentFeint,
+                    currentSpecial,
+                    translations,
+                  );
                 },
                 onChain: () {
                   debugPrint('GlossaryUIBuilder: onChain clicked');
@@ -317,7 +434,15 @@ class GlossaryUIBuilder {
                   final currentSide = pickerState?.selectedSides[id] ?? '';
                   final currentFeint = pickerState?.selectedFeints[id] ?? false;
                   final currentSpecial = pickerState?.selectedSpecials[id];
-                  onChain?.call(item, category, currentSide, currentLevel, currentFeint, currentSpecial, translations);
+                  onChain?.call(
+                    item,
+                    category,
+                    currentSide,
+                    currentLevel,
+                    currentFeint,
+                    currentSpecial,
+                    translations,
+                  );
                 },
                 onAnswer: () {
                   debugPrint('GlossaryUIBuilder: onAnswer clicked');
@@ -325,7 +450,15 @@ class GlossaryUIBuilder {
                   final currentSide = pickerState?.selectedSides[id] ?? '';
                   final currentFeint = pickerState?.selectedFeints[id] ?? false;
                   final currentSpecial = pickerState?.selectedSpecials[id];
-                  onAnswer?.call(item, category, currentSide, currentLevel, currentFeint, currentSpecial, translations);
+                  onAnswer?.call(
+                    item,
+                    category,
+                    currentSide,
+                    currentLevel,
+                    currentFeint,
+                    currentSpecial,
+                    translations,
+                  );
                 },
                 onFinish: () {
                   debugPrint('GlossaryUIBuilder: onFinish clicked');
@@ -333,7 +466,15 @@ class GlossaryUIBuilder {
                   final currentSide = pickerState?.selectedSides[id] ?? '';
                   final currentFeint = pickerState?.selectedFeints[id] ?? false;
                   final currentSpecial = pickerState?.selectedSpecials[id];
-                  onFinish?.call(item, category, currentSide, currentLevel, currentFeint, currentSpecial, translations);
+                  onFinish?.call(
+                    item,
+                    category,
+                    currentSide,
+                    currentLevel,
+                    currentFeint,
+                    currentSpecial,
+                    translations,
+                  );
                 },
                 onCancel: () {
                   debugPrint('GlossaryUIBuilder: onCancel clicked');

@@ -23,6 +23,10 @@ class CategoryUtils {
         return Icons.text_fields;
       case 'other':
         return Icons.more_horiz;
+      case 'simultaneous':
+        return Icons.add_circle_outline;
+      case 'chain':
+        return Icons.arrow_forward;
       default:
         return Icons.help_outline;
     }
@@ -51,6 +55,10 @@ class CategoryUtils {
         return Colors.orange;
       case 'other':
         return Colors.blueGrey;
+      case 'simultaneous':
+        return Colors.deepPurple;
+      case 'chain':
+        return Colors.teal;
       default:
         return Colors.grey;
     }

@@ -167,13 +167,14 @@ class GlossaryPickerWidgets {
     );
   }
 
-  /// Build workflow buttons (next/answer/finish/cancel)
+  /// Build workflow buttons (next/+/chain/answer/finish/cancel)
   static Widget workflowButtons(
     BuildContext context,
     String actionLabel,
     bool isCounterMode,
     bool isEditing, {
     VoidCallback? onNext,
+    VoidCallback? onSimultaneous,
     VoidCallback? onChain,
     VoidCallback? onAnswer,
     VoidCallback? onFinish,
@@ -207,8 +208,28 @@ class GlossaryPickerWidgets {
               child: Text(actionLabel, style: const TextStyle(fontSize: 12)),
             ),
 
-            // Chain button (if not editing)
-            if (!isEditing) ...[
+            // Simultaneous (+) button - shown when
+            // not in counter mode, and not editing
+            if (!isCounterMode && !isEditing && onSimultaneous != null) ...[
+              const SizedBox(width: 6),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: const Size(0, 36),
+                ),
+                onPressed: onSimultaneous,
+                child: const Text(
+                  '+',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+
+            // Chain button (→) - shown when
+            // not in counter mode, and not editing
+            if (!isCounterMode && !isEditing && onChain != null) ...[
               const SizedBox(width: 6),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

@@ -55,6 +55,19 @@ class Move {
   bool get isCombo => subMoves.isNotEmpty;
   bool get isChain => chain.isNotEmpty;
 
+  /// Returns the effective category for icon/color display purposes.
+  /// For 'simultaneous' moves, resolves to the first sub-move's category.
+  /// For 'chain' moves, resolves to the first chain item's category.
+  String get displayCategory {
+    if (category == 'simultaneous' && subMoves.isNotEmpty) {
+      return subMoves.first.category;
+    }
+    if (category == 'chain' && chain.isNotEmpty) {
+      return chain.first.category;
+    }
+    return category;
+  }
+
   String getTranslation(String lang) {
     if (isChain) {
       return chain.map((m) => m.getTranslation(lang)).join(' -> ');

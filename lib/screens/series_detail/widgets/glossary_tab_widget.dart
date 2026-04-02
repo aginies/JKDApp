@@ -34,6 +34,16 @@ class GlossaryTabWidget extends StatefulWidget {
     String? special,
     Map<String, String> translations,
   )
+  onSimultaneousAction;
+  final Function(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+  )
   onChainAction;
   final Function(
     Map<String, dynamic> item,
@@ -71,7 +81,6 @@ class GlossaryTabWidget extends StatefulWidget {
     Map<String, String> ctr,
     int r,
     String? cLevelOverride,
-    bool isSimultaneous,
   )
   onAddCounterMove;
 
@@ -85,6 +94,7 @@ class GlossaryTabWidget extends StatefulWidget {
     required this.onShowMediaGallery,
     required this.onPickSpecial,
     required this.onWorkflowAction,
+    required this.onSimultaneousAction,
     required this.onChainAction,
     required this.onAnswerAction,
     required this.onFinishAction,
@@ -242,7 +252,6 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             translations,
             1,
             null,
-            (attack['sim'] ?? false) as bool,
           );
         } else {
           widget.onWorkflowAction(
@@ -256,6 +265,20 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             false,
           );
         }
+      },
+      onSimultaneous: (item, cat, side, level, isFeint, special, translations) {
+        debugPrint(
+          'GlossaryTabWidget: onSimultaneous triggered for ${item['name']}',
+        );
+        widget.onSimultaneousAction(
+          item,
+          cat,
+          side,
+          level,
+          isFeint,
+          special,
+          translations,
+        );
       },
       onChain: (item, cat, side, level, isFeint, special, translations) {
         debugPrint('GlossaryTabWidget: onChain triggered for ${item['name']}');
@@ -303,7 +326,6 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             translations,
             1,
             null,
-            (attack['sim'] ?? false) as bool,
           );
           widget.onFinishCombo();
         } else {
@@ -359,7 +381,6 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
                   {},
                   1,
                   null,
-                  (attack['sim'] ?? false) as bool,
                 );
               },
               child: Text(LocalizationService.translate('add', lang)),

@@ -58,7 +58,9 @@ class ComboCardWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     side: BorderSide(
                       color: isSelected
-                          ? MoveDisplayWidgets.getCategoryColor(move.category)
+                          ? MoveDisplayWidgets.getCategoryColor(
+                              move.displayCategory,
+                            )
                           : MoveDisplayWidgets.getCategoryColor(
                               move.counterCategory ?? '',
                             ),
@@ -105,6 +107,8 @@ class ComboCardWidget extends StatelessWidget {
     final bool isSimultaneous = move.category == 'simultaneous';
     final bool isChain = move.category == 'chain';
 
+    final bool hasCounter = move.counterName != null;
+
     return GestureDetector(
       onTap: isRemoving
           ? null
@@ -121,11 +125,11 @@ class ComboCardWidget extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
-                  '${index + 1}.',
-                  style: const TextStyle(
+                  '${index + 1}.${hasCounter ? ' A:' : ''}',
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                    color: hasCounter ? Colors.orange.shade300 : Colors.grey,
                   ),
                 ),
                 ...move.subMoves.asMap().entries.map((e) {
@@ -155,11 +159,11 @@ class ComboCardWidget extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
-                  '${index + 1}.',
-                  style: const TextStyle(
+                  '${index + 1}.${hasCounter ? ' A:' : ''}',
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                    color: hasCounter ? Colors.orange.shade300 : Colors.grey,
                   ),
                 ),
                 ...move.chain.asMap().entries.map((e) {
@@ -194,7 +198,7 @@ class ComboCardWidget extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    '${index + 1}. ${move.name}',
+                    '${index + 1}.${hasCounter ? ' A:' : ''} ${move.name}',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -278,6 +282,14 @@ class ComboCardWidget extends StatelessWidget {
           const Divider(height: 8),
           Row(
             children: [
+              Text(
+                'D: ',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.lightBlue.shade300,
+                ),
+              ),
               Icon(
                 MoveDisplayWidgets.getCategoryIcon(move.counterCategory ?? ''),
                 size: 16,

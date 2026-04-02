@@ -83,6 +83,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final ScrollController _movesScrollController = ScrollController();
   Timer? _scrollTimer;
 
+  // Buffered move waiting for simultaneous merge (when + is pressed)
+  Move? _pendingSimultaneousMove;
+
   @override
   void initState() {
     super.initState();
@@ -458,6 +461,32 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           ? _currentCombo[_pickerState.editingComboItemIndex!]
           : null;
 
+      // If there's a pending simultaneous move and we're not editing,
+      // combine it with the current move
+      if (_pendingSimultaneousMove != null && !isE) {
+        final currentMove = Move(
+          glossaryId: isCustom ? null : item['id'],
+          name: isCustom ? _customMoveController.text : item['name'],
+          category: cat,
+          translations: translations,
+          side: side,
+          level: level,
+          isFeint: isFeint,
+          specialAction: special,
+          repetitions: 1,
+        );
+        final combined = Move(
+          name: '${_pendingSimultaneousMove!.name} + ${currentMove.name}',
+          category: 'simultaneous',
+          subMoves: [_pendingSimultaneousMove!, currentMove],
+        );
+        _addItemToCombo(combined);
+        _pendingSimultaneousMove = null;
+        _pickerState.clearPendingAction();
+        _customMoveController.clear();
+        return;
+      }
+
       final Move n;
       if (isE && _pickerState.isEditingCounter) {
         n = ex!.copyWith(
@@ -493,18 +522,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       if (isE) {
         _currentCombo[_pickerState.editingComboItemIndex!] = n;
         _pickerState.clearEditingState();
-      } else if (_pickerState.pendingChain.isNotEmpty) {
-        // Finalize pending chain with this move
-        final finalChain = List<Move>.from(_pickerState.pendingChain)..add(n);
-        final chainMove = Move(
-          name: finalChain.map((m) => m.name).join(' -> '),
-          category: 'chain',
-          chain: finalChain,
-        );
-        _addItemToCombo(chainMove);
-        _pickerState.clearPendingChain();
-      } else if (_pickerState.globalSimultaneousMode) {
-        _addCombinedActionToCombo(n);
       } else {
         _addItemToCombo(n);
       }
@@ -527,12 +544,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     Map<String, String> ctr,
     int r, {
     String? cLevelOverride,
-    bool isSimultaneous = false,
   }) {
     debugPrint('SeriesDetailScreen: _addCounterMove called');
     setState(() {
       final isE = _pickerState.editingComboItemIndex != null;
-      final bool isSimModeActive = _pickerState.globalSimultaneousMode;
 
       if (isE && _pickerState.isEditingCounter) {
         final ex = _currentCombo[_pickerState.editingComboItemIndex!];
@@ -578,71 +593,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         if (isE) {
           _currentCombo[_pickerState.editingComboItemIndex!] = n;
           _pickerState.setEditingComboItemIndex(null);
-        } else if (_pickerState.pendingChain.isNotEmpty) {
-          // Finalize pending chain with this counter move
-          final finalChain = List<Move>.from(_pickerState.pendingChain)..add(n);
-          final chainMove = Move(
-            name: finalChain.map((m) => m.name).join(' -> '),
-            category: 'chain',
-            chain: finalChain,
-          );
-          _addItemToCombo(chainMove);
-          _pickerState.clearPendingChain();
-        } else if (isSimultaneous) {
-          // Check if the last move already has a counter (adding simultaneous answer)
-          final bool lastMoveHasCounter =
-              _currentCombo.isNotEmpty &&
-              _currentCombo.last.counterName != null;
-
-          if (lastMoveHasCounter) {
-            // Just add the counter to combine with existing counter
-            final counterMove = Move(
-              glossaryId: c['id'],
-              name: c['name'],
-              category: cat,
-              translations: ctr,
-              side: cs,
-              level: cLevelOverride ?? al,
-              repetitions: 1,
-            );
-            _addCombinedActionToCombo(counterMove, isCounter: true);
-          } else {
-            // Add the attack part simultaneously first
-            final attackMove = Move(
-              glossaryId: at['id'],
-              name: at['name'],
-              category: ac,
-              translations: atr,
-              side: as,
-              level: al,
-              isFeint: af,
-              specialAction: asp,
-              repetitions: r,
-            );
-            _addCombinedActionToCombo(attackMove);
-
-            // Then add the counter part to that same group
-            final counterMove = Move(
-              glossaryId: c['id'],
-              name: c['name'],
-              category: cat,
-              translations: ctr,
-              side: cs,
-              level: cLevelOverride ?? al,
-              repetitions: 1,
-            );
-            _addCombinedActionToCombo(counterMove, isCounter: true);
-          }
         } else {
           _addItemToCombo(n);
         }
       }
 
-      // Keep counter mode active if simultaneous mode is still enabled
-      // so user can add more simultaneous answers
-      if (!isSimModeActive) {
-        _pickerState.setPendingAttackMove(null);
-      }
+      _pickerState.setPendingAttackMove(null);
       _pickerState.setPendingActionItem(null);
       _pickerState.setPendingLevel(null);
     });
@@ -659,6 +615,31 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   ) {
     debugPrint('SeriesDetailScreen: _onChainAction called');
     setState(() {
+      // If there's a pending simultaneous move, combine first then add
+      if (_pendingSimultaneousMove != null) {
+        final currentMove = Move(
+          glossaryId: item['id'],
+          name: item['name'],
+          category: cat,
+          translations: translations,
+          side: side,
+          level: level,
+          isFeint: isFeint,
+          specialAction: special,
+          repetitions: 1,
+        );
+        final combined = Move(
+          name: '${_pendingSimultaneousMove!.name} + ${currentMove.name}',
+          category: 'simultaneous',
+          subMoves: [_pendingSimultaneousMove!, currentMove],
+        );
+        _addItemToCombo(combined);
+        _pendingSimultaneousMove = null;
+        _pickerState.clearPendingAction();
+        _customMoveController.clear();
+        return;
+      }
+
       final bool isCounterMode = _pickerState.pendingAttackMove != null;
       Move n;
       if (isCounterMode) {
@@ -694,7 +675,40 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         );
       }
 
-      _pickerState.addToPendingChain(n);
+      // Direct chain: merge onto the last combo item
+      if (_currentCombo.isNotEmpty) {
+        final lastIndex = _currentCombo.length - 1;
+        final lastMove = _currentCombo[lastIndex];
+
+        if (lastMove.category == 'chain') {
+          // Already a chain — append to it
+          final updatedChain = List<Move>.from(lastMove.chain)..add(n);
+          _currentCombo[lastIndex] = lastMove.copyWith(
+            chain: updatedChain,
+            name: updatedChain.map((m) => m.name).join(' -> '),
+          );
+        } else {
+          // Wrap [lastMove, n] into a new chain
+          final chainMoves = [lastMove, n];
+          _currentCombo[lastIndex] = Move(
+            name: chainMoves.map((m) => m.name).join(' -> '),
+            category: 'chain',
+            chain: chainMoves,
+            // Preserve counter if it exists on the last move
+            counterName: lastMove.counterName,
+            counterCategory: lastMove.counterCategory,
+            counterSide: lastMove.counterSide,
+            counterLevel: lastMove.counterLevel,
+            counterSpecialAction: lastMove.counterSpecialAction,
+            counterGlossaryId: lastMove.counterGlossaryId,
+            counterTranslations: lastMove.counterTranslations,
+          );
+        }
+      } else {
+        // No items yet, just add as a standalone move
+        _addItemToCombo(n);
+      }
+
       _pickerState.clearPendingAction();
       _pickerState.setPendingAttackMove(null);
       _customMoveController.clear();
@@ -710,6 +724,51 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     });
   }
 
+  void _onSimultaneousAction(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+  ) {
+    debugPrint('SeriesDetailScreen: _onSimultaneousAction called');
+    setState(() {
+      final n = Move(
+        glossaryId: item['id'],
+        name: item['name'],
+        category: cat,
+        translations: translations,
+        side: side,
+        level: level,
+        isFeint: isFeint,
+        specialAction: special,
+        repetitions: 1,
+      );
+
+      if (_currentCombo.isNotEmpty) {
+        // Combo has items — merge with last item as before
+        _addCombinedActionToCombo(n);
+      } else if (_pendingSimultaneousMove != null) {
+        // Already have a pending move — combine them and add to combo
+        final combined = Move(
+          name: '${_pendingSimultaneousMove!.name} + ${n.name}',
+          category: 'simultaneous',
+          subMoves: [_pendingSimultaneousMove!, n],
+        );
+        _addItemToCombo(combined);
+        _pendingSimultaneousMove = null;
+      } else {
+        // Combo is empty, no pending — buffer this move
+        _pendingSimultaneousMove = n;
+      }
+
+      _pickerState.clearPendingAction();
+      _customMoveController.clear();
+    });
+  }
+
   void _onAnswerAction(
     Map<String, dynamic> item,
     String cat,
@@ -721,22 +780,47 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   ) {
     debugPrint('SeriesDetailScreen: _onAnswerAction called');
     setState(() {
-      // Simply switch to counter mode - the answer button just puts the picker
-      // into "pick a counter" mode without committing the current move.
-      // The original _buildWorkflowButtons did exactly this:
-      // setPendingAttackMove with the current item data, then clear pending state.
-      _pickerState.setPendingAttackMove({
-        'item': item,
-        'cat': cat,
-        'sd': side,
-        'lv': level,
-        'f': isFeint,
-        'sp': special,
-        'tr': translations,
-        'sim': _pickerState.globalSimultaneousMode,
-      });
-      _pickerState.setPendingActionItem(null);
-      _pickerState.setPendingLevel(null);
+      if (_pendingSimultaneousMove != null) {
+        // Combine the pending move with the current move simultaneously,
+        // add to combo, then enter counter-edit mode for the combined item.
+        final currentMove = Move(
+          glossaryId: item['id'],
+          name: item['name'],
+          category: cat,
+          translations: translations,
+          side: side,
+          level: level,
+          isFeint: isFeint,
+          specialAction: special,
+          repetitions: 1,
+        );
+        final combined = Move(
+          name: '${_pendingSimultaneousMove!.name} + ${currentMove.name}',
+          category: 'simultaneous',
+          subMoves: [_pendingSimultaneousMove!, currentMove],
+        );
+        _addItemToCombo(combined);
+        _pendingSimultaneousMove = null;
+
+        // Enter counter-edit mode for the combined item we just added
+        _pickerState.setEditingComboItemIndex(_currentCombo.length - 1);
+        _pickerState.setIsEditingCounter(true);
+        _pickerState.setPendingActionItem(null);
+        _pickerState.setPendingLevel(null);
+      } else {
+        // Normal answer flow: store pending attack move and enter counter mode
+        _pickerState.setPendingAttackMove({
+          'item': item,
+          'cat': cat,
+          'sd': side,
+          'lv': level,
+          'f': isFeint,
+          'sp': special,
+          'tr': translations,
+        });
+        _pickerState.setPendingActionItem(null);
+        _pickerState.setPendingLevel(null);
+      }
     });
   }
 
@@ -862,25 +946,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                   ),
                 Row(
                   children: [
-                    if (_currentCombo.isNotEmpty &&
-                        _pickerState.editingComboItemIndex == null)
-                      IconButton(
-                        icon: Icon(
-                          _pickerState.globalSimultaneousMode
-                              ? Icons.add_circle
-                              : Icons.add_circle_outline,
-                          color: _pickerState.globalSimultaneousMode
-                              ? Colors.blue
-                              : Colors.grey,
-                          size: 28,
-                        ),
-                        onPressed: () => setS(() {
-                          _pickerState.setGlobalSimultaneousMode(
-                            !_pickerState.globalSimultaneousMode,
-                          );
-                        }),
-                        tooltip: 'Simultaneous Mode',
-                      ),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.help_outline, color: Colors.blue),
@@ -919,6 +984,28 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                               special,
                               translations,
                               isCustom,
+                            );
+                          });
+                        },
+                    onSimultaneousAction:
+                        (
+                          item,
+                          cat,
+                          side,
+                          level,
+                          isFeint,
+                          special,
+                          translations,
+                        ) {
+                          setS(() {
+                            _onSimultaneousAction(
+                              item,
+                              cat,
+                              side,
+                              level,
+                              isFeint,
+                              special,
+                              translations,
                             );
                           });
                         },
@@ -976,7 +1063,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         _pickerState.clearEditingState();
                         _pickerState.clearPendingAction();
                         _pickerState.setPendingAttackMove(null);
-                        _pickerState.clearPendingChain();
+                        _pendingSimultaneousMove = null;
                       });
                     },
                     onAddCounterMove:
@@ -994,7 +1081,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           ctr,
                           r,
                           cLevelOverride,
-                          isSimultaneous,
                         ) {
                           setS(() {
                             _addCounterMove(
@@ -1011,7 +1097,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                               ctr,
                               r,
                               cLevelOverride: cLevelOverride,
-                              isSimultaneous: isSimultaneous,
                             );
                           });
                         },
@@ -1029,6 +1114,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   void _resetPickerState() {
     _pickerState.reset();
     _currentCombo.clear();
+    _pendingSimultaneousMove = null;
     _customMoveController.clear();
   }
 
@@ -1038,11 +1124,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     bool voiceEnabled,
     List<String> availableSubLetters,
   ) {
-    final bool hasPendingChain = _pickerState.pendingChain.isNotEmpty;
-    final double h =
-        (_currentCombo.any((m) => m.category == 'move') || hasPendingChain)
-        ? 198
-        : 190;
+    final double h = _currentCombo.any((m) => m.category == 'move') ? 198 : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
       width: double.infinity,
@@ -1081,9 +1163,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         child: Text(
                           _pickerState.editingSeriesIndex != null
                               ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_getDisplayNumber(_pickerState.editingSeriesIndex!)}'
-                              : (hasPendingChain
-                                    ? 'BUILDING CHAIN'
-                                    : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})'),
+                              : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
@@ -1284,142 +1364,151 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             ),
           ),
           Expanded(
-            child: hasPendingChain
-                ? ListView.builder(
-                    key: ValueKey('chain_${_pickerState.pendingChain.length}'),
-                    controller: _comboScrollController,
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    itemCount: _pickerState.pendingChain.length,
-                    itemBuilder: (context, idx) {
-                      final m = _pickerState.pendingChain[idx];
-                      return Row(
-                        children: [
-                          ComboCardWidget(
-                            move: m,
-                            index: idx,
-                            language: lang,
-                            animation: const AlwaysStoppedAnimation(1.0),
-                            onRemove: () {},
-                            onEdit: (_, _) {},
-                            onShowMediaGallery: _showMediaGallery,
-                          ),
-                          if (idx < _pickerState.pendingChain.length - 1)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.0),
-                              child: Icon(
-                                Icons.arrow_forward,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  )
-                : Stack(
-                    children: [
-                      AnimatedList(
-                        key: _comboListKey,
-                        controller: _comboScrollController,
-                        scrollDirection: Axis.horizontal,
-                        initialItemCount: _currentCombo.length,
-                        itemBuilder: (ctx, idx, animation) {
-                          if (idx >= _currentCombo.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final m = _currentCombo[idx];
-                          return ComboCardWidget(
-                            move: m,
-                            index: idx,
-                            language: lang,
-                            animation: animation,
-                            onRemove: () =>
-                                _removeItemFromCombo(idx, setS, lang),
-                            onEdit: (index, isCounter) => _handleEditComboItem(
-                              index,
-                              isCounter,
-                              setS,
-                              ctx,
-                            ),
-                            onShowMediaGallery: _showMediaGallery,
-                            isSelected:
-                                _pickerState.editingComboItemIndex == idx &&
-                                !_pickerState.isEditingCounter,
-                            isCounterSelected:
-                                _pickerState.editingComboItemIndex == idx &&
-                                _pickerState.isEditingCounter,
-                          );
-                        },
+            child: Stack(
+              children: [
+                if (_pendingSimultaneousMove != null)
+                  Positioned(
+                    top: 4,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                      if (_currentCombo.length > 1) ...[
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 4),
-                              decoration: BoxDecoration(
-                                color: (!Platform.isAndroid && !Platform.isIOS)
-                                    ? Colors.black87
-                                    : Colors.black26,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back_ios_new,
-                                  color: Colors.white,
-                                  size: (!Platform.isAndroid && !Platform.isIOS)
-                                      ? 26
-                                      : 20,
-                                ),
-                                onPressed: () {
-                                  _comboScrollController.animateTo(
-                                    _comboScrollController.offset - 168,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                              ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.blue.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(
+                              _pendingSimultaneousMove!.category,
+                            ),
+                            size: 16,
+                            color: MoveDisplayWidgets.getCategoryColor(
+                              _pendingSimultaneousMove!.category,
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 4),
-                              decoration: BoxDecoration(
-                                color: (!Platform.isAndroid && !Platform.isIOS)
-                                    ? Colors.black87
-                                    : Colors.black26,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.white,
-                                  size: (!Platform.isAndroid && !Platform.isIOS)
-                                      ? 26
-                                      : 20,
-                                ),
-                                onPressed: () {
-                                  _comboScrollController.animateTo(
-                                    _comboScrollController.offset + 168,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                              ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_pendingSimultaneousMove!.name} +',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                        ),
-                      ],
-                    ],
+                          const SizedBox(width: 4),
+                          const Text(
+                            '…',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                AnimatedList(
+                  key: _comboListKey,
+                  controller: _comboScrollController,
+                  scrollDirection: Axis.horizontal,
+                  initialItemCount: _currentCombo.length,
+                  itemBuilder: (ctx, idx, animation) {
+                    if (idx >= _currentCombo.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final m = _currentCombo[idx];
+                    return ComboCardWidget(
+                      move: m,
+                      index: idx,
+                      language: lang,
+                      animation: animation,
+                      onRemove: () => _removeItemFromCombo(idx, setS, lang),
+                      onEdit: (index, isCounter) =>
+                          _handleEditComboItem(index, isCounter, setS, ctx),
+                      onShowMediaGallery: _showMediaGallery,
+                      isSelected:
+                          _pickerState.editingComboItemIndex == idx &&
+                          !_pickerState.isEditingCounter,
+                      isCounterSelected:
+                          _pickerState.editingComboItemIndex == idx &&
+                          _pickerState.isEditingCounter,
+                    );
+                  },
+                ),
+                if (_currentCombo.length > 1) ...[
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 4),
+                        decoration: BoxDecoration(
+                          color: (!Platform.isAndroid && !Platform.isIOS)
+                              ? Colors.black87
+                              : Colors.black26,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                            size: (!Platform.isAndroid && !Platform.isIOS)
+                                ? 26
+                                : 20,
+                          ),
+                          onPressed: () {
+                            _comboScrollController.animateTo(
+                              _comboScrollController.offset - 168,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        decoration: BoxDecoration(
+                          color: (!Platform.isAndroid && !Platform.isIOS)
+                              ? Colors.black87
+                              : Colors.black26,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: (!Platform.isAndroid && !Platform.isIOS)
+                                ? 26
+                                : 20,
+                          ),
+                          onPressed: () {
+                            _comboScrollController.animateTo(
+                              _comboScrollController.offset + 168,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
