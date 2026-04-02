@@ -388,13 +388,17 @@ class GlossaryUIBuilder {
               ),
               child: GlossaryPickerWidgets.workflowButtons(
                 context,
-                pickerState?.editingComboItemIndex != null
+                (pickerState?.editingComboItemIndex != null &&
+                        !(pickerState?.isEditingCounter ?? false))
                     ? LocalizationService.translate('update_item', lang)
                     : (isCounterMode
                           ? LocalizationService.translate('add', lang)
                           : LocalizationService.translate('next', lang)),
                 isCounterMode,
-                pickerState?.editingComboItemIndex != null,
+                // isEditing: hide +/→ only when editing the attack side,
+                // not when editing a counter (counter mode still needs +/→)
+                pickerState?.editingComboItemIndex != null &&
+                    !(pickerState?.isEditingCounter ?? false),
                 lang: lang,
                 onNext: () {
                   debugPrint('GlossaryUIBuilder: onNext clicked');

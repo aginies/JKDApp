@@ -125,7 +125,9 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
   @override
   void didUpdateWidget(covariant GlossaryTabWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final isCounterMode = widget.pickerState.pendingAttackMove != null;
+    final isCounterMode =
+        widget.pickerState.pendingAttackMove != null ||
+        widget.pickerState.isEditingCounter;
     if (isCounterMode != _lastCounterMode) {
       _lastCounterMode = isCounterMode;
       // Recreate the tab controller when counter mode changes
@@ -219,7 +221,9 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
   }
 
   Widget _buildTabContent(BuildContext context, String category, String lang) {
-    final isCounterMode = widget.pickerState.pendingAttackMove != null;
+    final isCounterMode =
+        widget.pickerState.pendingAttackMove != null ||
+        widget.pickerState.isEditingCounter;
 
     return GlossaryUIBuilder.buildGlossaryList(
       context,
@@ -249,6 +253,25 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             attack['f'],
             attack['sp'],
             attack['tr'],
+            translations,
+            1,
+            null,
+          );
+        } else if (widget.pickerState.isEditingCounter) {
+          // Editing counter on existing combo item (e.g. simultaneous→Answer flow).
+          // Attack data is already on the combo item; pass dummy attack params
+          // since _addCounterMove editing path uses ex directly.
+          widget.onAddCounterMove(
+            item,
+            cat,
+            side,
+            <String, dynamic>{},
+            '',
+            '',
+            '',
+            false,
+            null,
+            <String, String>{},
             translations,
             1,
             null,
@@ -328,6 +351,25 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             null,
           );
           widget.onFinishCombo();
+        } else if (widget.pickerState.isEditingCounter) {
+          // Editing counter on existing combo item (simultaneous→Answer flow).
+          // Attack data is already on the combo item; pass dummy attack params.
+          widget.onAddCounterMove(
+            item,
+            cat,
+            side,
+            <String, dynamic>{},
+            '',
+            '',
+            '',
+            false,
+            null,
+            <String, String>{},
+            translations,
+            1,
+            null,
+          );
+          widget.onFinishCombo();
         } else {
           widget.onFinishAction(
             item,
@@ -345,7 +387,9 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
   }
 
   Widget _buildCustomTextTab(BuildContext context, String lang) {
-    final isCounterMode = widget.pickerState.pendingAttackMove != null;
+    final isCounterMode =
+        widget.pickerState.pendingAttackMove != null ||
+        widget.pickerState.isEditingCounter;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -366,22 +410,41 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
             ElevatedButton(
               onPressed: () {
                 if (widget.customMoveController.text.isEmpty) return;
-                final attack = widget.pickerState.pendingAttackMove!;
-                widget.onAddCounterMove(
-                  {'name': widget.customMoveController.text, 'id': null},
-                  'text',
-                  '',
-                  attack['item'],
-                  attack['cat'],
-                  attack['sd'],
-                  attack['lv'],
-                  attack['f'],
-                  attack['sp'],
-                  attack['tr'],
-                  {},
-                  1,
-                  null,
-                );
+                final attack = widget.pickerState.pendingAttackMove;
+                if (attack != null) {
+                  widget.onAddCounterMove(
+                    {'name': widget.customMoveController.text, 'id': null},
+                    'text',
+                    '',
+                    attack['item'],
+                    attack['cat'],
+                    attack['sd'],
+                    attack['lv'],
+                    attack['f'],
+                    attack['sp'],
+                    attack['tr'],
+                    {},
+                    1,
+                    null,
+                  );
+                } else {
+                  // Editing counter on existing combo item
+                  widget.onAddCounterMove(
+                    {'name': widget.customMoveController.text, 'id': null},
+                    'text',
+                    '',
+                    <String, dynamic>{},
+                    '',
+                    '',
+                    '',
+                    false,
+                    null,
+                    <String, String>{},
+                    {},
+                    1,
+                    null,
+                  );
+                }
               },
               child: Text(LocalizationService.translate('add', lang)),
             ),

@@ -208,9 +208,8 @@ class GlossaryPickerWidgets {
               child: Text(actionLabel, style: const TextStyle(fontSize: 12)),
             ),
 
-            // Simultaneous (+) button - shown when
-            // not in counter mode, and not editing
-            if (!isCounterMode && !isEditing && onSimultaneous != null) ...[
+            // Simultaneous (+) button - shown when not editing
+            if (!isEditing && onSimultaneous != null) ...[
               const SizedBox(width: 6),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -227,9 +226,8 @@ class GlossaryPickerWidgets {
               ),
             ],
 
-            // Chain button (→) - shown when
-            // not in counter mode, and not editing
-            if (!isCounterMode && !isEditing && onChain != null) ...[
+            // Chain button (→) - shown when not editing
+            if (!isEditing && onChain != null) ...[
               const SizedBox(width: 6),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

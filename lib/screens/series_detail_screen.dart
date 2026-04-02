@@ -86,6 +86,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   // Buffered move waiting for simultaneous merge (when + is pressed)
   Move? _pendingSimultaneousMove;
 
+  // Buffered counter move waiting for simultaneous/chain merge (when + or → is pressed in counter mode)
+  Move? _pendingCounterSimMove;
+  bool _pendingCounterIsChain = false;
+
   @override
   void initState() {
     super.initState();
@@ -547,34 +551,91 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   }) {
     debugPrint('SeriesDetailScreen: _addCounterMove called');
     setState(() {
+      // --- Resolve the final counter move by consuming pending buffer ---
+      final incomingCounter = Move(
+        glossaryId: c['id'],
+        name: c['name'],
+        category: cat,
+        side: cs,
+        translations: ctr,
+      );
+
+      final Move resolvedCounter;
+      if (_pendingCounterSimMove != null) {
+        // Combine buffered counter with the incoming counter
+        if (_pendingCounterIsChain) {
+          // Chain merge: buffered → incoming
+          if (_pendingCounterSimMove!.category == 'chain') {
+            resolvedCounter = _pendingCounterSimMove!.copyWith(
+              chain: [..._pendingCounterSimMove!.chain, incomingCounter],
+              name:
+                  '${_pendingCounterSimMove!.name} -> ${incomingCounter.name}',
+            );
+          } else {
+            resolvedCounter = Move(
+              name:
+                  '${_pendingCounterSimMove!.name} -> ${incomingCounter.name}',
+              category: 'chain',
+              chain: [_pendingCounterSimMove!, incomingCounter],
+            );
+          }
+        } else {
+          // Simultaneous merge: buffered + incoming
+          if (_pendingCounterSimMove!.category == 'simultaneous') {
+            resolvedCounter = _pendingCounterSimMove!.copyWith(
+              subMoves: [..._pendingCounterSimMove!.subMoves, incomingCounter],
+              name: '${_pendingCounterSimMove!.name} + ${incomingCounter.name}',
+            );
+          } else {
+            resolvedCounter = Move(
+              name: '${_pendingCounterSimMove!.name} + ${incomingCounter.name}',
+              category: 'simultaneous',
+              subMoves: [_pendingCounterSimMove!, incomingCounter],
+            );
+          }
+        }
+        _pendingCounterSimMove = null;
+        _pendingCounterIsChain = false;
+      } else {
+        resolvedCounter = incomingCounter;
+      }
+
+      // Use the first sub-element's fields for flat counter storage,
+      // but the resolved name/category for the combined display
+      final String finalCounterName = resolvedCounter.name;
+      final String finalCounterCategory = resolvedCounter.category;
+      // Side from the first counter move (the one the user picked first)
+      final String finalCounterSide = resolvedCounter.category == 'simultaneous'
+          ? (resolvedCounter.subMoves.isNotEmpty
+                ? resolvedCounter.subMoves.first.side
+                : resolvedCounter.side)
+          : resolvedCounter.category == 'chain'
+          ? (resolvedCounter.chain.isNotEmpty
+                ? resolvedCounter.chain.first.side
+                : resolvedCounter.side)
+          : resolvedCounter.side;
+      final Map<String, String> finalCounterTranslations =
+          resolvedCounter.translations;
+
       final isE = _pickerState.editingComboItemIndex != null;
 
       if (isE && _pickerState.isEditingCounter) {
         final ex = _currentCombo[_pickerState.editingComboItemIndex!];
-        _currentCombo[_pickerState.editingComboItemIndex!] = Move(
-          glossaryId: ex.glossaryId,
-          counterGlossaryId: c['id'],
-          name: ex.name,
-          category: ex.category,
-          translations: ex.translations,
-          side: ex.side,
-          level: ex.level,
-          isFeint: ex.isFeint,
-          specialAction: ex.specialAction,
-          repetitions: ex.repetitions,
-          counterName: c['name'],
-          counterCategory: cat,
-          counterSide: cs,
+        _currentCombo[_pickerState.editingComboItemIndex!] = ex.copyWith(
+          counterGlossaryId: resolvedCounter.glossaryId,
+          counterName: finalCounterName,
+          counterCategory: finalCounterCategory,
+          counterSide: finalCounterSide,
           counterLevel: cLevelOverride ?? ex.level,
           counterSpecialAction: null,
-          counterTranslations: ctr,
+          counterTranslations: finalCounterTranslations,
         );
         _pickerState.setEditingComboItemIndex(null);
         _pickerState.setIsEditingCounter(false);
       } else {
         final n = Move(
           glossaryId: at['id'],
-          counterGlossaryId: c['id'],
+          counterGlossaryId: resolvedCounter.glossaryId,
           name: at['name'],
           category: ac,
           translations: atr,
@@ -583,12 +644,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           isFeint: af,
           specialAction: asp,
           repetitions: r,
-          counterName: c['name'],
-          counterCategory: cat,
-          counterSide: cs,
+          counterName: finalCounterName,
+          counterCategory: finalCounterCategory,
+          counterSide: finalCounterSide,
           counterLevel: cLevelOverride ?? al,
           counterSpecialAction: null,
-          counterTranslations: ctr,
+          counterTranslations: finalCounterTranslations,
         );
         if (isE) {
           _currentCombo[_pickerState.editingComboItemIndex!] = n;
@@ -640,29 +701,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         return;
       }
 
-      final bool isCounterMode = _pickerState.pendingAttackMove != null;
-      Move n;
+      final bool isCounterMode =
+          _pickerState.pendingAttackMove != null ||
+          _pickerState.isEditingCounter;
+
+      // In counter mode: buffer this counter move for chain merge
       if (isCounterMode) {
-        n = Move(
-          glossaryId: _pickerState.pendingAttackMove!['item']['id'],
-          name: _pickerState.pendingAttackMove!['item']['name'],
-          category: _pickerState.pendingAttackMove!['cat'],
-          translations: _pickerState.pendingAttackMove!['tr'],
-          side: _pickerState.pendingAttackMove!['sd'],
-          level: _pickerState.pendingAttackMove!['lv'],
-          isFeint: _pickerState.pendingAttackMove!['f'],
-          specialAction: _pickerState.pendingAttackMove!['sp'],
-          repetitions: 1,
-          counterName: item['name'],
-          counterCategory: cat,
-          counterSide: side,
-          counterLevel: level,
-          counterSpecialAction: special,
-          counterGlossaryId: item['id'],
-          counterTranslations: translations,
-        );
-      } else {
-        n = Move(
+        final counterMove = Move(
           glossaryId: item['id'],
           name: item['name'],
           category: cat,
@@ -673,7 +718,43 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           specialAction: special,
           repetitions: 1,
         );
+
+        if (_pendingCounterSimMove != null) {
+          // Already have a pending counter — chain them
+          if (_pendingCounterSimMove!.category == 'chain') {
+            _pendingCounterSimMove = _pendingCounterSimMove!.copyWith(
+              chain: [..._pendingCounterSimMove!.chain, counterMove],
+              name: '${_pendingCounterSimMove!.name} -> ${counterMove.name}',
+            );
+          } else {
+            _pendingCounterSimMove = Move(
+              name: '${_pendingCounterSimMove!.name} -> ${counterMove.name}',
+              category: 'chain',
+              chain: [_pendingCounterSimMove!, counterMove],
+            );
+          }
+          _pendingCounterIsChain = true;
+        } else {
+          _pendingCounterSimMove = counterMove;
+          _pendingCounterIsChain = true;
+        }
+        _pickerState.clearPendingAction();
+        _customMoveController.clear();
+        return;
       }
+
+      Move n;
+      n = Move(
+        glossaryId: item['id'],
+        name: item['name'],
+        category: cat,
+        translations: translations,
+        side: side,
+        level: level,
+        isFeint: isFeint,
+        specialAction: special,
+        repetitions: 1,
+      );
 
       // Direct chain: merge onto the last combo item
       if (_currentCombo.isNotEmpty) {
@@ -746,6 +827,30 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         specialAction: special,
         repetitions: 1,
       );
+
+      final bool isCounterMode =
+          _pickerState.pendingAttackMove != null ||
+          _pickerState.isEditingCounter;
+      if (isCounterMode) {
+        // In counter mode: buffer this counter move for simultaneous merge
+        if (_pendingCounterSimMove != null) {
+          // Already have a pending counter — combine them
+          _pendingCounterSimMove = Move(
+            name: '${_pendingCounterSimMove!.name} + ${n.name}',
+            category: 'simultaneous',
+            subMoves: _pendingCounterSimMove!.category == 'simultaneous'
+                ? [..._pendingCounterSimMove!.subMoves, n]
+                : [_pendingCounterSimMove!, n],
+          );
+          _pendingCounterIsChain = false;
+        } else {
+          _pendingCounterSimMove = n;
+          _pendingCounterIsChain = false;
+        }
+        _pickerState.clearPendingAction();
+        _customMoveController.clear();
+        return;
+      }
 
       if (_currentCombo.isNotEmpty) {
         // Combo has items — merge with last item as before
@@ -1064,6 +1169,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         _pickerState.clearPendingAction();
                         _pickerState.setPendingAttackMove(null);
                         _pendingSimultaneousMove = null;
+                        _pendingCounterSimMove = null;
+                        _pendingCounterIsChain = false;
                       });
                     },
                     onAddCounterMove:
@@ -1115,6 +1222,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     _pickerState.reset();
     _currentCombo.clear();
     _pendingSimultaneousMove = null;
+    _pendingCounterSimMove = null;
+    _pendingCounterIsChain = false;
     _customMoveController.clear();
   }
 
@@ -1398,6 +1507,62 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           const SizedBox(width: 4),
                           Text(
                             '${_pendingSimultaneousMove!.name} +',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            '…',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (_pendingCounterSimMove != null)
+                  Positioned(
+                    top: 4,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'D:',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orangeAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(
+                              _pendingCounterSimMove!.displayCategory,
+                            ),
+                            size: 16,
+                            color: MoveDisplayWidgets.getCategoryColor(
+                              _pendingCounterSimMove!.displayCategory,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_pendingCounterSimMove!.name} ${_pendingCounterIsChain ? '->' : '+'}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
