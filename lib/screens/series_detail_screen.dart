@@ -1896,13 +1896,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
-      floatingActionButton: _isEditing
+      floatingActionButton: _isFullscreen
           ? FloatingActionButton(
-              onPressed: _showEditHelpDialog,
-              child: const Icon(Icons.help_outline),
+              heroTag: 'exit_fullscreen',
+              tooltip: LocalizationService.translate('exit_fullscreen', lang),
+              onPressed: () => setState(() => _isFullscreen = false),
+              child: const Icon(Icons.fullscreen_exit),
             )
-          : null,
-
+          : (_isEditing
+              ? FloatingActionButton(
+                  onPressed: _showEditHelpDialog,
+                  child: const Icon(Icons.help_outline),
+                )
+              : null),
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(
@@ -1953,6 +1959,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       'training_mode',
                       lang,
                     ),
+                  ),
+                if (!_isEditing && widget.series != null)
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen),
+                    onPressed: () => setState(() => _isFullscreen = true),
+                    tooltip: LocalizationService.translate('fullscreen', lang),
                   ),
                 if (_isEditing)
                   IconButton(
@@ -2226,9 +2238,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ),
                   ],
                 ],
-                if (!_isEditing &&
-                    !_isFullscreen &&
-                    _currentTrainingOptions == null) ...[
+                if (!_isEditing && !_isFullscreen && _currentTrainingOptions == null) ...[
                   Wrap(
                     spacing: 8,
                     children: [
