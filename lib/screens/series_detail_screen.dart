@@ -12,11 +12,15 @@ import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import '../services/pdf_service.dart';
 import '../services/export_service.dart';
-import '../services/media_service.dart';
-import '../services/voice_parsing_service.dart';
 import 'series_detail/dialogs/voice_help_dialog.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
+import 'series_detail/dialogs/workflow_help_dialog.dart';
+import 'series_detail/services/media_gallery_service.dart';
+import 'series_detail/services/voice_processing_service.dart';
+import 'series_detail/services/training_management_service.dart'
+    as training_service;
+import 'series_detail/mixins/series_detail_utils.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
@@ -35,7 +39,8 @@ class SeriesDetailScreen extends StatefulWidget {
   State<SeriesDetailScreen> createState() => _SeriesDetailScreenState();
 }
 
-class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
+class _SeriesDetailScreenState extends State<SeriesDetailScreen>
+    with SeriesDetailUtils {
   final _titleController = TextEditingController();
   final _customMoveController = TextEditingController();
   String _selectedCategory = 'Jun Fan Gung Fu';
@@ -45,13 +50,27 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   bool _isEditing = false;
 
   final FlutterTts _tts = FlutterTts();
-  final VoiceParsingService _voiceService = VoiceParsingService();
   late TrainingController _trainingController;
   int _trainingInterval = 7;
   int _comboInterval = 2500;
   TrainingOptions? _currentTrainingOptions;
 
-  final MediaService _mediaService = MediaService();
+  // Service instances
+  final MediaGalleryService _mediaGalleryService = MediaGalleryService();
+  final VoiceProcessingService _voiceProcessingService =
+      VoiceProcessingService();
+  final training_service.TrainingManagementService _trainingManagementService =
+      training_service.TrainingManagementService();
+
+  // Getters required by SeriesDetailUtils mixin
+  @override
+  List<Move> get moves => _moves;
+
+  @override
+  ScrollController get movesScrollController => _movesScrollController;
+
+  @override
+  PickerState get pickerState => _pickerState;
 
   // Picker state management
   final PickerState _pickerState = PickerState();
@@ -144,95 +163,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   List<String> _getAvailableSubLetters(int? targetIndex, int? editingIndex) {
-    if (targetIndex == null) return 'abcdefg'.split('');
-
-    // Calculate display numbers for current moves
-    int currentMainNumber = 0;
-    final List<int> displayNumbers = [];
-    for (int i = 0; i < _moves.length; i++) {
-      if (_moves[i].category != 'move') {
-        if (_moves[i].subLetter == null) {
-          currentMainNumber++;
-        }
-        int effective = currentMainNumber;
-        if (effective == 0) effective = 1;
-        displayNumbers.add(effective);
-      } else {
-        displayNumbers.add(0);
-      }
-    }
-
-    if (targetIndex < 0 || targetIndex >= displayNumbers.length) {
-      return 'abcdefg'.split('');
-    }
-
-    final targetMainNumber = displayNumbers[targetIndex];
-    final takenLetters = <String>{};
-
-    for (int i = 0; i < _moves.length; i++) {
-      if (i == editingIndex) continue; // Exclude the one we are editing
-      if (displayNumbers[i] == targetMainNumber &&
-          _moves[i].subLetter != null) {
-        takenLetters.add(_moves[i].subLetter!);
-      }
-    }
-
-    return 'abcdefg'.split('').where((l) => !takenLetters.contains(l)).toList();
+    return getAvailableSubLetters(targetIndex, editingIndex);
   }
 
   String _getDisplayNumber(int index) {
-    if (index < 0 || index >= _moves.length) return '';
-
-    int currentMainNumber = 0;
-    for (int i = 0; i <= index; i++) {
-      if (_moves[i].category != 'move') {
-        if (_moves[i].subLetter == null) {
-          currentMainNumber++;
-        }
-      }
-    }
-
-    int effectiveMain = currentMainNumber;
-    if (effectiveMain == 0) effectiveMain = 1;
-
-    final sub = _moves[index].subLetter ?? '';
-    if (_moves[index].category == 'move') return '';
-    return '$effectiveMain$sub';
+    return getDisplayNumber(index);
   }
 
   void _normalizeSubLetters() {
-    int subIndex = 0;
-    for (int i = 0; i < _moves.length; i++) {
-      if (_moves[i].category == 'move') continue;
-
-      if (_moves[i].subLetter == null) {
-        subIndex = 0;
-      } else {
-        const letters = 'abcdefghijklmnopqrstuvwxyz';
-        if (subIndex < letters.length) {
-          _moves[i] = _moves[i].copyWith(subLetter: letters[subIndex]);
-          subIndex++;
-        }
-      }
-    }
+    _moves = normalizeSubLetters(_moves);
   }
 
   void _scrollToIndex(int index) {
-    if (!_movesScrollController.hasClients) return;
-
-    final double targetOffset =
-        (index * SeriesDetailConstants.estimatedMoveItemHeight).clamp(
-          0.0,
-          _movesScrollController.position.maxScrollExtent,
-        );
-
-    _movesScrollController.animateTo(
-      targetOffset,
-      duration: const Duration(
-        milliseconds: SeriesDetailConstants.scrollAnimationMs,
-      ),
-      curve: Curves.easeInOut,
-    );
+    scrollToIndex(index);
   }
 
   void _addItemToCombo(Move item) {
@@ -376,188 +319,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _showMediaGallery(String category, String moveName) {
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final lang = provider.language;
-    final galleryPath = provider.galleryPath;
-    if (galleryPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(LocalizationService.translate('gallery_path', lang)),
-        ),
-      );
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AlertDialog(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '$moveName - ${LocalizationService.translate('instructional_photos', lang)}',
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.photo_library, color: Colors.green),
-                    tooltip: 'Select from files',
-                    onPressed: () async {
-                      final file = await _mediaService.pickAndSaveImage(
-                        galleryPath,
-                        category,
-                        moveName,
-                      );
-                      if (file != null) setModalState(() {});
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_a_photo,
-                      color: Colors.blueAccent,
-                    ),
-                    tooltip: 'Take photo',
-                    onPressed: () async {
-                      final file = await _mediaService.captureAndSaveImage(
-                        galleryPath,
-                        category,
-                        moveName,
-                      );
-                      if (file != null) setModalState(() {});
-                    },
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: FutureBuilder<List<File>>(
-                  future: _mediaService.getImagesForMove(
-                    galleryPath,
-                    category,
-                    moveName,
-                  ),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final images = snapshot.data ?? [];
-                    if (images.isEmpty) {
-                      return Center(
-                        child: Text(
-                          LocalizationService.translate('no_images', lang),
-                        ),
-                      );
-                    }
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                      itemCount: images.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () => _showFullScreenImage(images, index),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(images[index], fit: BoxFit.cover),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showFullScreenImage(List<File> images, int initialIndex) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: EdgeInsets.zero,
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            int currentIndex = initialIndex;
-            final PageController pageController = PageController(
-              initialPage: initialIndex,
-            );
-
-            return Stack(
-              children: [
-                PageView.builder(
-                  controller: pageController,
-                  itemCount: images.length,
-                  onPageChanged: (index) {
-                    setState(() => currentIndex = index);
-                  },
-                  itemBuilder: (context, index) {
-                    return Center(
-                      child: InteractiveViewer(
-                        child: Image.file(images[index], fit: BoxFit.contain),
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                if (images.length > 1)
-                  Positioned(
-                    bottom: 16,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${currentIndex + 1} / ${images.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
+    _mediaGalleryService.showMediaGallery(context, category, moveName);
   }
 
   void _saveSeries() async {
@@ -621,15 +383,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _showTrainingOptions() async {
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final lang = provider.language;
-    final options = await TrainingOptionsDialog.show(
+    final options = await _trainingManagementService.showTrainingOptions(
       context,
-      lang,
-      _moves.length,
+      _moves,
       _trainingInterval,
       _comboInterval,
-      provider.speechRate,
+      _trainingController,
     );
 
     if (options != null) {
@@ -638,22 +397,16 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         _comboInterval = options.comboInterval;
         _currentTrainingOptions = options;
       });
-      _trainingController.startTraining(
-        moves: _moves,
-        startIndex: options.startIndex,
-        endIndex: options.endIndex,
-        interval: options.interval,
-        comboInterval: options.comboInterval,
-        isLooping: options.isLooping,
-        language: lang,
-        speechRate: provider.speechRate,
-      );
     }
   }
 
   void _startVoiceInput() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    final result = await VoiceInputDialog.show(context, _voiceService, lang);
+    final result = await VoiceInputDialog.show(
+      context,
+      _voiceProcessingService.voiceService,
+      lang,
+    );
     if (result != null && result.trim().isNotEmpty) {
       _processVoiceInput(result);
     }
@@ -663,135 +416,28 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     Map<String, dynamic> completionInfo,
     SeriesProvider provider,
   ) {
-    final lang = provider.language;
-    final dayCompleted = completionInfo['dayCompleted'] == true;
-
-    if (dayCompleted) {
-      // Day completed! Show celebration dialog
-      final dayNumber = completionInfo['dayNumber'] as int;
-      final streak = completionInfo['streak'] as int;
-      final progress = (completionInfo['progress'] as double) * 100;
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.celebration, color: Colors.amber, size: 80),
-              const SizedBox(height: 16),
-              Text(
-                '${LocalizationService.translate('day', lang)} $dayNumber ${LocalizationService.translate('finish', lang)}!',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              if (streak > 1)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('🔥', style: TextStyle(fontSize: 24)),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$streak ${LocalizationService.translate('days', lang)}!',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(value: progress / 100),
-              const SizedBox(height: 8),
-              Text(
-                '${progress.toStringAsFixed(1)}% ${LocalizationService.translate('progress', lang)}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(LocalizationService.translate('finish', lang)),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Series completed but day not finished yet
-      final completedSeries = completionInfo['completedSeries'] as int;
-      final totalSeries = completionInfo['totalSeries'] as int;
-      final currentSeriesCount =
-          completionInfo['currentSeriesCount'] as int? ?? 0;
-
-      String message;
-      if (currentSeriesCount >= 2) {
-        // Series is fully complete (2 reps done)
-        message =
-            '${LocalizationService.translate('finish', lang)}! ✓ ($completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)})';
-      } else {
-        // Series partially complete (1 rep done)
-        message =
-            '${LocalizationService.translate('finish', lang)}! ($currentSeriesCount/2 reps) - $completedSeries/$totalSeries ${LocalizationService.translate('series_title', lang)}';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 3),
-          backgroundColor: currentSeriesCount >= 2
-              ? Colors.green
-              : Theme.of(context).colorScheme.secondary,
-        ),
-      );
-    }
+    _trainingManagementService.showCompletionDialog(
+      context,
+      completionInfo,
+      provider,
+    );
   }
 
   void _processVoiceInput(String input) {
-    if (input.trim().isEmpty) return;
-    List<Move> parsed = [];
-    try {
-      final decoded = json.decode(input);
-      if (decoded is List) {
-        parsed = decoded.map((m) => Move.fromMap(m)).toList();
-      }
-    } catch (_) {
-      // If not JSON, it might be raw text from a legacy caller or error
-      final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-      parsed = _voiceService.parseSentenceToCombo(input, lang);
-    }
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    _voiceProcessingService.processVoiceInputWithContext(
+      input,
+      lang,
+      _pickerState,
+      _currentCombo,
+      _moves,
+      _comboListKey,
+      () => setState(() {}),
+    );
+  }
 
-    if (parsed.isEmpty) return;
-    setState(() {
-      if (_pickerState.isPickerOpen) {
-        // Since we are in a modal bottom sheet with a separate StateSetter (setS),
-        // we need to be careful. However, _processVoiceInput usually runs via
-        // a dialog that pops back. If we are in the picker, we should ideally
-        // use the setS provided to the picker, but this method uses setState.
-        // For now, let's at least add them.
-        for (var m in parsed) {
-          _currentCombo.add(m);
-          _comboListKey.currentState?.insertItem(
-            _currentCombo.length - 1,
-            duration: const Duration(milliseconds: 400),
-          );
-        }
-      } else {
-        if (parsed.length == 1) {
-          _moves.add(parsed.first);
-        } else {
-          _moves.add(
-            Move(
-              name: 'Combo: ${parsed.first.name} + ...',
-              category: 'combo',
-              subMoves: parsed,
-            ),
-          );
-        }
-      }
-    });
+  void _showWorkflowHelp(BuildContext context, String lang) {
+    WorkflowHelpDialog.show(context, lang);
   }
 
   void _pickMove({
@@ -1157,7 +803,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.help_outline, color: Colors.blue),
+                        icon: const Icon(
+                          Icons.help_outline,
+                          color: Colors.blue,
+                        ),
                         onPressed: () => _showWorkflowHelp(context, lang),
                         tooltip: 'Help',
                       ),
@@ -1354,11 +1003,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   Future<int> _getInitialIndexForCategory(String cat) async {
-    if (_pickerState.pendingActionItemId == null) return -1;
-    final items = await DatabaseService().getGlossaryByCategory(cat);
-    return items.indexWhere(
-      (item) => item['id'] == _pickerState.pendingActionItemId,
-    );
+    return getInitialIndexForCategory(cat);
   }
 
   Widget _buildGlossaryWithScroll(String cat, StateSetter setS, String lang) {
@@ -1371,7 +1016,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
   }
 
   void _activateGlossaryItem(int itemId) {
-    _pickerState.activateGlossaryItem(itemId);
+    activateGlossaryItem(itemId);
   }
 
   Widget _buildCustomTextTab(
@@ -1455,8 +1100,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
     final bool hasPendingChain = _pickerState.pendingChain.isNotEmpty;
     final double h =
         (_currentCombo.any((m) => m.category == 'move') || hasPendingChain)
-            ? 198
-            : 190;
+        ? 198
+        : 190;
     return Container(
       constraints: BoxConstraints(minHeight: 170, maxHeight: h),
       width: double.infinity,
@@ -1496,8 +1141,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                           _pickerState.editingSeriesIndex != null
                               ? '${LocalizationService.translate('update_item', lang).toUpperCase()} ${_getDisplayNumber(_pickerState.editingSeriesIndex!)}'
                               : (hasPendingChain
-                                  ? 'BUILDING CHAIN'
-                                  : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})'),
+                                    ? 'BUILDING CHAIN'
+                                    : '${LocalizationService.translate('current_combo', lang)} (${_currentCombo.length})'),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
@@ -1735,100 +1380,105 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     children: [
                       AnimatedList(
                         key: _comboListKey,
-                  controller: _comboScrollController,
-                  scrollDirection: Axis.horizontal,
-                  initialItemCount: _currentCombo.length,
-                  itemBuilder: (ctx, idx, animation) {
-                    if (idx >= _currentCombo.length) {
-                      return const SizedBox.shrink();
-                    }
-                    final m = _currentCombo[idx];
-                    return ComboCardWidget(
-                      move: m,
-                      index: idx,
-                      language: lang,
-                      animation: animation,
-                      onRemove: () => _removeItemFromCombo(idx, setS, lang),
-                      onEdit: (index, isCounter) =>
-                          _handleEditComboItem(index, isCounter, setS, ctx),
-                      onShowMediaGallery: _showMediaGallery,
-                      isSelected:
-                          _pickerState.editingComboItemIndex == idx &&
-                          !_pickerState.isEditingCounter,
-                      isCounterSelected:
-                          _pickerState.editingComboItemIndex == idx &&
-                          _pickerState.isEditingCounter,
-                    );
-                  },
-                ),
-                if (_currentCombo.length > 1) ...[
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 4),
-                        decoration: BoxDecoration(
-                          color: (!Platform.isAndroid && !Platform.isIOS)
-                              ? Colors.black87
-                              : Colors.black26,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.white,
-                            size: (!Platform.isAndroid && !Platform.isIOS)
-                                ? 26
-                                : 20,
-                          ),
-                          onPressed: () {
-                            _comboScrollController.animateTo(
-                              _comboScrollController.offset - 168,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                        ),
+                        controller: _comboScrollController,
+                        scrollDirection: Axis.horizontal,
+                        initialItemCount: _currentCombo.length,
+                        itemBuilder: (ctx, idx, animation) {
+                          if (idx >= _currentCombo.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final m = _currentCombo[idx];
+                          return ComboCardWidget(
+                            move: m,
+                            index: idx,
+                            language: lang,
+                            animation: animation,
+                            onRemove: () =>
+                                _removeItemFromCombo(idx, setS, lang),
+                            onEdit: (index, isCounter) => _handleEditComboItem(
+                              index,
+                              isCounter,
+                              setS,
+                              ctx,
+                            ),
+                            onShowMediaGallery: _showMediaGallery,
+                            isSelected:
+                                _pickerState.editingComboItemIndex == idx &&
+                                !_pickerState.isEditingCounter,
+                            isCounterSelected:
+                                _pickerState.editingComboItemIndex == idx &&
+                                _pickerState.isEditingCounter,
+                          );
+                        },
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 4),
-                        decoration: BoxDecoration(
-                          color: (!Platform.isAndroid && !Platform.isIOS)
-                              ? Colors.black87
-                              : Colors.black26,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.white,
-                            size: (!Platform.isAndroid && !Platform.isIOS)
-                                ? 26
-                                : 20,
+                      if (_currentCombo.length > 1) ...[
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 4),
+                              decoration: BoxDecoration(
+                                color: (!Platform.isAndroid && !Platform.isIOS)
+                                    ? Colors.black87
+                                    : Colors.black26,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: Colors.white,
+                                  size: (!Platform.isAndroid && !Platform.isIOS)
+                                      ? 26
+                                      : 20,
+                                ),
+                                onPressed: () {
+                                  _comboScrollController.animateTo(
+                                    _comboScrollController.offset - 168,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                          onPressed: () {
-                            _comboScrollController.animateTo(
-                              _comboScrollController.offset + 168,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          },
                         ),
-                      ),
-                    ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 4),
+                              decoration: BoxDecoration(
+                                color: (!Platform.isAndroid && !Platform.isIOS)
+                                    ? Colors.black87
+                                    : Colors.black26,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white,
+                                  size: (!Platform.isAndroid && !Platform.isIOS)
+                                      ? 26
+                                      : 20,
+                                ),
+                                onPressed: () {
+                                  _comboScrollController.animateTo(
+                                    _comboScrollController.offset + 168,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
-            ),
           ),
         ],
       ),
@@ -2288,10 +1938,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                               onPressed: () {
                                 setS(() {
                                   final counterMove = Move(
-                                    glossaryId:
-                                        _pickerState.pendingAttackMove!['item']['id'],
-                                    name:
-                                        _pickerState.pendingAttackMove!['item']['name'],
+                                    glossaryId: _pickerState
+                                        .pendingAttackMove!['item']['id'],
+                                    name: _pickerState
+                                        .pendingAttackMove!['item']['name'],
                                     category:
                                         _pickerState.pendingAttackMove!['cat'],
                                     translations:
@@ -2315,12 +1965,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _pickerState.setPendingActionItem(null);
                                   _pickerState.setPendingLevel(null);
                                   _pickerState.setPendingAttackMove(null);
-                                  
+
                                   // Scroll to end of preview
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
                                     _comboScrollController.animateTo(
-                                      _comboScrollController.position.maxScrollExtent,
-                                      duration: const Duration(milliseconds: 300),
+                                      _comboScrollController
+                                          .position
+                                          .maxScrollExtent,
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
                                       curve: Curves.easeOut,
                                     );
                                   });
@@ -2406,10 +2062,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   final side =
                                       _pickerState.selectedSides[id] ?? 'L';
                                   final counterMove = Move(
-                                    glossaryId:
-                                        _pickerState.pendingAttackMove!['item']['id'],
-                                    name:
-                                        _pickerState.pendingAttackMove!['item']['name'],
+                                    glossaryId: _pickerState
+                                        .pendingAttackMove!['item']['id'],
+                                    name: _pickerState
+                                        .pendingAttackMove!['item']['name'],
                                     category:
                                         _pickerState.pendingAttackMove!['cat'],
                                     translations:
@@ -2434,12 +2090,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                                   _pickerState.setPendingActionItem(null);
                                   _pickerState.setPendingLevel(null);
                                   _pickerState.setPendingAttackMove(null);
-                                  
+
                                   // Scroll to end of preview
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
                                     _comboScrollController.animateTo(
-                                      _comboScrollController.position.maxScrollExtent,
-                                      duration: const Duration(milliseconds: 300),
+                                      _comboScrollController
+                                          .position
+                                          .maxScrollExtent,
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
                                       curve: Curves.easeOut,
                                     );
                                   });
@@ -2667,8 +2329,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         isFeint: _pickerState.pendingAttackMove!['f'],
                         specialAction: _pickerState.pendingAttackMove!['sp'],
                         repetitions: 1,
-                        counterName:
-                            isCustom ? _customMoveController.text : it['name'],
+                        counterName: isCustom
+                            ? _customMoveController.text
+                            : it['name'],
                         counterCategory: cat,
                         counterSide: sd,
                         counterLevel: lv,
@@ -2680,9 +2343,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     }
 
                     if (_pickerState.pendingChain.isNotEmpty) {
-                      final finalChain =
-                          List<Move>.from(_pickerState.pendingChain)
-                            ..add(interaction);
+                      final finalChain = List<Move>.from(
+                        _pickerState.pendingChain,
+                      )..add(interaction);
                       final chainMove = Move(
                         name: finalChain.map((m) => m.name).join(' -> '),
                         category: 'chain',
@@ -2705,8 +2368,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                 isE
                     ? LocalizationService.translate('update_item', lang)
                     : (isCounterMode
-                        ? LocalizationService.translate('add', lang)
-                        : LocalizationService.translate('next', lang)),
+                          ? LocalizationService.translate('add', lang)
+                          : LocalizationService.translate('next', lang)),
                 style: const TextStyle(fontSize: 12),
               ),
             ),
@@ -2735,8 +2398,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         isFeint: _pickerState.pendingAttackMove!['f'],
                         specialAction: _pickerState.pendingAttackMove!['sp'],
                         repetitions: 1,
-                        counterName:
-                            isCustom ? _customMoveController.text : it['name'],
+                        counterName: isCustom
+                            ? _customMoveController.text
+                            : it['name'],
                         counterCategory: cat,
                         counterSide: sd,
                         counterLevel: lv,
@@ -2746,8 +2410,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                     } else {
                       interaction = Move(
                         glossaryId: isCustom ? null : it['id'],
-                        name:
-                            isCustom ? _customMoveController.text : it['name'],
+                        name: isCustom
+                            ? _customMoveController.text
+                            : it['name'],
                         category: cat,
                         translations: tr,
                         side: sd,
@@ -2878,8 +2543,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         isFeint: _pickerState.pendingAttackMove!['f'],
                         specialAction: _pickerState.pendingAttackMove!['sp'],
                         repetitions: 1,
-                        counterName:
-                            isCustom ? _customMoveController.text : it['name'],
+                        counterName: isCustom
+                            ? _customMoveController.text
+                            : it['name'],
                         counterCategory: cat,
                         counterSide: sd,
                         counterLevel: lv,
@@ -2892,9 +2558,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
 
                     // Handle chain finalization on "Finish"
                     if (_pickerState.pendingChain.isNotEmpty) {
-                      final finalChain =
-                          List<Move>.from(_pickerState.pendingChain)
-                            ..add(interaction);
+                      final finalChain = List<Move>.from(
+                        _pickerState.pendingChain,
+                      )..add(interaction);
                       final chainMove = Move(
                         name: finalChain.map((m) => m.name).join(' -> '),
                         category: 'chain',
