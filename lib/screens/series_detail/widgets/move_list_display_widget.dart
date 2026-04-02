@@ -673,7 +673,9 @@ class MoveListDisplayWidget {
                                                           style: TextStyle(
                                                             fontSize: 13,
                                                             color:
-                                                                Theme.of(context)
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
                                                                     .colorScheme
                                                                     .secondary,
                                                             fontWeight:
@@ -682,7 +684,8 @@ class MoveListDisplayWidget {
                                                         ),
                                                         MoveDisplayWidgets.sideCircle(
                                                           LocalizationService.translate(
-                                                            sub.counterSide == 'L'
+                                                            sub.counterSide ==
+                                                                    'L'
                                                                 ? 'left'
                                                                 : 'right',
                                                             language,
@@ -691,7 +694,8 @@ class MoveListDisplayWidget {
                                                           mini: true,
                                                         ),
                                                         MoveDisplayWidgets.levelIcon(
-                                                          sub.counterLevel ?? '',
+                                                          sub.counterLevel ??
+                                                              '',
                                                           size: 10,
                                                           mini: true,
                                                         ),
@@ -778,7 +782,8 @@ class MoveListDisplayWidget {
                                             size: 28,
                                             color:
                                                 MoveDisplayWidgets.getCategoryColor(
-                                                  moves[i].counterCategory ?? '',
+                                                  moves[i].counterCategory ??
+                                                      '',
                                                 ),
                                           ),
                                           Text(

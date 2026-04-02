@@ -1904,11 +1904,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               child: const Icon(Icons.fullscreen_exit),
             )
           : (_isEditing
-              ? FloatingActionButton(
-                  onPressed: _showEditHelpDialog,
-                  child: const Icon(Icons.help_outline),
-                )
-              : null),
+                ? FloatingActionButton(
+                    onPressed: _showEditHelpDialog,
+                    child: const Icon(Icons.help_outline),
+                  )
+                : null),
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(
@@ -2242,13 +2242,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                   Wrap(
                     spacing: 8,
                     children: [
-                      Chip(
-                        label: Text(_selectedCategory),
-                      ),
+                      Chip(label: Text(_selectedCategory)),
                       if (_selectedCategory != 'JKD Moves')
-                        Chip(
-                          label: Text(_selectedType),
-                        ),
+                        Chip(label: Text(_selectedType)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -2256,41 +2252,41 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 if (!_isFullscreen)
                   SizedBox(
                     height: 48,
-                  child: Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      if (_isEditing) ...[
-                        const SizedBox(width: 8),
-                        Consumer<SeriesProvider>(
-                          builder: (context, provider, child) => Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (provider.voiceEnabled) ...[
-                                FloatingActionButton.small(
-                                  heroTag: 'voice_btn',
-                                  onPressed: _startVoiceInput,
-                                  backgroundColor: Colors.redAccent,
-                                  child: const Icon(
-                                    Icons.mic,
-                                    size: 20,
-                                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        if (_isEditing) ...[
+                          const SizedBox(width: 8),
+                          Consumer<SeriesProvider>(
+                            builder: (context, provider, child) => Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (provider.voiceEnabled) ...[
+                                  FloatingActionButton.small(
+                                    heroTag: 'voice_btn',
+                                    onPressed: _startVoiceInput,
+                                    backgroundColor: Colors.redAccent,
+                                    child: const Icon(
+                                      Icons.mic,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
                                   ),
+                                  const SizedBox(width: 8),
+                                ],
+                                FloatingActionButton.small(
+                                  heroTag: 'add_btn',
+                                  onPressed: () => _pickMove(),
+                                  child: const Icon(Icons.add, size: 20),
                                 ),
-                                const SizedBox(width: 8),
                               ],
-                              FloatingActionButton.small(
-                                heroTag: 'add_btn',
-                                onPressed: () => _pickMove(),
-                                child: const Icon(Icons.add, size: 20),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
+                          const SizedBox(width: 16),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
                 Expanded(
                   child: _isEditing
                       ? ReorderableListView(
@@ -2306,15 +2302,26 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           },
                           children: _buildMoveListTiles(lang),
                         )
-                      : InteractiveViewer(
-                          panEnabled: false, // Standard scroll handles vertical movement
-                          scaleEnabled: Platform.isAndroid || Platform.isIOS,
-                          minScale: 0.4,
-                          maxScale: 3.0,
-                          child: ListView(
-                            controller: _movesScrollController,
-                            children: _buildMoveListTiles(lang),
-                          ),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            return InteractiveViewer(
+                              panEnabled:
+                                  false, // Standard scroll handles vertical movement
+                              scaleEnabled:
+                                  Platform.isAndroid || Platform.isIOS,
+                              minScale: 0.4,
+                              maxScale: 3.0,
+                              constrained: false,
+                              child: SizedBox(
+                                width: constraints.maxWidth,
+                                height: constraints.maxHeight,
+                                child: ListView(
+                                  controller: _movesScrollController,
+                                  children: _buildMoveListTiles(lang),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                 ),
               ],
