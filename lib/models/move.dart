@@ -96,7 +96,9 @@ class Move {
 
   factory Move.fromMap(Map<String, dynamic> map) {
     final trans = TranslationUtils.parseTranslations(map['translations']);
-    final counterTrans = TranslationUtils.parseTranslations(map['counter_translations']);
+    final counterTrans = TranslationUtils.parseTranslations(
+      map['counter_translations'],
+    );
 
     List<Move> subs = [];
     if (map['sub_moves_json'] != null) {
@@ -131,7 +133,9 @@ class Move {
       glossaryId: map['glossary_id'],
       counterGlossaryId: map['counter_glossary_id'],
       uKey: map['uKey'] ?? (map['id']?.toString() ?? const Uuid().v4()),
-      name: map['name'] ?? (subs.isNotEmpty ? 'Combo' : (chainItems.isNotEmpty ? 'Chain' : '')),
+      name:
+          map['name'] ??
+          (subs.isNotEmpty ? 'Combo' : (chainItems.isNotEmpty ? 'Chain' : '')),
       category: map['category'] ?? (chainItems.isNotEmpty ? 'chain' : ''),
       side: map['side'] ?? '',
       level: map['level'] ?? '',

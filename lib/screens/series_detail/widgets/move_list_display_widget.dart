@@ -423,7 +423,8 @@ class MoveListDisplayWidget {
                                   fontSize: 16,
                                   onEdit: isEditing ? onEdit(i) : null,
                                 )
-                              else if (moves[i].category == 'chain' || moves[i].isChain)
+                              else if (moves[i].category == 'chain' ||
+                                  moves[i].isChain)
                                 _buildChainContent(
                                   context,
                                   moves[i],
@@ -628,9 +629,10 @@ class MoveListDisplayWidget {
                                                         sub.counterName!,
                                                         style: TextStyle(
                                                           fontSize: 13,
-                                                          color: Theme.of(context)
-                                                              .colorScheme
-                                                              .secondary,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .secondary,
                                                           fontWeight:
                                                               FontWeight.bold,
                                                         ),
@@ -676,8 +678,8 @@ class MoveListDisplayWidget {
                                                           style:
                                                               const TextStyle(
                                                                 fontSize: 11,
-                                                                color: Colors
-                                                                    .grey,
+                                                                color:
+                                                                    Colors.grey,
                                                                 fontStyle:
                                                                     FontStyle
                                                                         .italic,
@@ -737,9 +739,9 @@ class MoveListDisplayWidget {
                                         Text(
                                           moves[i].counterName!,
                                           style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),

@@ -437,8 +437,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     );
   }
 
-
-
   void _pickMove({
     List<Move>? initialMoves,
     int? seriesIndex,
@@ -3478,4 +3476,4 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       ),
     );
   }
-  }
+}

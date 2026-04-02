@@ -48,12 +48,11 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 24,
+      version: 25,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
-
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     LoggingService.log('Upgrading database from $oldVersion to $newVersion');
@@ -344,6 +343,21 @@ class DatabaseService {
       await _seedSeries(db);
       debugPrint('Migration v23: Re-seeded glossary and system series');
     }
+
+    if (oldVersion < 25) {
+      try {
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN counter_translations TEXT',
+        );
+        debugPrint(
+          'Migration v25: Added counter_translations column to series_moves',
+        );
+      } catch (e) {
+        debugPrint(
+          'Migration warning: counter_translations column may already exist - $e',
+        );
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -370,7 +384,7 @@ class DatabaseService {
 
     await db.execute('''
       CREATE TABLE series_moves (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, sub_letter TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, sub_moves_json TEXT, chain_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, sub_letter TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, counter_translations TEXT, sub_moves_json TEXT, chain_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
 
@@ -559,8 +573,7 @@ class DatabaseService {
               'sub_moves_json': move['sub_moves_json'],
               'chain_json': move['chain_json'],
               'position': i,
-              });
-
+            });
           }
         }
       } catch (e) {
@@ -645,8 +658,9 @@ class DatabaseService {
               'program_id': programId,
               'day_number': day['day_number'] ?? 1,
               'series_ids': json.encode(resolvedIds),
-              'series_assignments':
-                  assignments.isNotEmpty ? json.encode(assignments) : null,
+              'series_assignments': assignments.isNotEmpty
+                  ? json.encode(assignments)
+                  : null,
               'notes': day['notes'],
               'is_rest_day': day['is_rest_day'] ?? 0,
             });

@@ -195,6 +195,49 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
     }
   }
 
+  Future<void> _deleteProgram() async {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(LocalizationService.translate('delete_series', lang)),
+        content: Text(
+          '${LocalizationService.translate('confirm_delete', lang)} "${widget.program!.title}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              LocalizationService.translate('delete', lang),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final db = DatabaseService();
+        await db.deleteProgram(widget.program!.id!);
+        await provider.loadAllPrograms();
+        if (!mounted) return;
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   Future<void> _exportToJson() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -290,6 +333,12 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
               icon: const Icon(Icons.code),
               tooltip: LocalizationService.translate('export_json', lang),
               onPressed: _exportToJson,
+            ),
+          if (widget.program != null)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              tooltip: LocalizationService.translate('delete', lang),
+              onPressed: _deleteProgram,
             ),
           IconButton(
             icon: const Icon(Icons.save),

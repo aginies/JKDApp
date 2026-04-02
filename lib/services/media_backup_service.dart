@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
 class MediaBackupService {
-  static String buildBackupPath(String sourcePath, String timestamp) =>
-      p.join(sourcePath, 'jkd_media_backup_$timestamp.zip');
+  static String _getTimestamp() =>
+      DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
 
   static Future<String?> backupGalleryToZip(
     String sourcePath,
@@ -15,8 +15,7 @@ class MediaBackupService {
   }) async {
     try {
       final String finalFileName =
-          zipFileName ??
-          'jkd_media_backup_${DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now())}.zip';
+          zipFileName ?? 'jkd-media-backup-${_getTimestamp()}.zip';
       final String zipPath = p.join(targetDir, finalFileName);
 
       final encoder = ZipFileEncoder();
@@ -24,7 +23,7 @@ class MediaBackupService {
 
       final dir = Directory(sourcePath);
       if (await dir.exists()) {
-        encoder.addDirectory(dir);
+        await _addDirectoryToZip(encoder, dir, '');
       }
       encoder.close();
 
@@ -35,23 +34,43 @@ class MediaBackupService {
     }
   }
 
+  static Future<void> _addDirectoryToZip(
+    ZipFileEncoder encoder,
+    Directory dir,
+    String zipPath,
+  ) async {
+    final List<FileSystemEntity> entities = await dir
+        .list(recursive: false)
+        .toList();
+    for (final entity in entities) {
+      final String name = p.basename(entity.path);
+      final String entryPath = zipPath.isEmpty ? name : '$zipPath/$name';
+
+      if (entity is Directory) {
+        await _addDirectoryToZip(encoder, entity, entryPath);
+      } else if (entity is File) {
+        encoder.addFile(entity, entryPath);
+      }
+    }
+  }
+
   static Future<bool> restoreGalleryFromZip(
     String targetPath,
     String zipFilePath,
   ) async {
     try {
-      final bytes = File(zipFilePath).readAsBytesSync();
+      final bytes = await File(zipFilePath).readAsBytes();
       final archive = ZipDecoder().decodeBytes(bytes);
 
       for (final file in archive) {
         final filename = file.name;
         if (file.isFile) {
           final data = file.content as List<int>;
-          File(p.join(targetPath, filename))
-            ..createSync(recursive: true)
-            ..writeAsBytesSync(data);
+          final f = File(p.join(targetPath, filename));
+          await f.create(recursive: true);
+          await f.writeAsBytes(data);
         } else {
-          Directory(p.join(targetPath, filename)).createSync(recursive: true);
+          await Directory(p.join(targetPath, filename)).create(recursive: true);
         }
       }
       return true;

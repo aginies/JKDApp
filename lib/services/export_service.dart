@@ -2,17 +2,23 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/series.dart';
 import 'database_service.dart';
 
 class ExportService {
+  static String _getTimestamp() =>
+      DateFormat('yyyy-MM-dd_HH-mm').format(DateTime.now());
+
   static Future<void> shareSeriesJson(
     List<JkdSeries> seriesList, {
-    String fileName = 'jkd_series_export.json',
+    String? fileName,
   }) async {
     try {
+      final String finalFileName =
+          fileName ?? 'jkd_series_export_${_getTimestamp()}.json';
       final List<Map<String, dynamic>> jsonData = seriesList.map((s) {
         final map = s.toMap();
         map['moves'] = s.moves.map((m) => m.toMap()).toList();
@@ -24,7 +30,7 @@ class ExportService {
       ).convert(jsonData);
 
       final directory = await getTemporaryDirectory();
-      final File file = File('${directory.path}/$fileName');
+      final File file = File('${directory.path}/$finalFileName');
       await file.writeAsString(jsonString);
 
       await SharePlus.instance.share(
@@ -43,8 +49,7 @@ class ExportService {
       ).convert(items);
 
       final directory = await getTemporaryDirectory();
-      final String fileName =
-          'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final String fileName = 'jkd_glossary_backup_${_getTimestamp()}.json';
       final File file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
 
@@ -58,10 +63,12 @@ class ExportService {
 
   static Future<String?> exportToJson(
     List<JkdSeries> seriesList, {
-    String fileName = 'jkd_series_export.json',
+    String? fileName,
     String? customDirectory,
   }) async {
     try {
+      final String finalFileName =
+          fileName ?? 'jkd_series_export_${_getTimestamp()}.json';
       final List<Map<String, dynamic>> jsonData = seriesList.map((s) {
         final map = s.toMap();
         map['moves'] = s.moves.map((m) => m.toMap()).toList();
@@ -81,7 +88,7 @@ class ExportService {
 
       if (targetPath == null) return null;
 
-      final File file = File('$targetPath/$fileName');
+      final File file = File('$targetPath/$finalFileName');
       await file.writeAsString(jsonString);
 
       return file.path;
@@ -102,8 +109,7 @@ class ExportService {
           customDirectory ?? await FilePicker.platform.getDirectoryPath();
       if (targetDir == null) return null;
 
-      final String fileName =
-          'jkd_glossary_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      final String fileName = 'jkd_glossary_backup_${_getTimestamp()}.json';
       final File file = File('$targetDir/$fileName');
       await file.writeAsString(jsonString);
 

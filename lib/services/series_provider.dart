@@ -53,6 +53,7 @@ class SeriesProvider with ChangeNotifier {
   final TrainingProgramService _programService = TrainingProgramService();
 
   List<JkdSeries> get series => _series;
+  List<TrainingProgram> get allPrograms => _allPrograms;
   UserProgramProgress? get activeProgram => _activeProgram;
   TrainingProgram? get activeProgramDetails => _activeProgramDetails;
   List<Map<String, dynamic>> get glossary => _glossary;
@@ -241,6 +242,7 @@ class SeriesProvider with ChangeNotifier {
 
   Future<void> loadAllPrograms() async {
     _allPrograms = await _programService.getAllPrograms();
+    notifyListeners();
   }
 
   /// Get global search results across series, glossary, and programs
@@ -251,27 +253,32 @@ class SeriesProvider with ChangeNotifier {
 
     // 1. Search Series
     for (final s in _series) {
-      bool match = s.title.toLowerCase().contains(q) ||
+      bool match =
+          s.title.toLowerCase().contains(q) ||
           s.category.toLowerCase().contains(q) ||
           s.notes.toLowerCase().contains(q);
 
       if (match) {
-        results.add(SearchResult(
-          type: SearchResultType.series,
-          title: s.title,
-          subtitle: s.category,
-          data: s,
-        ));
+        results.add(
+          SearchResult(
+            type: SearchResultType.series,
+            title: s.title,
+            subtitle: s.category,
+            data: s,
+          ),
+        );
       } else {
         // Search moves within series
         for (final m in s.moves) {
           if (m.name.toLowerCase().contains(q)) {
-            results.add(SearchResult(
-              type: SearchResultType.move,
-              title: m.name,
-              subtitle: 'From Series: ${s.title}',
-              data: s, // Clicking a move result takes you to its series
-            ));
+            results.add(
+              SearchResult(
+                type: SearchResultType.move,
+                title: m.name,
+                subtitle: 'From Series: ${s.title}',
+                data: s, // Clicking a move result takes you to its series
+              ),
+            );
             break; // Only one result per series if multiple moves match
           }
         }
@@ -285,12 +292,14 @@ class SeriesProvider with ChangeNotifier {
       final t = (trans[_language] ?? trans['en'] ?? '').toLowerCase();
 
       if (name.contains(q) || t.contains(q)) {
-        results.add(SearchResult(
-          type: SearchResultType.glossary,
-          title: item['name'].toString(),
-          subtitle: 'Glossary - ${item['category']}',
-          data: item,
-        ));
+        results.add(
+          SearchResult(
+            type: SearchResultType.glossary,
+            title: item['name'].toString(),
+            subtitle: 'Glossary - ${item['category']}',
+            data: item,
+          ),
+        );
       }
     }
 
@@ -298,12 +307,14 @@ class SeriesProvider with ChangeNotifier {
     for (final p in _allPrograms) {
       if (p.title.toLowerCase().contains(q) ||
           p.description.toLowerCase().contains(q)) {
-        results.add(SearchResult(
-          type: SearchResultType.program,
-          title: p.title,
-          subtitle: 'Training Program',
-          data: p,
-        ));
+        results.add(
+          SearchResult(
+            type: SearchResultType.program,
+            title: p.title,
+            subtitle: 'Training Program',
+            data: p,
+          ),
+        );
       }
     }
 

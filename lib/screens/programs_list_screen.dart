@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/training_program.dart';
 import '../services/series_provider.dart';
-import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import 'program_detail_screen.dart';
 import 'program_create_screen.dart';
@@ -15,70 +14,7 @@ class ProgramsListScreen extends StatefulWidget {
 }
 
 class _ProgramsListScreenState extends State<ProgramsListScreen> {
-  final TrainingProgramService _programService = TrainingProgramService();
-  List<TrainingProgram> _programs = [];
   String _selectedDifficulty = 'all';
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPrograms();
-  }
-
-  Future<void> _loadPrograms() async {
-    setState(() => _isLoading = true);
-    try {
-      final programs = await _programService.getAllPrograms();
-
-      // Sort programs: System first, then by difficulty, then by title
-      programs.sort((a, b) {
-        // System programs first
-        if (a.isSystem != b.isSystem) {
-          return a.isSystem ? -1 : 1;
-        }
-
-        // Then by difficulty level
-        const difficultyOrder = {
-          'beginner': 0,
-          'intermediate': 1,
-          'advanced': 2,
-          'expert': 3,
-        };
-
-        final diffA = difficultyOrder[a.difficultyLevel.toLowerCase()] ?? 99;
-        final diffB = difficultyOrder[b.difficultyLevel.toLowerCase()] ?? 99;
-
-        if (diffA != diffB) {
-          return diffA.compareTo(diffB);
-        }
-
-        // Finally by title
-        return a.title.toLowerCase().compareTo(b.title.toLowerCase());
-      });
-
-      setState(() {
-        _programs = programs;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading programs: $e')));
-      }
-    }
-  }
-
-  List<TrainingProgram> get _filteredPrograms {
-    if (_selectedDifficulty == 'all') {
-      return _programs;
-    }
-    return _programs
-        .where((p) => p.difficultyLevel == _selectedDifficulty)
-        .toList();
-  }
 
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty.toLowerCase()) {
@@ -116,133 +52,74 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     final provider = Provider.of<SeriesProvider>(context);
     final lang = provider.language;
 
+    // Get and sort programs
+    final List<TrainingProgram> programs = List.from(provider.allPrograms);
+    programs.sort((a, b) {
+      if (a.isSystem != b.isSystem) return a.isSystem ? -1 : 1;
+      const difficultyOrder = {
+        'beginner': 0,
+        'intermediate': 1,
+        'advanced': 2,
+        'expert': 3,
+      };
+      final diffA = difficultyOrder[a.difficultyLevel.toLowerCase()] ?? 99;
+      final diffB = difficultyOrder[b.difficultyLevel.toLowerCase()] ?? 99;
+      if (diffA != diffB) return diffA.compareTo(diffB);
+      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    });
+
+    // Filter programs
+    final filteredPrograms = _selectedDifficulty == 'all'
+        ? programs
+        : programs
+              .where((p) => p.difficultyLevel == _selectedDifficulty)
+              .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(LocalizationService.translate('training_programs', lang)),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            onSelected: (value) {
-              setState(() => _selectedDifficulty = value);
-            },
+            onSelected: (value) => setState(() => _selectedDifficulty = value),
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'all',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.list,
-                      color: _selectedDifficulty == 'all'
-                          ? theme.colorScheme.primary
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.translate('all', lang),
-                      style: TextStyle(
-                        fontWeight: _selectedDifficulty == 'all'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildFilterItem(
+                'all',
+                Icons.list,
+                LocalizationService.translate('all', lang),
+                theme,
               ),
-              PopupMenuItem(
-                value: 'beginner',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.school,
-                      color: _selectedDifficulty == 'beginner'
-                          ? _getDifficultyColor('beginner')
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.translate('beginner', lang),
-                      style: TextStyle(
-                        fontWeight: _selectedDifficulty == 'beginner'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildFilterItem(
+                'beginner',
+                Icons.school,
+                LocalizationService.translate('beginner', lang),
+                theme,
               ),
-              PopupMenuItem(
-                value: 'intermediate',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_up,
-                      color: _selectedDifficulty == 'intermediate'
-                          ? _getDifficultyColor('intermediate')
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.translate('intermediate', lang),
-                      style: TextStyle(
-                        fontWeight: _selectedDifficulty == 'intermediate'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildFilterItem(
+                'intermediate',
+                Icons.trending_up,
+                LocalizationService.translate('intermediate', lang),
+                theme,
               ),
-              PopupMenuItem(
-                value: 'advanced',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.military_tech,
-                      color: _selectedDifficulty == 'advanced'
-                          ? _getDifficultyColor('advanced')
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.translate('advanced', lang),
-                      style: TextStyle(
-                        fontWeight: _selectedDifficulty == 'advanced'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildFilterItem(
+                'advanced',
+                Icons.military_tech,
+                LocalizationService.translate('advanced', lang),
+                theme,
               ),
-              PopupMenuItem(
-                value: 'expert',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.workspace_premium,
-                      color: _selectedDifficulty == 'expert'
-                          ? _getDifficultyColor('expert')
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.translate('expert', lang),
-                      style: TextStyle(
-                        fontWeight: _selectedDifficulty == 'expert'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildFilterItem(
+                'expert',
+                Icons.workspace_premium,
+                LocalizationService.translate('expert', lang),
+                theme,
               ),
             ],
           ),
         ],
       ),
-      body: _isLoading
+      body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _filteredPrograms.isEmpty
+          : filteredPrograms.isEmpty
           ? Center(
               child: Text(
                 LocalizationService.translate('no_programs_found', lang),
@@ -251,28 +128,55 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
             )
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _filteredPrograms.length,
+              itemCount: filteredPrograms.length,
               itemBuilder: (context, index) {
-                final program = _filteredPrograms[index];
-                return _buildProgramCard(context, program, provider);
+                return _buildProgramCard(
+                  context,
+                  filteredPrograms[index],
+                  provider,
+                );
               },
             ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(right: 120.0),
         child: FloatingActionButton(
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProgramCreateScreen(),
-              ),
-            );
-            if (result == true) {
-              _loadPrograms();
-            }
-          },
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProgramCreateScreen(),
+            ),
+          ),
           child: const Icon(Icons.add),
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildFilterItem(
+    String value,
+    IconData icon,
+    String label,
+    ThemeData theme,
+  ) {
+    final isSelected = _selectedDifficulty == value;
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : (value == 'all' ? null : _getDifficultyColor(value)),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -286,8 +190,6 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     final lang = provider.language;
     final difficultyColor = _getDifficultyColor(program.difficultyLevel);
     final difficultyIcon = _getDifficultyIcon(program.difficultyLevel);
-
-    // Check if user has progress on this program
     final hasActiveProgram =
         provider.hasActiveProgram &&
         provider.activeProgram?.programId == program.id;
@@ -295,33 +197,25 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProgramDetailScreen(program: program),
-            ),
-          );
-        },
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProgramDetailScreen(program: program),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      program.title.replaceAll(
-                        'Weeks',
-                        LocalizationService.translate('weeks', lang),
-                      ),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                program.title.replaceAll(
+                  'Weeks',
+                  LocalizationService.translate('weeks', lang),
+                ),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -400,96 +294,25 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                 alignment: Alignment.centerRight,
                 child: hasActiveProgram
                     ? ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ProgramDetailScreen(program: program),
-                            ),
-                          );
-                        },
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ProgramDetailScreen(program: program),
+                          ),
+                        ),
                         icon: const Icon(Icons.play_arrow, size: 18),
                         label: Text(
                           LocalizationService.translate('resume', lang),
                         ),
                       )
                     : OutlinedButton.icon(
-                        onPressed: () async {
-                          // Check if user has active program
-                          if (provider.hasActiveProgram) {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(
-                                  LocalizationService.translate(
-                                    'warning',
-                                    lang,
-                                  ),
-                                ),
-                                content: Text(
-                                  LocalizationService.translate(
-                                    'abandon_current_program',
-                                    lang,
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(
-                                      LocalizationService.translate(
-                                        'cancel',
-                                        lang,
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(
-                                      LocalizationService.translate(
-                                        'abandon',
-                                        lang,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (confirm != true) return;
-                            await provider.abandonActiveProgram();
-                          }
-
-                          // Start new program
-                          try {
-                            await provider.startProgram(program.id!);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    LocalizationService.translate(
-                                      'program_started',
-                                      lang,
-                                    ),
-                                  ),
-                                ),
-                              );
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProgramDetailScreen(program: program),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
-                            }
-                          }
-                        },
+                        onPressed: () => _handleStartProgram(
+                          context,
+                          program,
+                          provider,
+                          lang,
+                        ),
                         icon: const Icon(Icons.play_arrow, size: 18),
                         label: Text(
                           LocalizationService.translate('start', lang),
@@ -501,5 +324,60 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleStartProgram(
+    BuildContext context,
+    TrainingProgram program,
+    SeriesProvider provider,
+    String lang,
+  ) async {
+    if (provider.hasActiveProgram) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(LocalizationService.translate('warning', lang)),
+          content: Text(
+            LocalizationService.translate('abandon_current_program', lang),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(LocalizationService.translate('cancel', lang)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(LocalizationService.translate('abandon', lang)),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+      await provider.abandonActiveProgram();
+    }
+
+    try {
+      await provider.startProgram(program.id!);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('program_started', lang),
+            ),
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProgramDetailScreen(program: program),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
 }

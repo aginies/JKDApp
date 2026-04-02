@@ -380,10 +380,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                               icon: Icon(_getCategoryIcon('jkd_moves')),
                             ),
                             Tab(
-                              text: LocalizationService.translate(
-                                'kali',
-                                lang,
-                              ),
+                              text: LocalizationService.translate('kali', lang),
                               icon: Icon(_getCategoryIcon('kali')),
                             ),
                             Tab(

@@ -61,18 +61,20 @@ class PdfService {
                       fontWeight: pw.FontWeight.bold,
                     ),
                   ),
-                  pw.Row(children: [
-                    if (categoryIcon != null)
-                      pw.Image(categoryIcon, width: 32, height: 32),
-                    pw.SizedBox(width: 8),
-                    pw.Text(
-                      series.category,
-                      style: pw.TextStyle(
-                        fontSize: 12,
-                        color: PdfColors.grey700,
+                  pw.Row(
+                    children: [
+                      if (categoryIcon != null)
+                        pw.Image(categoryIcon, width: 32, height: 32),
+                      pw.SizedBox(width: 8),
+                      pw.Text(
+                        series.category,
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.grey700,
+                        ),
                       ),
-                    ),
-                  ]),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -177,7 +179,11 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildMoveContent(Move move, String lang, {bool isSub = false}) {
+  static pw.Widget _buildMoveContent(
+    Move move,
+    String lang, {
+    bool isSub = false,
+  }) {
     if (move.isCombo) {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -190,7 +196,10 @@ class PdfService {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 if (!isSub)
-                  pw.Text('${subIdx + 1}. ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                  pw.Text(
+                    '${subIdx + 1}. ',
+                    style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
                 pw.Expanded(
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -226,16 +235,22 @@ class PdfService {
                 children: [
                   _buildSingleMoveLine(m, lang),
                   if (m.counterName != null)
-                     pw.Padding(
-                        padding: const pw.EdgeInsets.only(top: 2, left: 10),
-                        child: _buildCounterRow(m, lang),
-                      ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(top: 2, left: 10),
+                      child: _buildCounterRow(m, lang),
+                    ),
                 ],
               ),
               if (idx < move.chain.length - 1)
                 pw.Padding(
                   padding: const pw.EdgeInsets.symmetric(horizontal: 4),
-                  child: pw.Text('->', style: pw.TextStyle(color: PdfColors.teal, fontWeight: pw.FontWeight.bold)),
+                  child: pw.Text(
+                    '->',
+                    style: pw.TextStyle(
+                      color: PdfColors.teal,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                 ),
             ],
           );
@@ -265,7 +280,11 @@ class PdfService {
         if (translation.isNotEmpty)
           pw.Text(
             ' ($translation)',
-            style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic, color: PdfColors.grey700),
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontStyle: pw.FontStyle.italic,
+              color: PdfColors.grey700,
+            ),
           ),
         pw.SizedBox(width: 4),
         pw.Text(
@@ -292,12 +311,20 @@ class PdfService {
         ),
         pw.Text(
           move.counterName!,
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.orange900),
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: 10,
+            color: PdfColors.orange900,
+          ),
         ),
         if (counterTranslation.isNotEmpty)
           pw.Text(
             ' ($counterTranslation)',
-            style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic, color: PdfColors.orange700),
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontStyle: pw.FontStyle.italic,
+              color: PdfColors.orange700,
+            ),
           ),
         pw.SizedBox(width: 4),
         pw.Text(

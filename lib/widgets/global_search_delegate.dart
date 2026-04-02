@@ -16,9 +16,9 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
 
   @override
   String get searchFieldLabel => LocalizationService.translate(
-        'search_hint',
-        context.read<SeriesProvider>().language,
-      );
+    'search_hint',
+    context.read<SeriesProvider>().language,
+  );
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -55,47 +55,62 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
   }
 
   Widget _buildSearchResults(BuildContext context) {
-    if (query.isEmpty) {
-      return Center(
-        child: Text(
-          LocalizationService.translate('search_hint', context.read<SeriesProvider>().language),
-          style: const TextStyle(color: Colors.grey),
-        ),
-      );
-    }
-
     final provider = context.read<SeriesProvider>();
-    final results = provider.getGlobalSearchResults(query);
+    final results = query.isEmpty ? [] : provider.getGlobalSearchResults(query);
 
-    if (results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              LocalizationService.translate('nothing', provider.language),
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
+    return Stack(
+      children: [
+        // Background Logo
+        if (results.isEmpty)
+          Center(
+            child: Opacity(
+              opacity: 0.05,
+              child: Image.asset(
+                'assets/icon/JKD.png',
+                width: 250,
+                height: 250,
+              ),
             ),
-          ],
-        ),
-      );
-    }
+          ),
 
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final result = results[index];
-        return ListTile(
-          leading: _getLeadingIcon(result),
-          title: Text(result.title),
-          subtitle: Text(result.subtitle),
-          onTap: () {
-            _handleResultSelection(context, result, provider);
-          },
-        );
-      },
+        // Content
+        if (query.isEmpty)
+          Center(
+            child: Text(
+              LocalizationService.translate('search_hint', provider.language),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          )
+        else if (results.isEmpty)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.search_off, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  LocalizationService.translate('nothing', provider.language),
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          )
+        else
+          ListView.builder(
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final result = results[index];
+              return ListTile(
+                leading: _getLeadingIcon(result),
+                title: Text(result.title),
+                subtitle: Text(result.subtitle),
+                onTap: () {
+                  _handleResultSelection(context, result, provider);
+                },
+              );
+            },
+          ),
+      ],
     );
   }
 
@@ -112,16 +127,21 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
     }
   }
 
-  void _handleResultSelection(BuildContext context, SearchResult result, SeriesProvider provider) {
+  void _handleResultSelection(
+    BuildContext context,
+    SearchResult result,
+    SeriesProvider provider,
+  ) {
     final lang = provider.language;
-    
+
     switch (result.type) {
       case SearchResultType.series:
       case SearchResultType.move:
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SeriesDetailScreen(series: result.data as JkdSeries),
+            builder: (context) =>
+                SeriesDetailScreen(series: result.data as JkdSeries),
           ),
         );
         break;
@@ -129,7 +149,8 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProgramDetailScreen(program: result.data as TrainingProgram),
+            builder: (context) =>
+                ProgramDetailScreen(program: result.data as TrainingProgram),
           ),
         );
         break;
@@ -137,7 +158,7 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
         final item = result.data as Map<String, dynamic>;
         final trans = TranslationUtils.parseTranslations(item['translations']);
         final t = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
-        
+
         // Show translation in a SnackBar since we're in a search context
         ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
