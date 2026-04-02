@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -29,6 +28,8 @@ import 'series_detail/widgets/move_list_display_widget.dart';
 import 'series_detail/widgets/combo_card_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
+import 'series_detail/glossary/glossary_ui_builder.dart';
+import 'series_detail/widgets/glossary_tab_widget.dart';
 import '../utils/string_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
@@ -80,8 +81,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final GlobalKey<AnimatedListState> _comboListKey =
       GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
-  final Map<String, ScrollController> _glossaryScrollControllers = {};
-  final Map<String, Future<List<Map<String, dynamic>>>> _glossaryFutures = {};
   Timer? _scrollTimer;
 
   @override
@@ -157,9 +156,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     _customMoveController.dispose();
     _comboScrollController.dispose();
     _movesScrollController.dispose();
-    for (final controller in _glossaryScrollControllers.values) {
-      controller.dispose();
-    }
+    GlossaryUIBuilder.disposeAllControllers();
     super.dispose();
   }
 
@@ -224,6 +221,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           counterLevel: newItem.level,
           counterSpecialAction: newItem.specialAction,
           counterGlossaryId: newItem.glossaryId,
+          counterTranslations: newItem.translations,
         );
       } else {
         // Append to existing counter name
@@ -252,6 +250,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           counterLevel: lastMove.counterLevel,
           counterSpecialAction: lastMove.counterSpecialAction,
           counterGlossaryId: lastMove.counterGlossaryId,
+          counterTranslations: lastMove.counterTranslations,
         );
       }
     }
@@ -265,9 +264,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   ) async {
     if (index < 0 || index >= _currentCombo.length) return;
     final m = _currentCombo[index];
+
+    // Determine the glossary ID to auto-expand the item in the list
+    final int? glossaryId = isCounter ? m.counterGlossaryId : m.glossaryId;
+
     setS(() {
       _pickerState.setEditingComboItemIndex(index);
       _pickerState.setIsEditingCounter(isCounter);
+      // Auto-expand the glossary item in the list
+      if (glossaryId != null) {
+        _pickerState.setPendingActionItem(glossaryId);
+      }
     });
 
     if (!mounted) return;
@@ -278,12 +285,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       cat = m.subMoves.first.category;
     }
 
-    final t = MoveDisplayWidgets.getTabIndexForCategory(
-      cat,
-      isCounter: isCounter,
-    );
+    final t = MoveDisplayWidgets.getTabIndexForCategory(cat);
     if (t != -1) {
-      DefaultTabController.of(ctx).animateTo(t);
+      _pickerState.setRequestedTabIndex(t);
     }
   }
 
@@ -437,6 +441,329 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     );
   }
 
+  void _onWorkflowAction(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+    bool isCustom,
+  ) {
+    debugPrint('SeriesDetailScreen: _onWorkflowAction called');
+    setState(() {
+      final isE = _pickerState.editingComboItemIndex != null;
+      final ex = isE
+          ? _currentCombo[_pickerState.editingComboItemIndex!]
+          : null;
+
+      final Move n;
+      if (isE && _pickerState.isEditingCounter) {
+        n = ex!.copyWith(
+          counterName: isCustom ? _customMoveController.text : item['name'],
+          counterGlossaryId: isCustom ? null : item['id'],
+          counterCategory: cat,
+          counterSide: side,
+          counterLevel: level,
+          counterSpecialAction: special,
+          counterTranslations: translations,
+        );
+      } else {
+        n = Move(
+          glossaryId: isCustom ? null : item['id'],
+          counterGlossaryId: ex?.counterGlossaryId,
+          name: isCustom ? _customMoveController.text : item['name'],
+          category: cat,
+          side: side,
+          level: level,
+          isFeint: isFeint,
+          specialAction: special,
+          translations: translations,
+          repetitions: 1,
+          counterName: ex?.counterName,
+          counterCategory: ex?.counterCategory,
+          counterSide: ex?.counterSide,
+          counterLevel: ex?.counterLevel,
+          counterSpecialAction: ex?.counterSpecialAction,
+          counterTranslations: ex?.counterTranslations ?? {},
+        );
+      }
+
+      if (isE) {
+        _currentCombo[_pickerState.editingComboItemIndex!] = n;
+        _pickerState.clearEditingState();
+      } else if (_pickerState.pendingChain.isNotEmpty) {
+        // Finalize pending chain with this move
+        final finalChain = List<Move>.from(_pickerState.pendingChain)..add(n);
+        final chainMove = Move(
+          name: finalChain.map((m) => m.name).join(' -> '),
+          category: 'chain',
+          chain: finalChain,
+        );
+        _addItemToCombo(chainMove);
+        _pickerState.clearPendingChain();
+      } else if (_pickerState.globalSimultaneousMode) {
+        _addCombinedActionToCombo(n);
+      } else {
+        _addItemToCombo(n);
+      }
+      _pickerState.clearPendingAction();
+      _customMoveController.clear();
+    });
+  }
+
+  void _addCounterMove(
+    Map<String, dynamic> c,
+    String cat,
+    String cs,
+    Map<String, dynamic> at,
+    String ac,
+    String as,
+    String al,
+    bool af,
+    String? asp,
+    Map<String, String> atr,
+    Map<String, String> ctr,
+    int r, {
+    String? cLevelOverride,
+    bool isSimultaneous = false,
+  }) {
+    debugPrint('SeriesDetailScreen: _addCounterMove called');
+    setState(() {
+      final isE = _pickerState.editingComboItemIndex != null;
+      final bool isSimModeActive = _pickerState.globalSimultaneousMode;
+
+      if (isE && _pickerState.isEditingCounter) {
+        final ex = _currentCombo[_pickerState.editingComboItemIndex!];
+        _currentCombo[_pickerState.editingComboItemIndex!] = Move(
+          glossaryId: ex.glossaryId,
+          counterGlossaryId: c['id'],
+          name: ex.name,
+          category: ex.category,
+          translations: ex.translations,
+          side: ex.side,
+          level: ex.level,
+          isFeint: ex.isFeint,
+          specialAction: ex.specialAction,
+          repetitions: ex.repetitions,
+          counterName: c['name'],
+          counterCategory: cat,
+          counterSide: cs,
+          counterLevel: cLevelOverride ?? ex.level,
+          counterSpecialAction: null,
+          counterTranslations: ctr,
+        );
+        _pickerState.setEditingComboItemIndex(null);
+        _pickerState.setIsEditingCounter(false);
+      } else {
+        final n = Move(
+          glossaryId: at['id'],
+          counterGlossaryId: c['id'],
+          name: at['name'],
+          category: ac,
+          translations: atr,
+          side: as,
+          level: al,
+          isFeint: af,
+          specialAction: asp,
+          repetitions: r,
+          counterName: c['name'],
+          counterCategory: cat,
+          counterSide: cs,
+          counterLevel: cLevelOverride ?? al,
+          counterSpecialAction: null,
+          counterTranslations: ctr,
+        );
+        if (isE) {
+          _currentCombo[_pickerState.editingComboItemIndex!] = n;
+          _pickerState.setEditingComboItemIndex(null);
+        } else if (_pickerState.pendingChain.isNotEmpty) {
+          // Finalize pending chain with this counter move
+          final finalChain = List<Move>.from(_pickerState.pendingChain)..add(n);
+          final chainMove = Move(
+            name: finalChain.map((m) => m.name).join(' -> '),
+            category: 'chain',
+            chain: finalChain,
+          );
+          _addItemToCombo(chainMove);
+          _pickerState.clearPendingChain();
+        } else if (isSimultaneous) {
+          // Check if the last move already has a counter (adding simultaneous answer)
+          final bool lastMoveHasCounter =
+              _currentCombo.isNotEmpty &&
+              _currentCombo.last.counterName != null;
+
+          if (lastMoveHasCounter) {
+            // Just add the counter to combine with existing counter
+            final counterMove = Move(
+              glossaryId: c['id'],
+              name: c['name'],
+              category: cat,
+              translations: ctr,
+              side: cs,
+              level: cLevelOverride ?? al,
+              repetitions: 1,
+            );
+            _addCombinedActionToCombo(counterMove, isCounter: true);
+          } else {
+            // Add the attack part simultaneously first
+            final attackMove = Move(
+              glossaryId: at['id'],
+              name: at['name'],
+              category: ac,
+              translations: atr,
+              side: as,
+              level: al,
+              isFeint: af,
+              specialAction: asp,
+              repetitions: r,
+            );
+            _addCombinedActionToCombo(attackMove);
+
+            // Then add the counter part to that same group
+            final counterMove = Move(
+              glossaryId: c['id'],
+              name: c['name'],
+              category: cat,
+              translations: ctr,
+              side: cs,
+              level: cLevelOverride ?? al,
+              repetitions: 1,
+            );
+            _addCombinedActionToCombo(counterMove, isCounter: true);
+          }
+        } else {
+          _addItemToCombo(n);
+        }
+      }
+
+      // Keep counter mode active if simultaneous mode is still enabled
+      // so user can add more simultaneous answers
+      if (!isSimModeActive) {
+        _pickerState.setPendingAttackMove(null);
+      }
+      _pickerState.setPendingActionItem(null);
+      _pickerState.setPendingLevel(null);
+    });
+  }
+
+  void _onChainAction(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+  ) {
+    debugPrint('SeriesDetailScreen: _onChainAction called');
+    setState(() {
+      final bool isCounterMode = _pickerState.pendingAttackMove != null;
+      Move n;
+      if (isCounterMode) {
+        n = Move(
+          glossaryId: _pickerState.pendingAttackMove!['item']['id'],
+          name: _pickerState.pendingAttackMove!['item']['name'],
+          category: _pickerState.pendingAttackMove!['cat'],
+          translations: _pickerState.pendingAttackMove!['tr'],
+          side: _pickerState.pendingAttackMove!['sd'],
+          level: _pickerState.pendingAttackMove!['lv'],
+          isFeint: _pickerState.pendingAttackMove!['f'],
+          specialAction: _pickerState.pendingAttackMove!['sp'],
+          repetitions: 1,
+          counterName: item['name'],
+          counterCategory: cat,
+          counterSide: side,
+          counterLevel: level,
+          counterSpecialAction: special,
+          counterGlossaryId: item['id'],
+          counterTranslations: translations,
+        );
+      } else {
+        n = Move(
+          glossaryId: item['id'],
+          name: item['name'],
+          category: cat,
+          translations: translations,
+          side: side,
+          level: level,
+          isFeint: isFeint,
+          specialAction: special,
+          repetitions: 1,
+        );
+      }
+
+      _pickerState.addToPendingChain(n);
+      _pickerState.clearPendingAction();
+      _pickerState.setPendingAttackMove(null);
+      _customMoveController.clear();
+
+      // Scroll to end of preview
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _comboScrollController.animateTo(
+          _comboScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    });
+  }
+
+  void _onAnswerAction(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+  ) {
+    debugPrint('SeriesDetailScreen: _onAnswerAction called');
+    setState(() {
+      // Simply switch to counter mode - the answer button just puts the picker
+      // into "pick a counter" mode without committing the current move.
+      // The original _buildWorkflowButtons did exactly this:
+      // setPendingAttackMove with the current item data, then clear pending state.
+      _pickerState.setPendingAttackMove({
+        'item': item,
+        'cat': cat,
+        'sd': side,
+        'lv': level,
+        'f': isFeint,
+        'sp': special,
+        'tr': translations,
+        'sim': _pickerState.globalSimultaneousMode,
+      });
+      _pickerState.setPendingActionItem(null);
+      _pickerState.setPendingLevel(null);
+    });
+  }
+
+  void _onFinishAction(
+    Map<String, dynamic> item,
+    String cat,
+    String side,
+    String level,
+    bool isFeint,
+    String? special,
+    Map<String, String> translations,
+  ) {
+    debugPrint('SeriesDetailScreen: _onFinishAction called');
+    _onWorkflowAction(
+      item,
+      cat,
+      side,
+      level,
+      isFeint,
+      special,
+      translations,
+      false,
+    );
+    _finishAndAddCombo();
+    Navigator.pop(context);
+  }
+
   void _pickMove({
     List<Move>? initialMoves,
     int? seriesIndex,
@@ -490,11 +817,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             }
             final t = MoveDisplayWidgets.getTabIndexForCategory(cat);
             if (t != -1) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (DefaultTabController.of(ctx).index != t) {
-                  DefaultTabController.of(ctx).animateTo(t);
-                }
-              });
+              _pickerState.setRequestedTabIndex(t);
+            }
+            // Auto-expand the glossary item
+            final glossaryId = _currentCombo.first.glossaryId;
+            if (glossaryId != null) {
+              _pickerState.setPendingActionItem(glossaryId);
             }
             autoEditFirst = false; // Prevent re-triggering on rebuilds
           }
@@ -504,487 +832,192 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             _pickerState.editingSeriesIndex,
           );
 
-          return DefaultTabController(
-            key: ValueKey(isCounterMode),
-            length: 9,
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.95,
-              child: Column(
-                children: [
-                  _buildComboPreview(
-                    setS,
-                    lang,
-                    voiceEnabled,
-                    availableSubLetters,
-                  ),
-                  if (isCounterMode)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () => setS(
-                              () => _pickerState.setPendingAttackMove(null),
-                            ),
-                          ),
-                          Text(
-                            LocalizationService.translate('pick_answer', lang),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      if (_currentCombo.isNotEmpty &&
-                          _pickerState.editingComboItemIndex == null)
+          return SizedBox(
+            height: MediaQuery.of(context).size.height * 0.95,
+            child: Column(
+              children: [
+                _buildComboPreview(
+                  setS,
+                  lang,
+                  voiceEnabled,
+                  availableSubLetters,
+                ),
+                if (isCounterMode)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
                         IconButton(
-                          icon: Icon(
-                            _pickerState.globalSimultaneousMode
-                                ? Icons.add_circle
-                                : Icons.add_circle_outline,
-                            color: _pickerState.globalSimultaneousMode
-                                ? Colors.blue
-                                : Colors.grey,
-                            size: 28,
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => setS(
+                            () => _pickerState.setPendingAttackMove(null),
                           ),
-                          onPressed: () => setS(() {
-                            _pickerState.setGlobalSimultaneousMode(
-                              !_pickerState.globalSimultaneousMode,
-                            );
-                          }),
-                          tooltip: 'Simultaneous Mode',
                         ),
-                      Expanded(
-                        child: TabBar(
-                          isScrollable: true,
-                          tabs: isCounterMode
-                              ? [
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'punches',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'punch',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'punch',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'kicks',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'kick',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'kick',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'packs',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      Icons.front_hand,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'packs',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'trapping',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      Icons.back_hand,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'trapping',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'move',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      Icons.directions_run,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'move',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'jkd_moves',
-                                      lang,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.directions_run,
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'kali',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'kali',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'kali',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'other',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      Icons.more_horiz,
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'other',
-                                          ),
-                                    ),
-                                  ),
-                                  const Tab(
-                                    text: 'Text',
-                                    icon: Icon(Icons.text_fields),
-                                  ),
-                                ]
-                              : [
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'punches',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'punch',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'punch',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'kicks',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'kick',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'kick',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'packs',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'packs',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'packs',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'trapping',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'trapping',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'trapping',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'move',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'move',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'move',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'jkd_moves',
-                                      lang,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.directions_run,
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'kali',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'kali',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'kali',
-                                          ),
-                                    ),
-                                  ),
-                                  Tab(
-                                    text: LocalizationService.translate(
-                                      'other',
-                                      lang,
-                                    ),
-                                    icon: Icon(
-                                      MoveDisplayWidgets.getCategoryIcon(
-                                        'other',
-                                      ),
-                                      color:
-                                          MoveDisplayWidgets.getCategoryColor(
-                                            'other',
-                                          ),
-                                    ),
-                                  ),
-                                  const Tab(
-                                    text: 'Text',
-                                    icon: Icon(
-                                      Icons.text_fields,
-                                      color: Colors.teal,
-                                    ),
-                                  ),
-                                ],
+                        Text(
+                          LocalizationService.translate('pick_answer', lang),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.help_outline,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () => _showEditHelpDialog(),
-                        tooltip: 'Help',
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: isCounterMode
-                          ? [
-                              _buildCounterGlossaryList(
-                                'punch',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'kick',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'packs',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'trapping',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'move',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'jkd_moves',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'kali',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCounterGlossaryList(
-                                'other',
-                                setS,
-                                _pickerState.pendingAttackMove!['item'],
-                                _pickerState.pendingAttackMove!['cat'],
-                                _pickerState.pendingAttackMove!['sd'],
-                                _pickerState.pendingAttackMove!['lv'],
-                                _pickerState.pendingAttackMove!['f'],
-                                _pickerState.pendingAttackMove!['sp'],
-                                _pickerState.pendingAttackMove!['tr'],
-                                1,
-                                setS,
-                                lang,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                              _buildCustomTextTab(
-                                setS,
-                                lang,
-                                isCounter: true,
-                                attackItem:
-                                    _pickerState.pendingAttackMove!['item'],
-                                attackCategory:
-                                    _pickerState.pendingAttackMove!['cat'],
-                                side: _pickerState.pendingAttackMove!['sd'],
-                                level: _pickerState.pendingAttackMove!['lv'],
-                                isFeint: _pickerState.pendingAttackMove!['f'],
-                                special: _pickerState.pendingAttackMove!['sp'],
-                                attackTranslations:
-                                    _pickerState.pendingAttackMove!['tr'],
-                                reps: 1,
-                                pickerModalState: setS,
-                                isSimultaneous:
-                                    _pickerState.pendingAttackMove!['sim'] ??
-                                    false,
-                              ),
-                            ]
-                          : [
-                              _buildGlossaryWithScroll('punch', setS, lang),
-                              _buildGlossaryWithScroll('kick', setS, lang),
-                              _buildGlossaryWithScroll('packs', setS, lang),
-                              _buildGlossaryWithScroll('trapping', setS, lang),
-                              _buildGlossaryWithScroll('move', setS, lang),
-                              _buildGlossaryWithScroll('jkd_moves', setS, lang),
-                              _buildGlossaryWithScroll('kali', setS, lang),
-                              _buildGlossaryWithScroll('other', setS, lang),
-                              _buildCustomTextTab(setS, lang),
-                            ],
+                      ],
                     ),
                   ),
-                ],
-              ),
+                Row(
+                  children: [
+                    if (_currentCombo.isNotEmpty &&
+                        _pickerState.editingComboItemIndex == null)
+                      IconButton(
+                        icon: Icon(
+                          _pickerState.globalSimultaneousMode
+                              ? Icons.add_circle
+                              : Icons.add_circle_outline,
+                          color: _pickerState.globalSimultaneousMode
+                              ? Colors.blue
+                              : Colors.grey,
+                          size: 28,
+                        ),
+                        onPressed: () => setS(() {
+                          _pickerState.setGlobalSimultaneousMode(
+                            !_pickerState.globalSimultaneousMode,
+                          );
+                        }),
+                        tooltip: 'Simultaneous Mode',
+                      ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.help_outline, color: Colors.blue),
+                      onPressed: () => _showEditHelpDialog(),
+                      tooltip: 'Help',
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: GlossaryTabWidget(
+                    pickerState: _pickerState,
+                    currentCombo: _currentCombo,
+                    setState: setS,
+                    customMoveController: _customMoveController,
+                    onActivateGlossaryItem: () => setS(() {}),
+                    onShowMediaGallery: _showMediaGallery,
+                    onPickSpecial: (id) => _pickSpecialForMove(id, setS),
+                    onWorkflowAction:
+                        (
+                          item,
+                          cat,
+                          side,
+                          level,
+                          isFeint,
+                          special,
+                          translations,
+                          isCustom,
+                        ) {
+                          setS(() {
+                            _onWorkflowAction(
+                              item,
+                              cat,
+                              side,
+                              level,
+                              isFeint,
+                              special,
+                              translations,
+                              isCustom,
+                            );
+                          });
+                        },
+                    onChainAction:
+                        (
+                          item,
+                          cat,
+                          side,
+                          level,
+                          isFeint,
+                          special,
+                          translations,
+                        ) {
+                          setS(() {
+                            _onChainAction(
+                              item,
+                              cat,
+                              side,
+                              level,
+                              isFeint,
+                              special,
+                              translations,
+                            );
+                          });
+                        },
+                    onAnswerAction:
+                        (
+                          item,
+                          cat,
+                          side,
+                          level,
+                          isFeint,
+                          special,
+                          translations,
+                        ) {
+                          setS(() {
+                            _onAnswerAction(
+                              item,
+                              cat,
+                              side,
+                              level,
+                              isFeint,
+                              special,
+                              translations,
+                            );
+                          });
+                        },
+                    onFinishAction: _onFinishAction,
+                    onFinishCombo: () {
+                      _finishAndAddCombo();
+                      Navigator.pop(context);
+                    },
+                    onCancelAction: () {
+                      setS(() {
+                        _pickerState.clearEditingState();
+                        _pickerState.clearPendingAction();
+                        _pickerState.setPendingAttackMove(null);
+                        _pickerState.clearPendingChain();
+                      });
+                    },
+                    onAddCounterMove:
+                        (
+                          c,
+                          cat,
+                          cs,
+                          at,
+                          ac,
+                          as,
+                          al,
+                          af,
+                          asp,
+                          atr,
+                          ctr,
+                          r,
+                          cLevelOverride,
+                          isSimultaneous,
+                        ) {
+                          setS(() {
+                            _addCounterMove(
+                              c,
+                              cat,
+                              cs,
+                              at,
+                              ac,
+                              as,
+                              al,
+                              af,
+                              asp,
+                              atr,
+                              ctr,
+                              r,
+                              cLevelOverride: cLevelOverride,
+                              isSimultaneous: isSimultaneous,
+                            );
+                          });
+                        },
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -997,95 +1030,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     _pickerState.reset();
     _currentCombo.clear();
     _customMoveController.clear();
-  }
-
-  Future<int> _getInitialIndexForCategory(String cat) async {
-    return getInitialIndexForCategory(cat);
-  }
-
-  Widget _buildGlossaryWithScroll(String cat, StateSetter setS, String lang) {
-    return FutureBuilder<int>(
-      future: _getInitialIndexForCategory(cat),
-      builder: (context, snapshot) {
-        return _buildGlossaryList(cat, setS, lang, initialIndex: snapshot.data);
-      },
-    );
-  }
-
-  void _activateGlossaryItem(int itemId) {
-    activateGlossaryItem(itemId);
-  }
-
-  Widget _buildCustomTextTab(
-    StateSetter setS,
-    String lang, {
-    bool isCounter = false,
-    Map<String, dynamic>? attackItem,
-    String? attackCategory,
-    String? side,
-    String? level,
-    bool? isFeint,
-    String? special,
-    Map<String, String>? attackTranslations,
-    int? reps,
-    StateSetter? pickerModalState,
-    bool isSimultaneous = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: _customMoveController,
-            decoration: const InputDecoration(
-              labelText: 'Custom Move Name',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (val) => setS(() {}),
-          ),
-          const SizedBox(height: 20),
-          if (!isCounter)
-            _buildWorkflowButtons(
-              {'name': _customMoveController.text, 'translations': '{}'},
-              'text',
-              '',
-              '',
-              false,
-              null,
-              {},
-              setS,
-              lang,
-              isCustom: true,
-            )
-          else
-            ElevatedButton(
-              onPressed: () {
-                if (_customMoveController.text.isEmpty) return;
-                setS(() {
-                  final bool effectiveSim =
-                      isSimultaneous || _pickerState.globalSimultaneousMode;
-                  _addCounterMove(
-                    {'name': _customMoveController.text},
-                    'text',
-                    '',
-                    attackItem!,
-                    attackCategory!,
-                    side!,
-                    level!,
-                    isFeint!,
-                    special,
-                    attackTranslations!,
-                    {},
-                    reps!,
-                    isSimultaneous: effectiveSim,
-                  );
-                });
-              },
-              child: Text(LocalizationService.translate('add', lang)),
-            ),
-        ],
-      ),
-    );
   }
 
   Widget _buildComboPreview(
@@ -1342,7 +1286,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           Expanded(
             child: hasPendingChain
                 ? ListView.builder(
-                    key: ValueKey('chain_\${_pickerState.pendingChain.length}'),
+                    key: ValueKey('chain_${_pickerState.pendingChain.length}'),
                     controller: _comboScrollController,
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1477,1328 +1421,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     ],
                   ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlossaryList(
-    String cat,
-    StateSetter setS,
-    String lang, {
-    int? initialIndex,
-  }) {
-    final scrollController = _glossaryScrollControllers.putIfAbsent(
-      cat,
-      () => ScrollController(),
-    );
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
-
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: DatabaseService().getGlossaryByCategory(cat),
-      builder: (ctx, snap) {
-        if (!snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final items = snap.data!;
-
-        if (initialIndex != null &&
-            initialIndex >= 0 &&
-            initialIndex < items.length) {
-          final targetItemId = items[initialIndex]['id'];
-          // Only scroll if we haven't already scrolled to this item
-          if (_pickerState.lastScrolledItemId != targetItemId) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _scrollTimer?.cancel();
-              _scrollTimer = Timer(const Duration(milliseconds: 100), () {
-                if (!mounted) return;
-                if (scrollController.hasClients &&
-                    scrollController.position.hasContentDimensions) {
-                  const double estimatedItemHeight = 125.0;
-                  final viewportHeight =
-                      scrollController.position.viewportDimension;
-
-                  // Calculate offset to center the item in the viewport
-                  double offset =
-                      (initialIndex * estimatedItemHeight) -
-                      (viewportHeight / 2) +
-                      (estimatedItemHeight / 2);
-
-                  // Clamp offset to valid range
-                  if (offset < 0) {
-                    offset = 0;
-                  } else if (offset >
-                      scrollController.position.maxScrollExtent) {
-                    offset = scrollController.position.maxScrollExtent;
-                  }
-
-                  scrollController.jumpTo(offset);
-                  _pickerState.setLastScrolledItemId(targetItemId);
-                }
-              });
-            });
-          }
-        }
-
-        return ListView.builder(
-          controller: scrollController,
-          itemCount: items.length,
-          itemBuilder: (ctx, idx) {
-            final item = items[idx];
-            final id = item['id'];
-            final side = _pickerState.selectedSides[id] ?? '';
-            final isF = _pickerState.selectedFeints[id] ?? false;
-            final spec = _pickerState.selectedSpecials[id];
-            // Expanded highlight logic: match by ID or by name/cat if ID is null (legacy)
-            final bool isE =
-                _pickerState.pendingActionItemId == id ||
-                (_pickerState.pendingActionItemId == null &&
-                    _pickerState.editingComboItemIndex != null &&
-                    (!_pickerState.isEditingCounter
-                        ? _currentCombo[_pickerState.editingComboItemIndex!]
-                                  .name ==
-                              item['name']
-                        : _currentCombo[_pickerState.editingComboItemIndex!]
-                                  .counterName ==
-                              item['name']) &&
-                    (!_pickerState.isEditingCounter
-                        ? _currentCombo[_pickerState.editingComboItemIndex!]
-                                  .category ==
-                              cat
-                        : _currentCombo[_pickerState.editingComboItemIndex!]
-                                  .counterCategory ==
-                              cat));
-            final String pL = item['possible_level'] ?? 'H,M,L';
-            final bool sH = pL.contains('H'),
-                sM = pL.contains('M'),
-                sL = pL.contains('L');
-            final String pD = item['possible_direction'] ?? '';
-            final bool hasDirection = pD.isNotEmpty;
-
-            // Parse translations from JSON string
-            Map<String, String> tr = {};
-            if (item['translations'] != null) {
-              try {
-                tr = Map<String, String>.from(
-                  json.decode(item['translations']),
-                );
-              } catch (_) {
-                tr = {};
-              }
-            }
-            final translation = tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              shape: isE
-                  ? RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: MoveDisplayWidgets.getCategoryColor(cat),
-                        width: 2,
-                      ),
-                    )
-                  : null,
-              child: InkWell(
-                onDoubleTap: () => _showMediaGallery(cat, item['name']),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            MoveDisplayWidgets.getCategoryIcon(cat),
-                            size: 32,
-                            color: MoveDisplayWidgets.getCategoryColor(cat),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            cat == 'move'
-                                ? (tr['en'] ?? item['name'])
-                                : item['name'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (provider.showTranslation &&
-                          cat != 'move' &&
-                          translation.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 40.0),
-                          child: Text(
-                            translation,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: [
-                          if (item['possible_direction'] != null) ...[
-                            _pickerSideButton(
-                              LocalizationService.translate('left', lang),
-                              'L',
-                              side,
-                              Colors.blue,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                            _pickerSideButton(
-                              LocalizationService.translate('right', lang),
-                              'R',
-                              side,
-                              Colors.red,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                          ] else if (cat == 'move')
-                            ElevatedButton(
-                              onPressed: () => setS(() {
-                                _pickerState.setPendingActionItem(id);
-                                _pickerState.setPendingLevel('');
-                              }),
-                              child: const Text('ADD'),
-                            )
-                          else if (cat == 'trapping' || cat == 'packs') ...[
-                            _sideButtonWithArrow(
-                              LocalizationService.translate('left', lang),
-                              'L',
-                              Colors.blue,
-                              () => setS(() {
-                                _pickerState.setPendingActionItem(id);
-                                _pickerState.setPendingLevel('');
-                                _pickerState.selectedSides[id] = 'L';
-                              }),
-                              lang,
-                              id,
-                            ),
-                            _sideButtonWithArrow(
-                              LocalizationService.translate('right', lang),
-                              'R',
-                              Colors.red,
-                              () => setS(() {
-                                _pickerState.setPendingActionItem(id);
-                                _pickerState.setPendingLevel('');
-                                _pickerState.selectedSides[id] = 'R';
-                              }),
-                              lang,
-                              id,
-                            ),
-                          ] else ...[
-                            _pickerSideButton(
-                              LocalizationService.translate('left', lang),
-                              'L',
-                              side,
-                              Colors.blue,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                            _pickerSideButton(
-                              LocalizationService.translate('right', lang),
-                              'R',
-                              side,
-                              Colors.red,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                            if (cat == 'punch' || cat == 'kick') ...[
-                              FilterChip(
-                                label: Text(
-                                  LocalizationService.translate('draw', lang),
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                selected: isF,
-                                onSelected: (v) => setS(
-                                  () => _pickerState.setSelectedFeint(id, v),
-                                ),
-                              ),
-                              ActionChip(
-                                label: Text(
-                                  spec ??
-                                      LocalizationService.translate(
-                                        'move',
-                                        lang,
-                                      ),
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                onPressed: () => _pickSpecialForMove(id, setS),
-                              ),
-                            ],
-                          ],
-                          const SizedBox(width: 8),
-                          if (cat != 'move' && !hasDirection)
-                            Wrap(
-                              spacing: 4,
-                              children: [
-                                if (sH)
-                                  _levelSelectionButton('High', id, setS, lang),
-                                if (sM)
-                                  _levelSelectionButton('Mid', id, setS, lang),
-                                if (sL)
-                                  _levelSelectionButton('Low', id, setS, lang),
-                              ],
-                            ),
-                        ],
-                      ),
-                      if (_pickerState.pendingActionItemId == id)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: _buildWorkflowButtons(
-                            item,
-                            cat,
-                            side,
-                            _pickerState.pendingLevel ?? '',
-                            isF,
-                            spec,
-                            tr,
-                            setS,
-                            lang,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildCounterGlossaryList(
-    String cat,
-    StateSetter setS,
-    Map<String, dynamic> attack,
-    String aCat,
-    String aSide,
-    String aLev,
-    bool aF,
-    String? aS,
-    Map<String, String> aTr,
-    int reps,
-    StateSetter pickerS,
-    String lang, {
-    bool isSimultaneous = false,
-  }) {
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final glossaryFuture = _glossaryFutures.putIfAbsent(cat, () async {
-      final items = await DatabaseService().getGlossaryByCategory(cat);
-      return items.map((item) {
-        final Map<String, dynamic> mutableItem = Map.from(item);
-        try {
-          mutableItem['parsed_translations'] = Map<String, String>.from(
-            json.decode(item['translations']),
-          );
-        } catch (_) {
-          mutableItem['parsed_translations'] = <String, String>{};
-        }
-        return mutableItem;
-      }).toList();
-    });
-
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: glossaryFuture,
-      builder: (ctx, snap) {
-        if (!snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        var items = snap.data!;
-        if (cat == 'packs') {
-          final String hit = attack['hit_type'] ?? 'both';
-          if (hit != 'both') {
-            items = items
-                .where(
-                  (i) =>
-                      (i['possible_type_attack'] ?? 'both') == 'both' ||
-                      i['possible_type_attack'] == hit,
-                )
-                .toList();
-          }
-        }
-        return ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (ctx, idx) {
-            final item = items[idx];
-            final id = item['id'];
-            final side = _pickerState.selectedSides[id] ?? '';
-            final spec = _pickerState.selectedSpecials[id];
-            final String pL = item['possible_level'] ?? 'H,M,L';
-            final Map<String, String> tr =
-                (item['parsed_translations'] as Map<String, String>?) ?? {};
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: InkWell(
-                onDoubleTap: () => _showMediaGallery(cat, item['name']),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            MoveDisplayWidgets.getCategoryIcon(cat),
-                            size: 28,
-                            color: MoveDisplayWidgets.getCategoryColor(cat),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            item['name'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      if (provider.showTranslation &&
-                          cat != 'move' &&
-                          tr.isNotEmpty)
-                        Builder(
-                          builder: (context) {
-                            final translation =
-                                tr[lang] ?? tr['en'] ?? tr['fr'] ?? '';
-                            if (translation.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                left: 36.0,
-                                top: 2.0,
-                              ),
-                              child: Text(
-                                translation,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      const SizedBox(height: 8),
-                      if (cat == 'move')
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => setS(() {
-                                final bool effectiveSim =
-                                    isSimultaneous ||
-                                    _pickerState.globalSimultaneousMode;
-                                _addCounterMove(
-                                  item,
-                                  cat,
-                                  '',
-                                  attack,
-                                  aCat,
-                                  aSide,
-                                  aLev,
-                                  aF,
-                                  aS,
-                                  aTr,
-                                  tr,
-                                  reps,
-                                  isSimultaneous: effectiveSim,
-                                );
-                              }),
-                              child: Text(
-                                LocalizationService.translate('add', lang),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                minimumSize: const Size(0, 36),
-                              ),
-                              onPressed: () {
-                                setS(() {
-                                  final counterMove = Move(
-                                    glossaryId: _pickerState
-                                        .pendingAttackMove!['item']['id'],
-                                    name: _pickerState
-                                        .pendingAttackMove!['item']['name'],
-                                    category:
-                                        _pickerState.pendingAttackMove!['cat'],
-                                    translations:
-                                        _pickerState.pendingAttackMove!['tr'],
-                                    side: _pickerState.pendingAttackMove!['sd'],
-                                    level:
-                                        _pickerState.pendingAttackMove!['lv'],
-                                    isFeint:
-                                        _pickerState.pendingAttackMove!['f'],
-                                    specialAction:
-                                        _pickerState.pendingAttackMove!['sp'],
-                                    repetitions: 1,
-                                    counterName: item['name'],
-                                    counterCategory: cat,
-                                    counterSide: '',
-                                    counterLevel: '',
-                                    counterSpecialAction: null,
-                                    counterGlossaryId: id,
-                                  );
-                                  _pickerState.addToPendingChain(counterMove);
-                                  _pickerState.setPendingActionItem(null);
-                                  _pickerState.setPendingLevel(null);
-                                  _pickerState.setPendingAttackMove(null);
-
-                                  // Scroll to end of preview
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    _comboScrollController.animateTo(
-                                      _comboScrollController
-                                          .position
-                                          .maxScrollExtent,
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeOut,
-                                    );
-                                  });
-                                });
-                              },
-                              child: const Icon(Icons.arrow_forward, size: 18),
-                            ),
-                          ],
-                        )
-                      else if (cat == 'trapping' || cat == 'packs')
-                        Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            _sideButtonWithArrow(
-                              LocalizationService.translate('left', lang),
-                              'L',
-                              Colors.blue,
-                              () => setS(() {
-                                final bool effectiveSim =
-                                    isSimultaneous ||
-                                    _pickerState.globalSimultaneousMode;
-                                _addCounterMove(
-                                  item,
-                                  cat,
-                                  'L',
-                                  attack,
-                                  aCat,
-                                  aSide,
-                                  aLev,
-                                  aF,
-                                  aS,
-                                  aTr,
-                                  tr,
-                                  reps,
-                                  isSimultaneous: effectiveSim,
-                                );
-                              }),
-                              lang,
-                              id,
-                            ),
-                            _sideButtonWithArrow(
-                              LocalizationService.translate('right', lang),
-                              'R',
-                              Colors.red,
-                              () => setS(() {
-                                final bool effectiveSim =
-                                    isSimultaneous ||
-                                    _pickerState.globalSimultaneousMode;
-                                _addCounterMove(
-                                  item,
-                                  cat,
-                                  'R',
-                                  attack,
-                                  aCat,
-                                  aSide,
-                                  aLev,
-                                  aF,
-                                  aS,
-                                  aTr,
-                                  tr,
-                                  reps,
-                                  isSimultaneous: effectiveSim,
-                                );
-                              }),
-                              lang,
-                              id,
-                            ),
-                            const SizedBox(width: 4),
-                            // CHAIN BUTTON (->)
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                minimumSize: const Size(0, 32),
-                              ),
-                              onPressed: () {
-                                setS(() {
-                                  final side =
-                                      _pickerState.selectedSides[id] ?? 'L';
-                                  final counterMove = Move(
-                                    glossaryId: _pickerState
-                                        .pendingAttackMove!['item']['id'],
-                                    name: _pickerState
-                                        .pendingAttackMove!['item']['name'],
-                                    category:
-                                        _pickerState.pendingAttackMove!['cat'],
-                                    translations:
-                                        _pickerState.pendingAttackMove!['tr'],
-                                    side: _pickerState.pendingAttackMove!['sd'],
-                                    level:
-                                        _pickerState.pendingAttackMove!['lv'],
-                                    isFeint:
-                                        _pickerState.pendingAttackMove!['f'],
-                                    specialAction:
-                                        _pickerState.pendingAttackMove!['sp'],
-                                    repetitions: 1,
-                                    counterName: item['name'],
-                                    counterCategory: cat,
-                                    counterSide: side,
-                                    counterLevel:
-                                        _pickerState.pendingLevel ?? '',
-                                    counterSpecialAction: spec,
-                                    counterGlossaryId: id,
-                                  );
-                                  _pickerState.addToPendingChain(counterMove);
-                                  _pickerState.setPendingActionItem(null);
-                                  _pickerState.setPendingLevel(null);
-                                  _pickerState.setPendingAttackMove(null);
-
-                                  // Scroll to end of preview
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    _comboScrollController.animateTo(
-                                      _comboScrollController
-                                          .position
-                                          .maxScrollExtent,
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeOut,
-                                    );
-                                  });
-                                });
-                              },
-                              child: const Icon(Icons.arrow_forward, size: 16),
-                            ),
-                          ],
-                        )
-                      else
-                        Wrap(
-                          spacing: 4,
-                          children: [
-                            _pickerSideButton(
-                              LocalizationService.translate('left', lang),
-                              'L',
-                              side,
-                              Colors.blue,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                            _pickerSideButton(
-                              LocalizationService.translate('right', lang),
-                              'R',
-                              side,
-                              Colors.red,
-                              id,
-                              setS,
-                              lang,
-                              withArrow: true,
-                            ),
-                            if (cat == 'punch' || cat == 'kick')
-                              ActionChip(
-                                label: Text(
-                                  spec ??
-                                      LocalizationService.translate(
-                                        'move',
-                                        lang,
-                                      ),
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                onPressed: () => _pickSpecialForMove(id, setS),
-                              ),
-                            const SizedBox(width: 8),
-                            Wrap(
-                              spacing: 4,
-                              children: [
-                                if (pL.contains('H'))
-                                  _counterLevelButton(
-                                    'High',
-                                    id,
-                                    setS,
-                                    lang,
-                                    withArrow: true,
-                                  ),
-                                if (pL.contains('M'))
-                                  _counterLevelButton(
-                                    'Mid',
-                                    id,
-                                    setS,
-                                    lang,
-                                    withArrow: true,
-                                  ),
-                                if (pL.contains('L'))
-                                  _counterLevelButton(
-                                    'Low',
-                                    id,
-                                    setS,
-                                    lang,
-                                    withArrow: true,
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      if (_pickerState.pendingActionItemId == id)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: _buildWorkflowButtons(
-                            item,
-                            cat,
-                            side,
-                            _pickerState.pendingLevel ?? '',
-                            aF,
-                            spec,
-                            tr,
-                            setS,
-                            lang,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _levelSelectionButton(
-    String l,
-    int id,
-    StateSetter setS,
-    String lang,
-  ) {
-    IconData icon = l == 'High'
-        ? Icons.north_east
-        : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
-    final bool sel =
-        _pickerState.pendingActionItemId == id &&
-        _pickerState.pendingLevel == l;
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        minimumSize: const Size(60, 32),
-        backgroundColor: sel ? Theme.of(context).primaryColor : null,
-        foregroundColor: sel ? Colors.white : null,
-      ),
-      onPressed: () => setS(() {
-        _activateGlossaryItem(id);
-        // Toggle: if already selected, deselect (set to empty string)
-        _pickerState.setPendingLevel(sel ? '' : l);
-      }),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            LocalizationService.translate(
-              l.toLowerCase(),
-              lang,
-            ).substring(0, 1),
-            style: const TextStyle(fontSize: 11),
-          ),
-          const SizedBox(width: 4),
-          Icon(icon, size: 12),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkflowButtons(
-    Map<String, dynamic> it,
-    String cat,
-    String sd,
-    String lv,
-    bool f,
-    String? sp,
-    Map<String, String> tr,
-    StateSetter setS,
-    String lang, {
-    bool isCustom = false,
-  }) {
-    final bool isE = _pickerState.editingComboItemIndex != null;
-    final bool isCounterMode = _pickerState.pendingAttackMove != null;
-    final bool isSimEnabled = _pickerState.globalSimultaneousMode;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36),
-              ),
-              onPressed: () {
-                setS(() {
-                  final ex = isE
-                      ? _currentCombo[_pickerState.editingComboItemIndex!]
-                      : null;
-                  final Move n;
-                  if (isE && _pickerState.isEditingCounter) {
-                    n = ex!.copyWith(
-                      counterName: isCustom
-                          ? _customMoveController.text
-                          : it['name'],
-                      counterGlossaryId: isCustom ? null : it['id'],
-                      counterCategory: cat,
-                      counterSide: sd,
-                      counterLevel: lv,
-                      counterSpecialAction: sp,
-                    );
-                  } else {
-                    n = Move(
-                      glossaryId: isCustom ? null : it['id'],
-                      counterGlossaryId: ex?.counterGlossaryId,
-                      name: isCustom ? _customMoveController.text : it['name'],
-                      category: cat,
-                      translations: tr,
-                      side: sd,
-                      level: lv,
-                      isFeint: f,
-                      specialAction: sp,
-                      repetitions: 1,
-                      counterName: ex?.counterName,
-                      counterCategory: ex?.counterCategory,
-                      counterSide: ex?.counterSide,
-                      counterLevel: ex?.counterLevel,
-                      counterSpecialAction: ex?.counterSpecialAction,
-                    );
-                  }
-
-                  if (isE) {
-                    _currentCombo[_pickerState.editingComboItemIndex!] = n;
-                    _pickerState.setEditingComboItemIndex(null);
-                    _pickerState.setIsEditingCounter(false);
-                  } else {
-                    Move interaction;
-                    if (isCounterMode) {
-                      interaction = Move(
-                        glossaryId:
-                            _pickerState.pendingAttackMove!['item']['id'],
-                        name: _pickerState.pendingAttackMove!['item']['name'],
-                        category: _pickerState.pendingAttackMove!['cat'],
-                        translations: _pickerState.pendingAttackMove!['tr'],
-                        side: _pickerState.pendingAttackMove!['sd'],
-                        level: _pickerState.pendingAttackMove!['lv'],
-                        isFeint: _pickerState.pendingAttackMove!['f'],
-                        specialAction: _pickerState.pendingAttackMove!['sp'],
-                        repetitions: 1,
-                        counterName: isCustom
-                            ? _customMoveController.text
-                            : it['name'],
-                        counterCategory: cat,
-                        counterSide: sd,
-                        counterLevel: lv,
-                        counterSpecialAction: sp,
-                        counterGlossaryId: isCustom ? null : it['id'],
-                      );
-                    } else {
-                      interaction = n;
-                    }
-
-                    if (_pickerState.pendingChain.isNotEmpty) {
-                      final finalChain = List<Move>.from(
-                        _pickerState.pendingChain,
-                      )..add(interaction);
-                      final chainMove = Move(
-                        name: finalChain.map((m) => m.name).join(' -> '),
-                        category: 'chain',
-                        chain: finalChain,
-                      );
-                      _addItemToCombo(chainMove);
-                      _pickerState.clearPendingChain();
-                    } else if (isSimEnabled) {
-                      _addCombinedActionToCombo(interaction);
-                    } else {
-                      _addItemToCombo(interaction);
-                    }
-                  }
-                  _pickerState.setPendingActionItem(null);
-                  _pickerState.setPendingLevel(null);
-                  _pickerState.setPendingAttackMove(null);
-                });
-              },
-              child: Text(
-                isE
-                    ? LocalizationService.translate('update_item', lang)
-                    : (isCounterMode
-                          ? LocalizationService.translate('add', lang)
-                          : LocalizationService.translate('next', lang)),
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-            if (!isE) ...[
-              const SizedBox(width: 6),
-              // CHAIN BUTTON (->)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(0, 36),
-                ),
-                onPressed: () {
-                  setS(() {
-                    Move interaction;
-                    if (isCounterMode) {
-                      interaction = Move(
-                        glossaryId:
-                            _pickerState.pendingAttackMove!['item']['id'],
-                        name: _pickerState.pendingAttackMove!['item']['name'],
-                        category: _pickerState.pendingAttackMove!['cat'],
-                        translations: _pickerState.pendingAttackMove!['tr'],
-                        side: _pickerState.pendingAttackMove!['sd'],
-                        level: _pickerState.pendingAttackMove!['lv'],
-                        isFeint: _pickerState.pendingAttackMove!['f'],
-                        specialAction: _pickerState.pendingAttackMove!['sp'],
-                        repetitions: 1,
-                        counterName: isCustom
-                            ? _customMoveController.text
-                            : it['name'],
-                        counterCategory: cat,
-                        counterSide: sd,
-                        counterLevel: lv,
-                        counterSpecialAction: sp,
-                        counterGlossaryId: isCustom ? null : it['id'],
-                      );
-                    } else {
-                      interaction = Move(
-                        glossaryId: isCustom ? null : it['id'],
-                        name: isCustom
-                            ? _customMoveController.text
-                            : it['name'],
-                        category: cat,
-                        translations: tr,
-                        side: sd,
-                        level: lv,
-                        isFeint: f,
-                        specialAction: sp,
-                        repetitions: 1,
-                      );
-                    }
-
-                    _pickerState.addToPendingChain(interaction);
-                    _pickerState.setPendingActionItem(null);
-                    _pickerState.setPendingLevel(null);
-                    _pickerState.setPendingAttackMove(null);
-                    _customMoveController.clear();
-
-                    // Scroll to end of preview
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _comboScrollController.animateTo(
-                        _comboScrollController.position.maxScrollExtent,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      );
-                    });
-                  });
-                },
-                child: const Icon(Icons.arrow_forward, size: 18),
-              ),
-            ],
-            if (!isCounterMode && !isE) ...[
-              const SizedBox(width: 6),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: const Size(0, 36),
-                ),
-                onPressed: () {
-                  setS(() {
-                    _pickerState.setPendingAttackMove({
-                      'item': isCustom
-                          ? {
-                              'name': _customMoveController.text,
-                              'translations': '{}',
-                              'hit_type': 'both',
-                            }
-                          : it,
-                      'cat': cat,
-                      'sd': sd,
-                      'lv': lv,
-                      'f': f,
-                      'sp': sp,
-                      'tr': tr,
-                      'sim': isSimEnabled,
-                    });
-                    _pickerState.setPendingActionItem(null);
-                    _pickerState.setPendingLevel(null);
-                  });
-                },
-                child: Text(
-                  LocalizationService.translate('answer', lang),
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            ],
-          ],
-        ),
-        Row(
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36),
-              ),
-              onPressed: () {
-                setS(() {
-                  final ex = isE
-                      ? _currentCombo[_pickerState.editingComboItemIndex!]
-                      : null;
-                  final Move n;
-                  if (isE && _pickerState.isEditingCounter) {
-                    n = ex!.copyWith(
-                      counterName: isCustom
-                          ? _customMoveController.text
-                          : it['name'],
-                      counterGlossaryId: isCustom ? null : it['id'],
-                      counterCategory: cat,
-                      counterSide: sd,
-                      counterLevel: lv,
-                      counterSpecialAction: sp,
-                    );
-                  } else {
-                    n = Move(
-                      glossaryId: isCustom ? null : it['id'],
-                      counterGlossaryId: ex?.counterGlossaryId,
-                      name: isCustom ? _customMoveController.text : it['name'],
-                      category: cat,
-                      translations: tr,
-                      side: sd,
-                      level: lv,
-                      isFeint: f,
-                      specialAction: sp,
-                      repetitions: 1,
-                      counterName: ex?.counterName,
-                      counterCategory: ex?.counterCategory,
-                      counterSide: ex?.counterSide,
-                      counterLevel: ex?.counterLevel,
-                      counterSpecialAction: ex?.counterSpecialAction,
-                    );
-                  }
-                  if (isE) {
-                    _currentCombo[_pickerState.editingComboItemIndex!] = n;
-                  } else {
-                    // Finalize interaction
-                    Move interaction;
-                    if (isCounterMode) {
-                      interaction = Move(
-                        glossaryId:
-                            _pickerState.pendingAttackMove!['item']['id'],
-                        name: _pickerState.pendingAttackMove!['item']['name'],
-                        category: _pickerState.pendingAttackMove!['cat'],
-                        translations: _pickerState.pendingAttackMove!['tr'],
-                        side: _pickerState.pendingAttackMove!['sd'],
-                        level: _pickerState.pendingAttackMove!['lv'],
-                        isFeint: _pickerState.pendingAttackMove!['f'],
-                        specialAction: _pickerState.pendingAttackMove!['sp'],
-                        repetitions: 1,
-                        counterName: isCustom
-                            ? _customMoveController.text
-                            : it['name'],
-                        counterCategory: cat,
-                        counterSide: sd,
-                        counterLevel: lv,
-                        counterSpecialAction: sp,
-                        counterGlossaryId: isCustom ? null : it['id'],
-                      );
-                    } else {
-                      interaction = n;
-                    }
-
-                    // Handle chain finalization on "Finish"
-                    if (_pickerState.pendingChain.isNotEmpty) {
-                      final finalChain = List<Move>.from(
-                        _pickerState.pendingChain,
-                      )..add(interaction);
-                      final chainMove = Move(
-                        name: finalChain.map((m) => m.name).join(' -> '),
-                        category: 'chain',
-                        chain: finalChain,
-                      );
-                      _addItemToCombo(chainMove);
-                      _pickerState.clearPendingChain();
-                    } else if (isSimEnabled) {
-                      _addCombinedActionToCombo(interaction);
-                    } else {
-                      _addItemToCombo(interaction);
-                    }
-                  }
-                });
-                _finishAndAddCombo();
-                Navigator.pop(context);
-              },
-              child: Text(
-                LocalizationService.translate('finish', lang),
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-            const SizedBox(width: 6),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(0, 36),
-              ),
-              onPressed: () => setS(() {
-                if (isE) _pickerState.setEditingComboItemIndex(null);
-                _pickerState.setPendingActionItem(null);
-                _pickerState.setPendingAttackMove(null);
-                _pickerState.clearPendingChain();
-              }),
-              child: Text(
-                LocalizationService.translate('cancel', lang),
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _sideButtonWithArrow(
-    String l,
-    String sd,
-    Color c,
-    VoidCallback onP,
-    String lang,
-    int id,
-  ) {
-    final icon = sd == 'L' ? Icons.arrow_back : Icons.arrow_forward;
-    final bool sel = _pickerState.selectedSides[id] == sd;
-    return ActionChip(
-      onPressed: () {
-        _activateGlossaryItem(id);
-        onP();
-      },
-      backgroundColor: sel ? c : c.withValues(alpha: 0.15),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (sd == 'L') ...[
-            Icon(icon, size: 12, color: sel ? Colors.white : c),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            l,
-            style: TextStyle(
-              fontSize: 10,
-              color: sel ? Colors.white : c,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (sd == 'R') ...[
-            const SizedBox(width: 4),
-            Icon(icon, size: 12, color: sel ? Colors.white : c),
-          ],
-        ],
-      ),
-    );
-  }
-
-  void _addCounterMove(
-    Map<String, dynamic> c,
-    String cat,
-    String cs,
-    Map<String, dynamic> at,
-    String ac,
-    String as,
-    String al,
-    bool af,
-    String? asp,
-    Map<String, String> atr,
-    Map<String, String> ctr,
-    int r, {
-    String? cLevelOverride,
-    bool isSimultaneous = false,
-  }) {
-    final isE = _pickerState.editingComboItemIndex != null;
-    final bool isSimModeActive = _pickerState.globalSimultaneousMode;
-
-    if (isE && _pickerState.isEditingCounter) {
-      final ex = _currentCombo[_pickerState.editingComboItemIndex!];
-      _currentCombo[_pickerState.editingComboItemIndex!] = Move(
-        glossaryId: ex.glossaryId,
-        counterGlossaryId: c['id'],
-        name: ex.name,
-        category: ex.category,
-        translations: ex.translations,
-        side: ex.side,
-        level: ex.level,
-        isFeint: ex.isFeint,
-        specialAction: ex.specialAction,
-        repetitions: ex.repetitions,
-        counterName: c['name'],
-        counterCategory: cat,
-        counterSide: cs,
-        counterLevel: cLevelOverride ?? ex.level,
-        counterSpecialAction: null,
-      );
-      _pickerState.setEditingComboItemIndex(null);
-      _pickerState.setIsEditingCounter(false);
-    } else {
-      final n = Move(
-        glossaryId: at['id'],
-        counterGlossaryId: c['id'],
-        name: at['name'],
-        category: ac,
-        translations: atr,
-        side: as,
-        level: al,
-        isFeint: af,
-        specialAction: asp,
-        repetitions: r,
-        counterName: c['name'],
-        counterCategory: cat,
-        counterSide: cs,
-        counterLevel: cLevelOverride ?? al,
-        counterSpecialAction: null,
-      );
-      if (isE) {
-        _currentCombo[_pickerState.editingComboItemIndex!] = n;
-        _pickerState.setEditingComboItemIndex(null);
-      } else if (isSimultaneous) {
-        // Check if the last move already has a counter (adding simultaneous answer)
-        final bool lastMoveHasCounter =
-            _currentCombo.isNotEmpty && _currentCombo.last.counterName != null;
-
-        if (lastMoveHasCounter) {
-          // Just add the counter to combine with existing counter
-          final counterMove = Move(
-            glossaryId: c['id'],
-            name: c['name'],
-            category: cat,
-            translations: ctr,
-            side: cs,
-            level: cLevelOverride ?? al,
-            repetitions: 1,
-          );
-          _addCombinedActionToCombo(counterMove, isCounter: true);
-        } else {
-          // Add the attack part simultaneously first
-          final attackMove = Move(
-            glossaryId: at['id'],
-            name: at['name'],
-            category: ac,
-            translations: atr,
-            side: as,
-            level: al,
-            isFeint: af,
-            specialAction: asp,
-            repetitions: r,
-          );
-          _addCombinedActionToCombo(attackMove);
-
-          // Then add the counter part to that same group
-          final counterMove = Move(
-            glossaryId: c['id'],
-            name: c['name'],
-            category: cat,
-            translations: ctr,
-            side: cs,
-            level: cLevelOverride ?? al,
-            repetitions: 1,
-          );
-          _addCombinedActionToCombo(counterMove, isCounter: true);
-        }
-      } else {
-        _addItemToCombo(n);
-      }
-    }
-
-    // Keep counter mode active if simultaneous mode is still enabled
-    // so user can add more simultaneous answers
-    if (!isSimModeActive) {
-      _pickerState.setPendingAttackMove(null);
-    }
-    _pickerState.setPendingActionItem(null);
-    _pickerState.setPendingLevel(null);
-  }
-
-  Widget _counterLevelButton(
-    String l,
-    int id,
-    StateSetter setS,
-    String lang, {
-    bool withArrow = false,
-  }) {
-    IconData icon = l == 'High'
-        ? Icons.north_east
-        : (l == 'Low' ? Icons.south_east : Icons.arrow_forward);
-    final bool sel =
-        _pickerState.pendingActionItemId == id &&
-        _pickerState.pendingLevel == l;
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        minimumSize: const Size(60, 32),
-        backgroundColor: sel ? Theme.of(context).primaryColor : null,
-        foregroundColor: sel ? Colors.white : null,
-      ),
-      onPressed: () => setS(() {
-        _activateGlossaryItem(id);
-        _pickerState.setPendingLevel(sel ? '' : l);
-      }),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            LocalizationService.translate(
-              l.toLowerCase(),
-              lang,
-            ).substring(0, 1),
-            style: const TextStyle(fontSize: 11),
-          ),
-          if (withArrow) ...[const SizedBox(width: 4), Icon(icon, size: 12)],
         ],
       ),
     );
@@ -2949,7 +1571,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 return ListTile(
                   title: const Text('None'),
                   onTap: () {
-                    setS(() => _pickerState.selectedSpecials[id] = null);
+                    setS(() => _pickerState.setSelectedSpecial(id, null));
                     Navigator.pop(ctx);
                   },
                 );
@@ -2958,7 +1580,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               return ListTile(
                 title: Text(s['name']),
                 onTap: () {
-                  setS(() => _pickerState.selectedSpecials[id] = s['name']);
+                  setS(() => _pickerState.setSelectedSpecial(id, s['name']));
                   Navigator.pop(ctx);
                 },
               );
@@ -2966,52 +1588,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _pickerSideButton(
-    String label,
-    String sd,
-    String curr,
-    Color c,
-    int id,
-    StateSetter setS,
-    String lang, {
-    bool withArrow = false,
-  }) {
-    bool isS = curr == sd;
-    final icon = sd == 'L' ? Icons.arrow_back : Icons.arrow_forward;
-    return ChoiceChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (withArrow && sd == 'L') ...[
-            Icon(icon, size: 12, color: isS ? Colors.white : c),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: isS ? Colors.white : c,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (withArrow && sd == 'R') ...[
-            const SizedBox(width: 4),
-            Icon(icon, size: 12, color: isS ? Colors.white : c),
-          ],
-        ],
-      ),
-      selected: isS,
-      selectedColor: c.withValues(alpha: 0.7),
-      backgroundColor: c.withValues(alpha: 0.15),
-      onSelected: (selected) {
-        setS(() {
-          _activateGlossaryItem(id);
-          _pickerState.selectedSides[id] = selected ? sd : '';
-        });
-      },
     );
   }
 

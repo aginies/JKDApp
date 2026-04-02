@@ -51,6 +51,9 @@ class PickerState extends ChangeNotifier {
   // Global simultaneous mode toggle
   bool _globalSimultaneousMode = false;
 
+  // Requested tab index for programmatic tab navigation
+  int? _requestedTabIndex;
+
   // Getters
   Map<int, String> get selectedSides => _selectedSides;
   Map<int, bool> get selectedFeints => _selectedFeints;
@@ -68,6 +71,7 @@ class PickerState extends ChangeNotifier {
   int? get lastScrolledItemId => _lastScrolledItemId;
   String? get selectedSubLetter => _selectedSubLetter;
   bool get globalSimultaneousMode => _globalSimultaneousMode;
+  int? get requestedTabIndex => _requestedTabIndex;
 
   bool get isEditingMode => _editingComboItemIndex != null;
 
@@ -147,6 +151,18 @@ class PickerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setRequestedTabIndex(int? index) {
+    _requestedTabIndex = index;
+    notifyListeners();
+  }
+
+  /// Consumes the requested tab index (returns it and clears it)
+  int? consumeRequestedTabIndex() {
+    final index = _requestedTabIndex;
+    _requestedTabIndex = null;
+    return index;
+  }
+
   void addToPendingChain(Move move) {
     _pendingChain.add(move);
     notifyListeners();
@@ -187,6 +203,7 @@ class PickerState extends ChangeNotifier {
     _pendingChain.clear();
     _lastScrolledItemId = null;
     _selectedSubLetter = null;
+    _requestedTabIndex = null;
     notifyListeners();
   }
 
