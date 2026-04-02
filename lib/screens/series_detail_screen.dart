@@ -81,6 +81,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final GlobalKey<AnimatedListState> _comboListKey =
       GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
+  final TransformationController _transformationController =
+      TransformationController();
   Timer? _scrollTimer;
   bool _isFullscreen = false;
 
@@ -2238,7 +2240,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ),
                   ],
                 ],
-                if (!_isEditing && !_isFullscreen) ...[
+                if (!_isEditing &&
+                    !_isFullscreen &&
+                    _currentTrainingOptions == null) ...[
                   Wrap(
                     spacing: 8,
                     children: [
@@ -2247,11 +2251,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         Chip(label: Text(_selectedType)),
                     ],
                   ),
-                  const SizedBox(height: 8),
                 ],
                 if (!_isFullscreen)
                   SizedBox(
-                    height: 48,
+                    height: 32,
                     child: Row(
                       children: [
                         const Expanded(child: Divider()),
@@ -2302,26 +2305,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           },
                           children: _buildMoveListTiles(lang),
                         )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            return InteractiveViewer(
-                              panEnabled:
-                                  false, // Standard scroll handles vertical movement
-                              scaleEnabled:
-                                  Platform.isAndroid || Platform.isIOS,
-                              minScale: 0.4,
-                              maxScale: 3.0,
-                              constrained: false,
-                              child: SizedBox(
-                                width: constraints.maxWidth,
-                                height: constraints.maxHeight,
-                                child: ListView(
-                                  controller: _movesScrollController,
-                                  children: _buildMoveListTiles(lang),
-                                ),
-                              ),
-                            );
-                          },
+                      : InteractiveViewer(
+                          transformationController: _transformationController,
+                          panEnabled:
+                              false, // Standard scroll handles vertical movement
+                          scaleEnabled: Platform.isAndroid || Platform.isIOS,
+                          minScale: 0.4,
+                          maxScale: 3.0,
+                          boundaryMargin: const EdgeInsets.all(
+                            2000,
+                          ), // Allow zooming out
+                          child: ListView(
+                            controller: _movesScrollController,
+                            children: _buildMoveListTiles(lang),
+                          ),
                         ),
                 ),
               ],
