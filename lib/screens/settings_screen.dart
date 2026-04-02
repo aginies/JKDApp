@@ -394,6 +394,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       }).toList(),
                 ),
               ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.format_size),
+                title: Text(LocalizationService.translate('font_size', lang)),
+                subtitle: Text(
+                  LocalizationService.translate('font_size_desc', lang),
+                ),
+                trailing: Text(
+                  '${(provider.fontSizeScale * 100).toInt()}%',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Slider(
+                  value: provider.fontSizeScale,
+                  min: 0.7,
+                  max: 1.3,
+                  divisions: 60,
+                  onChanged: (val) => provider.setFontSizeScale(val),
+                ),
+              ),
+              const Divider(),
               SwitchListTile(
                 secondary: const Icon(Icons.translate),
                 title: Text(

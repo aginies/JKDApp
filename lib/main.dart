@@ -87,6 +87,14 @@ class JkdApp extends StatelessWidget {
       darkTheme: darkTheme,
       themeMode: mode,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(provider.fontSizeScale),
+          ),
+          child: child!,
+        );
+      },
       home: const SplashScreen(),
     );
   }

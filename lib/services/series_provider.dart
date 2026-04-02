@@ -43,6 +43,7 @@ class SeriesProvider with ChangeNotifier {
   bool _showTranslation = true;
   String? _projectPath;
   double _speechRate = 0.25;
+  double _fontSizeScale = 1.0;
   String _searchQuery = '';
   String? _galleryPath;
   bool _isLoading = false;
@@ -65,6 +66,7 @@ class SeriesProvider with ChangeNotifier {
   bool get showTranslation => _showTranslation;
   String? get projectPath => _projectPath;
   double get speechRate => _speechRate;
+  double get fontSizeScale => _fontSizeScale;
   String get searchQuery => _searchQuery;
   String? get galleryPath => _galleryPath;
   bool get isLoading => _isLoading;
@@ -107,6 +109,11 @@ class SeriesProvider with ChangeNotifier {
     // Speech Rate
     if (prefs.containsKey('speech_rate')) {
       _speechRate = double.tryParse(prefs['speech_rate']!) ?? 0.25;
+    }
+
+    // Font Size Scale
+    if (prefs.containsKey('font_size_scale')) {
+      _fontSizeScale = double.tryParse(prefs['font_size_scale']!) ?? 1.0;
     }
 
     // Theme
@@ -210,6 +217,12 @@ class SeriesProvider with ChangeNotifier {
   void setSpeechRate(double rate) async {
     _speechRate = rate;
     await _dbService.saveSetting('speech_rate', rate.toString());
+    notifyListeners();
+  }
+
+  void setFontSizeScale(double scale) async {
+    _fontSizeScale = double.parse(scale.toStringAsFixed(2));
+    await _dbService.saveSetting('font_size_scale', _fontSizeScale.toString());
     notifyListeners();
   }
 
