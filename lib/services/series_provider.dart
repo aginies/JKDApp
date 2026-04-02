@@ -5,12 +5,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../models/series.dart';
 import '../models/move.dart';
+import '../models/search_result.dart';
 import '../models/user_program_progress.dart';
 import '../models/training_program.dart';
 import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
 import '../services/training_program_service.dart';
+import '../utils/translation_utils.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
 
@@ -30,6 +32,7 @@ class SeriesProvider with ChangeNotifier {
   ];
 
   List<JkdSeries> _series = [];
+  List<TrainingProgram> _allPrograms = [];
   final Map<String, List<JkdSeries>> _filteredCache = {};
   List<Map<String, dynamic>> _glossary = [];
   String _language = 'en';
@@ -131,6 +134,7 @@ class SeriesProvider with ChangeNotifier {
     await _initGalleryDirectories();
     await loadGlossary();
     await loadSeries();
+    await loadAllPrograms();
     await loadActiveProgram();
   }
 
@@ -233,6 +237,77 @@ class SeriesProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
     LoggingService.log('Loaded ${_series.length} series.');
+  }
+
+  Future<void> loadAllPrograms() async {
+    _allPrograms = await _programService.getAllPrograms();
+  }
+
+  /// Get global search results across series, glossary, and programs
+  List<SearchResult> getGlobalSearchResults(String query) {
+    if (query.isEmpty) return [];
+    final q = query.toLowerCase();
+    final results = <SearchResult>[];
+
+    // 1. Search Series
+    for (final s in _series) {
+      bool match = s.title.toLowerCase().contains(q) ||
+          s.category.toLowerCase().contains(q) ||
+          s.notes.toLowerCase().contains(q);
+
+      if (match) {
+        results.add(SearchResult(
+          type: SearchResultType.series,
+          title: s.title,
+          subtitle: s.category,
+          data: s,
+        ));
+      } else {
+        // Search moves within series
+        for (final m in s.moves) {
+          if (m.name.toLowerCase().contains(q)) {
+            results.add(SearchResult(
+              type: SearchResultType.move,
+              title: m.name,
+              subtitle: 'From Series: ${s.title}',
+              data: s, // Clicking a move result takes you to its series
+            ));
+            break; // Only one result per series if multiple moves match
+          }
+        }
+      }
+    }
+
+    // 2. Search Glossary
+    for (final item in _glossary) {
+      final name = item['name'].toString().toLowerCase();
+      final trans = TranslationUtils.parseTranslations(item['translations']);
+      final t = (trans[_language] ?? trans['en'] ?? '').toLowerCase();
+
+      if (name.contains(q) || t.contains(q)) {
+        results.add(SearchResult(
+          type: SearchResultType.glossary,
+          title: item['name'].toString(),
+          subtitle: 'Glossary - ${item['category']}',
+          data: item,
+        ));
+      }
+    }
+
+    // 3. Search Programs
+    for (final p in _allPrograms) {
+      if (p.title.toLowerCase().contains(q) ||
+          p.description.toLowerCase().contains(q)) {
+        results.add(SearchResult(
+          type: SearchResultType.program,
+          title: p.title,
+          subtitle: 'Training Program',
+          data: p,
+        ));
+      }
+    }
+
+    return results;
   }
 
   /// Get glossary items by category from the pre-loaded cache

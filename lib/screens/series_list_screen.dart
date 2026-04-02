@@ -14,6 +14,7 @@ import '../models/series.dart';
 import '../utils/translation_utils.dart';
 import '../widgets/active_program_card.dart';
 import '../utils/category_utils.dart';
+import '../widgets/global_search_delegate.dart';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -24,8 +25,6 @@ class SeriesListScreen extends StatefulWidget {
 
 class _SeriesListScreenState extends State<SeriesListScreen>
     with TickerProviderStateMixin {
-  bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
   final VoiceNoteService _voiceNoteService = VoiceNoteService();
   final MediaService _mediaService = MediaService();
   String _glossarySearchQuery = '';
@@ -47,7 +46,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
   @override
   void dispose() {
-    _searchController.dispose();
     _voiceNoteService.dispose();
     _rotationController.dispose();
     _tabController.dispose();
@@ -882,29 +880,15 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             ),
           ),
         ),
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: LocalizationService.translate('search_hint', lang),
-                  border: InputBorder.none,
-                ),
-                onChanged: (val) =>
-                    context.read<SeriesProvider>().setSearchQuery(val),
-              )
-            : Text(LocalizationService.translate('library_title', lang)),
+        title: Text(LocalizationService.translate('library_title', lang)),
         actions: [
           IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: () {
-              setState(() {
-                _isSearching = !_isSearching;
-                if (!_isSearching) {
-                  _searchController.clear();
-                  context.read<SeriesProvider>().setSearchQuery('');
-                }
-              });
+              showSearch(
+                context: context,
+                delegate: GlobalSearchDelegate(context),
+              );
             },
           ),
           IconButton(
