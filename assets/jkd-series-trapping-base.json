@@ -6,10 +6,10 @@
     "type": "Attack",
     "attack_method": "SDA",
     "notes": "",
-    "is_system": 1,
+    "is_system": 0,
     "moves": [
       {
-        "id": null,
+        "id": 184,
         "glossary_id": null,
         "counter_glossary_id": null,
         "name": "Pak Sao -> Jab",
@@ -30,7 +30,7 @@
         "chain_json": "[{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":null,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null}]"
       },
       {
-        "id": 111,
+        "id": 185,
         "glossary_id": null,
         "counter_glossary_id": null,
         "name": "Pak Sao -> Jab -> Pak Sao -> Jab",
@@ -51,7 +51,7 @@
         "chain_json": "[{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":78,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":\"Vertical Locking\",\"counter_side\":\"L\",\"counter_level\":\"\",\"counter_special_action\":null,\"counter_category\":\"trapping\",\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":null,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null}]"
       },
       {
-        "id": 112,
+        "id": 186,
         "glossary_id": null,
         "counter_glossary_id": null,
         "name": "Pak Sao -> Jab -> Jab -> Pak Sao -> Jab",
@@ -70,6 +70,27 @@
         "counter_category": null,
         "sub_moves_json": null,
         "chain_json": "[{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":80,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":\"Catch Arm\",\"counter_side\":\"L\",\"counter_level\":\"\",\"counter_special_action\":null,\"counter_category\":\"trapping\",\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":null,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":null,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null}]"
+      },
+      {
+        "id": 187,
+        "glossary_id": null,
+        "counter_glossary_id": null,
+        "name": "Pak Sao -> Jab -> Tan Sao -> Pak Sao -> Jab",
+        "category": "chain",
+        "side": "",
+        "level": "",
+        "sub_letter": null,
+        "is_feint": 0,
+        "special_action": null,
+        "translations": "{}",
+        "repetitions": 1,
+        "counter_name": null,
+        "counter_side": null,
+        "counter_level": null,
+        "counter_special_action": null,
+        "counter_category": null,
+        "sub_moves_json": null,
+        "chain_json": "[{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":78,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":\"Vertical Locking\",\"counter_side\":\"L\",\"counter_level\":\"\",\"counter_special_action\":null,\"counter_category\":\"trapping\",\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":83,\"counter_glossary_id\":null,\"name\":\"Tan Sao\",\"category\":\"trapping\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Palm up hand\\\",\\\"fr\\\":\\\"Paume vers le haut\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":57,\"counter_glossary_id\":null,\"name\":\"Pak Sao\",\"category\":\"packs\",\"side\":\"R\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Slapping hand\\\",\\\"fr\\\":\\\"Gifler with la main\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null},{\"id\":null,\"glossary_id\":1,\"counter_glossary_id\":null,\"name\":\"Jab\",\"category\":\"punch\",\"side\":\"L\",\"level\":\"\",\"sub_letter\":null,\"is_feint\":0,\"special_action\":null,\"translations\":\"{\\\"en\\\":\\\"Lead direct punch\\\",\\\"fr\\\":\\\"Direct du bras avant\\\"}\",\"repetitions\":1,\"counter_name\":null,\"counter_side\":null,\"counter_level\":null,\"counter_special_action\":null,\"counter_category\":null,\"sub_moves_json\":null,\"chain_json\":null}]"
       }
     ]
   }

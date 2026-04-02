@@ -15,7 +15,8 @@ import '../services/export_service.dart';
 import 'series_detail/dialogs/voice_help_dialog.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
-import 'series_detail/dialogs/workflow_help_dialog.dart';
+
+import 'series_detail/dialogs/edit_help_dialog.dart';
 import 'series_detail/services/media_gallery_service.dart';
 import 'series_detail/services/voice_processing_service.dart';
 import 'series_detail/services/training_management_service.dart'
@@ -436,9 +437,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     );
   }
 
-  void _showWorkflowHelp(BuildContext context, String lang) {
-    WorkflowHelpDialog.show(context, lang);
-  }
+
 
   void _pickMove({
     List<Move>? initialMoves,
@@ -807,7 +806,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           Icons.help_outline,
                           color: Colors.blue,
                         ),
-                        onPressed: () => _showWorkflowHelp(context, lang),
+                        onPressed: () => _showEditHelpDialog(),
                         tooltip: 'Help',
                       ),
                     ],
@@ -3059,10 +3058,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     }
   }
 
+  void _showEditHelpDialog() {
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    EditHelpDialog.show(context, lang);
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
+      floatingActionButton: _isEditing
+          ? FloatingActionButton(
+              onPressed: _showEditHelpDialog,
+              child: const Icon(Icons.help_outline),
+            )
+          : null,
       appBar: _currentTrainingOptions != null
           ? null
           : AppBar(
@@ -3449,10 +3459,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           onReorder: (oldIndex, newIndex) {
                             setState(() {
                               if (newIndex > oldIndex) newIndex -= 1;
-
                               final movedItem = _moves.removeAt(oldIndex);
                               _moves.insert(newIndex, movedItem);
-
                               _normalizeSubLetters();
                             });
                           },
@@ -3470,4 +3478,4 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       ),
     );
   }
-}
+  }
