@@ -55,6 +55,7 @@ class _BackupModalState extends State<BackupModal> {
           ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              /*
               _buildSectionTitle(
                 lang == 'fr' ? 'Sauvegarde Globale' : 'Global Backup',
               ),
@@ -79,6 +80,7 @@ class _BackupModalState extends State<BackupModal> {
                 onTap: () => _handleGlobalRestore(provider),
               ),
               const Divider(height: 32),
+              */
               _buildSectionTitle(
                 LocalizationService.translate('backup_export', lang),
               ),
