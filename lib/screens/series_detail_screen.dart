@@ -14,6 +14,7 @@ import '../services/export_service.dart';
 import 'series_detail/dialogs/voice_help_dialog.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
+import 'series_detail/dialogs/congratulations_animation.dart';
 
 import 'series_detail/dialogs/edit_help_dialog.dart';
 import 'series_detail/services/media_gallery_service.dart';
@@ -25,6 +26,8 @@ import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/widgets/move_list_display_widget.dart';
+import 'series_list/widgets/random_reader_widget.dart';
+import 'series_detail/builders/advanced_combo_builder.dart';
 import 'series_detail/widgets/combo_card_widget.dart';
 import 'series_detail/constants/series_detail_constants.dart';
 import 'series_detail/state/picker_state.dart';
@@ -83,6 +86,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final ScrollController _movesScrollController = ScrollController();
   Timer? _scrollTimer;
   bool _isFullscreen = false;
+  bool _isAdvancedBuilder = false;
 
   // Buffered move waiting for simultaneous merge (when + is pressed)
   Move? _pendingSimultaneousMove;
@@ -144,6 +148,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               widget.series!.id!,
             );
             if (completionInfo != null && mounted) {
+              final dayDone = completionInfo['day_complete'] == true;
+              CongratulationsAnimation.show(context, isDayComplete: dayDone);
               _showCompletionDialog(completionInfo, provider);
             }
           }
@@ -1949,16 +1955,24 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 if (!_isEditing &&
                     widget.series != null &&
                     widget.series!.category != 'JKD Moves')
-                  IconButton(
-                    icon: const Icon(
-                      Icons.play_circle_fill,
-                      color: Colors.greenAccent,
-                    ),
-                    onPressed: _showTrainingOptions,
-                    tooltip: LocalizationService.translate(
-                      'training_mode',
-                      lang,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final provider = Provider.of<SeriesProvider>(context);
+                      final isDone = provider.isSeriesCompletedToday(
+                        widget.series!.id!,
+                      );
+                      return IconButton(
+                        icon: Icon(
+                          Icons.play_circle_fill,
+                          color: isDone ? Colors.grey : Colors.greenAccent,
+                        ),
+                        onPressed: isDone ? null : _showTrainingOptions,
+                        tooltip: LocalizationService.translate(
+                          'training_mode',
+                          lang,
+                        ),
+                      );
+                    },
                   ),
                 if (!_isEditing && widget.series != null)
                   IconButton(
@@ -2276,17 +2290,59 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                                   const SizedBox(width: 8),
                                 ],
                                 FloatingActionButton.small(
+                                  heroTag: 'add_btn_2',
+                                  onPressed: () {
+                                    setState(() {
+                                      _isAdvancedBuilder = true;
+                                    });
+                                  },
+                                  backgroundColor: Colors.indigo,
+                                  child: const Text(
+                                    '+2',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FloatingActionButton.small(
                                   heroTag: 'add_btn',
                                   onPressed: () => _pickMove(),
                                   child: const Icon(Icons.add, size: 20),
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                      ],
-                    ),
+                                ],
+                                ),
+                                ),
+                                const SizedBox(width: 16),
+                                ],
+                                ],
+                                ),
+                                ),
+                                if (_isAdvancedBuilder)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    child: AdvancedComboBuilder(
+                                      onFinish: (newMove) {
+                                        setState(() {
+                                          _moves.add(newMove);
+                                          _isAdvancedBuilder = false;
+                                          _normalizeSubLetters();
+                                        });
+                                      },
+                                      onCancel: () {
+                                        setState(() {
+                                          _isAdvancedBuilder = false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                if (!_isEditing && widget.series?.category == 'JKD Moves')
+                  RandomReaderWidget(
+                    language: lang,
+                    forcedSeriesId: widget.series!.id,
+                    maxMoves: 10,
+                    showSelection: false,
                   ),
                 Expanded(
                   child: _isEditing

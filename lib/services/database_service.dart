@@ -29,6 +29,7 @@ class DatabaseService {
     'assets/jkd-series-trapping-base.json',
     'assets/jkd-series-footwork.json',
     'assets/jkd-series-abc.json',
+    'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -48,7 +49,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 25,
+      version: 27,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -358,6 +359,23 @@ class DatabaseService {
         );
       }
     }
+
+    if (oldVersion < 26) {
+      // Fix for empty series in training programs due to title matching or missing assignments
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v26: Re-seeded system training programs');
+    }
+
+    if (oldVersion < 27) {
+      // Add Ping Chui Laop Sao Gwa Chui series
+      await db.delete('series', where: 'is_system = 1');
+      await _seedSeries(db);
+      // Re-seed programs to ensure links to re-seeded series are correct
+      await db.delete('training_programs', where: 'is_system = 1');
+      await _seedTrainingPrograms(db);
+      debugPrint('Migration v27: Re-seeded system series and programs');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -628,8 +646,13 @@ class DatabaseService {
             final List<int> resolvedIds = [];
 
             for (var title in seriesTitles) {
-              if (title is String && seriesTitleMap.containsKey(title)) {
-                resolvedIds.add(seriesTitleMap[title]!);
+              if (title is String) {
+                final normalizedTitle = title.trim().toLowerCase();
+                if (seriesTitleMap.containsKey(title)) {
+                  resolvedIds.add(seriesTitleMap[title]!);
+                } else if (seriesTitleMap.containsKey(normalizedTitle)) {
+                  resolvedIds.add(seriesTitleMap[normalizedTitle]!);
+                }
               }
             }
 
@@ -638,11 +661,19 @@ class DatabaseService {
             if (day['assignments'] != null) {
               for (var assign in day['assignments']) {
                 final title = assign['title'];
-                if (title != null && seriesTitleMap.containsKey(title)) {
-                  assignments.add({
-                    'series_id': seriesTitleMap[title],
-                    'item_range': assign['range'],
-                  });
+                if (title is String) {
+                  final normalizedTitle = title.trim().toLowerCase();
+                  if (seriesTitleMap.containsKey(title)) {
+                    assignments.add({
+                      'series_id': seriesTitleMap[title],
+                      'item_range': assign['range'],
+                    });
+                  } else if (seriesTitleMap.containsKey(normalizedTitle)) {
+                    assignments.add({
+                      'series_id': seriesTitleMap[normalizedTitle],
+                      'item_range': assign['range'],
+                    });
+                  }
                 }
               }
             }
@@ -683,7 +714,10 @@ class DatabaseService {
     final Map<String, int> titleMap = {};
     for (var entry in series) {
       if (entry['title'] != null && entry['id'] != null) {
-        titleMap[entry['title'] as String] = entry['id'] as int;
+        // Store both exact title and normalized version
+        final title = entry['title'] as String;
+        titleMap[title] = entry['id'] as int;
+        titleMap[title.trim().toLowerCase()] = entry['id'] as int;
       }
     }
     return titleMap;

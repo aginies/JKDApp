@@ -575,6 +575,7 @@ class GlossaryUIBuilder {
         GlossaryPickerWidgets.sideButtonWithArrow(
           LocalizationService.translate('left', lang),
           'L',
+          side,
           Colors.blue,
           () {
             setState(() {
@@ -592,6 +593,7 @@ class GlossaryUIBuilder {
         GlossaryPickerWidgets.sideButtonWithArrow(
           LocalizationService.translate('right', lang),
           'R',
+          side,
           Colors.red,
           () {
             setState(() {

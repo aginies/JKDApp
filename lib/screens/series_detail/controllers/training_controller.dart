@@ -21,6 +21,7 @@ class TrainingController {
   bool _isPaused = false;
   int _currentIndex = -1;
   int _subIndex = 0; // Tracks progress within a combo/item
+  int _completionsCount = 0;
   Timer? _timer;
 
   // Stored parameters for resume
@@ -189,6 +190,7 @@ class TrainingController {
     _isPaused = false;
     _currentIndex = startIndex - 1;
     _subIndex = 0;
+    _completionsCount = 0;
     onIndexChanged(_currentIndex);
 
     _playStep(

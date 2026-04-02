@@ -195,7 +195,15 @@ class TrainingProgramService {
     // Get series objects
     final List<JkdSeries> series = [];
     final allSeries = await _db.getAllSeries();
-    for (final seriesId in currentDay.seriesIds) {
+
+    // Use seriesAssignments as the primary source if available
+    final idsToLoad =
+        currentDay.seriesAssignments != null &&
+            currentDay.seriesAssignments!.isNotEmpty
+        ? currentDay.seriesAssignments!.map((a) => a.seriesId).toList()
+        : currentDay.seriesIds;
+
+    for (final seriesId in idsToLoad) {
       final matchingSeries = allSeries.firstWhere(
         (s) => s.id == seriesId,
         orElse: () => JkdSeries(

@@ -335,6 +335,23 @@ class MoveListDisplayWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            const SizedBox(width: 4),
+                            MoveDisplayWidgets.sideCircle(
+                              (m.counterSide != null &&
+                                      m.counterSide!.isNotEmpty)
+                                  ? LocalizationService.translate(
+                                    m.counterSide == 'L' ? 'left' : 'right',
+                                    language,
+                                  ).substring(0, 1)
+                                  : '',
+                              m.counterSide ?? '',
+                              mini: true,
+                            ),
+                            MoveDisplayWidgets.levelIcon(
+                              m.counterLevel ?? '',
+                              size: 10,
+                              mini: true,
+                            ),
                           ],
                         ),
                       ),
@@ -683,16 +700,23 @@ class MoveListDisplayWidget {
                                                           ),
                                                         ),
                                                         MoveDisplayWidgets.sideCircle(
-                                                          LocalizationService.translate(
-                                                            sub.counterSide ==
-                                                                    'L'
-                                                                ? 'left'
-                                                                : 'right',
-                                                            language,
-                                                          ).substring(0, 1),
+                                                          (sub.counterSide !=
+                                                                      null &&
+                                                                  sub.counterSide!
+                                                                      .isNotEmpty)
+                                                              ? LocalizationService
+                                                                  .translate(
+                                                                  sub.counterSide ==
+                                                                          'L'
+                                                                      ? 'left'
+                                                                      : 'right',
+                                                                  language,
+                                                                ).substring(0, 1)
+                                                              : '',
                                                           sub.counterSide ?? '',
                                                           mini: true,
                                                         ),
+
                                                         MoveDisplayWidgets.levelIcon(
                                                           sub.counterLevel ??
                                                               '',
@@ -796,12 +820,17 @@ class MoveListDisplayWidget {
                                             ),
                                           ),
                                           MoveDisplayWidgets.sideCircle(
-                                            LocalizationService.translate(
-                                              moves[i].counterSide == 'L'
-                                                  ? 'left'
-                                                  : 'right',
-                                              language,
-                                            ).substring(0, 1),
+                                            (moves[i].counterSide != null &&
+                                                    moves[i]
+                                                        .counterSide!
+                                                        .isNotEmpty)
+                                                ? LocalizationService.translate(
+                                                  moves[i].counterSide == 'L'
+                                                      ? 'left'
+                                                      : 'right',
+                                                  language,
+                                                ).substring(0, 1)
+                                                : '',
                                             moves[i].counterSide ?? '',
                                             mini: true,
                                           ),

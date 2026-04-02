@@ -1,0 +1,918 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../models/move.dart';
+import '../../../services/localization_service.dart';
+import '../../../services/series_provider.dart';
+import '../widgets/move_display_widgets.dart';
+import '../glossary/glossary_data_service.dart';
+import '../glossary/glossary_ui_builder.dart';
+
+class AdvancedComboBuilder extends StatefulWidget {
+  final Function(Move) onFinish;
+  final VoidCallback onCancel;
+
+  const AdvancedComboBuilder({
+    super.key,
+    required this.onFinish,
+    required this.onCancel,
+  });
+
+  @override
+  State<AdvancedComboBuilder> createState() => _AdvancedComboBuilderState();
+}
+
+class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
+  // Current state of the workspace
+  final List<BuilderCardData> _workspaceCards = [];
+  
+  // Path-based selection for recursive structures
+  List<int>? _selectedPath;
+  bool _isCounterSelected = false; 
+  
+  // Modes
+  bool _isDefenseMode = false;
+  bool _isSimultaneousMode = false;
+  bool _isChainMode = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = Provider.of<SeriesProvider>(context).language;
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // TOP TOOLBAR: Structural buttons
+          _buildTopToolbar(lang),
+          
+          const SizedBox(height: 8),
+          
+          // MAIN WORKSPACE
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            ),
+            child: _workspaceCards.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        LocalizationService.translate('add_items_to_start', lang),
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _workspaceCards.asMap().entries.map((entry) {
+                      return _buildCard([entry.key], entry.value, lang);
+                    }).toList(),
+                  ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // BOTTOM TOOLBAR: Property buttons
+          _buildBottomToolbar(lang),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopToolbar(String lang) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _toolbarButton('Add', Icons.add, Colors.blue, _onAddClick),
+          _toolbarButton('Remove', Icons.remove, Colors.red, _onRemoveClick),
+          const SizedBox(width: 8, child: VerticalDivider()),
+          _toolbarButton(
+            '', 
+            Icons.add_circle_outline,
+            _isSimultaneousMode ? Colors.green : Colors.blueAccent,
+            () {
+              if (_selectedPath != null) {
+                setState(() {
+                  _isSimultaneousMode = true;
+                  _isChainMode = false;
+                  _isDefenseMode = false;
+                });
+                _showGlossaryPicker();
+              }
+            },
+            isActive: _isSimultaneousMode,
+          ),
+          _toolbarButton(
+            '',
+            Icons.arrow_forward,
+            _isChainMode ? Colors.green : Colors.teal,
+            () {
+              if (_selectedPath != null) {
+                setState(() {
+                  _isChainMode = true;
+                  _isSimultaneousMode = false;
+                  _isDefenseMode = false;
+                });
+                _showGlossaryPicker();
+              }
+            },
+            isActive: _isChainMode,
+          ),
+          _toolbarButton(
+            'Answer',
+            Icons.reply,
+            Colors.orange,
+            () {
+              if (_selectedPath != null) {
+                setState(() {
+                  _isDefenseMode = true;
+                  _isChainMode = false;
+                  _isSimultaneousMode = false;
+                });
+                _showGlossaryPicker();
+              }
+            },
+            isActive: _isDefenseMode,
+          ),
+          const SizedBox(width: 8, child: VerticalDivider()),
+          _toolbarButton('Finish', Icons.check, Colors.green, _onFinishClick),
+          _toolbarButton('Cancel', Icons.close, Colors.grey, widget.onCancel),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomToolbar(String lang) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _toolbarButton('Left', Icons.arrow_back, Colors.blue, () => _updateSelectedCard(side: 'L')),
+          _toolbarButton('Right', Icons.arrow_forward, Colors.red, () => _updateSelectedCard(side: 'R')),
+          const SizedBox(width: 8, child: VerticalDivider()),
+          _toolbarButton('Draw', Icons.gesture, Colors.purple, () => _updateSelectedCard(toggleFeint: true)),
+          const SizedBox(width: 8, child: VerticalDivider()),
+          _toolbarButton('H', null, Colors.deepOrange, () => _updateSelectedCard(level: 'High')),
+          _toolbarButton('M', null, Colors.orange, () => _updateSelectedCard(level: 'Mid')),
+          _toolbarButton('L', null, Colors.amberAccent, () => _updateSelectedCard(level: 'Low')),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolbarButton(
+    String label,
+    IconData? icon,
+    Color color,
+    VoidCallback onPressed, {
+    bool isActive = false,
+  }) {
+    final bgColor = isActive ? color : color.withValues(alpha: 0.1);
+    final fgColor = isActive ? Colors.white : color;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: const Size(0, 36),
+          backgroundColor: bgColor,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) Icon(icon, size: 16, color: fgColor),
+            if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
+            if (label.isNotEmpty)
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: fgColor,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Recursive Card builder - All items keep their full font/icon sizes
+  Widget _buildCard(List<int> path, BuilderCardData data, String lang) {
+    final theme = Theme.of(context);
+    final isSelected = _isPathSelected(path);
+    final color = MoveDisplayWidgets.getCategoryColor(data.category);
+
+    // BOX: CHAIN
+    if (data.isChain) {
+      return GestureDetector(
+        onTap: () => _selectPath(path),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (isSelected && !_isCounterSelected) ? Colors.green : Colors.grey.withValues(alpha: 0.5),
+              width: (isSelected && !_isCounterSelected) ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('CHAIN', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 4, runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: data.chain.asMap().entries.map((e) {
+                  final itemPath = [...path, e.key];
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCard(itemPath, e.value, lang),
+                      if (e.key < data.chain.length - 1)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Icon(Icons.arrow_forward, size: 16, color: Colors.teal),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+              if (data.hasCounter) ...[
+                const SizedBox(height: 4),
+                _buildCounterBox(path, data, lang, isSelected),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    // BOX: SIMULTANEOUS
+    if (data.isCombo) {
+      return GestureDetector(
+        onTap: () => _selectPath(path),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (isSelected && !_isCounterSelected) ? Colors.green : Colors.grey.withValues(alpha: 0.5),
+              width: (isSelected && !_isCounterSelected) ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('SIMULTANEOUS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Wrap(
+                  spacing: 4, runSpacing: 4,
+                  children: data.subMoves.asMap().entries.map((e) {
+                    final itemPath = [...path, e.key];
+                    return _buildCard(itemPath, e.value, lang);
+                  }).toList(),
+                ),
+              ),
+              if (data.hasCounter) ...[
+                const SizedBox(height: 4),
+                _buildCounterBox(path, data, lang, isSelected),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    // RENDER LEAF ITEM
+    return GestureDetector(
+      onTap: () => _selectPath(path),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        constraints: const BoxConstraints(minWidth: 75),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(8),
+          // Removed outer border to fix double border issue
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ATTACKER BOX
+            GestureDetector(
+              onTap: () => _selectPath(path, isCounter: false),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: (isSelected && !_isCounterSelected) ? color : color.withValues(alpha: 0.2),
+                    width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(MoveDisplayWidgets.getCategoryIcon(data.category), size: 20, color: color),
+                    const SizedBox(height: 4),
+                    Text(data.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                    if (data.specialAction != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: Chip(label: Text(data.specialAction!, style: const TextStyle(fontSize: 8)), padding: EdgeInsets.zero, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                      ),
+                    if (data.side.isNotEmpty || data.level.isNotEmpty || data.isFeint) ...[
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 4,
+                        children: [
+                          if (data.side.isNotEmpty)
+                            MoveDisplayWidgets.sideCircle(LocalizationService.translate(data.side == 'L' ? 'left' : 'right', lang).substring(0, 1), data.side, mini: true),
+                          if (data.level.isNotEmpty)
+                            MoveDisplayWidgets.levelIcon(data.level, size: 12, mini: true),
+                          if (data.isFeint) MoveDisplayWidgets.drawBox(mini: true),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            
+            if (data.hasCounter) ...[
+              const SizedBox(height: 4),
+              _buildCounterBox(path, data, lang, isSelected),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCounterBox(List<int> path, BuilderCardData data, String lang, bool isTopSelected) {
+    final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
+    
+    return GestureDetector(
+      onTap: () => _selectPath(path, isCounter: true),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isThisCounterSelected ? Colors.red : Colors.red.withValues(alpha: 0.3),
+            width: isThisCounterSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            const Text('ANSWER', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red)),
+            const SizedBox(height: 2),
+            Text(data.counterName!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            if (data.counterSide.isNotEmpty || data.counterLevel.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 2,
+                children: [
+                  if (data.counterSide.isNotEmpty)
+                    MoveDisplayWidgets.sideCircle(LocalizationService.translate(data.counterSide == 'L' ? 'left' : 'right', lang).substring(0, 1), data.counterSide, mini: true),
+                  if (data.counterLevel.isNotEmpty)
+                    MoveDisplayWidgets.levelIcon(data.counterLevel, size: 10, mini: true),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isPathSelected(List<int> path) {
+    if (_selectedPath == null || _selectedPath!.length != path.length) return false;
+    for (int i = 0; i < path.length; i++) {
+      if (_selectedPath![i] != path[i]) return false;
+    }
+    return true;
+  }
+
+  void _selectPath(List<int> path, {bool isCounter = false}) {
+    setState(() {
+      _selectedPath = List<int>.from(path);
+      _isCounterSelected = isCounter;
+    });
+  }
+
+  void _onAddClick() {
+    setState(() {
+      _isSimultaneousMode = false;
+      _isChainMode = false;
+      _isDefenseMode = false;
+    });
+    _showGlossaryPicker();
+  }
+
+  void _onMoveClick() {
+    if (_selectedPath == null) return;
+    
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Select Special Action', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: GlossaryDataService.fetchGlossaryByCategory('move'),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const CircularProgressIndicator();
+                final items = snapshot.data!;
+                return Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return ListTile(
+                        leading: const Icon(Icons.star, color: Colors.amber),
+                        title: Text(item['name']),
+                        onTap: () {
+                          _updateSelectedCard(specialAction: item['name']);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+void _onRemoveClick() {
+  if (_selectedPath == null) return;
+
+  setState(() {
+    if (_isCounterSelected) {
+      // DELETE ONLY THE ANSWER of the item at the selected path
+      _updateDataAtPath(_selectedPath!, (item) {
+        return item.copyWith(
+          counterName: null,
+          counterCategory: null,
+          counterGlossaryId: null,
+          counterSide: '',
+          counterLevel: '',
+        );
+      });
+      _isCounterSelected = false;
+    } else if (_selectedPath!.length > 1) {
+
+        // DELETE ONLY THE TARGETED SUB-ITEM
+        final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+        final indexToRemove = _selectedPath!.last;
+        
+        _updateDataAtPath(parentPath, (parent) {
+          final isChain = parent.isChain;
+          final List<BuilderCardData> subList = List.from(isChain ? parent.chain : parent.subMoves);
+          subList.removeAt(indexToRemove);
+          
+          // DO NOT DISSOLVE BOXES - If user wants a box, they keep the box structure
+          if (subList.isEmpty) return null; // Only remove the parent if it's completely empty
+          
+          return isChain ? parent.copyWith(chain: subList) : parent.copyWith(subMoves: subList);
+        });
+        
+        _selectedPath = null;
+      } else {
+        // DELETE ENTIRE TOP-LEVEL CARD
+        _workspaceCards.removeAt(_selectedPath![0]);
+        _selectedPath = null;
+      }
+    });
+  }
+
+  void _onFinishClick() {
+    if (_workspaceCards.isEmpty) return;
+
+    // Convert everything in the workspace into a single high-level Move (Combo)
+    // If there is more than one top-level item, they are treated as sequential steps (Chain)
+    Move finalMove;
+    if (_workspaceCards.length == 1) {
+      finalMove = _convertToMove(_workspaceCards.first);
+    } else {
+      // Multiple items at top level become a Chain
+      finalMove = Move(
+        name: _workspaceCards.map((c) => c.name).join(' -> '),
+        category: 'chain',
+        chain: _workspaceCards.map((c) => _convertToMove(c)).toList(),
+      );
+    }
+
+    widget.onFinish(finalMove);
+  }
+
+  Move _convertToMove(BuilderCardData data) {
+    // 1. Recursive handling for CHAIN
+    if (data.isChain) {
+      return Move(
+        name: data.chain.map((m) => m.name).join(' -> '),
+        category: 'chain',
+        chain: data.chain.map((m) => _convertToMove(m)).toList(),
+        counterName: data.counterName,
+        counterCategory: data.counterCategory,
+        counterSide: data.counterSide,
+        counterLevel: data.counterLevel,
+      );
+    }
+
+    // 2. Recursive handling for SIMULTANEOUS (Combo)
+    if (data.isCombo) {
+      return Move(
+        name: data.subMoves.map((m) => m.name).join(' + '),
+        category: 'simultaneous',
+        subMoves: data.subMoves.map((m) => _convertToMove(m)).toList(),
+        counterName: data.counterName,
+        counterCategory: data.counterCategory,
+        counterSide: data.counterSide,
+        counterLevel: data.counterLevel,
+      );
+    }
+
+    // 3. BASE ITEM (Leaf)
+    return Move(
+      name: data.name,
+      category: data.category,
+      side: data.side,
+      level: data.level,
+      isFeint: data.isFeint,
+      specialAction: data.specialAction,
+      glossaryId: data.glossaryId,
+      counterName: data.counterName,
+      counterCategory: data.counterCategory,
+      counterSide: data.counterSide,
+      counterLevel: data.counterLevel,
+    );
+  }
+
+  // Deep update helper
+  void _updateDataAtPath(List<int> path, BuilderCardData? Function(BuilderCardData) updater) {
+    if (path.isEmpty) return;
+    
+    BuilderCardData? updateRecursive(BuilderCardData current, List<int> remainingPath) {
+      if (remainingPath.isEmpty) return updater(current);
+      
+      final index = remainingPath[0];
+      final nextRemaining = remainingPath.sublist(1);
+      
+      if (current.isChain) {
+        final List<BuilderCardData> newList = List.from(current.chain);
+        final result = updateRecursive(newList[index], nextRemaining);
+        if (result == null) {
+          newList.removeAt(index);
+          if (newList.isEmpty) return null;
+          return current.copyWith(chain: newList);
+        }
+        newList[index] = result;
+        return current.copyWith(chain: newList);
+      } else if (current.isCombo) {
+        final List<BuilderCardData> newList = List.from(current.subMoves);
+        final result = updateRecursive(newList[index], nextRemaining);
+        if (result == null) {
+          newList.removeAt(index);
+          if (newList.isEmpty) return null;
+          return current.copyWith(subMoves: newList);
+        }
+        newList[index] = result;
+        return current.copyWith(subMoves: newList);
+      }
+      return current;
+    }
+
+    final topIndex = path[0];
+    final remaining = path.sublist(1);
+    
+    if (remaining.isEmpty) {
+      final result = updater(_workspaceCards[topIndex]);
+      if (result == null) {
+        _workspaceCards.removeAt(topIndex);
+      } else {
+        _workspaceCards[topIndex] = result;
+      }
+    } else {
+      final result = updateRecursive(_workspaceCards[topIndex], remaining);
+      if (result == null) {
+        _workspaceCards.removeAt(topIndex);
+      } else {
+        _workspaceCards[topIndex] = result;
+      }
+    }
+  }
+
+  void _updateSelectedCard({String? side, String? level, bool toggleFeint = false, String? specialAction}) {
+    if (_selectedPath == null) return;
+    
+    setState(() {
+      _updateDataAtPath(_selectedPath!, (item) {
+        if (_isCounterSelected) {
+          // Toggle logic for counterSide
+          String finalSide = item.counterSide;
+          if (side != null) {
+            finalSide = (item.counterSide == side) ? '' : side;
+          }
+          
+          // Toggle logic for counterLevel
+          String finalLevel = item.counterLevel;
+          if (level != null) {
+            finalLevel = (item.counterLevel == level) ? '' : level;
+          }
+
+          return item.copyWith(
+            counterSide: finalSide,
+            counterLevel: finalLevel,
+          );
+        } else {
+          // Toggle logic for side
+          String finalSide = item.side;
+          if (side != null) {
+            finalSide = (item.side == side) ? '' : side;
+          }
+          
+          // Toggle logic for level
+          String finalLevel = item.level;
+          if (level != null) {
+            finalLevel = (item.level == level) ? '' : level;
+          }
+
+          return item.copyWith(
+            side: finalSide,
+            level: finalLevel,
+            isFeint: toggleFeint ? !item.isFeint : item.isFeint,
+            specialAction: specialAction ?? item.specialAction,
+          );
+        }
+      });
+    });
+  }
+
+  void _showGlossaryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9, maxChildSize: 0.95, minChildSize: 0.5, expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                _isDefenseMode ? 'Select Answer' : 'Select Item to Add',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            Expanded(
+              child: DefaultTabController(
+                length: 6,
+                initialIndex: _isDefenseMode ? 2 : 0,
+                child: Column(
+                  children: [
+                    const TabBar(
+                      isScrollable: true,
+                      tabs: [Tab(text: 'Punches'), Tab(text: 'Kicks'), Tab(text: 'Packs'), Tab(text: 'Trapping'), Tab(text: 'JKD Moves'), Tab(text: 'Move')],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildGlossaryTab('punch', scrollController),
+                          _buildGlossaryTab('kick', scrollController),
+                          _buildGlossaryTab('packs', scrollController),
+                          _buildGlossaryTab('trapping', scrollController),
+                          _buildGlossaryTab('jkd_moves', scrollController),
+                          _buildGlossaryTab('move', scrollController),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlossaryTab(String category, ScrollController scrollController) {
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: GlossaryDataService.fetchGlossaryByCategory(category),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        final items = snapshot.data!;
+        return ListView.builder(
+          controller: scrollController,
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            final translations = GlossaryDataService.parseTranslations(item['translations']);
+            final translation = GlossaryDataService.getTranslation(translations, lang);
+            
+            return ListTile(
+              leading: Icon(MoveDisplayWidgets.getCategoryIcon(category), color: MoveDisplayWidgets.getCategoryColor(category)),
+              title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: translation.isNotEmpty ? Text(translation, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)) : null,
+              onTap: () {
+                setState(() {
+                  final newItem = BuilderCardData(
+                    name: item['name'],
+                    category: category,
+                    glossaryId: item['id'],
+                  );
+
+                  if (_isDefenseMode && _selectedPath != null) {
+                    _updateDataAtPath(_selectedPath!, (target) => target.copyWith(
+                      counterName: newItem.name,
+                      counterCategory: newItem.category,
+                      counterGlossaryId: newItem.glossaryId,
+                    ));
+                    _isDefenseMode = false;
+                  } else if (_isChainMode && _selectedPath != null) {
+                    // SMART APPEND into sequential chain (->)
+                    final newItem = BuilderCardData(
+                      name: item['name'],
+                      category: category,
+                      glossaryId: item['id'],
+                    );
+
+                    bool appended = false;
+                    if (_selectedPath!.length > 1) {
+                      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+                      _updateDataAtPath(parentPath, (parent) {
+                        if (parent.isChain) {
+                          appended = true;
+                          return parent.copyWith(chain: [...parent.chain, newItem]);
+                        }
+                        return parent;
+                      });
+                    }
+
+                    if (!appended) {
+                      _updateDataAtPath(_selectedPath!, (target) {
+                        if (target.isChain) {
+                          return target.copyWith(chain: [...target.chain, newItem]);
+                        }
+                        return BuilderCardData(name: 'Chain', category: 'chain', chain: [target, newItem]);
+                      });
+                    }
+                    _isChainMode = false;
+                  } else if (_isSimultaneousMode && _selectedPath != null) {
+                    // SMART APPEND into simultaneous combo (+)
+                    final newItem = BuilderCardData(
+                      name: item['name'],
+                      category: category,
+                      glossaryId: item['id'],
+                    );
+
+                    bool appended = false;
+                    if (_selectedPath!.length > 1) {
+                      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+                      _updateDataAtPath(parentPath, (parent) {
+                        if (parent.isCombo) {
+                          appended = true;
+                          return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
+                        }
+                        return parent;
+                      });
+                    }
+
+                    if (!appended) {
+                      _updateDataAtPath(_selectedPath!, (target) {
+                        if (target.isCombo) {
+                          return target.copyWith(subMoves: [...target.subMoves, newItem]);
+                        }
+                        return BuilderCardData(
+                          name: 'Combo',
+                          category: 'simultaneous',
+                          subMoves: [target, newItem],
+                        );
+                      });
+                    }
+                    _isSimultaneousMode = false;
+                  } else {
+                    _workspaceCards.add(newItem);
+                  }
+                });
+                Navigator.pop(context);
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class BuilderCardData {
+  final String name;
+  final String category;
+  final int? glossaryId;
+  final String side;
+  final String level;
+  final bool isFeint;
+  final String? specialAction;
+  final List<BuilderCardData> subMoves; // For simultaneous moves (+)
+  final List<BuilderCardData> chain; // For sequential moves (->)
+
+  // Counter (Answer) fields
+  final String? counterName;
+  final String? counterCategory;
+  final int? counterGlossaryId;
+  final String counterSide;
+  final String counterLevel;
+
+  BuilderCardData({
+    required this.name,
+    required this.category,
+    this.glossaryId,
+    this.side = '',
+    this.level = '',
+    this.isFeint = false,
+    this.specialAction,
+    this.subMoves = const [],
+    this.chain = const [],
+    this.counterName,
+    this.counterCategory,
+    this.counterGlossaryId,
+    this.counterSide = '',
+    this.counterLevel = '',
+  });
+
+  bool get isCombo => subMoves.isNotEmpty;
+  bool get isChain => chain.isNotEmpty;
+  bool get hasCounter => counterName != null;
+
+  BuilderCardData copyWith({
+    String? name,
+    String? category,
+    int? glossaryId,
+    String? side,
+    String? level,
+    bool? isFeint,
+    String? specialAction,
+    List<BuilderCardData>? subMoves,
+    List<BuilderCardData>? chain,
+    Object? counterName = _sentinel,
+    Object? counterCategory = _sentinel,
+    Object? counterGlossaryId = _sentinel,
+    String? counterSide,
+    String? counterLevel,
+  }) {
+    return BuilderCardData(
+      name: name ?? this.name,
+      category: category ?? this.category,
+      glossaryId: glossaryId ?? this.glossaryId,
+      side: side ?? this.side,
+      level: level ?? this.level,
+      isFeint: isFeint ?? this.isFeint,
+      specialAction: specialAction ?? this.specialAction,
+      subMoves: subMoves ?? this.subMoves,
+      chain: chain ?? this.chain,
+      counterName: counterName == _sentinel ? this.counterName : (counterName as String?),
+      counterCategory: counterCategory == _sentinel ? this.counterCategory : (counterCategory as String?),
+      counterGlossaryId: counterGlossaryId == _sentinel ? this.counterGlossaryId : (counterGlossaryId as int?),
+      counterSide: counterSide ?? this.counterSide,
+      counterLevel: counterLevel ?? this.counterLevel,
+    );
+  }
+
+  static const _sentinel = Object();
+}

@@ -29,6 +29,7 @@ class SeriesProvider with ChangeNotifier {
     'assets/jkd-series-loyda-jfk.json',
     'assets/jkd-series-trapping-base.json',
     'assets/jkd-series-footwork.json',
+    'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
   ];
 
   List<JkdSeries> _series = [];
@@ -578,5 +579,11 @@ class SeriesProvider with ChangeNotifier {
   /// Get today's assignment details (program, day, series)
   Future<Map<String, dynamic>?> getTodaysAssignment() async {
     return await _programService.getTodaysAssignment();
+  }
+
+  /// Check if a specific series has been completed today
+  bool isSeriesCompletedToday(int seriesId) {
+    if (_activeProgram == null) return false;
+    return _activeProgram!.todaysSeriesCompletionCounts.containsKey(seriesId);
   }
 }

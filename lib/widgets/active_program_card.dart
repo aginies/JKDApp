@@ -150,7 +150,10 @@ class ActiveProgramCard extends StatelessWidget {
                   final displayTitles = <String>[];
                   for (final s in seriesList) {
                     final matchingAssignment = currentDay.seriesAssignments
-                        ?.firstWhere((a) => a.seriesId == s.id);
+                        ?.firstWhere(
+                          (a) => a.seriesId == s.id,
+                          orElse: () => SeriesAssignment(seriesId: s.id!),
+                        );
                     if (matchingAssignment?.itemRange != null) {
                       displayTitles.add(
                         '${s.title} (${matchingAssignment!.itemRange})',
@@ -159,7 +162,12 @@ class ActiveProgramCard extends StatelessWidget {
                       displayTitles.add(s.title);
                     }
                   }
-                  todayText += displayTitles.join(', ');
+
+                  if (displayTitles.isEmpty) {
+                    todayText += LocalizationService.translate('nothing', lang);
+                  } else {
+                    todayText += displayTitles.join(', ');
+                  }
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,35 +182,40 @@ class ActiveProgramCard extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (seriesList.isEmpty) return;
+                          onPressed: seriesList.isEmpty
+                              ? null
+                              : () {
+                                  if (seriesList.length == 1) {
+                                    // Direct navigation for single series
+                                    final s = seriesList.first;
+                                    final range = currentDay.seriesAssignments
+                                        ?.firstWhere(
+                                          (a) => a.seriesId == s.id,
+                                          orElse: () =>
+                                              SeriesAssignment(seriesId: s.id!),
+                                        )
+                                        .itemRange;
 
-                            if (seriesList.length == 1) {
-                              // Direct navigation for single series
-                              final s = seriesList.first;
-                              final range = currentDay.seriesAssignments
-                                  ?.firstWhere((a) => a.seriesId == s.id)
-                                  .itemRange;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SeriesDetailScreen(
-                                    series: s,
-                                    itemRange: range,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              // Show selection dialog for multiple series
-                              _showSeriesSelection(
-                                context,
-                                seriesList,
-                                currentDay,
-                                lang,
-                              );
-                            }
-                          },
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SeriesDetailScreen(
+                                              series: s,
+                                              itemRange: range,
+                                            ),
+                                      ),
+                                    );
+                                  } else {
+                                    // Show selection dialog for multiple series
+                                    _showSeriesSelection(
+                                      context,
+                                      seriesList,
+                                      currentDay,
+                                      lang,
+                                    );
+                                  }
+                                },
                           icon: const Icon(Icons.play_arrow),
                           label: Text(
                             LocalizationService.translate('start', lang),
@@ -253,7 +266,10 @@ class ActiveProgramCard extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final s = seriesList[index];
                     final range = day.seriesAssignments
-                        ?.firstWhere((a) => a.seriesId == s.id)
+                        ?.firstWhere(
+                          (a) => a.seriesId == s.id,
+                          orElse: () => SeriesAssignment(seriesId: s.id!),
+                        )
                         .itemRange;
 
                     return ListTile(

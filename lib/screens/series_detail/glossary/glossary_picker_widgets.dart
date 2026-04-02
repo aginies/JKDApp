@@ -52,34 +52,38 @@ class GlossaryPickerWidgets {
   static Widget sideButtonWithArrow(
     String label,
     String side,
+    String currentSide,
     Color color,
     VoidCallback onPressed,
     String lang,
     int id,
   ) {
+    final bool isSelected = currentSide == side;
     IconData icon = side == 'L' ? Icons.arrow_back : Icons.arrow_forward;
 
-    return ActionChip(
-      onPressed: onPressed,
+    return ChoiceChip(
+      onSelected: (val) => onPressed(),
+      selected: isSelected,
+      selectedColor: color.withValues(alpha: 0.7),
       backgroundColor: color.withValues(alpha: 0.15),
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (side == 'L') ...[
-            Icon(icon, size: 12, color: color),
+            Icon(icon, size: 12, color: isSelected ? Colors.white : color),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: TextStyle(
               fontSize: 10,
-              color: color,
+              color: isSelected ? Colors.white : color,
               fontWeight: FontWeight.bold,
             ),
           ),
           if (side == 'R') ...[
             const SizedBox(width: 4),
-            Icon(icon, size: 12, color: color),
+            Icon(icon, size: 12, color: isSelected ? Colors.white : color),
           ],
         ],
       ),

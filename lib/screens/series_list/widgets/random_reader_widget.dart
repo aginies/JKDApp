@@ -6,10 +6,21 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
 import '../../../services/series_provider.dart';
 import '../../../services/localization_service.dart';
+import '../../series_detail/dialogs/congratulations_animation.dart';
 
 class RandomReaderWidget extends StatefulWidget {
   final String language;
-  const RandomReaderWidget({super.key, required this.language});
+  final int? forcedSeriesId;
+  final int? maxMoves;
+  final bool showSelection;
+
+  const RandomReaderWidget({
+    super.key,
+    required this.language,
+    this.forcedSeriesId,
+    this.maxMoves,
+    this.showSelection = true,
+  });
 
   @override
   State<RandomReaderWidget> createState() => _RandomReaderWidgetState();
@@ -26,15 +37,18 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   String _currentSeriesTitle = "";
   Timer? _timer;
   final Random _random = Random();
+  int _movesCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _selectedSeriesId = widget.forcedSeriesId?.toString();
     _initTts();
     _initSelection();
   }
 
   void _initSelection() {
+    if (widget.forcedSeriesId != null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<SeriesProvider>(context, listen: false);
       final jkdSeries = provider.getFilteredSeries('JKD Moves');
@@ -74,6 +88,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     setState(() {
       _isPlaying = true;
       _isPaused = false;
+      _movesCount = 0;
       _startRandomReader();
     });
   }
@@ -92,6 +107,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     setState(() {
       _isPlaying = false;
       _isPaused = false;
+      _movesCount = 0;
       _timer?.cancel();
       _currentMoveDisplay = "";
       _currentSeriesTitle = "";
@@ -126,10 +142,9 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
 
   Future<void> _announceSeries() async {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final jkdSeries = provider.getFilteredSeries('JKD Moves');
-    final targetSeries = jkdSeries.firstWhere(
+    final targetSeries = provider.series.firstWhere(
       (s) => s.id.toString() == _selectedSeriesId,
-      orElse: () => jkdSeries.first,
+      orElse: () => provider.series.first,
     );
 
     setState(() {
@@ -148,12 +163,23 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     if (!_isPlaying || _isPaused || _selectedSeriesId == null) return;
 
     final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final jkdSeries = provider.getFilteredSeries('JKD Moves');
-
-    final targetSeries = jkdSeries.firstWhere(
+    final targetSeries = provider.series.firstWhere(
       (s) => s.id.toString() == _selectedSeriesId,
-      orElse: () => jkdSeries.first,
+      orElse: () => provider.series.first,
     );
+
+    // Auto-switch guard if in forced mode with 80 moves
+    if (widget.forcedSeriesId != null && widget.maxMoves == 80) {
+      if (_movesCount < 40) {
+        if (_selectedGuard != 'L') {
+          setState(() => _selectedGuard = 'L');
+        }
+      } else {
+        if (_selectedGuard != 'R') {
+          setState(() => _selectedGuard = 'R');
+        }
+      }
+    }
 
     final availableMoves = targetSeries.moves
         .where((m) => m.side == _selectedGuard)
@@ -161,6 +187,23 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
 
     if (availableMoves.isEmpty) {
       _stop();
+      return;
+    }
+
+    // Stop if maxMoves reached
+    if (widget.maxMoves != null && _movesCount >= widget.maxMoves!) {
+      _stop();
+      // Record series completion if in forced mode
+      if (widget.forcedSeriesId != null && mounted) {
+        final provider = Provider.of<SeriesProvider>(context, listen: false);
+        final completionInfo = await provider.recordSeriesCompletion(
+          widget.forcedSeriesId!,
+        );
+        if (mounted) {
+          final dayDone = completionInfo?['day_complete'] == true;
+          CongratulationsAnimation.show(context, isDayComplete: dayDone);
+        }
+      }
       return;
     }
 
@@ -178,6 +221,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     }
 
     setState(() {
+      _movesCount++;
       _currentSeriesTitle = targetSeries.title;
       String translatedName = move.getTranslation(widget.language);
       if (translatedName.isEmpty) {
@@ -242,13 +286,23 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
               ),
               const Spacer(),
               if (!_isPlaying)
-                IconButton(
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.green,
-                    size: 32,
-                  ),
-                  onPressed: _play,
+                Builder(
+                  builder: (context) {
+                    bool isDone = false;
+                    if (widget.forcedSeriesId != null) {
+                      isDone = provider.isSeriesCompletedToday(
+                        widget.forcedSeriesId!,
+                      );
+                    }
+                    return IconButton(
+                      icon: Icon(
+                        Icons.play_arrow,
+                        color: isDone ? Colors.grey : Colors.green,
+                        size: 32,
+                      ),
+                      onPressed: isDone ? null : _play,
+                    );
+                  },
                 )
               else ...[
                 IconButton(
@@ -267,132 +321,161 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
             ],
           ),
           const Divider(),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.language == 'fr' ? 'Série' : 'Series',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
+          if (widget.showSelection)
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.language == 'fr' ? 'Série' : 'Series',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedSeriesId,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.blue.withValues(alpha: 0.2),
+                      DropdownButton<String>(
+                        value: _selectedSeriesId,
+                        isExpanded: true,
+                        underline: Container(
+                          height: 1,
+                          color: Colors.blue.withValues(alpha: 0.2),
+                        ),
+                        items: jkdSeries
+                            .map(
+                              (s) => DropdownMenuItem(
+                                value: s.id.toString(),
+                                child: Text(
+                                  s.title,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (_isPlaying && !_isPaused)
+                            ? null
+                            : (val) => setState(() => _selectedSeriesId = val!),
                       ),
-                      items: jkdSeries
-                          .map(
-                            (s) => DropdownMenuItem(
-                              value: s.id.toString(),
-                              child: Text(
-                                s.title,
-                                overflow: TextOverflow.ellipsis,
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.language == 'fr' ? 'Garde' : 'Guard',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      DropdownButton<String>(
+                        value: _selectedGuard,
+                        isExpanded: true,
+                        underline: Container(
+                          height: 1,
+                          color: Colors.blue.withValues(alpha: 0.2),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'L',
+                            child: Text(
+                              LocalizationService.translate(
+                                'left',
+                                widget.language,
                               ),
                             ),
-                          )
-                          .toList(),
-                      onChanged: (_isPlaying && !_isPaused)
-                          ? null
-                          : (val) => setState(() => _selectedSeriesId = val!),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.language == 'fr' ? 'Garde' : 'Guard',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedGuard,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.blue.withValues(alpha: 0.2),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'L',
-                          child: Text(
-                            LocalizationService.translate(
-                              'left',
-                              widget.language,
+                          ),
+                          DropdownMenuItem(
+                            value: 'R',
+                            child: Text(
+                              LocalizationService.translate(
+                                'right',
+                                widget.language,
+                              ),
                             ),
                           ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'R',
-                          child: Text(
-                            LocalizationService.translate(
-                              'right',
-                              widget.language,
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (_isPlaying && !_isPaused)
-                          ? null
-                          : (val) => setState(() => _selectedGuard = val!),
-                    ),
-                  ],
+                        ],
+                        onChanged: (_isPlaying && !_isPaused)
+                            ? null
+                            : (val) => setState(() => _selectedGuard = val!),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.language == 'fr' ? 'Délai' : 'Delay',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.language == 'fr' ? 'Délai' : 'Delay',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      DropdownButton<double>(
+                        value: _delaySeconds,
+                        isExpanded: true,
+                        underline: Container(
+                          height: 1,
+                          color: Colors.blue.withValues(alpha: 0.2),
+                        ),
+                        items: [0.6, 1.0, 1.5, 2.0, 2.5]
+                            .map(
+                              (d) => DropdownMenuItem(
+                                value: d,
+                                child: Text('${d}s'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (_isPlaying && !_isPaused)
+                            ? null
+                            : (val) => setState(() => _delaySeconds = val!),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            // Progress bar when selection is hidden (forced mode)
+            if (widget.maxMoves != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: _movesCount / widget.maxMoves!,
+                      backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.blue,
                       ),
                     ),
-                    DropdownButton<double>(
-                      value: _delaySeconds,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.blue.withValues(alpha: 0.2),
-                      ),
-                      items: [0.6, 1.0, 1.5, 2.0, 2.5]
-                          .map(
-                            (d) => DropdownMenuItem(
-                              value: d,
-                              child: Text('${d}s'),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (_isPlaying && !_isPaused)
-                          ? null
-                          : (val) => setState(() => _delaySeconds = val!),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${((_movesCount / widget.maxMoves!) * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
-          ),
+          ],
           if (_currentMoveDisplay.isNotEmpty) ...[
             const SizedBox(height: 20),
             Container(

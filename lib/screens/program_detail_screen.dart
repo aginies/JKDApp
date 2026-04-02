@@ -8,11 +8,13 @@ import 'package:file_picker/file_picker.dart';
 import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
+import '../models/series.dart';
 import '../services/series_provider.dart';
 import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import '../widgets/program_calendar_widget.dart';
 import 'program_create_screen.dart';
+import 'series_detail_screen.dart';
 
 class ProgramDetailScreen extends StatefulWidget {
   final TrainingProgram program;
@@ -572,15 +574,40 @@ class _DayCardState extends State<_DayCard> {
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           leading: Icon(leadingIcon, color: iconColor),
-          title: Text(
-            widget.day.isRestDay
-                ? '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}: ${LocalizationService.translate('rest_day', widget.lang)}'
-                : '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: widget.isCurrentDay
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
+          title: Row(
+            children: [
+              Text(
+                widget.day.isRestDay
+                    ? '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}: ${LocalizationService.translate('rest_day', widget.lang)}'
+                    : '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: widget.isCurrentDay
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              if (widget.isCompleted) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'DONE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           subtitle: widget.day.notes != null
               ? Text(
@@ -601,42 +628,165 @@ class _DayCardState extends State<_DayCard> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: widget.day.seriesAssignments!.map((assignment) {
-                    final series = provider.series.firstWhere(
-                      (s) => s.id == assignment.seriesId,
-                      orElse: () => provider.series.first,
-                    );
+                  children: [
+                    ...widget.day.seriesAssignments!.map((assignment) {
+                      final series = provider.series.firstWhere(
+                        (s) => s.id == assignment.seriesId,
+                        orElse: () => provider.series.first,
+                      );
 
-                    // Build display text with range if available
-                    final displayText = assignment.itemRange != null
-                        ? '${series.title} (${assignment.itemRange})'
-                        : series.title;
+                      // Build display text with range if available
+                      final displayText = assignment.itemRange != null
+                          ? '${series.title} (${assignment.itemRange})'
+                          : series.title;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.fitness_center,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              displayText,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.fitness_center,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.secondary,
                             ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                displayText,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    if (widget.isCurrentDay) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final List<JkdSeries> seriesList = [];
+                            for (final sa in widget.day.seriesAssignments!) {
+                              final matching = provider.series.firstWhere(
+                                (s) => s.id == sa.seriesId,
+                                orElse: () => JkdSeries(
+                                  id: sa.seriesId,
+                                  title: 'Unknown',
+                                  category: 'Other',
+                                  moves: [],
+                                ),
+                              );
+                              if (matching.title != 'Unknown') {
+                                seriesList.add(matching);
+                              }
+                            }
+
+                            if (seriesList.isEmpty) return;
+
+                            if (seriesList.length == 1) {
+                              final s = seriesList.first;
+                              final range = widget.day.seriesAssignments!
+                                  .firstWhere((a) => a.seriesId == s.id)
+                                  .itemRange;
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SeriesDetailScreen(
+                                    series: s,
+                                    itemRange: range,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              _showSeriesSelection(
+                                context,
+                                seriesList,
+                                widget.day,
+                                widget.lang,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.play_arrow),
+                          label: Text(
+                            LocalizationService.translate('start', widget.lang),
                           ),
-                        ],
+                        ),
                       ),
-                    );
-                  }).toList(),
+                    ],
+                  ],
                 ),
               ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showSeriesSelection(
+    BuildContext context,
+    List<JkdSeries> seriesList,
+    ProgramDay day,
+    String lang,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                LocalizationService.translate('select_series', lang),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: seriesList.length,
+                  itemBuilder: (context, index) {
+                    final s = seriesList[index];
+                    final range = day.seriesAssignments
+                        ?.firstWhere(
+                          (a) => a.seriesId == s.id,
+                          orElse: () => SeriesAssignment(seriesId: s.id!),
+                        )
+                        .itemRange;
+
+                    return ListTile(
+                      leading: const Icon(Icons.fitness_center),
+                      title: Text(s.title),
+                      subtitle: range != null
+                          ? Text(
+                              '${LocalizationService.translate('items_range', lang)}: $range',
+                            )
+                          : null,
+                      onTap: () {
+                        Navigator.pop(context); // Close bottom sheet
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                SeriesDetailScreen(series: s, itemRange: range),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }
