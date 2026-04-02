@@ -82,6 +82,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       GlobalKey<AnimatedListState>();
   final ScrollController _movesScrollController = ScrollController();
   Timer? _scrollTimer;
+  bool _isFullscreen = false;
 
   // Buffered move waiting for simultaneous merge (when + is pressed)
   Move? _pendingSimultaneousMove;
@@ -1895,13 +1896,20 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     return Scaffold(
-      floatingActionButton: _isEditing
+      floatingActionButton: _isFullscreen
           ? FloatingActionButton(
-              onPressed: _showEditHelpDialog,
-              child: const Icon(Icons.help_outline),
+              heroTag: 'exit_fullscreen',
+              tooltip: LocalizationService.translate('exit_fullscreen', lang),
+              onPressed: () => setState(() => _isFullscreen = false),
+              child: const Icon(Icons.fullscreen_exit),
             )
-          : null,
-      appBar: _currentTrainingOptions != null
+          : (_isEditing
+              ? FloatingActionButton(
+                  onPressed: _showEditHelpDialog,
+                  child: const Icon(Icons.help_outline),
+                )
+              : null),
+      appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(
               title: Row(
@@ -1951,6 +1959,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       'training_mode',
                       lang,
                     ),
+                  ),
+                if (!_isEditing && widget.series != null)
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen),
+                    onPressed: () => setState(() => _isFullscreen = true),
+                    tooltip: LocalizationService.translate('fullscreen', lang),
                   ),
                 if (_isEditing)
                   IconButton(
@@ -2049,7 +2063,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             ),
             child: Column(
               children: [
-                if (_trainingController.isTraining)
+                if (_trainingController.isTraining && !_isFullscreen)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -2223,27 +2237,25 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         ],
                       ),
                   ],
-                ] else ...[
+                ],
+                if (!_isEditing && !_isFullscreen) ...[
                   Wrap(
                     spacing: 8,
                     children: [
                       Chip(
-                        label: Text(
-                          '${LocalizationService.translate('category', lang)}: $_selectedCategory',
-                        ),
+                        label: Text(_selectedCategory),
                       ),
                       if (_selectedCategory != 'JKD Moves')
                         Chip(
-                          label: Text(
-                            '${LocalizationService.translate('type', lang)}: $_selectedType',
-                          ),
+                          label: Text(_selectedType),
                         ),
                     ],
                   ),
                   const SizedBox(height: 8),
                 ],
-                SizedBox(
-                  height: 48,
+                if (!_isFullscreen)
+                  SizedBox(
+                    height: 48,
                   child: Row(
                     children: [
                       const Expanded(child: Divider()),
@@ -2294,9 +2306,15 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           },
                           children: _buildMoveListTiles(lang),
                         )
-                      : ListView(
-                          controller: _movesScrollController,
-                          children: _buildMoveListTiles(lang),
+                      : InteractiveViewer(
+                          panEnabled: false, // Standard scroll handles vertical movement
+                          scaleEnabled: Platform.isAndroid || Platform.isIOS,
+                          minScale: 0.4,
+                          maxScale: 3.0,
+                          child: ListView(
+                            controller: _movesScrollController,
+                            children: _buildMoveListTiles(lang),
+                          ),
                         ),
                 ),
               ],
