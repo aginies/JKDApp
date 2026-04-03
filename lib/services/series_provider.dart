@@ -12,6 +12,7 @@ import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
 import '../services/training_program_service.dart';
+import '../services/usage_statistics_service.dart';
 import '../utils/translation_utils.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
@@ -53,6 +54,7 @@ class SeriesProvider with ChangeNotifier {
 
   final DatabaseService _dbService = DatabaseService();
   final TrainingProgramService _programService = TrainingProgramService();
+  final UsageStatisticsService _usageService = UsageStatisticsService();
 
   List<JkdSeries> get series => _series;
   List<TrainingProgram> get allPrograms => _allPrograms;
@@ -143,6 +145,7 @@ class SeriesProvider with ChangeNotifier {
     await _initGalleryDirectories();
     await loadGlossary();
     await loadSeries();
+    await _usageService.init(_series);
     await loadAllPrograms();
     await loadActiveProgram();
   }
@@ -249,6 +252,7 @@ class SeriesProvider with ChangeNotifier {
     LoggingService.log('Loading series from database...');
     _filteredCache.clear();
     _series = await _dbService.getAllSeries();
+    await _usageService.refresh(_series);
     _isLoading = false;
     notifyListeners();
     LoggingService.log('Loaded ${_series.length} series.');

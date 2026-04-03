@@ -286,15 +286,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     final result = await Navigator.of(context).push<Move>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (ctx) => Scaffold(
-          body: SafeArea(
-            child: AdvancedComboBuilder(
-              initialMove: editIndex != null ? _moves[editIndex] : null,
-              onFinish: (move) => Navigator.of(ctx).pop(move),
-              onCancel: () => Navigator.of(ctx).pop(),
+        builder: (ctx) {
+          final lang = Provider.of<SeriesProvider>(ctx, listen: false).language;
+          return Scaffold(
+            body: SafeArea(
+              child: AdvancedComboBuilder(
+                initialMove: editIndex != null ? _moves[editIndex] : null,
+                onFinish: (move) => Navigator.of(ctx).pop(move),
+                onCancel: () => Navigator.of(ctx).pop(),
+              ),
             ),
-          ),
-        ),
+            floatingActionButton: FloatingActionButton(
+              heroTag: 'combo_builder_help',
+              onPressed: () => EditHelpDialog.show(ctx, lang),
+              child: const Icon(Icons.help_outline),
+            ),
+          );
+        },
       ),
     );
     if (result != null && mounted) {
@@ -484,11 +492,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     }
   }
 
-  void _showEditHelpDialog() {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    EditHelpDialog.show(context, lang);
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
@@ -500,12 +503,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               onPressed: () => setState(() => _isFullscreen = false),
               child: const Icon(Icons.fullscreen_exit),
             )
-          : (_isEditing
-                ? FloatingActionButton(
-                    onPressed: _showEditHelpDialog,
-                    child: const Icon(Icons.help_outline),
-                  )
-                : null),
+          : null,
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
           : AppBar(

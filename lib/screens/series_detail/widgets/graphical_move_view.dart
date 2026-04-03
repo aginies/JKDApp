@@ -339,7 +339,9 @@ class GraphicalMoveView {
                           if (move.side.isNotEmpty)
                             MoveDisplayWidgets.sideCircle(
                               LocalizationService.translate(
-                                move.side == 'L' ? 'left' : 'right',
+                                move.side == 'L'
+                                    ? 'left'
+                                    : (move.side == 'R' ? 'right' : 'mid'),
                                 lang,
                               ).substring(0, 1),
                               move.side,

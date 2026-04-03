@@ -518,43 +518,72 @@ class GlossaryUIBuilder {
     final List<Widget> controls = [];
 
     if (hasDirection) {
-      // Directional controls with arrow
-      controls.add(
-        GlossaryPickerWidgets.pickerSideButton(
-          LocalizationService.translate('left', lang),
-          'L',
-          side,
-          Colors.blue,
-          id,
-          () {
-            setState(() {
-              pickerState?.setPendingActionItem(id);
-              pickerState?.setSelectedSide(id, 'L');
-              onActivateGlossaryItem?.call();
-            });
-          },
-          lang,
-          withArrow: true,
-        ),
-      );
-      controls.add(
-        GlossaryPickerWidgets.pickerSideButton(
-          LocalizationService.translate('right', lang),
-          'R',
-          side,
-          Colors.red,
-          id,
-          () {
-            setState(() {
-              pickerState?.setPendingActionItem(id);
-              pickerState?.setSelectedSide(id, 'R');
-              onActivateGlossaryItem?.call();
-            });
-          },
-          lang,
-          withArrow: true,
-        ),
-      );
+      final bool hasLeft = item['possible_direction'].contains('L');
+      final bool hasMid = item['possible_direction'].contains('M');
+      final bool hasRight = item['possible_direction'].contains('R');
+
+      if (hasLeft) {
+        controls.add(
+          GlossaryPickerWidgets.pickerSideButton(
+            LocalizationService.translate('left', lang),
+            'L',
+            side,
+            Colors.blue,
+            id,
+            () {
+              setState(() {
+                pickerState?.setPendingActionItem(id);
+                pickerState?.setSelectedSide(id, 'L');
+                onActivateGlossaryItem?.call();
+              });
+            },
+            lang,
+            withArrow: true,
+          ),
+        );
+      }
+
+      if (hasMid) {
+        controls.add(
+          GlossaryPickerWidgets.pickerSideButton(
+            LocalizationService.translate('mid', lang),
+            'M',
+            side,
+            Colors.green,
+            id,
+            () {
+              setState(() {
+                pickerState?.setPendingActionItem(id);
+                pickerState?.setSelectedSide(id, 'M');
+                onActivateGlossaryItem?.call();
+              });
+            },
+            lang,
+            withArrow: false,
+          ),
+        );
+      }
+
+      if (hasRight) {
+        controls.add(
+          GlossaryPickerWidgets.pickerSideButton(
+            LocalizationService.translate('right', lang),
+            'R',
+            side,
+            Colors.red,
+            id,
+            () {
+              setState(() {
+                pickerState?.setPendingActionItem(id);
+                pickerState?.setSelectedSide(id, 'R');
+                onActivateGlossaryItem?.call();
+              });
+            },
+            lang,
+            withArrow: true,
+          ),
+        );
+      }
     } else if (category == 'move') {
       // Simple ADD button for moves
       controls.add(

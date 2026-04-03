@@ -61,7 +61,7 @@
   ],
   "packs": [
     {"name": "Pak Sao", "translations": {"en": "Slapping hand", "fr": "Gifler with la main"}, "possible_type_attack": "both", "possible_level": "H,M", "removal": {}},
-    {"name": "Parry Nan Tek", "translations": {"en": "Pack + Nan Tek", "fr": "Pack + coup pieds latéral"}, "possible_type_attack": "both", "possible_level": "H", "removal": {}},
+    {"name": "Parry", "translations": {"en": "Parry", "fr": "Paré le coup"}, "possible_type_attack": "both", "possible_level": "H,M,L", "removal": {}},
     {"name": "Shoulder Roll", "translations": {"en": "Shoulder roll", "fr": "Rotation d'épaule"}, "possible_type_attack": "both", "possible_level": "H", "removal": {}},
     {"name": "Insinida", "translations": {"en": "Insinida (Diagonal entry)", "fr": "Insinida (Entrée diagonale)"}, "possible_type_attack": "open", "possible_level": "H,M", "removal": {}},
     {"name": "Inside Wedge", "translations": {"en": "Pack Insidge wedge", "fr": "Pack interieur"}, "possible_type_attack": "open", "possible_level": "H", "removal": {}},
@@ -111,7 +111,7 @@
     {"name": "Toy Ma", "translations": {"en": "Move back", "fr": "Reculer"}, "possible_level": "", "removal": {}},
     {"name": "Toy Gerk", "translations": {"en": "Move the leg Back", "fr": "Reculer jambe en arrière"}, "possible_level": "", "removal": {}},
     {"name": "Lateral step", "translations": {"en": "Lateral step", "fr": "Déplacement Latéral"}, "possible_direction": "L,R", "possible_level": "", "removal": {}},
-    {"name": "Jab Step 3 Ways", "translations": {"en": "Step 3 ways", "fr": "Les 3 voies"}, "possible_direction": "L,R", "possible_level": "", "removal": {}}
+    {"name": "Jab Step 3 Ways", "translations": {"en": "Step 3 ways", "fr": "Les 3 voies"}, "possible_direction": "L,M,R", "possible_level": "", "removal": {}}
   ],
   "general": [
     {"name": "Kwoon", "translations": {"en": "School, gym", "fr": "École, gymnase"}, "possible_level": "", "removal": {}},

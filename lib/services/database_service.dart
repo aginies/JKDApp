@@ -49,7 +49,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 27,
+      version: 28,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -375,6 +375,15 @@ class DatabaseService {
       await db.delete('training_programs', where: 'is_system = 1');
       await _seedTrainingPrograms(db);
       debugPrint('Migration v27: Re-seeded system series and programs');
+    }
+
+    if (oldVersion < 28) {
+      // Re-seed glossary to include M (Middle) direction for Lateral step and Jab Step 3 Ways
+      await db.delete('glossary');
+      await _seedGlossary(db);
+      debugPrint(
+        'Migration v28: Re-seeded glossary for Middle direction update',
+      );
     }
   }
 

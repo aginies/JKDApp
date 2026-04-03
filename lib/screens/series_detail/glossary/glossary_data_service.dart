@@ -4,6 +4,7 @@
 import 'dart:convert';
 import '../../../models/move.dart';
 import '../../../services/database_service.dart';
+import '../../../services/usage_statistics_service.dart';
 import '../state/picker_state.dart';
 
 class GlossaryDataService {
@@ -31,6 +32,21 @@ class GlossaryDataService {
 
     // Parse and cache
     final parsed = _parseTranslations(items);
+
+    // Sort by usage count
+    final usageService = UsageStatisticsService();
+    parsed.sort((a, b) {
+      final countA = usageService.getCount(a['name'] ?? '');
+      final countB = usageService.getCount(b['name'] ?? '');
+      if (countA != countB) {
+        return countB.compareTo(countA); // Higher count first
+      }
+      // If counts are equal, preserve original position
+      final posA = a['position'] as int? ?? 0;
+      final posB = b['position'] as int? ?? 0;
+      return posA.compareTo(posB);
+    });
+
     _cache[category] = parsed;
 
     // Apply filter if needed

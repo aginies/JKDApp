@@ -184,7 +184,7 @@ class MoveListDisplayWidget {
             ),
             MoveDisplayWidgets.sideCircle(
               LocalizationService.translate(
-                sub.side == 'L' ? 'left' : 'right',
+                sub.side == 'L' ? 'left' : (sub.side == 'R' ? 'right' : 'mid'),
                 language,
               ).substring(0, 1),
               sub.side,
@@ -340,7 +340,11 @@ class MoveListDisplayWidget {
                               (m.counterSide != null &&
                                       m.counterSide!.isNotEmpty)
                                   ? LocalizationService.translate(
-                                      m.counterSide == 'L' ? 'left' : 'right',
+                                      m.counterSide == 'L'
+                                          ? 'left'
+                                          : (m.counterSide == 'R'
+                                                ? 'right'
+                                                : 'mid'),
                                       language,
                                     ).substring(0, 1)
                                   : '',
@@ -711,7 +715,10 @@ class MoveListDisplayWidget {
                                                                   sub.counterSide ==
                                                                           'L'
                                                                       ? 'left'
-                                                                      : 'right',
+                                                                      : (sub.counterSide ==
+                                                                                'R'
+                                                                            ? 'right'
+                                                                            : 'mid'),
                                                                   language,
                                                                 ).substring(
                                                                   0,
@@ -832,7 +839,10 @@ class MoveListDisplayWidget {
                                                 ? LocalizationService.translate(
                                                     moves[i].counterSide == 'L'
                                                         ? 'left'
-                                                        : 'right',
+                                                        : (moves[i].counterSide ==
+                                                                  'R'
+                                                              ? 'right'
+                                                              : 'mid'),
                                                     language,
                                                   ).substring(0, 1)
                                                 : '',

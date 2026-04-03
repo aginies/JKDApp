@@ -584,7 +584,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             if (data.side.isNotEmpty)
                               MoveDisplayWidgets.sideCircle(
                                 LocalizationService.translate(
-                                  data.side == 'L' ? 'left' : 'right',
+                                  data.side == 'L'
+                                      ? 'left'
+                                      : (data.side == 'R' ? 'right' : 'mid'),
                                   lang,
                                 ).substring(0, 1),
                                 data.side,

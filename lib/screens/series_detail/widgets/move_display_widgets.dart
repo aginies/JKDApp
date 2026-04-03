@@ -47,7 +47,6 @@ class MoveDisplayWidgets {
     ),
   );
 
-  /// Side indicator circle (Left/Right)
   static Widget sideCircle(
     String label,
     String sideCode, {
@@ -55,12 +54,16 @@ class MoveDisplayWidgets {
     Color? textColor,
   }) {
     if (sideCode.isEmpty) return const SizedBox.shrink();
+    Color bgColor = Colors.blue;
+    if (sideCode == 'R') {
+      bgColor = Colors.red;
+    } else if (sideCode == 'M') {
+      bgColor = Colors.green;
+    }
+
     return Container(
       padding: EdgeInsets.all(mini ? 5 : 6),
-      decoration: BoxDecoration(
-        color: sideCode == 'L' ? Colors.blue : Colors.red,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
       child: Text(
         label.substring(0, 1),
         style: TextStyle(
