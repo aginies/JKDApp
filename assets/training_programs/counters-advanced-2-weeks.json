@@ -9,7 +9,10 @@
       {
         "day_number": 1,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-8" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-8"
+          }
         ],
         "notes": "Review beginner Jab-Cross counters. Ensure smooth flow and balance.",
         "is_rest_day": 0
@@ -17,7 +20,10 @@
       {
         "day_number": 2,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "9-13" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "9-13"
+          }
         ],
         "notes": "COUNTERS 9-13 (Jab-Cross): Advanced entries including Shoulder Stops, Insinida, and Bob Wave. Full series complete.",
         "is_rest_day": 0
@@ -25,7 +31,10 @@
       {
         "day_number": 3,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          }
         ],
         "notes": "FULL SERIES: Flow through all 13 Jab-Cross defensive responses.",
         "is_rest_day": 0
@@ -39,7 +48,10 @@
       {
         "day_number": 5,
         "assignments": [
-          { "title": "Contre Jab Hook", "range": "1-8" }
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-8"
+          }
         ],
         "notes": "Review beginner Jab-Hook counters. Focus on closing distance.",
         "is_rest_day": 0
@@ -47,7 +59,10 @@
       {
         "day_number": 6,
         "assignments": [
-          { "title": "Contre Jab Hook", "range": "9-14" }
+          {
+            "title": "Contre Jab Hook",
+            "range": "9-14"
+          }
         ],
         "notes": "COUNTERS 9-14 (Jab-Hook): Added complexity with knee strikes, pull arms, and kicking entries. Intermediate series goal reached.",
         "is_rest_day": 0
@@ -55,7 +70,10 @@
       {
         "day_number": 7,
         "assignments": [
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "ADVANCED FLOW: Integration of all 14 Jab-Hook defensive responses.",
         "is_rest_day": 0
@@ -69,7 +87,10 @@
       {
         "day_number": 9,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          }
         ],
         "notes": "Increased volume. Focus on precision and non-telegraphed ripostes.",
         "is_rest_day": 0
@@ -77,7 +98,10 @@
       {
         "day_number": 10,
         "assignments": [
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "Increased volume. Ensure you are moving 'through' the opponent with confidence.",
         "is_rest_day": 0
@@ -85,8 +109,14 @@
       {
         "day_number": 11,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" },
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          },
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "Combined series. Practice responding to diverse attack lines.",
         "is_rest_day": 0
@@ -94,8 +124,14 @@
       {
         "day_number": 12,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" },
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          },
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "Endurance day. High repetitions of all 27 intermediate counters.",
         "is_rest_day": 0
@@ -103,8 +139,14 @@
       {
         "day_number": 13,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" },
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          },
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "Speed training. Respond with explosive timing to imaginary attacks.",
         "is_rest_day": 0
@@ -112,12 +154,22 @@
       {
         "day_number": 14,
         "assignments": [
-          { "title": "Contre Jab Cross", "range": "1-13" },
-          { "title": "Contre Jab Hook", "range": "1-14" }
+          {
+            "title": "Contre Jab Cross",
+            "range": "1-13"
+          },
+          {
+            "title": "Contre Jab Hook",
+            "range": "1-14"
+          }
         ],
         "notes": "Advanced Graduation! Your defensive arsenal is now significantly expanded.",
         "is_rest_day": 0
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

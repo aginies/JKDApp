@@ -3,28 +3,98 @@
     "title": "22 Coups de poings",
     "category": "Jun Fan Gung Fu",
     "moves": [
-      {"name": "Jab", "side": "L"},
-      {"name": "Cross", "side": "R"},
-      {"name": "Body Hook", "side": "R"},
-      {"name": "Body Hook", "side": "L"},
-      {"name": "Uppercut", "side": "R"},
-      {"name": "Uppercut", "side": "L"},
-      {"name": "Hook", "side": "R"},
-      {"name": "Hook", "side": "L"},
-      {"name": "Body Jab", "side": "L"},
-      {"name": "Body Cross", "side": "R"},
-      {"name": "Swing", "side": "R"},
-      {"name": "Swing", "side": "L"},
-      {"name": "OverHead", "side": "R"},
-      {"name": "Uppercut", "side": "L"},
-      {"name": "OverHead", "side": "L"},
-      {"name": "Uppercut", "side": "R"},
-      {"name": "Qua Chuie / cross", "side": "R"},
-      {"name": "Qua Chuie / Jab", "side": "L"},
-      {"name": "Frappes Marteau", "side": "R"},
-      {"name": "Frappes Marteau", "side": "L"},
-      {"name": "overhead poing avant", "side": "R"},
-      {"name": "overhead poing arrière", "side": "L"}
-    ]
+      {
+        "name": "Jab",
+        "side": "L"
+      },
+      {
+        "name": "Cross",
+        "side": "R"
+      },
+      {
+        "name": "Body Hook",
+        "side": "R"
+      },
+      {
+        "name": "Body Hook",
+        "side": "L"
+      },
+      {
+        "name": "Uppercut",
+        "side": "R"
+      },
+      {
+        "name": "Uppercut",
+        "side": "L"
+      },
+      {
+        "name": "Hook",
+        "side": "R"
+      },
+      {
+        "name": "Hook",
+        "side": "L"
+      },
+      {
+        "name": "Body Jab",
+        "side": "L"
+      },
+      {
+        "name": "Body Cross",
+        "side": "R"
+      },
+      {
+        "name": "Swing",
+        "side": "R"
+      },
+      {
+        "name": "Swing",
+        "side": "L"
+      },
+      {
+        "name": "OverHead",
+        "side": "R"
+      },
+      {
+        "name": "Uppercut",
+        "side": "L"
+      },
+      {
+        "name": "OverHead",
+        "side": "L"
+      },
+      {
+        "name": "Uppercut",
+        "side": "R"
+      },
+      {
+        "name": "Qua Chuie / cross",
+        "side": "R"
+      },
+      {
+        "name": "Qua Chuie / Jab",
+        "side": "L"
+      },
+      {
+        "name": "Frappes Marteau",
+        "side": "R"
+      },
+      {
+        "name": "Frappes Marteau",
+        "side": "L"
+      },
+      {
+        "name": "overhead poing avant",
+        "side": "R"
+      },
+      {
+        "name": "overhead poing arrière",
+        "side": "L"
+      }
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

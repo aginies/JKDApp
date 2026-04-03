@@ -9,7 +9,10 @@
       {
         "day_number": 1,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          }
         ],
         "notes": "Review full 3 counts. Focus on max power and speed.",
         "is_rest_day": 0
@@ -17,7 +20,10 @@
       {
         "day_number": 2,
         "assignments": [
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Review full 4 counts. Focus on max power and speed.",
         "is_rest_day": 0
@@ -25,8 +31,14 @@
       {
         "day_number": 3,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Integration day. Switch between series based on distance cues.",
         "is_rest_day": 0
@@ -40,8 +52,14 @@
       {
         "day_number": 5,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Adding Footwork: Step and Slide into 3 Counts, Slide and Step out of 4 Counts.",
         "is_rest_day": 0
@@ -49,8 +67,14 @@
       {
         "day_number": 6,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Adding Footwork: Push Shuffle into 4 Counts, Rock Shuffle during 3 Counts.",
         "is_rest_day": 0
@@ -58,8 +82,14 @@
       {
         "day_number": 7,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Full Integration: All patterns with all footwork from Fundamentals.",
         "is_rest_day": 0
@@ -73,8 +103,14 @@
       {
         "day_number": 9,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "High Volume Speed: Minimum recovery between combinations.",
         "is_rest_day": 0
@@ -82,8 +118,14 @@
       {
         "day_number": 10,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Shadow Boxing: Use 3 and 4 counts as the core of your shadow boxing.",
         "is_rest_day": 0
@@ -91,8 +133,14 @@
       {
         "day_number": 11,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Complex Rhythms: Focus on the transition between hand and foot strikes.",
         "is_rest_day": 0
@@ -100,8 +148,14 @@
       {
         "day_number": 12,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Endurance Flow: Continuous movement and combinations for 3 minute rounds.",
         "is_rest_day": 0
@@ -109,8 +163,14 @@
       {
         "day_number": 13,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Max Effort: Full power and speed for every combination.",
         "is_rest_day": 0
@@ -118,12 +178,22 @@
       {
         "day_number": 14,
         "assignments": [
-          { "title": "3 counts", "range": "1-12" },
-          { "title": "4 counts", "range": "1-14" }
+          {
+            "title": "3 counts",
+            "range": "1-12"
+          },
+          {
+            "title": "4 counts",
+            "range": "1-14"
+          }
         ],
         "notes": "Expert Graduation! You have mastered the core JKD combination system.",
         "is_rest_day": 0
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

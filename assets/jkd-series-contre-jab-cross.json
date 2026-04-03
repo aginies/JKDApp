@@ -112,6 +112,10 @@
         "repetitions": 1,
         "sub_moves_json": "[{\"name\": \"Jab\", \"category\": \"punch\", \"side\": \"L\", \"level\": \"High\", \"counter_name\": \"Pak Sao\", \"counter_category\": \"packs\", \"counter_side\": \"R\", \"counter_level\": \"High\"}, {\"name\": \"Cross (Open)\", \"category\": \"punch\", \"side\": \"R\", \"level\": \"High\", \"counter_name\": \"Bob and Wave\", \"counter_category\": \"packs\", \"counter_side\": \"L\", \"counter_level\": \"High\"}]"
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

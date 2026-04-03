@@ -8,19 +8,27 @@
     "days": [
       {
         "day_number": 1,
-        "series_ids": ["3 counts", "4 counts", "5 counts"],
+        "series_ids": [
+          "3 counts",
+          "4 counts",
+          "5 counts"
+        ],
         "notes": "Foundation review. Warm up with progressive combinations. Quality repetitions only.",
         "is_rest_day": 0
       },
       {
         "day_number": 2,
-        "series_ids": ["6 counts"],
+        "series_ids": [
+          "6 counts"
+        ],
         "notes": "Extended combinations. Maintain power and speed throughout. No lazy techniques.",
         "is_rest_day": 0
       },
       {
         "day_number": 3,
-        "series_ids": ["Loyda JFK"],
+        "series_ids": [
+          "Loyda JFK"
+        ],
         "notes": "Advanced JFK series. Flow, precision, timing - all must be perfect.",
         "is_rest_day": 0
       },
@@ -32,19 +40,28 @@
       },
       {
         "day_number": 5,
-        "series_ids": ["3 counts", "Pendulum"],
+        "series_ids": [
+          "3 counts",
+          "Pendulum"
+        ],
         "notes": "Angle creation with combinations. Every punch from optimal position.",
         "is_rest_day": 0
       },
       {
         "day_number": 6,
-        "series_ids": ["4 counts", "Rock Shuffle"],
+        "series_ids": [
+          "4 counts",
+          "Rock Shuffle"
+        ],
         "notes": "Rhythmic striking. Develop timing and ability to break opponent's rhythm.",
         "is_rest_day": 0
       },
       {
         "day_number": 7,
-        "series_ids": ["5 counts", "Push Shuffle"],
+        "series_ids": [
+          "5 counts",
+          "Push Shuffle"
+        ],
         "notes": "Explosive entries with medium combinations. Close and attack decisively.",
         "is_rest_day": 0
       },
@@ -56,37 +73,55 @@
       },
       {
         "day_number": 9,
-        "series_ids": ["6 counts", "Step and Slide"],
+        "series_ids": [
+          "6 counts",
+          "Step and Slide"
+        ],
         "notes": "Long combinations with fundamental footwork. Don't sacrifice technique for speed yet.",
         "is_rest_day": 0
       },
       {
         "day_number": 10,
-        "series_ids": ["Trapping 9 entrées de base", "3 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "3 counts"
+        ],
         "notes": "Trapping to striking transitions. Feel, control, strike - one fluid motion.",
         "is_rest_day": 0
       },
       {
         "day_number": 11,
-        "series_ids": ["Trapping 9 entrées de base", "4 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "4 counts"
+        ],
         "notes": "Extended trapping combinations. Maintain structure while flowing through ranges.",
         "is_rest_day": 0
       },
       {
         "day_number": 12,
-        "series_ids": ["Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "Counter-fighting mastery. Defense becomes offense instantly.",
         "is_rest_day": 0
       },
       {
         "day_number": 13,
-        "series_ids": ["Loyda JFK", "Pendulum"],
+        "series_ids": [
+          "Loyda JFK",
+          "Pendulum"
+        ],
         "notes": "Advanced JFK with angle work. Every technique maximizes damage potential.",
         "is_rest_day": 0
       },
       {
         "day_number": 14,
-        "series_ids": ["18 Kicks", "Push Shuffle"],
+        "series_ids": [
+          "18 Kicks",
+          "Push Shuffle"
+        ],
         "notes": "All kicks with explosive entry. Perfect your ability to kick while advancing.",
         "is_rest_day": 0
       },
@@ -98,37 +133,57 @@
       },
       {
         "day_number": 16,
-        "series_ids": ["6 counts", "Trapping 9 entrées de base"],
+        "series_ids": [
+          "6 counts",
+          "Trapping 9 entrées de base"
+        ],
         "notes": "Maximum complexity - long combos with trapping integration. Extreme focus required.",
         "is_rest_day": 0
       },
       {
         "day_number": 17,
-        "series_ids": ["Loyda JFK", "18 Kicks"],
+        "series_ids": [
+          "Loyda JFK",
+          "18 Kicks"
+        ],
         "notes": "Complete striking arsenal. Punches and kicks in seamless combinations.",
         "is_rest_day": 0
       },
       {
         "day_number": 18,
-        "series_ids": ["5 counts", "Contre Jab Cross"],
+        "series_ids": [
+          "5 counts",
+          "Contre Jab Cross"
+        ],
         "notes": "Counter with medium combinations. Your response should be overwhelming.",
         "is_rest_day": 0
       },
       {
         "day_number": 19,
-        "series_ids": ["22 Coups de poings", "18 Kicks"],
+        "series_ids": [
+          "22 Coups de poings",
+          "18 Kicks"
+        ],
         "notes": "All techniques review. Every punch and kick drilled to perfection.",
         "is_rest_day": 0
       },
       {
         "day_number": 20,
-        "series_ids": ["3 counts", "4 counts", "5 counts", "6 counts"],
+        "series_ids": [
+          "3 counts",
+          "4 counts",
+          "5 counts",
+          "6 counts"
+        ],
         "notes": "Combination ladder. Flow from 3 to 6 count sequences without stopping.",
         "is_rest_day": 0
       },
       {
         "day_number": 21,
-        "series_ids": ["Pendulum", "Rock Shuffle"],
+        "series_ids": [
+          "Pendulum",
+          "Rock Shuffle"
+        ],
         "notes": "Pure footwork mastery. Your movement should be effortless and unpredictable.",
         "is_rest_day": 0
       },
@@ -140,37 +195,59 @@
       },
       {
         "day_number": 23,
-        "series_ids": ["Loyda JFK", "Trapping 9 entrées de base"],
+        "series_ids": [
+          "Loyda JFK",
+          "Trapping 9 entrées de base"
+        ],
         "notes": "All ranges. From trapping to punching to kicking - complete fighter.",
         "is_rest_day": 0
       },
       {
         "day_number": 24,
-        "series_ids": ["6 counts", "Contre Jab Hook"],
+        "series_ids": [
+          "6 counts",
+          "Contre Jab Hook"
+        ],
         "notes": "Counter hooks with extended combinations. Defensive mastery.",
         "is_rest_day": 0
       },
       {
         "day_number": 25,
-        "series_ids": ["Trapping 9 entrées de base", "18 Kicks", "Pendulum"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "18 Kicks",
+          "Pendulum"
+        ],
         "notes": "Complex integration. Trapping, angle creation, kicking - advanced tactics.",
         "is_rest_day": 0
       },
       {
         "day_number": 26,
-        "series_ids": ["Loyda JFK", "Push Shuffle", "Rock Shuffle"],
+        "series_ids": [
+          "Loyda JFK",
+          "Push Shuffle",
+          "Rock Shuffle"
+        ],
         "notes": "JFK with all footwork patterns. Explosive, rhythmic, unpredictable.",
         "is_rest_day": 0
       },
       {
         "day_number": 27,
-        "series_ids": ["5 counts", "6 counts", "Trapping 9 entrées de base"],
+        "series_ids": [
+          "5 counts",
+          "6 counts",
+          "Trapping 9 entrées de base"
+        ],
         "notes": "Extended sequences with trapping. Your endurance and technique both tested.",
         "is_rest_day": 0
       },
       {
         "day_number": 28,
-        "series_ids": ["Contre Jab Cross", "Contre Jab Hook", "3 counts"],
+        "series_ids": [
+          "Contre Jab Cross",
+          "Contre Jab Hook",
+          "3 counts"
+        ],
         "notes": "All counters with follow-up combinations. Complete defensive system.",
         "is_rest_day": 0
       },
@@ -182,37 +259,63 @@
       },
       {
         "day_number": 30,
-        "series_ids": ["Loyda JFK", "6 counts", "Pendulum"],
+        "series_ids": [
+          "Loyda JFK",
+          "6 counts",
+          "Pendulum"
+        ],
         "notes": "Advanced integration day. JFK precision with long combos and angle work.",
         "is_rest_day": 0
       },
       {
         "day_number": 31,
-        "series_ids": ["Trapping 9 entrées de base", "Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "Defensive mastery. Trap, counter, control. Your defense should be offense.",
         "is_rest_day": 0
       },
       {
         "day_number": 32,
-        "series_ids": ["22 Coups de poings", "18 Kicks", "Push Shuffle"],
+        "series_ids": [
+          "22 Coups de poings",
+          "18 Kicks",
+          "Push Shuffle"
+        ],
         "notes": "All techniques with explosive entry. Complete arsenal drill.",
         "is_rest_day": 0
       },
       {
         "day_number": 33,
-        "series_ids": ["3 counts", "4 counts", "5 counts", "6 counts", "Rock Shuffle"],
+        "series_ids": [
+          "3 counts",
+          "4 counts",
+          "5 counts",
+          "6 counts",
+          "Rock Shuffle"
+        ],
         "notes": "Combination ladder with rhythm. Flow through all lengths with perfect timing.",
         "is_rest_day": 0
       },
       {
         "day_number": 34,
-        "series_ids": ["Loyda JFK", "Trapping 9 entrées de base", "Pendulum"],
+        "series_ids": [
+          "Loyda JFK",
+          "Trapping 9 entrées de base",
+          "Pendulum"
+        ],
         "notes": "Complete fighting system. All ranges, all angles, all tools.",
         "is_rest_day": 0
       },
       {
         "day_number": 35,
-        "series_ids": ["6 counts", "18 Kicks", "Step and Slide"],
+        "series_ids": [
+          "6 counts",
+          "18 Kicks",
+          "Step and Slide"
+        ],
         "notes": "Maximum combinations with kicks and fundamental movement.",
         "is_rest_day": 0
       },
@@ -224,37 +327,65 @@
       },
       {
         "day_number": 37,
-        "series_ids": ["Loyda JFK", "Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "Loyda JFK",
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "JFK with all counters. Attack and defense as one integrated system.",
         "is_rest_day": 0
       },
       {
         "day_number": 38,
-        "series_ids": ["Trapping 9 entrées de base", "5 counts", "6 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "5 counts",
+          "6 counts"
+        ],
         "notes": "Trapping with extended combinations. Your close-range game should be deadly.",
         "is_rest_day": 0
       },
       {
         "day_number": 39,
-        "series_ids": ["Pendulum", "Rock Shuffle", "Push Shuffle", "4 counts"],
+        "series_ids": [
+          "Pendulum",
+          "Rock Shuffle",
+          "Push Shuffle",
+          "4 counts"
+        ],
         "notes": "All footwork with combinations. Movement mastery complete.",
         "is_rest_day": 0
       },
       {
         "day_number": 40,
-        "series_ids": ["22 Coups de poings", "18 Kicks", "Loyda JFK"],
+        "series_ids": [
+          "22 Coups de poings",
+          "18 Kicks",
+          "Loyda JFK"
+        ],
         "notes": "Complete striking review. Every technique honed to perfection.",
         "is_rest_day": 0
       },
       {
         "day_number": 41,
-        "series_ids": ["3 counts", "4 counts", "5 counts", "6 counts", "Trapping 9 entrées de base"],
+        "series_ids": [
+          "3 counts",
+          "4 counts",
+          "5 counts",
+          "6 counts",
+          "Trapping 9 entrées de base"
+        ],
         "notes": "All combinations with trapping. Flow between ranges effortlessly.",
         "is_rest_day": 0
       },
       {
         "day_number": 42,
-        "series_ids": ["Loyda JFK", "Contre Jab Cross", "Contre Jab Hook", "Pendulum"],
+        "series_ids": [
+          "Loyda JFK",
+          "Contre Jab Cross",
+          "Contre Jab Hook",
+          "Pendulum"
+        ],
         "notes": "Advanced tactics. JFK, counters, angles - complete fighting intelligence.",
         "is_rest_day": 0
       },
@@ -266,16 +397,33 @@
       },
       {
         "day_number": 44,
-        "series_ids": ["Trapping 9 entrées de base", "22 Coups de poings", "18 Kicks", "6 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "22 Coups de poings",
+          "18 Kicks",
+          "6 counts"
+        ],
         "notes": "Ultimate integration. All tools, all ranges, maximum complexity. Give everything.",
         "is_rest_day": 0
       },
       {
         "day_number": 45,
-        "series_ids": ["Loyda JFK", "3 counts", "4 counts", "5 counts", "6 counts", "Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "Loyda JFK",
+          "3 counts",
+          "4 counts",
+          "5 counts",
+          "6 counts",
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "Graduation day. Complete JKD arsenal in one session. You've mastered advanced combination fighting. Congratulations!",
         "is_rest_day": 0
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

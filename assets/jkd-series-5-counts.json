@@ -15,7 +15,10 @@
         "repetitions": 1,
         "sub_moves_json": null
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]
-

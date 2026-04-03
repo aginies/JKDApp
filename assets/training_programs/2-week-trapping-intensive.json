@@ -8,19 +8,27 @@
     "days": [
       {
         "day_number": 1,
-        "series_ids": ["Trapping 9 entrées de base"],
+        "series_ids": [
+          "Trapping 9 entrées de base"
+        ],
         "notes": "Foundation day. Master the 9 basic entries before advancing. Focus on structure and angles.",
         "is_rest_day": 0
       },
       {
         "day_number": 2,
-        "series_ids": ["Trapping 9 entrées de base", "3 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "3 counts"
+        ],
         "notes": "Transition from trapping to striking. Flow seamlessly between ranges.",
         "is_rest_day": 0
       },
       {
         "day_number": 3,
-        "series_ids": ["Trapping 9 entrées de base", "Contre Jab Cross"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Contre Jab Cross"
+        ],
         "notes": "Defensive trapping. Trap the attack, then counter. Timing is everything.",
         "is_rest_day": 0
       },
@@ -32,19 +40,28 @@
       },
       {
         "day_number": 5,
-        "series_ids": ["Trapping 9 entrées de base", "4 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "4 counts"
+        ],
         "notes": "Longer combinations from trapping range. Maintain contact while striking.",
         "is_rest_day": 0
       },
       {
         "day_number": 6,
-        "series_ids": ["Trapping 9 entrées de base", "Contre Jab Hook"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Contre Jab Hook"
+        ],
         "notes": "Counter hooks using trapping. Control the elbow, control the punch.",
         "is_rest_day": 0
       },
       {
         "day_number": 7,
-        "series_ids": ["Trapping 9 entrées de base", "22 Coups de poings"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "22 Coups de poings"
+        ],
         "notes": "Week 1 review. Practice all trapping entries, then drill all punches. Integration tomorrow.",
         "is_rest_day": 0
       },
@@ -56,40 +73,62 @@
       },
       {
         "day_number": 9,
-        "series_ids": ["Trapping 9 entrées de base", "5 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "5 counts"
+        ],
         "notes": "Extended trapping sequences. Stay sticky, feel the gaps, exploit the openings.",
         "is_rest_day": 0
       },
       {
         "day_number": 10,
-        "series_ids": ["Trapping 9 entrées de base", "Loyda JFK"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Loyda JFK"
+        ],
         "notes": "Advanced integration. From trapping directly into JFK combinations.",
         "is_rest_day": 0
       },
       {
         "day_number": 11,
-        "series_ids": ["Trapping 9 entrées de base", "18 Kicks"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "18 Kicks"
+        ],
         "notes": "Trapping to kicking. Control arms, attack legs. Unexpected combinations.",
         "is_rest_day": 0
       },
       {
         "day_number": 12,
-        "series_ids": ["Trapping 9 entrées de base", "6 counts"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "6 counts"
+        ],
         "notes": "Maximum complexity. Long combinations maintaining trapping structure throughout.",
         "is_rest_day": 0
       },
       {
         "day_number": 13,
-        "series_ids": ["Trapping 9 entrées de base", "Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "Counter-fighting with trapping. Your defensive game should be formidable now.",
         "is_rest_day": 0
       },
       {
         "day_number": 14,
-        "series_ids": ["Trapping 9 entrées de base"],
+        "series_ids": [
+          "Trapping 9 entrées de base"
+        ],
         "notes": "Final day - pure trapping focus. Repeat until the movements are unconscious. You've completed the intensive!",
         "is_rest_day": 0
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

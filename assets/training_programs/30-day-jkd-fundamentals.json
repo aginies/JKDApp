@@ -8,19 +8,26 @@
     "days": [
       {
         "day_number": 1,
-        "series_ids": ["22 Coups de poings"],
+        "series_ids": [
+          "22 Coups de poings"
+        ],
         "notes": "PHASE 1 - DAY 1: Learn all 22 punches. Focus on proper stance, guard, and straight line principle.",
         "is_rest_day": 0
       },
       {
         "day_number": 2,
-        "series_ids": ["18 Kicks"],
+        "series_ids": [
+          "18 Kicks"
+        ],
         "notes": "PHASE 1 - DAY 2: Learn all 18 kicks. Chamber position, balance, and hip rotation are key.",
         "is_rest_day": 0
       },
       {
         "day_number": 3,
-        "series_ids": ["Step and Slide", "Slide and Step"],
+        "series_ids": [
+          "Step and Slide",
+          "Slide and Step"
+        ],
         "notes": "PHASE 1 - DAY 3: Master both forward and reverse footwork patterns. Stay light on your feet.",
         "is_rest_day": 0
       },
@@ -32,37 +39,52 @@
       },
       {
         "day_number": 5,
-        "series_ids": ["Push Shuffle"],
+        "series_ids": [
+          "Push Shuffle"
+        ],
         "notes": "PHASE 1 - DAY 5: Explosive forward movement. Essential for closing distance.",
         "is_rest_day": 0
       },
       {
         "day_number": 6,
-        "series_ids": ["4 counts"],
+        "series_ids": [
+          "4 counts"
+        ],
         "notes": "PHASE 1 - DAY 6: Practice 4 Counts series. Focus on FIRST 8 COMBINATIONS only for now.",
         "is_rest_day": 0
       },
       {
         "day_number": 7,
-        "series_ids": ["Contre Jab Cross"],
+        "series_ids": [
+          "Contre Jab Cross"
+        ],
         "notes": "PHASE 1 - DAY 7: Counter techniques. Focus on FIRST 6 COUNTERS only. Defense = offense in JKD.",
         "is_rest_day": 0
       },
       {
         "day_number": 8,
-        "series_ids": ["22 Coups de poings", "Step and Slide"],
+        "series_ids": [
+          "22 Coups de poings",
+          "Step and Slide"
+        ],
         "notes": "PHASE 1 - DAY 8: Combine punches with footwork. Start slow, build coordination.",
         "is_rest_day": 0
       },
       {
         "day_number": 9,
-        "series_ids": ["18 Kicks", "Push Shuffle"],
+        "series_ids": [
+          "18 Kicks",
+          "Push Shuffle"
+        ],
         "notes": "PHASE 1 - DAY 9: Kicks with explosive footwork. Perfect your fighting distance.",
         "is_rest_day": 0
       },
       {
         "day_number": 10,
-        "series_ids": ["4 counts", "Contre Jab Cross"],
+        "series_ids": [
+          "4 counts",
+          "Contre Jab Cross"
+        ],
         "notes": "PHASE 1 - DAY 10: Review 4 Counts (first 8) and Contre Jab Cross (first 6). Phase 1 complete!",
         "is_rest_day": 0
       },
@@ -74,37 +96,52 @@
       },
       {
         "day_number": 12,
-        "series_ids": ["Contre Jab Hook"],
+        "series_ids": [
+          "Contre Jab Hook"
+        ],
         "notes": "PHASE 2 - DAY 12: Second counter series. Focus on FIRST 6 COUNTERS only. Different attack angles.",
         "is_rest_day": 0
       },
       {
         "day_number": 13,
-        "series_ids": ["Trapping 9 entrées de base"],
+        "series_ids": [
+          "Trapping 9 entrées de base"
+        ],
         "notes": "PHASE 2 - DAY 13: All 9 trapping entries. Chi Sao fundamentals - feel opponent's energy.",
         "is_rest_day": 0
       },
       {
         "day_number": 14,
-        "series_ids": ["Rock Shuffle"],
+        "series_ids": [
+          "Rock Shuffle"
+        ],
         "notes": "PHASE 2 - DAY 14: Rhythmic footwork. Stay mobile, ready to change direction instantly.",
         "is_rest_day": 0
       },
       {
         "day_number": 15,
-        "series_ids": ["Contre Jab Hook", "Rock Shuffle"],
+        "series_ids": [
+          "Contre Jab Hook",
+          "Rock Shuffle"
+        ],
         "notes": "PHASE 2 - DAY 15: Combine counters (first 6) with rhythmic footwork.",
         "is_rest_day": 0
       },
       {
         "day_number": 16,
-        "series_ids": ["Trapping 9 entrées de base", "Slide and Step"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "Slide and Step"
+        ],
         "notes": "PHASE 2 - DAY 16: Trapping with footwork. Stay mobile while controlling.",
         "is_rest_day": 0
       },
       {
         "day_number": 17,
-        "series_ids": ["22 Coups de poings", "Contre Jab Hook"],
+        "series_ids": [
+          "22 Coups de poings",
+          "Contre Jab Hook"
+        ],
         "notes": "PHASE 2 - DAY 17: Review all punches, practice Contre Jab Hook (first 6).",
         "is_rest_day": 0
       },
@@ -116,13 +153,20 @@
       },
       {
         "day_number": 19,
-        "series_ids": ["18 Kicks", "Trapping 9 entrées de base"],
+        "series_ids": [
+          "18 Kicks",
+          "Trapping 9 entrées de base"
+        ],
         "notes": "PHASE 2 - DAY 19: All kicks, all 9 trapping entries. Build your arsenal.",
         "is_rest_day": 0
       },
       {
         "day_number": 20,
-        "series_ids": ["Contre Jab Cross", "Contre Jab Hook", "Rock Shuffle"],
+        "series_ids": [
+          "Contre Jab Cross",
+          "Contre Jab Hook",
+          "Rock Shuffle"
+        ],
         "notes": "PHASE 2 - DAY 20: Both counter series (first 6 each) with rhythmic footwork. Phase 2 complete!",
         "is_rest_day": 0
       },
@@ -134,37 +178,60 @@
       },
       {
         "day_number": 22,
-        "series_ids": ["22 Coups de poings", "18 Kicks", "Step and Slide"],
+        "series_ids": [
+          "22 Coups de poings",
+          "18 Kicks",
+          "Step and Slide"
+        ],
         "notes": "PHASE 3 - DAY 22: Integration begins. All strikes with basic footwork.",
         "is_rest_day": 0
       },
       {
         "day_number": 23,
-        "series_ids": ["4 counts", "Slide and Step", "Push Shuffle"],
+        "series_ids": [
+          "4 counts",
+          "Slide and Step",
+          "Push Shuffle"
+        ],
         "notes": "PHASE 3 - DAY 23: 4 Counts (first 8) with all Phase 1 footwork.",
         "is_rest_day": 0
       },
       {
         "day_number": 24,
-        "series_ids": ["Contre Jab Cross", "Contre Jab Hook", "Rock Shuffle"],
+        "series_ids": [
+          "Contre Jab Cross",
+          "Contre Jab Hook",
+          "Rock Shuffle"
+        ],
         "notes": "PHASE 3 - DAY 24: All counters from Phase 1 & 2 (first 6 each) with rhythmic movement.",
         "is_rest_day": 0
       },
       {
         "day_number": 25,
-        "series_ids": ["Trapping 9 entrées de base", "22 Coups de poings"],
+        "series_ids": [
+          "Trapping 9 entrées de base",
+          "22 Coups de poings"
+        ],
         "notes": "PHASE 3 - DAY 25: Trapping flow into punches. Sensitivity meets power.",
         "is_rest_day": 0
       },
       {
         "day_number": 26,
-        "series_ids": ["18 Kicks", "Push Shuffle", "Rock Shuffle"],
+        "series_ids": [
+          "18 Kicks",
+          "Push Shuffle",
+          "Rock Shuffle"
+        ],
         "notes": "PHASE 3 - DAY 26: All kicks with explosive and rhythmic footwork.",
         "is_rest_day": 0
       },
       {
         "day_number": 27,
-        "series_ids": ["4 counts", "Trapping 9 entrées de base", "Step and Slide"],
+        "series_ids": [
+          "4 counts",
+          "Trapping 9 entrées de base",
+          "Step and Slide"
+        ],
         "notes": "PHASE 3 - DAY 27: Combinations (first 8) with trapping entries and footwork.",
         "is_rest_day": 0
       },
@@ -176,16 +243,32 @@
       },
       {
         "day_number": 29,
-        "series_ids": ["22 Coups de poings", "18 Kicks", "Contre Jab Cross", "Contre Jab Hook"],
+        "series_ids": [
+          "22 Coups de poings",
+          "18 Kicks",
+          "Contre Jab Cross",
+          "Contre Jab Hook"
+        ],
         "notes": "PHASE 3 - DAY 29: All strikes and all counters. Your complete striking arsenal.",
         "is_rest_day": 0
       },
       {
         "day_number": 30,
-        "series_ids": ["4 counts", "Trapping 9 entrées de base", "Step and Slide", "Slide and Step", "Push Shuffle", "Rock Shuffle"],
+        "series_ids": [
+          "4 counts",
+          "Trapping 9 entrées de base",
+          "Step and Slide",
+          "Slide and Step",
+          "Push Shuffle",
+          "Rock Shuffle"
+        ],
         "notes": "GRADUATION DAY! Complete integration: combinations, trapping, all footwork. Congratulations on completing JKD Fundamentals! You now have all the basics.",
         "is_rest_day": 0
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]

@@ -43,7 +43,7 @@
         "sub_moves_json": "[{\"name\": \"Jab\", \"category\": \"punch\", \"side\": \"L\", \"level\": \"High\", \"counter_name\": \"Pak Sao\", \"counter_category\": \"packs\", \"counter_side\": \"R\", \"counter_level\": \"High\"}, {\"name\": \"Hook\", \"category\": \"punch\", \"side\": \"R\", \"level\": \"High\", \"counter_name\": \"Shoulder stop, knee, guard change\", \"counter_category\": \"trapping\", \"counter_side\": \"L\", \"counter_level\": \"High\"}]"
       },
       {
-        "name": "White cover (en avan\u00e7ant)",
+        "name": "White cover (en avançant)",
         "category": "combo",
         "side": "L",
         "level": "High",
@@ -51,7 +51,7 @@
         "sub_moves_json": "[{\"name\": \"Jab\", \"category\": \"punch\", \"side\": \"L\", \"level\": \"High\", \"counter_name\": \"Pak Sao\", \"counter_category\": \"packs\", \"counter_side\": \"R\", \"counter_level\": \"High\"}, {\"name\": \"Hook\", \"category\": \"punch\", \"side\": \"R\", \"level\": \"High\", \"counter_name\": \"White cover forward\", \"counter_category\": \"packs\", \"counter_side\": \"L\", \"counter_level\": \"High\"}]"
       },
       {
-        "name": "Panatukan (en avan\u00e7ant)",
+        "name": "Panatukan (en avançant)",
         "category": "combo",
         "side": "L",
         "level": "High",
@@ -199,6 +199,10 @@
         "level": "High",
         "sub_moves_json": "[{\"name\": \"Jab\", \"category\": \"punch\", \"side\": \"L\", \"level\": \"High\", \"counter_name\": \"Pak Sao\", \"counter_category\": \"packs\", \"counter_side\": \"R\", \"counter_level\": \"High\"}, {\"name\": \"Hook\", \"category\": \"punch\", \"side\": \"L\", \"level\": \"High\", \"counter_name\": \"Woang Pack Sao, Biu Jee, Pak Sao, Biu Jee\", \"counter_category\": \"trapping\", \"counter_side\": \"R\", \"counter_level\": \"High\"}]"
       }
-    ]
+    ],
+    "Author": "Antoine Giniès",
+    "Version": "1.9.1+1",
+    "JKDApp": "ginies.org",
+    "Date": "2026-04-03"
   }
 ]
