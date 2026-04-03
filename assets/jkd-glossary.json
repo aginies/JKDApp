@@ -185,7 +185,7 @@
     {"name": "Ordabis", "translations": {"en": "Closed", "fr": "Fermé"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Inwood", "translations": {"en": "Open", "fr": "Ouvert"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Backend", "translations": {"en": "Closed", "fr": "Fermé"}, "possible_level": "H,M,L", "removal": {}},
-    {"name": "Witick", "translations": {"en": "", "fr": "Restracte"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Witick", "translations": {"en": "Retract", "fr": "Retracte"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "LobStick", "translations": {"en": "Through", "fr": "Traverse"}, "possible_level": "H,M,L", "removal": {}}
   ]
 }
