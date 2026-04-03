@@ -72,6 +72,36 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     super.dispose();
   }
 
+  Color _getSurfaceColor(ThemeData theme) {
+    if (theme.brightness == Brightness.dark) {
+      // On AMOLED (black), cardColor is 0xFF121212.
+      // Reduced contrast from 0.12 to 0.07
+      return Color.alphaBlend(
+        Colors.white.withValues(alpha: 0.07),
+        theme.cardColor,
+      );
+    }
+    return theme.cardColor;
+  }
+
+  Color _getAlphaColor(Color color, ThemeData theme) {
+    // Significantly increase opacity in dark mode for better visibility
+    return color.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.4 : 0.1,
+    );
+  }
+
+  Color _getBorderColor(
+    Color color,
+    ThemeData theme, {
+    bool isSelected = false,
+  }) {
+    if (theme.brightness == Brightness.dark) {
+      return isSelected ? color : color.withValues(alpha: 0.5);
+    }
+    return isSelected ? color : color.withValues(alpha: 0.2);
+  }
+
   // Fully recursive conversion to preserve nested structures (Simultaneous, nested Chains, Answers)
   BuilderCardData _convertFromMove(Move m) {
     return BuilderCardData(
@@ -103,7 +133,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return Container(
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: _getSurfaceColor(theme),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.dividerColor),
       ),
@@ -120,7 +150,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: theme.dividerColor.withValues(alpha: 0.5),
@@ -389,10 +421,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     Color? customText,
     Widget? customChild,
   }) {
-    final bgColor = isActive || customText != null
-        ? color
-        : color.withValues(alpha: 0.1);
-    final fgColor = customText ?? (isActive ? Colors.white : color);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // 95% opacity for active buttons in dark mode
+    final double bgAlpha = isDark
+        ? (isActive ? 0.95 : 0.3)
+        : (isActive ? 1.0 : 0.1);
+
+    final Color bgColor = color.withValues(alpha: bgAlpha);
+
+    // In dark mode, non-active buttons should use a brighter version of the color or white
+    final Color fgColor =
+        customText ??
+        (isActive
+            ? Colors.white
+            : (isDark
+                  ? Color.alphaBlend(color.withValues(alpha: 0.7), Colors.white)
+                  : color));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1.0),
@@ -402,6 +448,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           minimumSize: const Size(0, 36),
           backgroundColor: bgColor,
+          side: isDark
+              ? BorderSide(color: color.withValues(alpha: 0.4), width: 1)
+              : null,
         ),
         child:
             customChild ??
@@ -445,12 +494,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: _getSurfaceColor(theme),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: (isSelected && !_isCounterSelected)
                   ? Colors.green
-                  : Colors.grey.withValues(alpha: 0.5),
+                  : _getBorderColor(Colors.grey, theme),
               width: (isSelected && !_isCounterSelected) ? 2 : 1,
             ),
           ),
@@ -460,7 +509,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               const Text(
                 'CHAIN',
                 style: TextStyle(
-                  fontSize: 8,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
                 ),
@@ -503,12 +552,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: _getSurfaceColor(theme),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: (isSelected && !_isCounterSelected)
                   ? Colors.green
-                  : Colors.grey.withValues(alpha: 0.5),
+                  : _getBorderColor(Colors.grey, theme),
               width: (isSelected && !_isCounterSelected) ? 2 : 1,
             ),
           ),
@@ -518,7 +567,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               const Text(
                 'SIMULTANEOUS',
                 style: TextStyle(
-                  fontSize: 8,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
                 ),
@@ -527,7 +576,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: _getAlphaColor(Colors.grey, theme),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Wrap(
@@ -555,7 +604,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           padding: const EdgeInsets.all(6),
           constraints: const BoxConstraints(minWidth: 75),
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: _getSurfaceColor(theme),
             borderRadius: BorderRadius.circular(8),
             // Removed outer border to fix double border issue
           ),
@@ -568,12 +617,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: _getAlphaColor(color, theme),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: (isSelected && !_isCounterSelected)
-                          ? color
-                          : color.withValues(alpha: 0.2),
+                      color: _getBorderColor(
+                        color,
+                        theme,
+                        isSelected: isSelected && !_isCounterSelected,
+                      ),
                       width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
                     ),
                   ),
@@ -588,9 +639,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                       const SizedBox(height: 4),
                       Text(
                         data.name,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: theme.brightness == Brightness.dark
+                              ? FontWeight.w600
+                              : FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -693,6 +746,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String lang,
     bool isTopSelected,
   ) {
+    final theme = Theme.of(context);
     final color = MoveDisplayWidgets.getCategoryColor(sm.category);
     final bool isSubSelected =
         isTopSelected && _isCounterSelected && _selectedCounterIndex == index;
@@ -702,10 +756,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: _getAlphaColor(color, theme),
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isSubSelected ? color : color.withValues(alpha: 0.3),
+            color: _getBorderColor(color, theme, isSelected: isSubSelected),
             width: isSubSelected ? 2 : 1,
           ),
         ),
@@ -719,7 +773,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
             Text(
               sm.name,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: theme.brightness == Brightness.dark
+                    ? FontWeight.w600
+                    : FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             if (sm.side.isNotEmpty || sm.level.isNotEmpty || sm.isFeint)
@@ -756,6 +815,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String lang,
     bool isTopSelected,
   ) {
+    final theme = Theme.of(context);
     final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
     // Whole-counter selected (no specific sub-item)
     final bool isWholeCounterSelected =
@@ -771,7 +831,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const Text(
             'ANSWER',
             style: TextStyle(
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
@@ -780,7 +840,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const Text(
             'SIMULTANEOUS',
             style: TextStyle(
-              fontSize: 7,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
             ),
@@ -789,7 +849,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: _getAlphaColor(Colors.grey, theme),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Wrap(
@@ -815,7 +875,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const Text(
             'ANSWER',
             style: TextStyle(
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
@@ -824,7 +884,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const Text(
             'CHAIN',
             style: TextStyle(
-              fontSize: 7,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
             ),
@@ -867,7 +927,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const Text(
             'ANSWER',
             style: TextStyle(
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
@@ -875,7 +935,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const SizedBox(height: 2),
           Text(
             data.counterName!,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: theme.brightness == Brightness.dark
+                  ? FontWeight.w600
+                  : FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           if (data.counterSide.isNotEmpty || data.counterLevel.isNotEmpty) ...[
@@ -910,14 +975,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: _getAlphaColor(Colors.red, theme),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color:
-                isWholeCounterSelected ||
-                    (isThisCounterSelected && !data.hasStructuredCounter)
-                ? Colors.red
-                : Colors.red.withValues(alpha: 0.3),
+            color: _getBorderColor(
+              Colors.red,
+              theme,
+              isSelected:
+                  isWholeCounterSelected ||
+                  (isThisCounterSelected && !data.hasStructuredCounter),
+            ),
             width:
                 isWholeCounterSelected ||
                     (isThisCounterSelected && !data.hasStructuredCounter)
