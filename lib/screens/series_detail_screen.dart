@@ -234,6 +234,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         _trainingInterval = options.interval;
         _comboInterval = options.comboInterval;
         _currentTrainingOptions = options;
+        _isGraphicalView = true;
       });
     }
   }
