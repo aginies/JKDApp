@@ -615,7 +615,7 @@ class MoveListDisplayWidget {
                                               ),
                                             ],
                                           ),
-                                        if (showTranslation)
+                                        if (showTranslation && !isChain)
                                           Builder(
                                             builder: (context) {
                                               final t =

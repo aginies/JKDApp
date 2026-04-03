@@ -151,67 +151,148 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildTopToolbar(String lang) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.zero,
-      child: Row(
-        children: [
-          _toolbarButton('Start', Icons.add, Colors.blue, _onAddClick),
-          _toolbarButton('Remove', Icons.remove, Colors.red, _onRemoveClick),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton(
-            '',
-            Icons.add_circle_outline,
-            _isSimultaneousMode ? Colors.green : Colors.blueAccent,
-            () {
-              if (_selectedPath != null) {
-                setState(() {
-                  _isSimultaneousMode = true;
-                  _isChainMode = false;
-                  _isDefenseMode = false;
-                });
-                _showGlossaryPicker();
-              }
-            },
-            isActive: _isSimultaneousMode,
+    return Row(
+      children: [
+        // LEFT group: action buttons
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            child: Row(
+              children: [
+                _toolbarButton('', Icons.add, Colors.blue, _onAddClick),
+                _toolbarButton('', Icons.remove, Colors.red, _onRemoveClick),
+                const SizedBox(width: 8, child: VerticalDivider()),
+                _toolbarButton(
+                  '',
+                  null,
+                  _isSimultaneousMode ? Colors.green : Colors.blueAccent,
+                  () {
+                    if (_selectedPath != null) {
+                      setState(() {
+                        _isSimultaneousMode = true;
+                        _isChainMode = false;
+                        _isDefenseMode = false;
+                      });
+                      _showGlossaryPicker();
+                    }
+                  },
+                  isActive: _isSimultaneousMode,
+                  customChild: Builder(
+                    builder: (context) {
+                      final fg = _isSimultaneousMode
+                          ? Colors.white
+                          : Colors.blueAccent;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'A',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: fg,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Icon(
+                              Icons.add_circle_outline,
+                              size: 16,
+                              color: fg,
+                            ),
+                          ),
+                          Text(
+                            'B',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: fg,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                _toolbarButton(
+                  '',
+                  null,
+                  _isChainMode ? Colors.green : Colors.teal,
+                  () {
+                    if (_selectedPath != null) {
+                      setState(() {
+                        _isChainMode = true;
+                        _isSimultaneousMode = false;
+                        _isDefenseMode = false;
+                      });
+                      _showGlossaryPicker();
+                    }
+                  },
+                  isActive: _isChainMode,
+                  customChild: Builder(
+                    builder: (context) {
+                      final fg = _isChainMode ? Colors.white : Colors.teal;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'A',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: fg,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 1),
+                            child: Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: fg,
+                            ),
+                          ),
+                          Icon(Icons.add, size: 14, color: fg),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                _toolbarButton(
+                  '',
+                  Icons.subdirectory_arrow_right,
+                  _isDefenseMode ? Colors.green : Colors.orange,
+                  () {
+                    if (_selectedPath != null) {
+                      setState(() {
+                        _isDefenseMode = true;
+                        _isChainMode = false;
+                        _isSimultaneousMode = false;
+                      });
+                      _showGlossaryPicker();
+                    }
+                  },
+                  isActive: _isDefenseMode,
+                ),
+              ],
+            ),
           ),
-          _toolbarButton(
-            'After',
-            Icons.arrow_forward,
-            _isChainMode ? Colors.green : Colors.teal,
-            () {
-              if (_selectedPath != null) {
-                setState(() {
-                  _isChainMode = true;
-                  _isSimultaneousMode = false;
-                  _isDefenseMode = false;
-                });
-                _showGlossaryPicker();
-              }
-            },
-            isActive: _isChainMode,
-          ),
-          _toolbarButton('Answer', Icons.reply, Colors.orange, () {
-            if (_selectedPath != null) {
-              setState(() {
-                _isDefenseMode = true;
-                _isChainMode = false;
-                _isSimultaneousMode = false;
-              });
-              _showGlossaryPicker();
-            }
-          }, isActive: _isDefenseMode),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton('Finish', Icons.check, Colors.green, _onFinishClick),
-          _toolbarButton(
-            'Cancel',
-            Icons.close,
-            Colors.red,
-            widget.onCancel,
-            isActive: true,
-          ),
-        ],
-      ),
+        ),
+        // RIGHT group: Finish & Cancel
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _toolbarButton('', Icons.check, Colors.green, _onFinishClick),
+            _toolbarButton(
+              '',
+              Icons.close,
+              Colors.red,
+              widget.onCancel,
+              isActive: true,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -273,6 +354,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     VoidCallback onPressed, {
     bool isActive = false,
     Color? customText,
+    Widget? customChild,
   }) {
     final bgColor = isActive || customText != null
         ? color
@@ -288,22 +370,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           minimumSize: const Size(0, 36),
           backgroundColor: bgColor,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) Icon(icon, size: 16, color: fgColor),
-            if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
-            if (label.isNotEmpty)
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: fgColor,
-                ),
-              ),
-          ],
-        ),
+        child:
+            customChild ??
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) Icon(icon, size: 20, color: fgColor),
+                if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
+                if (label.isNotEmpty)
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: fgColor,
+                    ),
+                  ),
+              ],
+            ),
       ),
     );
   }
