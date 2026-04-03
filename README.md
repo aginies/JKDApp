@@ -79,7 +79,7 @@ You can now group variations of a move using letters (a, b, c...):
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
 | iOS      | ⚠️ Limited | Supported by code but not officially built (Apple Developer account) |
 
-## Recent Updates (v1.9.1+1)
+## Recent Updates (v2.0.0+6)
 
 - **Database v13**: Added `sub_letter` support and automatic system series re-seeding.
 - **Improved Logging**: Logs now include versioning and timestamps, saveable as `jkd_app-VERSION-DATE-HOUR.log`.

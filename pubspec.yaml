@@ -2,7 +2,7 @@ name: jkd_app
 description: "JKD - Training Library"
 publish_to: 'none'
 
-version: 1.9.1+1
+version: 2.0.0+6
 
 environment:
   sdk: ^3.11.3
