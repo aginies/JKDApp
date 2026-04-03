@@ -43,7 +43,7 @@ class _BackupModalState extends State<BackupModal> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          lang == 'fr' ? 'Sauvegarde & Restauration' : 'Backup & Restore',
+          LocalizationService.translate('backup_restore_title', lang),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -57,7 +57,7 @@ class _BackupModalState extends State<BackupModal> {
             children: [
               /*
               _buildSectionTitle(
-                lang == 'fr' ? 'Sauvegarde Globale' : 'Global Backup',
+                LocalizationService.translate('export_title', lang) ?? 'Export Title',
               ),
               _buildBackupTile(
                 title: lang == 'fr'
@@ -71,7 +71,7 @@ class _BackupModalState extends State<BackupModal> {
                 onTap: () => _handleGlobalBackup(provider),
               ),
               _buildBackupTile(
-                title: lang == 'fr' ? 'Tout restaurer' : 'Restore Everything',
+                title: LocalizationService.translate('restore_everything', lang),
                 subtitle: lang == 'fr'
                     ? 'Restaurer depuis un fichier ZIP global'
                     : 'Restore from a full ZIP backup',
@@ -82,10 +82,41 @@ class _BackupModalState extends State<BackupModal> {
               const Divider(height: 32),
               */
               _buildSectionTitle(
-                LocalizationService.translate('backup_export', lang),
+                LocalizationService.translate('export_title', lang) ??
+                    'Export Title',
               ),
               _buildBackupTile(
-                title: LocalizationService.translate('export_desc', lang),
+                title: lang == 'fr'
+                    ? 'Tout exporter (Full Backup)'
+                    : 'Export Everything (Full Backup)',
+                subtitle: lang == 'fr'
+                    ? 'Série, Glossaire, Media dans un ZIP'
+                    : 'Series, Glossary, Media in a ZIP',
+                icon: Icons.all_inclusive,
+                color: Colors.purple,
+                onTap: () => _handleGlobalBackup(provider),
+              ),
+              _buildBackupTile(
+                title: LocalizationService.translate(
+                  'restore_everything',
+                  lang,
+                ),
+                subtitle: lang == 'fr'
+                    ? 'Restaurer depuis un fichier ZIP global'
+                    : 'Restore from a full ZIP backup',
+                icon: Icons.restore_page,
+                color: Colors.purpleAccent,
+                onTap: () => _handleGlobalRestore(provider),
+              ),
+              const Divider(height: 32),
+              _buildSectionTitle(
+                LocalizationService.translate('export_title', lang),
+              ),
+              _buildBackupTile(
+                title: LocalizationService.translate(
+                  'export_description',
+                  lang,
+                ),
                 subtitle: lang == 'fr'
                     ? 'Exporter vos séries personnalisées'
                     : 'Export your custom series',
