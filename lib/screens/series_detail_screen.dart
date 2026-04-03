@@ -87,6 +87,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   Timer? _scrollTimer;
   bool _isFullscreen = false;
   bool _isAdvancedBuilder = false;
+  int? _editingMoveIndex;
 
   // Buffered move waiting for simultaneous merge (when + is pressed)
   Move? _pendingSimultaneousMove;
@@ -1758,17 +1759,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       category: _selectedCategory,
       showTranslation: provider.showTranslation,
       onEdit: (index) => () {
-        if (_moves[index].category == 'simultaneous') {
-          _pickMove(
-            initialMoves: _moves[index].subMoves,
-            seriesIndex: index,
-            autoEditFirst: true,
-          );
-        } else if (_moves[index].isCombo) {
-          _pickMove(initialMoves: _moves[index].subMoves, seriesIndex: index);
-        } else {
-          _pickMove(initialMoves: [_moves[index]], seriesIndex: index);
-        }
+        setState(() {
+          _isAdvancedBuilder = true;
+          _editingMoveIndex = index;
+        });
       },
       onClone: (index) => () {
         setState(() {
@@ -2311,32 +2305,42 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                                   onPressed: () => _pickMove(),
                                   child: const Icon(Icons.add, size: 20),
                                 ),
-                                ],
-                                ),
-                                ),
-                                const SizedBox(width: 16),
-                                ],
-                                ],
-                                ),
-                                ),
-                                if (_isAdvancedBuilder)
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                    child: AdvancedComboBuilder(
-                                      onFinish: (newMove) {
-                                        setState(() {
-                                          _moves.add(newMove);
-                                          _isAdvancedBuilder = false;
-                                          _normalizeSubLetters();
-                                        });
-                                      },
-                                      onCancel: () {
-                                        setState(() {
-                                          _isAdvancedBuilder = false;
-                                        });
-                                      },
-                                    ),
-                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                      ],
+                    ),
+                  ),
+                if (_isAdvancedBuilder)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: AdvancedComboBuilder(
+                      initialMove: _editingMoveIndex != null
+                          ? _moves[_editingMoveIndex!]
+                          : null,
+                      onFinish: (newMove) {
+                        setState(() {
+                          if (_editingMoveIndex != null) {
+                            _moves[_editingMoveIndex!] = newMove;
+                          } else {
+                            _moves.add(newMove);
+                          }
+                          _isAdvancedBuilder = false;
+                          _editingMoveIndex = null;
+                          _normalizeSubLetters();
+                        });
+                      },
+
+                      onCancel: () {
+                        setState(() {
+                          _isAdvancedBuilder = false;
+                          _editingMoveIndex = null;
+                        });
+                      },
+                    ),
+                  ),
                 if (!_isEditing && widget.series?.category == 'JKD Moves')
                   RandomReaderWidget(
                     language: lang,

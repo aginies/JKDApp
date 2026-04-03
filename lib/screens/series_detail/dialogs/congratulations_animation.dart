@@ -9,7 +9,8 @@ class CongratulationsAnimation extends StatefulWidget {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => CongratulationsAnimation(isDayComplete: isDayComplete),
+      builder: (context) =>
+          CongratulationsAnimation(isDayComplete: isDayComplete),
     );
   }
 

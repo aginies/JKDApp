@@ -10,11 +10,13 @@ import '../glossary/glossary_ui_builder.dart';
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
   final VoidCallback onCancel;
+  final Move? initialMove;
 
   const AdvancedComboBuilder({
     super.key,
     required this.onFinish,
     required this.onCancel,
+    this.initialMove,
   });
 
   @override
@@ -24,15 +26,60 @@ class AdvancedComboBuilder extends StatefulWidget {
 class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Current state of the workspace
   final List<BuilderCardData> _workspaceCards = [];
-  
+
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
-  bool _isCounterSelected = false; 
-  
+  bool _isCounterSelected = false;
+
   // Modes
   bool _isDefenseMode = false;
   bool _isSimultaneousMode = false;
   bool _isChainMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMove != null) {
+      final m = widget.initialMove!;
+
+      // Unpack ONE level so each sub-item becomes a separate workspace card.
+      //
+      // 'combo' items store numbered sub-items in subMoves.  When editing,
+      // each sub-item becomes its own card (1. Jab  2. Cross  3. Jik Tek).
+      //
+      // Everything else (chains, simultaneous, standalone) is kept as a
+      // single workspace card so the structure is preserved on round-trip.
+      final bool isComboWrapper =
+          m.category == 'combo' &&
+          m.subMoves.isNotEmpty &&
+          (m.counterName == null || m.counterName!.isEmpty);
+
+      if (isComboWrapper) {
+        _workspaceCards.addAll(m.subMoves.map((sm) => _convertFromMove(sm)));
+      } else {
+        _workspaceCards.add(_convertFromMove(m));
+      }
+    }
+  }
+
+  // Fully recursive conversion to preserve nested structures (Simultaneous, nested Chains, Answers)
+  BuilderCardData _convertFromMove(Move m) {
+    return BuilderCardData(
+      name: m.name,
+      category: m.category,
+      side: m.side,
+      level: m.level,
+      isFeint: m.isFeint,
+      specialAction: m.specialAction,
+      glossaryId: m.glossaryId,
+      counterName: m.counterName,
+      counterCategory: m.counterCategory,
+      counterSide: m.counterSide ?? '',
+      counterLevel: m.counterLevel ?? '',
+      subMoves: m.subMoves.map((sm) => _convertFromMove(sm)).toList(),
+      chain: m.chain.map((cm) => _convertFromMove(cm)).toList(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +98,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         children: [
           // TOP TOOLBAR: Structural buttons
           _buildTopToolbar(lang),
-          
+
           const SizedBox(height: 8),
-          
+
           // MAIN WORKSPACE
           Container(
             width: double.infinity,
@@ -61,14 +108,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.5),
+              ),
             ),
             child: _workspaceCards.isEmpty
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
-                        LocalizationService.translate('add_items_to_start', lang),
+                        LocalizationService.translate(
+                          'add_items_to_start',
+                          lang,
+                        ),
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -81,9 +133,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     }).toList(),
                   ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // BOTTOM TOOLBAR: Property buttons
           _buildBottomToolbar(lang),
         ],
@@ -100,7 +152,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           _toolbarButton('Remove', Icons.remove, Colors.red, _onRemoveClick),
           const SizedBox(width: 8, child: VerticalDivider()),
           _toolbarButton(
-            '', 
+            '',
             Icons.add_circle_outline,
             _isSimultaneousMode ? Colors.green : Colors.blueAccent,
             () {
@@ -131,25 +183,25 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             },
             isActive: _isChainMode,
           ),
-          _toolbarButton(
-            'Answer',
-            Icons.reply,
-            Colors.orange,
-            () {
-              if (_selectedPath != null) {
-                setState(() {
-                  _isDefenseMode = true;
-                  _isChainMode = false;
-                  _isSimultaneousMode = false;
-                });
-                _showGlossaryPicker();
-              }
-            },
-            isActive: _isDefenseMode,
-          ),
+          _toolbarButton('Answer', Icons.reply, Colors.orange, () {
+            if (_selectedPath != null) {
+              setState(() {
+                _isDefenseMode = true;
+                _isChainMode = false;
+                _isSimultaneousMode = false;
+              });
+              _showGlossaryPicker();
+            }
+          }, isActive: _isDefenseMode),
           const SizedBox(width: 8, child: VerticalDivider()),
           _toolbarButton('Finish', Icons.check, Colors.green, _onFinishClick),
-          _toolbarButton('Cancel', Icons.close, Colors.grey, widget.onCancel),
+          _toolbarButton(
+            'Cancel',
+            Icons.close,
+            Colors.red,
+            widget.onCancel,
+            isActive: true,
+          ),
         ],
       ),
     );
@@ -160,14 +212,47 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _toolbarButton('Left', Icons.arrow_back, Colors.blue, () => _updateSelectedCard(side: 'L')),
-          _toolbarButton('Right', Icons.arrow_forward, Colors.red, () => _updateSelectedCard(side: 'R')),
+          _toolbarButton(
+            'Left',
+            Icons.arrow_back,
+            Colors.blue,
+            () => _updateSelectedCard(side: 'L'),
+          ),
+          _toolbarButton(
+            'Right',
+            Icons.arrow_forward,
+            Colors.red,
+            () => _updateSelectedCard(side: 'R'),
+          ),
           const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton('Draw', Icons.gesture, Colors.purple, () => _updateSelectedCard(toggleFeint: true)),
+          _toolbarButton(
+            'Draw',
+            Icons.gesture,
+            Colors.purple,
+            () => _updateSelectedCard(toggleFeint: true),
+          ),
           const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton('H', null, Colors.deepOrange, () => _updateSelectedCard(level: 'High')),
-          _toolbarButton('M', null, Colors.orange, () => _updateSelectedCard(level: 'Mid')),
-          _toolbarButton('L', null, Colors.amberAccent, () => _updateSelectedCard(level: 'Low')),
+          _toolbarButton(
+            'H',
+            null,
+            Colors.black,
+            () => _updateSelectedCard(level: 'High'),
+            customText: Colors.white,
+          ),
+          _toolbarButton(
+            'M',
+            null,
+            Colors.black,
+            () => _updateSelectedCard(level: 'Mid'),
+            customText: Colors.white,
+          ),
+          _toolbarButton(
+            'L',
+            null,
+            Colors.black,
+            () => _updateSelectedCard(level: 'Low'),
+            customText: Colors.white,
+          ),
         ],
       ),
     );
@@ -179,9 +264,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     Color color,
     VoidCallback onPressed, {
     bool isActive = false,
+    Color? customText,
   }) {
-    final bgColor = isActive ? color : color.withValues(alpha: 0.1);
-    final fgColor = isActive ? Colors.white : color;
+    final bgColor = isActive || customText != null
+        ? color
+        : color.withValues(alpha: 0.1);
+    final fgColor = customText ?? (isActive ? Colors.white : color);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
@@ -212,7 +300,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  // Recursive Card builder - All items keep their full font/icon sizes
+  // Recursive Card builder
   Widget _buildCard(List<int> path, BuilderCardData data, String lang) {
     final theme = Theme.of(context);
     final isSelected = _isPathSelected(path);
@@ -228,17 +316,27 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: (isSelected && !_isCounterSelected) ? Colors.green : Colors.grey.withValues(alpha: 0.5),
+              color: (isSelected && !_isCounterSelected)
+                  ? Colors.green
+                  : Colors.grey.withValues(alpha: 0.5),
               width: (isSelected && !_isCounterSelected) ? 2 : 1,
             ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('CHAIN', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                'CHAIN',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 4),
               Wrap(
-                spacing: 4, runSpacing: 4,
+                spacing: 4,
+                runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: data.chain.asMap().entries.map((e) {
                   final itemPath = [...path, e.key];
@@ -249,7 +347,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                       if (e.key < data.chain.length - 1)
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Icon(Icons.arrow_forward, size: 16, color: Colors.teal),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            size: 16,
+                            color: Colors.teal,
+                          ),
                         ),
                     ],
                   );
@@ -275,14 +377,23 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             color: theme.cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: (isSelected && !_isCounterSelected) ? Colors.green : Colors.grey.withValues(alpha: 0.5),
+              color: (isSelected && !_isCounterSelected)
+                  ? Colors.green
+                  : Colors.grey.withValues(alpha: 0.5),
               width: (isSelected && !_isCounterSelected) ? 2 : 1,
             ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('SIMULTANEOUS', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                'SIMULTANEOUS',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.all(4),
@@ -291,7 +402,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Wrap(
-                  spacing: 4, runSpacing: 4,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: data.subMoves.asMap().entries.map((e) {
                     final itemPath = [...path, e.key];
                     return _buildCard(itemPath, e.value, lang);
@@ -331,31 +443,66 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: (isSelected && !_isCounterSelected) ? color : color.withValues(alpha: 0.2),
+                    color: (isSelected && !_isCounterSelected)
+                        ? color
+                        : color.withValues(alpha: 0.2),
                     width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
                   ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(MoveDisplayWidgets.getCategoryIcon(data.category), size: 20, color: color),
+                    Icon(
+                      MoveDisplayWidgets.getCategoryIcon(data.category),
+                      size: 20,
+                      color: color,
+                    ),
                     const SizedBox(height: 4),
-                    Text(data.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                    Text(
+                      data.name,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                     if (data.specialAction != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 2.0),
-                        child: Chip(label: Text(data.specialAction!, style: const TextStyle(fontSize: 8)), padding: EdgeInsets.zero, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        child: Chip(
+                          label: Text(
+                            data.specialAction!,
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                          padding: EdgeInsets.zero,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
-                    if (data.side.isNotEmpty || data.level.isNotEmpty || data.isFeint) ...[
+                    if (data.side.isNotEmpty ||
+                        data.level.isNotEmpty ||
+                        data.isFeint) ...[
                       const SizedBox(height: 4),
                       Wrap(
                         spacing: 4,
                         children: [
                           if (data.side.isNotEmpty)
-                            MoveDisplayWidgets.sideCircle(LocalizationService.translate(data.side == 'L' ? 'left' : 'right', lang).substring(0, 1), data.side, mini: true),
+                            MoveDisplayWidgets.sideCircle(
+                              LocalizationService.translate(
+                                data.side == 'L' ? 'left' : 'right',
+                                lang,
+                              ).substring(0, 1),
+                              data.side,
+                              mini: true,
+                            ),
                           if (data.level.isNotEmpty)
-                            MoveDisplayWidgets.levelIcon(data.level, size: 12, mini: true),
-                          if (data.isFeint) MoveDisplayWidgets.drawBox(mini: true),
+                            MoveDisplayWidgets.levelIcon(
+                              data.level,
+                              size: 12,
+                              mini: true,
+                            ),
+                          if (data.isFeint)
+                            MoveDisplayWidgets.drawBox(mini: true),
                         ],
                       ),
                     ],
@@ -363,7 +510,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 ),
               ),
             ),
-            
+
             if (data.hasCounter) ...[
               const SizedBox(height: 4),
               _buildCounterBox(path, data, lang, isSelected),
@@ -374,9 +521,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  Widget _buildCounterBox(List<int> path, BuilderCardData data, String lang, bool isTopSelected) {
+  Widget _buildCounterBox(
+    List<int> path,
+    BuilderCardData data,
+    String lang,
+    bool isTopSelected,
+  ) {
     final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
-    
+
     return GestureDetector(
       onTap: () => _selectPath(path, isCounter: true),
       child: Container(
@@ -385,24 +537,49 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isThisCounterSelected ? Colors.red : Colors.red.withValues(alpha: 0.3),
+            color: isThisCounterSelected
+                ? Colors.red
+                : Colors.red.withValues(alpha: 0.3),
             width: isThisCounterSelected ? 2 : 1,
           ),
         ),
         child: Column(
           children: [
-            const Text('ANSWER', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red)),
+            const Text(
+              'ANSWER',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(data.counterName!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            if (data.counterSide.isNotEmpty || data.counterLevel.isNotEmpty) ...[
+            Text(
+              data.counterName!,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            if (data.counterSide.isNotEmpty ||
+                data.counterLevel.isNotEmpty) ...[
               const SizedBox(height: 4),
               Wrap(
                 spacing: 2,
                 children: [
                   if (data.counterSide.isNotEmpty)
-                    MoveDisplayWidgets.sideCircle(LocalizationService.translate(data.counterSide == 'L' ? 'left' : 'right', lang).substring(0, 1), data.counterSide, mini: true),
+                    MoveDisplayWidgets.sideCircle(
+                      LocalizationService.translate(
+                        data.counterSide == 'L' ? 'left' : 'right',
+                        lang,
+                      ).substring(0, 1),
+                      data.counterSide,
+                      mini: true,
+                    ),
                   if (data.counterLevel.isNotEmpty)
-                    MoveDisplayWidgets.levelIcon(data.counterLevel, size: 10, mini: true),
+                    MoveDisplayWidgets.levelIcon(
+                      data.counterLevel,
+                      size: 10,
+                      mini: true,
+                    ),
                 ],
               ),
             ],
@@ -413,7 +590,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   bool _isPathSelected(List<int> path) {
-    if (_selectedPath == null || _selectedPath!.length != path.length) return false;
+    if (_selectedPath == null || _selectedPath!.length != path.length)
+      return false;
     for (int i = 0; i < path.length; i++) {
       if (_selectedPath![i] != path[i]) return false;
     }
@@ -427,6 +605,23 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     });
   }
 
+  /// Read-only helper: returns the BuilderCardData at the given path, or null.
+  BuilderCardData? _getDataAtPath(List<int> path) {
+    if (path.isEmpty || path[0] >= _workspaceCards.length) return null;
+    BuilderCardData current = _workspaceCards[path[0]];
+    for (int i = 1; i < path.length; i++) {
+      final idx = path[i];
+      if (current.isChain && idx < current.chain.length) {
+        current = current.chain[idx];
+      } else if (current.isCombo && idx < current.subMoves.length) {
+        current = current.subMoves[idx];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
   void _onAddClick() {
     setState(() {
       _isSimultaneousMode = false;
@@ -438,7 +633,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _onMoveClick() {
     if (_selectedPath == null) return;
-    
+
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -446,7 +641,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Select Special Action', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Select Special Action',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: GlossaryDataService.fetchGlossaryByCategory('move'),
@@ -477,39 +675,43 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       ),
     );
   }
-void _onRemoveClick() {
-  if (_selectedPath == null) return;
 
-  setState(() {
-    if (_isCounterSelected) {
-      // DELETE ONLY THE ANSWER of the item at the selected path
-      _updateDataAtPath(_selectedPath!, (item) {
-        return item.copyWith(
-          counterName: null,
-          counterCategory: null,
-          counterGlossaryId: null,
-          counterSide: '',
-          counterLevel: '',
-        );
-      });
-      _isCounterSelected = false;
-    } else if (_selectedPath!.length > 1) {
+  void _onRemoveClick() {
+    if (_selectedPath == null) return;
 
+    setState(() {
+      if (_isCounterSelected) {
+        // DELETE ONLY THE ANSWER of the item at the selected path
+        _updateDataAtPath(_selectedPath!, (item) {
+          return item.copyWith(
+            counterName: null,
+            counterCategory: null,
+            counterGlossaryId: null,
+            counterSide: '',
+            counterLevel: '',
+          );
+        });
+        _isCounterSelected = false;
+      } else if (_selectedPath!.length > 1) {
         // DELETE ONLY THE TARGETED SUB-ITEM
         final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
         final indexToRemove = _selectedPath!.last;
-        
+
         _updateDataAtPath(parentPath, (parent) {
           final isChain = parent.isChain;
-          final List<BuilderCardData> subList = List.from(isChain ? parent.chain : parent.subMoves);
+          final List<BuilderCardData> subList = List.from(
+            isChain ? parent.chain : parent.subMoves,
+          );
           subList.removeAt(indexToRemove);
-          
-          // DO NOT DISSOLVE BOXES - If user wants a box, they keep the box structure
-          if (subList.isEmpty) return null; // Only remove the parent if it's completely empty
-          
-          return isChain ? parent.copyWith(chain: subList) : parent.copyWith(subMoves: subList);
+
+          // Only remove parent if it's completely empty
+          if (subList.isEmpty) return null;
+
+          return isChain
+              ? parent.copyWith(chain: subList)
+              : parent.copyWith(subMoves: subList);
         });
-        
+
         _selectedPath = null;
       } else {
         // DELETE ENTIRE TOP-LEVEL CARD
@@ -522,17 +724,19 @@ void _onRemoveClick() {
   void _onFinishClick() {
     if (_workspaceCards.isEmpty) return;
 
-    // Convert everything in the workspace into a single high-level Move (Combo)
-    // If there is more than one top-level item, they are treated as sequential steps (Chain)
     Move finalMove;
     if (_workspaceCards.length == 1) {
+      // Single card: return it directly as the series item
       finalMove = _convertToMove(_workspaceCards.first);
     } else {
-      // Multiple items at top level become a Chain
+      // Multiple cards: bundle into ONE series item with category 'combo'.
+      // Each workspace card becomes a numbered sub-item (1. Jab  2. Cross  3. Jik Tek)
+      // displayed one per line in the series view.
+      final subMoves = _workspaceCards.map((c) => _convertToMove(c)).toList();
       finalMove = Move(
-        name: _workspaceCards.map((c) => c.name).join(' -> '),
-        category: 'chain',
-        chain: _workspaceCards.map((c) => _convertToMove(c)).toList(),
+        name: 'Combo: ${subMoves.first.name} + ...',
+        category: 'combo',
+        subMoves: subMoves,
       );
     }
 
@@ -540,7 +744,7 @@ void _onRemoveClick() {
   }
 
   Move _convertToMove(BuilderCardData data) {
-    // 1. Recursive handling for CHAIN
+    // 1. Recursive handling for CHAIN (Inner contents must be leaf or combos, NEVER nested chains)
     if (data.isChain) {
       return Move(
         name: data.chain.map((m) => m.name).join(' -> '),
@@ -583,15 +787,21 @@ void _onRemoveClick() {
   }
 
   // Deep update helper
-  void _updateDataAtPath(List<int> path, BuilderCardData? Function(BuilderCardData) updater) {
+  void _updateDataAtPath(
+    List<int> path,
+    BuilderCardData? Function(BuilderCardData) updater,
+  ) {
     if (path.isEmpty) return;
-    
-    BuilderCardData? updateRecursive(BuilderCardData current, List<int> remainingPath) {
+
+    BuilderCardData? updateRecursive(
+      BuilderCardData current,
+      List<int> remainingPath,
+    ) {
       if (remainingPath.isEmpty) return updater(current);
-      
+
       final index = remainingPath[0];
       final nextRemaining = remainingPath.sublist(1);
-      
+
       if (current.isChain) {
         final List<BuilderCardData> newList = List.from(current.chain);
         final result = updateRecursive(newList[index], nextRemaining);
@@ -618,7 +828,7 @@ void _onRemoveClick() {
 
     final topIndex = path[0];
     final remaining = path.sublist(1);
-    
+
     if (remaining.isEmpty) {
       final result = updater(_workspaceCards[topIndex]);
       if (result == null) {
@@ -636,9 +846,14 @@ void _onRemoveClick() {
     }
   }
 
-  void _updateSelectedCard({String? side, String? level, bool toggleFeint = false, String? specialAction}) {
+  void _updateSelectedCard({
+    String? side,
+    String? level,
+    bool toggleFeint = false,
+    String? specialAction,
+  }) {
     if (_selectedPath == null) return;
-    
+
     setState(() {
       _updateDataAtPath(_selectedPath!, (item) {
         if (_isCounterSelected) {
@@ -647,7 +862,7 @@ void _onRemoveClick() {
           if (side != null) {
             finalSide = (item.counterSide == side) ? '' : side;
           }
-          
+
           // Toggle logic for counterLevel
           String finalLevel = item.counterLevel;
           if (level != null) {
@@ -664,7 +879,7 @@ void _onRemoveClick() {
           if (side != null) {
             finalSide = (item.side == side) ? '' : side;
           }
-          
+
           // Toggle logic for level
           String finalLevel = item.level;
           if (level != null) {
@@ -688,7 +903,10 @@ void _onRemoveClick() {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9, maxChildSize: 0.95, minChildSize: 0.5, expand: false,
+        initialChildSize: 0.9,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
         builder: (context, scrollController) => Column(
           children: [
             Padding(
@@ -706,7 +924,14 @@ void _onRemoveClick() {
                   children: [
                     const TabBar(
                       isScrollable: true,
-                      tabs: [Tab(text: 'Punches'), Tab(text: 'Kicks'), Tab(text: 'Packs'), Tab(text: 'Trapping'), Tab(text: 'JKD Moves'), Tab(text: 'Move')],
+                      tabs: [
+                        Tab(text: 'Punches'),
+                        Tab(text: 'Kicks'),
+                        Tab(text: 'Packs'),
+                        Tab(text: 'Trapping'),
+                        Tab(text: 'JKD Moves'),
+                        Tab(text: 'Move'),
+                      ],
                     ),
                     Expanded(
                       child: TabBarView(
@@ -732,24 +957,44 @@ void _onRemoveClick() {
 
   Widget _buildGlossaryTab(String category, ScrollController scrollController) {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: GlossaryDataService.fetchGlossaryByCategory(category),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
         final items = snapshot.data!;
         return ListView.builder(
           controller: scrollController,
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
-            final translations = GlossaryDataService.parseTranslations(item['translations']);
-            final translation = GlossaryDataService.getTranslation(translations, lang);
-            
+            final translations = GlossaryDataService.parseTranslations(
+              item['translations'],
+            );
+            final translation = GlossaryDataService.getTranslation(
+              translations,
+              lang,
+            );
+
             return ListTile(
-              leading: Icon(MoveDisplayWidgets.getCategoryIcon(category), color: MoveDisplayWidgets.getCategoryColor(category)),
-              title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: translation.isNotEmpty ? Text(translation, style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)) : null,
+              leading: Icon(
+                MoveDisplayWidgets.getCategoryIcon(category),
+                color: MoveDisplayWidgets.getCategoryColor(category),
+              ),
+              title: Text(
+                item['name'],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: translation.isNotEmpty
+                  ? Text(
+                      translation,
+                      style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 12,
+                      ),
+                    )
+                  : null,
               onTap: () {
                 setState(() {
                   final newItem = BuilderCardData(
@@ -759,56 +1004,82 @@ void _onRemoveClick() {
                   );
 
                   if (_isDefenseMode && _selectedPath != null) {
-                    _updateDataAtPath(_selectedPath!, (target) => target.copyWith(
-                      counterName: newItem.name,
-                      counterCategory: newItem.category,
-                      counterGlossaryId: newItem.glossaryId,
-                    ));
+                    // Nested Answer (inside chain or combo)
+                    _updateDataAtPath(
+                      _selectedPath!,
+                      (target) => target.copyWith(
+                        counterName: newItem.name,
+                        counterCategory: newItem.category,
+                        counterGlossaryId: newItem.glossaryId,
+                      ),
+                    );
                     _isDefenseMode = false;
                   } else if (_isChainMode && _selectedPath != null) {
-                    // SMART APPEND into sequential chain (->)
-                    final newItem = BuilderCardData(
-                      name: item['name'],
-                      category: category,
-                      glossaryId: item['id'],
-                    );
-
+                    // SMART APPEND into existing chain or create new one.
+                    // NEVER CREATE NESTED CHAINS.
+                    // Strategy: find the nearest ancestor chain and append
+                    // to it. If none exists, wrap the selected item into a
+                    // new chain at its current position.
                     bool appended = false;
-                    if (_selectedPath!.length > 1) {
-                      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
-                      _updateDataAtPath(parentPath, (parent) {
-                        if (parent.isChain) {
-                          appended = true;
-                          return parent.copyWith(chain: [...parent.chain, newItem]);
-                        }
-                        return parent;
+
+                    // 1. If the selected item IS a chain, append directly
+                    final selectedData = _getDataAtPath(_selectedPath!);
+                    if (selectedData != null && selectedData.isChain) {
+                      _updateDataAtPath(_selectedPath!, (target) {
+                        return target.copyWith(
+                          chain: [...target.chain, newItem],
+                        );
                       });
+                      appended = true;
                     }
 
+                    // 2. Walk up ancestors to find the nearest chain
+                    if (!appended && _selectedPath!.length > 1) {
+                      for (
+                        int depth = _selectedPath!.length - 1;
+                        depth >= 1;
+                        depth--
+                      ) {
+                        final ancestorPath = _selectedPath!.sublist(0, depth);
+                        final ancestor = _getDataAtPath(ancestorPath);
+                        if (ancestor != null && ancestor.isChain) {
+                          _updateDataAtPath(ancestorPath, (parent) {
+                            return parent.copyWith(
+                              chain: [...parent.chain, newItem],
+                            );
+                          });
+                          appended = true;
+                          break;
+                        }
+                      }
+                    }
+
+                    // 3. No ancestor chain found — create a NEW flat chain
+                    //    containing the selected item + the new item
                     if (!appended) {
                       _updateDataAtPath(_selectedPath!, (target) {
-                        if (target.isChain) {
-                          return target.copyWith(chain: [...target.chain, newItem]);
-                        }
-                        return BuilderCardData(name: 'Chain', category: 'chain', chain: [target, newItem]);
+                        return BuilderCardData(
+                          name: 'Chain',
+                          category: 'chain',
+                          chain: [target, newItem],
+                        );
                       });
                     }
                     _isChainMode = false;
                   } else if (_isSimultaneousMode && _selectedPath != null) {
-                    // SMART APPEND into simultaneous combo (+)
-                    final newItem = BuilderCardData(
-                      name: item['name'],
-                      category: category,
-                      glossaryId: item['id'],
-                    );
-
+                    // SMART APPEND into existing combo or create new one
                     bool appended = false;
                     if (_selectedPath!.length > 1) {
-                      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+                      final parentPath = _selectedPath!.sublist(
+                        0,
+                        _selectedPath!.length - 1,
+                      );
                       _updateDataAtPath(parentPath, (parent) {
                         if (parent.isCombo) {
                           appended = true;
-                          return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
+                          return parent.copyWith(
+                            subMoves: [...parent.subMoves, newItem],
+                          );
                         }
                         return parent;
                       });
@@ -817,7 +1088,9 @@ void _onRemoveClick() {
                     if (!appended) {
                       _updateDataAtPath(_selectedPath!, (target) {
                         if (target.isCombo) {
-                          return target.copyWith(subMoves: [...target.subMoves, newItem]);
+                          return target.copyWith(
+                            subMoves: [...target.subMoves, newItem],
+                          );
                         }
                         return BuilderCardData(
                           name: 'Combo',
@@ -906,9 +1179,15 @@ class BuilderCardData {
       specialAction: specialAction ?? this.specialAction,
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
-      counterName: counterName == _sentinel ? this.counterName : (counterName as String?),
-      counterCategory: counterCategory == _sentinel ? this.counterCategory : (counterCategory as String?),
-      counterGlossaryId: counterGlossaryId == _sentinel ? this.counterGlossaryId : (counterGlossaryId as int?),
+      counterName: counterName == _sentinel
+          ? this.counterName
+          : (counterName as String?),
+      counterCategory: counterCategory == _sentinel
+          ? this.counterCategory
+          : (counterCategory as String?),
+      counterGlossaryId: counterGlossaryId == _sentinel
+          ? this.counterGlossaryId
+          : (counterGlossaryId as int?),
       counterSide: counterSide ?? this.counterSide,
       counterLevel: counterLevel ?? this.counterLevel,
     );

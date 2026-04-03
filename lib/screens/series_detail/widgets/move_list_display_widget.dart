@@ -340,9 +340,9 @@ class MoveListDisplayWidget {
                               (m.counterSide != null &&
                                       m.counterSide!.isNotEmpty)
                                   ? LocalizationService.translate(
-                                    m.counterSide == 'L' ? 'left' : 'right',
-                                    language,
-                                  ).substring(0, 1)
+                                      m.counterSide == 'L' ? 'left' : 'right',
+                                      language,
+                                    ).substring(0, 1)
                                   : '',
                               m.counterSide ?? '',
                               mini: true,
@@ -359,11 +359,11 @@ class MoveListDisplayWidget {
                 ],
               ),
               if (idx < move.chain.length - 1)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
                   child: Icon(
                     Icons.arrow_forward,
-                    size: iconSize * 0.7,
+                    size: 16,
                     color: Colors.teal,
                   ),
                 ),
@@ -373,7 +373,6 @@ class MoveListDisplayWidget {
       ],
     );
   }
-
   /// Builds the move list tiles
   static List<Widget> buildTiles({
     required List<Move> moves,
@@ -702,16 +701,19 @@ class MoveListDisplayWidget {
                                                         MoveDisplayWidgets.sideCircle(
                                                           (sub.counterSide !=
                                                                       null &&
-                                                                  sub.counterSide!
+                                                                  sub
+                                                                      .counterSide!
                                                                       .isNotEmpty)
-                                                              ? LocalizationService
-                                                                  .translate(
+                                                              ? LocalizationService.translate(
                                                                   sub.counterSide ==
                                                                           'L'
                                                                       ? 'left'
                                                                       : 'right',
                                                                   language,
-                                                                ).substring(0, 1)
+                                                                ).substring(
+                                                                  0,
+                                                                  1,
+                                                                )
                                                               : '',
                                                           sub.counterSide ?? '',
                                                           mini: true,
@@ -825,11 +827,11 @@ class MoveListDisplayWidget {
                                                         .counterSide!
                                                         .isNotEmpty)
                                                 ? LocalizationService.translate(
-                                                  moves[i].counterSide == 'L'
-                                                      ? 'left'
-                                                      : 'right',
-                                                  language,
-                                                ).substring(0, 1)
+                                                    moves[i].counterSide == 'L'
+                                                        ? 'left'
+                                                        : 'right',
+                                                    language,
+                                                  ).substring(0, 1)
                                                 : '',
                                             moves[i].counterSide ?? '',
                                             mini: true,
