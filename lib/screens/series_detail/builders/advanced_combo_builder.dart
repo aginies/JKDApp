@@ -94,49 +94,52 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // TOP TOOLBAR: Structural buttons
+          // TOP TOOLBAR: Structural buttons (stuck to top)
           _buildTopToolbar(lang),
 
           const SizedBox(height: 8),
 
-          // MAIN WORKSPACE
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.5),
+          // MAIN WORKSPACE (scrollable, takes all available space)
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.5),
+                ),
               ),
-            ),
-            child: _workspaceCards.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        LocalizationService.translate(
-                          'add_items_to_start',
-                          lang,
+              child: _workspaceCards.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          LocalizationService.translate(
+                            'add_items_to_start',
+                            lang,
+                          ),
+                          style: const TextStyle(color: Colors.grey),
                         ),
-                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _workspaceCards.asMap().entries.map((entry) {
+                          return _buildCard([entry.key], entry.value, lang);
+                        }).toList(),
                       ),
                     ),
-                  )
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _workspaceCards.asMap().entries.map((entry) {
-                      return _buildCard([entry.key], entry.value, lang);
-                    }).toList(),
-                  ),
+            ),
           ),
 
           const SizedBox(height: 8),
 
-          // BOTTOM TOOLBAR: Property buttons
+          // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
           _buildBottomToolbar(lang),
         ],
       ),
@@ -148,7 +151,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _toolbarButton('Add', Icons.add, Colors.blue, _onAddClick),
+          _toolbarButton('Start', Icons.add, Colors.blue, _onAddClick),
           _toolbarButton('Remove', Icons.remove, Colors.red, _onRemoveClick),
           const SizedBox(width: 8, child: VerticalDivider()),
           _toolbarButton(
@@ -704,8 +707,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           );
           subList.removeAt(indexToRemove);
 
-          // Only remove parent if it's completely empty
+          // Remove parent if it's completely empty
           if (subList.isEmpty) return null;
+
+          // Unwrap if only 1 item remains (no longer a group)
+          if (subList.length == 1) {
+            final remaining = subList.first;
+            // Preserve counter from the parent wrapper if the remaining item has none
+            if (parent.hasCounter && !remaining.hasCounter) {
+              return remaining.copyWith(
+                counterName: parent.counterName,
+                counterCategory: parent.counterCategory,
+                counterGlossaryId: parent.counterGlossaryId,
+                counterSide: parent.counterSide,
+                counterLevel: parent.counterLevel,
+              );
+            }
+            return remaining;
+          }
 
           return isChain
               ? parent.copyWith(chain: subList)
@@ -808,6 +827,20 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (result == null) {
           newList.removeAt(index);
           if (newList.isEmpty) return null;
+          // Unwrap if only 1 item remains
+          if (newList.length == 1) {
+            final remaining = newList.first;
+            if (current.hasCounter && !remaining.hasCounter) {
+              return remaining.copyWith(
+                counterName: current.counterName,
+                counterCategory: current.counterCategory,
+                counterGlossaryId: current.counterGlossaryId,
+                counterSide: current.counterSide,
+                counterLevel: current.counterLevel,
+              );
+            }
+            return remaining;
+          }
           return current.copyWith(chain: newList);
         }
         newList[index] = result;
@@ -818,6 +851,20 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (result == null) {
           newList.removeAt(index);
           if (newList.isEmpty) return null;
+          // Unwrap if only 1 item remains
+          if (newList.length == 1) {
+            final remaining = newList.first;
+            if (current.hasCounter && !remaining.hasCounter) {
+              return remaining.copyWith(
+                counterName: current.counterName,
+                counterCategory: current.counterCategory,
+                counterGlossaryId: current.counterGlossaryId,
+                counterSide: current.counterSide,
+                counterLevel: current.counterLevel,
+              );
+            }
+            return remaining;
+          }
           return current.copyWith(subMoves: newList);
         }
         newList[index] = result;

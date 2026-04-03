@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../models/move.dart';
-import '../../../services/database_service.dart';
 import '../constants/series_detail_constants.dart';
-import '../state/picker_state.dart';
 
 /// Mixin containing utility methods for series detail screen functionality
 mixin SeriesDetailUtils {
   // These properties should be provided by the class using this mixin
   List<Move> get moves;
   ScrollController get movesScrollController;
-  PickerState get pickerState;
 
   /// Get available sub-letters for a move at the target index
   List<String> getAvailableSubLetters(int? targetIndex, int? editingIndex) {
@@ -110,19 +107,5 @@ mixin SeriesDetailUtils {
       ),
       curve: Curves.easeInOut,
     );
-  }
-
-  /// Get initial index for a category based on pending action item
-  Future<int> getInitialIndexForCategory(String category) async {
-    if (pickerState.pendingActionItemId == null) return -1;
-    final items = await DatabaseService().getGlossaryByCategory(category);
-    return items.indexWhere(
-      (item) => item['id'] == pickerState.pendingActionItemId,
-    );
-  }
-
-  /// Activate a glossary item in the picker state
-  void activateGlossaryItem(int itemId) {
-    pickerState.activateGlossaryItem(itemId);
   }
 }
