@@ -49,342 +49,31 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 28,
+      version: 1, // Reset to 1 for development
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
+  /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    LoggingService.log('Upgrading database from $oldVersion to $newVersion');
-    if (oldVersion < 2) {
-      await db.execute(
-        'CREATE TABLE IF NOT EXISTS voice_records (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, file_path TEXT, created_at TEXT)',
-      );
-      await db.execute(
-        'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)',
-      );
-    }
-    if (oldVersion < 3) {
-      try {
-        await db.execute(
-          'ALTER TABLE series_moves ADD COLUMN glossary_id INTEGER',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: glossary_id column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 4) {
-      try {
-        await db.execute('ALTER TABLE glossary ADD COLUMN hit_type TEXT');
-      } catch (e) {
-        debugPrint('Migration warning: hit_type column may already exist - $e');
-      }
-      try {
-        await db.execute(
-          'ALTER TABLE glossary ADD COLUMN possible_type_attack TEXT',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: possible_type_attack column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 5) {
-      try {
-        await db.execute('ALTER TABLE glossary ADD COLUMN possible_level TEXT');
-      } catch (e) {
-        debugPrint(
-          'Migration warning: possible_level column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 6) {
-      try {
-        await db.execute(
-          'ALTER TABLE series ADD COLUMN is_system INTEGER DEFAULT 0',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: is_system column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 7) {
-      await db.delete('glossary');
-      await _seedGlossary(db);
-    }
-    if (oldVersion < 8) {
-      try {
-        await db.execute(
-          'ALTER TABLE series_moves ADD COLUMN counter_glossary_id INTEGER',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: counter_glossary_id column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 9) {
-      await db.rawQuery('''
-        UPDATE series_moves 
-        SET glossary_id = (SELECT id FROM glossary WHERE name = series_moves.name LIMIT 1)
-        WHERE glossary_id IS NULL AND name IS NOT NULL
-      ''');
-      await db.rawQuery('''
-        UPDATE series_moves 
-        SET counter_glossary_id = (SELECT id FROM glossary WHERE name = series_moves.counter_name LIMIT 1)
-        WHERE counter_glossary_id IS NULL AND counter_name IS NOT NULL
-      ''');
-    }
-    if (oldVersion < 10) {
-      try {
-        await db.execute(
-          'ALTER TABLE glossary ADD COLUMN possible_direction TEXT',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: possible_direction column may already exist - $e',
-        );
-      }
-      await db.delete('glossary');
-      await _seedGlossary(db);
-    }
-    if (oldVersion < 11) {
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_id ON series_moves(series_id)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_series_moves_glossary_id ON series_moves(glossary_id)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_series_moves_counter_glossary_id ON series_moves(counter_glossary_id)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_glossary_name ON glossary(name)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_series_moves_series_pos ON series_moves(series_id, position)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_glossary_cat_pos ON glossary(category, position)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_voice_records_created ON voice_records(created_at DESC)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_glossary_position ON glossary(position)',
-      );
-    }
-    if (oldVersion < 12) {
-      try {
-        await db.execute('ALTER TABLE series_moves ADD COLUMN sub_letter TEXT');
-      } catch (e) {
-        debugPrint(
-          'Migration warning: sub_letter column may already exist - $e',
-        );
-      }
-    }
-    if (oldVersion < 13) {
-      // Re-seed system series to ensure they have correct categories and data
-      // Note: deleting from 'series' will cascade delete to 'series_moves' due to FK
-      await db.delete('series', where: 'is_system = 1');
-      await _seedSeries(db);
-    }
-    if (oldVersion < 14) {
-      // Add training programs tables
-      await db.execute('''
-        CREATE TABLE training_programs (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          description TEXT,
-          difficulty_level TEXT,
-          duration_days INTEGER NOT NULL,
-          is_system INTEGER DEFAULT 1,
-          created_at TEXT
-        )
-      ''');
+    LoggingService.log(
+      'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
+    );
 
-      await db.execute('''
-        CREATE TABLE program_days (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          program_id INTEGER NOT NULL,
-          day_number INTEGER NOT NULL,
-          series_ids TEXT NOT NULL,
-          notes TEXT,
-          is_rest_day INTEGER DEFAULT 0,
-          FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE
-        )
-      ''');
+    // Drop all tables
+    await db.execute('DROP TABLE IF EXISTS day_completions');
+    await db.execute('DROP TABLE IF EXISTS user_program_progress');
+    await db.execute('DROP TABLE IF EXISTS program_days');
+    await db.execute('DROP TABLE IF EXISTS training_programs');
+    await db.execute('DROP TABLE IF EXISTS voice_records');
+    await db.execute('DROP TABLE IF EXISTS settings');
+    await db.execute('DROP TABLE IF EXISTS series_moves');
+    await db.execute('DROP TABLE IF EXISTS series');
+    await db.execute('DROP TABLE IF EXISTS glossary');
 
-      await db.execute('''
-        CREATE TABLE user_program_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          program_id INTEGER NOT NULL,
-          started_at TEXT NOT NULL,
-          current_day INTEGER DEFAULT 1,
-          completed_days TEXT,
-          status TEXT DEFAULT 'active',
-          completed_at TEXT,
-          FOREIGN KEY (program_id) REFERENCES training_programs(id)
-        )
-      ''');
-
-      await db.execute('''
-        CREATE TABLE day_completions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          progress_id INTEGER NOT NULL,
-          day_number INTEGER NOT NULL,
-          completed_at TEXT NOT NULL,
-          duration_seconds INTEGER,
-          notes TEXT,
-          FOREIGN KEY (progress_id) REFERENCES user_program_progress(id) ON DELETE CASCADE
-        )
-      ''');
-
-      // Create indexes for performance
-      await db.execute(
-        'CREATE INDEX idx_program_days_program_id ON program_days(program_id)',
-      );
-      await db.execute(
-        'CREATE INDEX idx_user_progress_status ON user_program_progress(status)',
-      );
-      await db.execute(
-        'CREATE INDEX idx_day_completions_progress_id ON day_completions(progress_id)',
-      );
-
-      // Seed training programs from JSON assets
-      await _seedTrainingPrograms(db);
-    }
-
-    if (oldVersion < 15) {
-      // Add todays_completed_series_ids column to track series completion counts for today
-      // Format: JSON map like {"1": 2, "3": 1} where key is series ID and value is completion count
-      try {
-        await db.execute(
-          'ALTER TABLE user_program_progress ADD COLUMN todays_completed_series_ids TEXT DEFAULT "{}"',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: todays_completed_series_ids column may already exist - $e',
-        );
-      }
-    }
-
-    if (oldVersion < 16) {
-      // Add series_assignments column to store detailed series assignments with item ranges
-      // Format: JSON array like [{"series_id": 1, "item_range": "1-4"}, {"series_id": 3, "item_range": null}]
-      try {
-        await db.execute(
-          'ALTER TABLE program_days ADD COLUMN series_assignments TEXT',
-        );
-        debugPrint(
-          'Migration v16: Added series_assignments column to program_days',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: series_assignments column may already exist - $e',
-        );
-      }
-    }
-
-    if (oldVersion < 17) {
-      // Re-seed glossary and series to include the new ABC series and missing kicks
-      await db.delete('glossary');
-      await _seedGlossary(db);
-      await db.delete('series', where: 'is_system = 1');
-      await _seedSeries(db);
-      debugPrint('Migration v17: Re-seeded glossary and system series');
-    }
-
-    if (oldVersion < 18) {
-      // Re-seed glossary and series to include updated Contre Jab Hook and Biu Sao
-      await db.delete('glossary');
-      await _seedGlossary(db);
-      await db.delete('series', where: 'is_system = 1');
-      await _seedSeries(db);
-      debugPrint('Migration v18: Re-seeded glossary and system series');
-    }
-
-    if (oldVersion < 19) {
-      // Re-seed training programs to include new footwork programs
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v19: Re-seeded system training programs');
-    }
-
-    if (oldVersion < 20) {
-      // Re-seed training programs to include Basic Hits
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v20: Re-seeded system training programs');
-    }
-
-    if (oldVersion < 21) {
-      // Re-seed training programs to include Counters programs
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v21: Re-seeded system training programs');
-    }
-
-    if (oldVersion < 22) {
-      // Re-seed training programs to include 3 & 4 Counts programs
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v22: Re-seeded system training programs');
-    }
-
-    if (oldVersion < 23) {
-      // Re-seed glossary to include Kali techniques
-      await db.delete('glossary');
-      await _seedGlossary(db);
-      await db.delete('series', where: 'is_system = 1');
-      await _seedSeries(db);
-      debugPrint('Migration v23: Re-seeded glossary and system series');
-    }
-
-    if (oldVersion < 25) {
-      try {
-        await db.execute(
-          'ALTER TABLE series_moves ADD COLUMN counter_translations TEXT',
-        );
-        debugPrint(
-          'Migration v25: Added counter_translations column to series_moves',
-        );
-      } catch (e) {
-        debugPrint(
-          'Migration warning: counter_translations column may already exist - $e',
-        );
-      }
-    }
-
-    if (oldVersion < 26) {
-      // Fix for empty series in training programs due to title matching or missing assignments
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v26: Re-seeded system training programs');
-    }
-
-    if (oldVersion < 27) {
-      // Add Ping Chui Laop Sao Gwa Chui series
-      await db.delete('series', where: 'is_system = 1');
-      await _seedSeries(db);
-      // Re-seed programs to ensure links to re-seeded series are correct
-      await db.delete('training_programs', where: 'is_system = 1');
-      await _seedTrainingPrograms(db);
-      debugPrint('Migration v27: Re-seeded system series and programs');
-    }
-
-    if (oldVersion < 28) {
-      // Re-seed glossary to include M (Middle) direction for Lateral step and Jab Step 3 Ways
-      await db.delete('glossary');
-      await _seedGlossary(db);
-      debugPrint(
-        'Migration v28: Re-seeded glossary for Middle direction update',
-      );
-    }
+    // Recreate everything
+    await _onCreate(db, newVersion);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -405,13 +94,43 @@ class DatabaseService {
 
     await db.execute('''
       CREATE TABLE series (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, category TEXT, type TEXT, attack_method TEXT, notes TEXT, is_system INTEGER DEFAULT 0
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        title TEXT, 
+        category TEXT, 
+        type TEXT, 
+        attack_method TEXT, 
+        notes TEXT, 
+        is_system INTEGER DEFAULT 0
       )
     ''');
 
     await db.execute('''
       CREATE TABLE series_moves (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, series_id INTEGER, glossary_id INTEGER, counter_glossary_id INTEGER, name TEXT, category TEXT, side TEXT, level TEXT, sub_letter TEXT, is_feint INTEGER, special_action TEXT, translations TEXT, repetitions INTEGER, counter_name TEXT, counter_category TEXT, counter_side TEXT, counter_level TEXT, counter_special_action TEXT, counter_translations TEXT, sub_moves_json TEXT, chain_json TEXT, position INTEGER, FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        series_id INTEGER, 
+        glossary_id INTEGER, 
+        counter_glossary_id INTEGER, 
+        name TEXT, 
+        category TEXT, 
+        side TEXT, 
+        level TEXT, 
+        sub_letter TEXT, 
+        is_feint INTEGER, 
+        special_action TEXT, 
+        translations TEXT, 
+        repetitions INTEGER, 
+        counter_name TEXT, 
+        counter_category TEXT, 
+        counter_side TEXT, 
+        counter_level TEXT, 
+        counter_special_action TEXT, 
+        counter_translations TEXT, 
+        counter_sub_moves_json TEXT, 
+        counter_chain_json TEXT, 
+        sub_moves_json TEXT, 
+        chain_json TEXT, 
+        position INTEGER, 
+        FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
 
@@ -597,6 +316,9 @@ class DatabaseService {
               'counter_side': move['counter_side'],
               'counter_level': move['counter_level'],
               'counter_special_action': move['counter_special_action'],
+              'counter_translations': move['counter_translations'],
+              'counter_sub_moves_json': move['counter_sub_moves_json'],
+              'counter_chain_json': move['counter_chain_json'],
               'sub_moves_json': move['sub_moves_json'],
               'chain_json': move['chain_json'],
               'position': i,
@@ -783,6 +505,7 @@ class DatabaseService {
         m.id as m_id, m.series_id, m.glossary_id, m.counter_glossary_id, m.name, m.category as m_category, 
         m.side, m.level, m.sub_letter, m.is_feint, m.special_action, m.translations, m.repetitions, 
         m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
+        m.counter_translations, m.counter_sub_moves_json, m.counter_chain_json,
         m.sub_moves_json, m.chain_json, m.position
       FROM series s
       LEFT JOIN series_moves m ON s.id = m.series_id
@@ -826,6 +549,11 @@ class DatabaseService {
             counterSide: row['counter_side'] as String?,
             counterLevel: row['counter_level'] as String?,
             counterSpecialAction: row['counter_special_action'] as String?,
+            counterTranslations: TranslationUtils.parseTranslations(
+              row['counter_translations'],
+            ),
+            counterSubMoves: _parseSubMoves(row['counter_sub_moves_json']),
+            counterChain: _parseChain(row['counter_chain_json']),
             subMoves: _parseSubMoves(row['sub_moves_json']),
             chain: _parseChain(row['chain_json']),
           ),
@@ -836,7 +564,9 @@ class DatabaseService {
   }
 
   List<Move> _parseSubMoves(dynamic jsonStr) {
-    if (jsonStr == null || jsonStr.toString().isEmpty) return [];
+    if (jsonStr == null || jsonStr.toString().isEmpty || jsonStr == '[]') {
+      return [];
+    }
     try {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
@@ -847,7 +577,9 @@ class DatabaseService {
   }
 
   List<Move> _parseChain(dynamic jsonStr) {
-    if (jsonStr == null || jsonStr.toString().isEmpty) return [];
+    if (jsonStr == null || jsonStr.toString().isEmpty || jsonStr == '[]') {
+      return [];
+    }
     try {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();

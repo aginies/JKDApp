@@ -1538,6 +1538,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   '${target.counterSubMoves.map((m) => m.name).join(' + ')} + ${newItem.name}',
             );
           }
+          if (target.hasCounterChain) {
+            // Has a chain — wrap it as the first simultaneous item,
+            // then add the new item as second simultaneous item.
+            // (A -> B) + C
+            final chainGroup = BuilderCardData(
+              name: target.counterChain.map((m) => m.name).join(' -> '),
+              category: 'chain',
+              chain: List.from(target.counterChain),
+            );
+            return target.copyWith(
+              counterSubMoves: [chainGroup, newItem],
+              counterChain: const [], // clear — now inside simultaneous
+              counterName: '(${chainGroup.name}) + ${newItem.name}',
+            );
+          }
           // Create simultaneous group from existing single counter + new item
           final existingCounter = BuilderCardData(
             name: target.counterName ?? '',
@@ -1590,6 +1605,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               counterChain: [...target.counterChain, newItem],
               counterName:
                   '${target.counterChain.map((m) => m.name).join(' -> ')} -> ${newItem.name}',
+            );
+          }
+          if (target.hasCounterCombo) {
+            // Has a simultaneous group — wrap it as the first chain item,
+            // then append the new item as second chain step.
+            // (Insinda + Jab) -> Hook
+            final simultaneousGroup = BuilderCardData(
+              name: target.counterSubMoves.map((m) => m.name).join(' + '),
+              category: 'simultaneous',
+              subMoves: List.from(target.counterSubMoves),
+            );
+            return target.copyWith(
+              counterChain: [simultaneousGroup, newItem],
+              counterSubMoves: const [], // clear — now inside chain
+              counterName: '(${simultaneousGroup.name}) -> ${newItem.name}',
             );
           }
           // Create chain from existing single counter + new item
