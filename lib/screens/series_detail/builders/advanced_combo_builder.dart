@@ -25,6 +25,7 @@ class AdvancedComboBuilder extends StatefulWidget {
 class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Current state of the workspace
   final List<BuilderCardData> _workspaceCards = [];
+  final _customTextController = TextEditingController();
 
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
@@ -59,6 +60,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         _workspaceCards.add(_convertFromMove(m));
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _customTextController.dispose();
+    super.dispose();
   }
 
   // Fully recursive conversion to preserve nested structures (Simultaneous, nested Chains, Answers)
@@ -302,20 +309,20 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       child: Row(
         children: [
           _toolbarButton(
-            'Left',
+            LocalizationService.translate('left', lang),
             Icons.arrow_back,
             Colors.blue,
             () => _updateSelectedCard(side: 'L'),
           ),
           _toolbarButton(
-            'Right',
+            LocalizationService.translate('right', lang),
             Icons.arrow_forward,
             Colors.red,
             () => _updateSelectedCard(side: 'R'),
           ),
           const SizedBox(width: 8, child: VerticalDivider()),
           _toolbarButton(
-            'Draw',
+            LocalizationService.translate('draw', lang),
             Icons.gesture,
             Colors.purple,
             () => _updateSelectedCard(toggleFeint: true),
@@ -1049,19 +1056,26 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
             Expanded(
               child: DefaultTabController(
-                length: 6,
+                length: 7,
                 initialIndex: _isDefenseMode ? 2 : 0,
                 child: Column(
                   children: [
-                    const TabBar(
+                    TabBar(
                       isScrollable: true,
                       tabs: [
-                        Tab(text: 'Punches'),
-                        Tab(text: 'Kicks'),
-                        Tab(text: 'Packs'),
-                        Tab(text: 'Trapping'),
-                        Tab(text: 'JKD Moves'),
-                        Tab(text: 'Move'),
+                        const Tab(text: 'Punches'),
+                        const Tab(text: 'Kicks'),
+                        const Tab(text: 'Packs'),
+                        const Tab(text: 'Trapping'),
+                        const Tab(text: 'JKD Moves'),
+                        const Tab(text: 'Move'),
+                        Tab(
+                          icon: Icon(
+                            MoveDisplayWidgets.getCategoryIcon('text'),
+                            size: 16,
+                          ),
+                          text: 'Text',
+                        ),
                       ],
                     ),
                     Expanded(
@@ -1073,6 +1087,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           _buildGlossaryTab('trapping', scrollController),
                           _buildGlossaryTab('jkd_moves', scrollController),
                           _buildGlossaryTab('move', scrollController),
+                          _buildTextTab(),
                         ],
                       ),
                     ),
@@ -1082,6 +1097,156 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _onAddItem(BuilderCardData newItem) {
+    setState(() {
+      if (_isDefenseMode && _selectedPath != null) {
+        // Nested Answer (inside chain or combo)
+        _updateDataAtPath(
+          _selectedPath!,
+          (target) => target.copyWith(
+            counterName: newItem.name,
+            counterCategory: newItem.category,
+            counterGlossaryId: newItem.glossaryId,
+          ),
+        );
+        _isDefenseMode = false;
+      } else if (_isChainMode && _selectedPath != null) {
+        // CHAIN / INSERT AFTER — context-aware:
+        if (_selectedPath!.length > 1) {
+          // Nested item — find the nearest chain ancestor and
+          // insert after the child index within that chain.
+          for (int depth = _selectedPath!.length - 1; depth >= 1; depth--) {
+            final parentPath = _selectedPath!.sublist(0, depth);
+            final childIndex = _selectedPath![depth];
+            bool inserted = false;
+            _updateDataAtPath(parentPath, (parent) {
+              if (parent.isChain) {
+                final newChain = List<BuilderCardData>.from(parent.chain);
+                newChain.insert(childIndex + 1, newItem);
+                inserted = true;
+                return parent.copyWith(chain: newChain);
+              }
+              return parent;
+            });
+            if (inserted) {
+              // Select the newly inserted item
+              _selectedPath = [...parentPath, childIndex + 1];
+              break;
+            }
+          }
+        } else {
+          // Top-level card
+          final topIndex = _selectedPath![0];
+          final selected = _getDataAtPath(_selectedPath!);
+
+          if (selected != null && selected.isChain) {
+            // Already a chain — append new item at end
+            _updateDataAtPath(_selectedPath!, (target) {
+              return target.copyWith(chain: [...target.chain, newItem]);
+            });
+            // Select the newly appended item
+            _selectedPath = [topIndex, selected.chain.length];
+          } else {
+            // Standalone card — wrap selected + new into a chain
+            _workspaceCards[topIndex] = BuilderCardData(
+              name: 'Chain',
+              category: 'chain',
+              chain: [_workspaceCards[topIndex], newItem],
+            );
+            // Select the new item inside the chain
+            _selectedPath = [topIndex, 1];
+          }
+        }
+        _isChainMode = false;
+      } else if (_isSimultaneousMode && _selectedPath != null) {
+        // SMART APPEND into existing combo or create new one
+        bool appended = false;
+        if (_selectedPath!.length > 1) {
+          final parentPath = _selectedPath!.sublist(
+            0,
+            _selectedPath!.length - 1,
+          );
+          _updateDataAtPath(parentPath, (parent) {
+            if (parent.isCombo) {
+              appended = true;
+              return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
+            }
+            return parent;
+          });
+        }
+
+        if (!appended) {
+          _updateDataAtPath(_selectedPath!, (target) {
+            if (target.isCombo) {
+              return target.copyWith(subMoves: [...target.subMoves, newItem]);
+            }
+            return BuilderCardData(
+              name: 'Combo',
+              category: 'simultaneous',
+              subMoves: [target, newItem],
+            );
+          });
+        }
+        _isSimultaneousMode = false;
+      } else {
+        // Insert after selected top-level card, or append at end
+        if (_selectedPath != null && _selectedPath!.length == 1) {
+          final insertIndex = _selectedPath![0] + 1;
+          _workspaceCards.insert(insertIndex, newItem);
+        } else {
+          _workspaceCards.add(newItem);
+        }
+      }
+    });
+  }
+
+  Widget _buildTextTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _customTextController,
+            decoration: const InputDecoration(
+              labelText: 'Custom Text',
+              border: OutlineInputBorder(),
+              hintText: 'Enter custom instruction or move name',
+            ),
+            autofocus: true,
+            onSubmitted: (val) {
+              if (val.trim().isNotEmpty) {
+                final newItem = BuilderCardData(
+                  name: val.trim(),
+                  category: 'text',
+                );
+                _onAddItem(newItem);
+                _customTextController.clear();
+                Navigator.pop(context);
+              }
+            },
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () {
+              final val = _customTextController.text.trim();
+              if (val.isNotEmpty) {
+                final newItem = BuilderCardData(name: val, category: 'text');
+                _onAddItem(newItem);
+                _customTextController.clear();
+                Navigator.pop(context);
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Add Custom Text'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 45),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1128,132 +1293,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     )
                   : null,
               onTap: () {
-                setState(() {
-                  final newItem = BuilderCardData(
-                    name: item['name'],
-                    category: category,
-                    glossaryId: item['id'],
-                  );
-
-                  if (_isDefenseMode && _selectedPath != null) {
-                    // Nested Answer (inside chain or combo)
-                    _updateDataAtPath(
-                      _selectedPath!,
-                      (target) => target.copyWith(
-                        counterName: newItem.name,
-                        counterCategory: newItem.category,
-                        counterGlossaryId: newItem.glossaryId,
-                      ),
-                    );
-                    _isDefenseMode = false;
-                  } else if (_isChainMode && _selectedPath != null) {
-                    // CHAIN / INSERT AFTER — context-aware:
-                    // - Nested inside a chain: insert after the selected
-                    //   sub-item position within that chain.
-                    // - Top-level chain: append new item at end of chain.
-                    // - Top-level standalone: wrap selected + new into a
-                    //   new chain.
-
-                    if (_selectedPath!.length > 1) {
-                      // Nested item — find the nearest chain ancestor and
-                      // insert after the child index within that chain.
-                      for (
-                        int depth = _selectedPath!.length - 1;
-                        depth >= 1;
-                        depth--
-                      ) {
-                        final parentPath = _selectedPath!.sublist(0, depth);
-                        // Check if parent at this depth is a chain by
-                        // attempting the insert via _updateDataAtPath.
-                        final childIndex = _selectedPath![depth];
-                        bool inserted = false;
-                        _updateDataAtPath(parentPath, (parent) {
-                          if (parent.isChain) {
-                            final newChain = List<BuilderCardData>.from(
-                              parent.chain,
-                            );
-                            newChain.insert(childIndex + 1, newItem);
-                            inserted = true;
-                            return parent.copyWith(chain: newChain);
-                          }
-                          return parent;
-                        });
-                        if (inserted) {
-                          // Select the newly inserted item
-                          _selectedPath = [...parentPath, childIndex + 1];
-                          break;
-                        }
-                      }
-                    } else {
-                      // Top-level card
-                      final topIndex = _selectedPath![0];
-                      final selected = _getDataAtPath(_selectedPath!);
-
-                      if (selected != null && selected.isChain) {
-                        // Already a chain — append new item at end
-                        _updateDataAtPath(_selectedPath!, (target) {
-                          return target.copyWith(
-                            chain: [...target.chain, newItem],
-                          );
-                        });
-                        // Select the newly appended item
-                        _selectedPath = [topIndex, selected.chain.length];
-                      } else {
-                        // Standalone card — wrap selected + new into a chain
-                        _workspaceCards[topIndex] = BuilderCardData(
-                          name: 'Chain',
-                          category: 'chain',
-                          chain: [_workspaceCards[topIndex], newItem],
-                        );
-                        // Select the new item inside the chain
-                        _selectedPath = [topIndex, 1];
-                      }
-                    }
-                    _isChainMode = false;
-                  } else if (_isSimultaneousMode && _selectedPath != null) {
-                    // SMART APPEND into existing combo or create new one
-                    bool appended = false;
-                    if (_selectedPath!.length > 1) {
-                      final parentPath = _selectedPath!.sublist(
-                        0,
-                        _selectedPath!.length - 1,
-                      );
-                      _updateDataAtPath(parentPath, (parent) {
-                        if (parent.isCombo) {
-                          appended = true;
-                          return parent.copyWith(
-                            subMoves: [...parent.subMoves, newItem],
-                          );
-                        }
-                        return parent;
-                      });
-                    }
-
-                    if (!appended) {
-                      _updateDataAtPath(_selectedPath!, (target) {
-                        if (target.isCombo) {
-                          return target.copyWith(
-                            subMoves: [...target.subMoves, newItem],
-                          );
-                        }
-                        return BuilderCardData(
-                          name: 'Combo',
-                          category: 'simultaneous',
-                          subMoves: [target, newItem],
-                        );
-                      });
-                    }
-                    _isSimultaneousMode = false;
-                  } else {
-                    // Insert after selected top-level card, or append at end
-                    if (_selectedPath != null && _selectedPath!.length == 1) {
-                      final insertIndex = _selectedPath![0] + 1;
-                      _workspaceCards.insert(insertIndex, newItem);
-                    } else {
-                      _workspaceCards.add(newItem);
-                    }
-                  }
-                });
+                final newItem = BuilderCardData(
+                  name: item['name'],
+                  category: category,
+                  glossaryId: item['id'],
+                );
+                _onAddItem(newItem);
                 Navigator.pop(context);
               },
             );

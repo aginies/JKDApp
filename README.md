@@ -9,7 +9,7 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Move Glossary**: Extensive database of punches, kicks, packs, trapping, and specialized JKD movements.
 - **Combo Builder**: Visual interface to build complex combinations with support for **sub-numbering** (e.g., 1a, 1b, 1c).
 - **Training Mode**: Text-to-speech guided training with configurable intervals and looping.
-- **Random Reader**: Specialized training tool for JKD Footwork that calls out moves randomly within a selected series.
+- **Training Programs**: Structured multi-day training regimens with progress tracking, daily assignments, and completion statistics.
 - **Multi-language**: Full support for English and French.
 
 ### Advanced Features
