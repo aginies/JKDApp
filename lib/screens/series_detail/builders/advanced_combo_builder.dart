@@ -130,7 +130,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                         spacing: 8,
                         runSpacing: 8,
                         children: _workspaceCards.asMap().entries.map((entry) {
-                          return _buildCard([entry.key], entry.value, lang);
+                          return _buildCard(
+                            [entry.key],
+                            entry.value,
+                            lang,
+                            cardNumber: entry.key + 1,
+                          );
                         }).toList(),
                       ),
                     ),
@@ -149,6 +154,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   Widget _buildTopToolbar(String lang) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.zero,
       child: Row(
         children: [
           _toolbarButton('Start', Icons.add, Colors.blue, _onAddClick),
@@ -237,22 +243,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           const SizedBox(width: 8, child: VerticalDivider()),
           _toolbarButton(
             'H',
-            null,
-            Colors.black,
+            Icons.north_east,
+            Colors.grey[700]!,
             () => _updateSelectedCard(level: 'High'),
             customText: Colors.white,
           ),
           _toolbarButton(
             'M',
-            null,
-            Colors.black,
+            Icons.arrow_forward,
+            Colors.grey[700]!,
             () => _updateSelectedCard(level: 'Mid'),
             customText: Colors.white,
           ),
           _toolbarButton(
             'L',
-            null,
-            Colors.black,
+            Icons.south_east,
+            Colors.grey[700]!,
             () => _updateSelectedCard(level: 'Low'),
             customText: Colors.white,
           ),
@@ -275,11 +281,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     final fgColor = customText ?? (isActive ? Colors.white : color);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      padding: const EdgeInsets.symmetric(horizontal: 1.0),
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           minimumSize: const Size(0, 36),
           backgroundColor: bgColor,
         ),
@@ -304,14 +310,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   // Recursive Card builder
-  Widget _buildCard(List<int> path, BuilderCardData data, String lang) {
+  Widget _buildCard(
+    List<int> path,
+    BuilderCardData data,
+    String lang, {
+    int? cardNumber,
+  }) {
     final theme = Theme.of(context);
     final isSelected = _isPathSelected(path);
     final color = MoveDisplayWidgets.getCategoryColor(data.category);
 
+    Widget card;
+
     // BOX: CHAIN
     if (data.isChain) {
-      return GestureDetector(
+      card = GestureDetector(
         onTap: () => _selectPath(path),
         child: Container(
           padding: const EdgeInsets.all(8),
@@ -368,11 +381,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           ),
         ),
       );
-    }
-
-    // BOX: SIMULTANEOUS
-    if (data.isCombo) {
-      return GestureDetector(
+    } else if (data.isCombo) {
+      card = GestureDetector(
         onTap: () => _selectPath(path),
         child: Container(
           padding: const EdgeInsets.all(8),
@@ -421,107 +431,140 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           ),
         ),
       );
-    }
-
-    // RENDER LEAF ITEM
-    return GestureDetector(
-      onTap: () => _selectPath(path),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        constraints: const BoxConstraints(minWidth: 75),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(8),
-          // Removed outer border to fix double border issue
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ATTACKER BOX
-            GestureDetector(
-              onTap: () => _selectPath(path, isCounter: false),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: (isSelected && !_isCounterSelected)
-                        ? color
-                        : color.withValues(alpha: 0.2),
-                    width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
+    } else {
+      // RENDER LEAF ITEM
+      card = GestureDetector(
+        onTap: () => _selectPath(path),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          constraints: const BoxConstraints(minWidth: 75),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(8),
+            // Removed outer border to fix double border issue
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ATTACKER BOX
+              GestureDetector(
+                onTap: () => _selectPath(path, isCounter: false),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: (isSelected && !_isCounterSelected)
+                          ? color
+                          : color.withValues(alpha: 0.2),
+                      width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        MoveDisplayWidgets.getCategoryIcon(data.category),
+                        size: 20,
+                        color: color,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        data.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (data.specialAction != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0),
+                          child: Chip(
+                            label: Text(
+                              data.specialAction!,
+                              style: const TextStyle(fontSize: 8),
+                            ),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      if (data.side.isNotEmpty ||
+                          data.level.isNotEmpty ||
+                          data.isFeint) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            if (data.side.isNotEmpty)
+                              MoveDisplayWidgets.sideCircle(
+                                LocalizationService.translate(
+                                  data.side == 'L' ? 'left' : 'right',
+                                  lang,
+                                ).substring(0, 1),
+                                data.side,
+                                mini: true,
+                              ),
+                            if (data.level.isNotEmpty)
+                              MoveDisplayWidgets.levelIcon(
+                                data.level,
+                                size: 12,
+                                mini: true,
+                              ),
+                            if (data.isFeint)
+                              MoveDisplayWidgets.drawBox(mini: true),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      MoveDisplayWidgets.getCategoryIcon(data.category),
-                      size: 20,
-                      color: color,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      data.name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (data.specialAction != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0),
-                        child: Chip(
-                          label: Text(
-                            data.specialAction!,
-                            style: const TextStyle(fontSize: 8),
-                          ),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    if (data.side.isNotEmpty ||
-                        data.level.isNotEmpty ||
-                        data.isFeint) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 4,
-                        children: [
-                          if (data.side.isNotEmpty)
-                            MoveDisplayWidgets.sideCircle(
-                              LocalizationService.translate(
-                                data.side == 'L' ? 'left' : 'right',
-                                lang,
-                              ).substring(0, 1),
-                              data.side,
-                              mini: true,
-                            ),
-                          if (data.level.isNotEmpty)
-                            MoveDisplayWidgets.levelIcon(
-                              data.level,
-                              size: 12,
-                              mini: true,
-                            ),
-                          if (data.isFeint)
-                            MoveDisplayWidgets.drawBox(mini: true),
-                        ],
-                      ),
-                    ],
-                  ],
+              ),
+
+              if (data.hasCounter) ...[
+                const SizedBox(height: 4),
+                _buildCounterBox(path, data, lang, isSelected),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Wrap with number badge for top-level cards
+    if (cardNumber != null) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          card,
+          Positioned(
+            top: -6,
+            left: -6,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '$cardNumber',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+          ),
+        ],
+      );
+    }
 
-            if (data.hasCounter) ...[
-              const SizedBox(height: 4),
-              _buildCounterBox(path, data, lang, isSelected),
-            ],
-          ],
-        ),
-      ),
-    );
+    return card;
   }
 
   Widget _buildCounterBox(
