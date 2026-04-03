@@ -344,6 +344,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     final idx = _trainingController.currentIndex;
     final move = _moves[idx];
 
+    // Compute the display number for this item (skipping 'move' category)
+    int displayNumber = 0;
+    for (int i = 0; i <= idx; i++) {
+      if (_moves[i].category != 'move') displayNumber++;
+    }
+    final int totalNumbered = _moves.where((m) => m.category != 'move').length;
+    final String itemLabel = move.category != 'move'
+        ? '$displayNumber / $totalNumbered'
+        : '${idx + 1} / ${_moves.length}';
+
+    Widget itemView;
+
     if (_isGraphicalView) {
       // Single graphical card, centered
       final cards = GraphicalMoveView.buildCards(
@@ -354,14 +366,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         trainingController: _trainingController,
         singleItemIndex: idx,
       );
-      return Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: cards.isNotEmpty ? cards.first : const SizedBox.shrink(),
-          ),
-        ),
-      );
+      itemView = cards.isNotEmpty ? cards.first : const SizedBox.shrink();
     } else {
       // Single list tile, centered
       final tiles = MoveListDisplayWidget.buildTiles(
@@ -382,15 +387,31 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         onSetState: (a, b) {},
         singleItemIndex: idx,
       );
-      return Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: tiles.isNotEmpty ? tiles.first : const SizedBox.shrink(),
+      itemView = tiles.isNotEmpty ? tiles.first : const SizedBox.shrink();
+    }
+
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                itemLabel,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 16),
+              itemView,
+            ],
           ),
         ),
-      );
-    }
+      ),
+    );
   }
 
   void _confirmDeleteItem(BuildContext context, int index, String lang) {
