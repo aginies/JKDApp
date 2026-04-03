@@ -71,6 +71,16 @@
       "removal": {}
     },
     {
+      "name": "Da",
+      "translations": {
+        "en": "Hit",
+        "fr": "Frappe"
+      },
+      "hit_type": "closed",
+      "possible_level": "H,M,L",
+      "removal": {}
+    },
+    {
       "name": "Uppercut",
       "translations": {
         "en": "Uppercut",
@@ -1247,15 +1257,6 @@
       "translations": {
         "en": "Hand",
         "fr": "Main"
-      },
-      "possible_level": "H,M,L",
-      "removal": {}
-    },
-    {
-      "name": "Da",
-      "translations": {
-        "en": "Strike/Hit",
-        "fr": "Frapper"
       },
       "possible_level": "H,M,L",
       "removal": {}
