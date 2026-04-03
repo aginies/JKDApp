@@ -4,6 +4,7 @@ import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
+import '../widgets/separated_wrap.dart';
 import '../glossary/glossary_data_service.dart';
 
 class AdvancedComboBuilder extends StatefulWidget {
@@ -515,10 +516,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 ),
               ),
               const SizedBox(height: 4),
-              Wrap(
+              SeparatedWrap(
                 spacing: 4,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: 10,
                 children: data.chain.asMap().entries.map((e) {
                   final itemPath = [...path, e.key];
                   return Row(
@@ -579,9 +579,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   color: _getAlphaColor(Colors.grey, theme),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Wrap(
+                child: SeparatedWrap(
                   spacing: 4,
-                  runSpacing: 4,
+                  runSpacing: 10,
                   children: data.subMoves.asMap().entries.map((e) {
                     final itemPath = [...path, e.key];
                     return _buildCard(itemPath, e.value, lang);
@@ -847,9 +847,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               color: _getAlphaColor(Colors.grey, theme),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Wrap(
+            child: SeparatedWrap(
               spacing: 4,
-              runSpacing: 4,
+              runSpacing: 10,
               children: data.counterSubMoves.asMap().entries.map((e) {
                 return _buildCounterSubCard(
                   path,
@@ -885,10 +885,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
           const SizedBox(height: 4),
-          Wrap(
+          SeparatedWrap(
             spacing: 4,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 10,
             children: data.counterChain.asMap().entries.map((e) {
               return Row(
                 mainAxisSize: MainAxisSize.min,

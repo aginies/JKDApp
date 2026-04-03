@@ -426,6 +426,54 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     );
   }
 
+  void _showPrintOptions(String lang) {
+    if (widget.series == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              LocalizationService.translate('export_to_pdf', lang),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.grid_view, color: Colors.blue),
+              title: const Text('Graphical Card View'),
+              subtitle: const Text('Visual cards, mirrors the app interface'),
+              onTap: () {
+                Navigator.pop(context);
+                PdfService.exportSeriesToPdf(
+                  widget.series!,
+                  lang,
+                  isGraphical: true,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.list, color: Colors.teal),
+              title: const Text('Compact List View'),
+              subtitle: const Text('Text-focused, space-efficient list'),
+              onTap: () {
+                Navigator.pop(context);
+                PdfService.exportSeriesToPdf(
+                  widget.series!,
+                  lang,
+                  isGraphical: false,
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _confirmDeleteItem(BuildContext context, int index, String lang) {
     showDialog(
       context: context,
@@ -584,7 +632,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       if (value == 'edit') {
                         setState(() => _isEditing = true);
                       } else if (value == 'print') {
-                        PdfService.exportSeriesToPdf(widget.series!, lang);
+                        _showPrintOptions(lang);
                       } else if (value == 'export') {
                         _handleExportJson();
                       } else if (value == 'share') {

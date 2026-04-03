@@ -3,6 +3,7 @@ import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../controllers/training_controller.dart';
 import 'move_display_widgets.dart';
+import 'separated_wrap.dart';
 
 /// Read-only graphical card view for moves — mirrors the visual style
 /// of the AdvancedComboBuilder cards but without any editing capabilities.
@@ -50,10 +51,6 @@ class GraphicalMoveView {
 
   /// Given a top-level move and the current [subIndex] from TTS,
   /// compute which sub-move (by index into subMoves/chain) is active.
-  ///
-  /// Each sub-move without a counter produces 1 TtsLine.
-  /// Each sub-move with a counter produces 2 TtsLines (attack + answer).
-  /// Returns -1 if no sub-move is active.
   static int _activeSubMoveIndex(Move move, int subIndex) {
     final List<Move> subs;
     if (move.isChain) {
@@ -78,7 +75,6 @@ class GraphicalMoveView {
   }
 
   /// Whether the answer part of a sub-move is currently being spoken.
-  /// True when subIndex points to the second TtsLine of a sub-move with counter.
   static bool _isAnswerActive(Move subMove, int subIndex, int linesBefore) {
     if (subMove.counterName == null && !subMove.hasStructuredCounter) {
       return false;
@@ -177,7 +173,7 @@ class GraphicalMoveView {
                         padding: EdgeInsets.symmetric(horizontal: 4.0),
                         child: Icon(
                           Icons.arrow_forward,
-                          size: 16,
+                          size: 24,
                           color: Colors.teal,
                         ),
                       ),
@@ -424,12 +420,10 @@ class GraphicalMoveView {
   }
 
   /// A Wrap-like layout that inserts subtle divider lines between visual rows.
-  /// Uses [LayoutBuilder] to measure available width and partition [children]
-  /// into rows, inserting a thin [Divider] between them.
   static Widget _buildSubItemsWrap({required List<Widget> children}) {
     if (children.isEmpty) return const SizedBox.shrink();
 
-    return _SeparatedWrap(spacing: 4, children: children);
+    return SeparatedWrap(spacing: 4, children: children);
   }
 
   /// Read-only counter (answer) box — supports simple, simultaneous, and chain counters.
@@ -523,7 +517,7 @@ class GraphicalMoveView {
                       padding: EdgeInsets.symmetric(horizontal: 2.0),
                       child: Icon(
                         Icons.arrow_forward,
-                        size: 12,
+                        size: 18,
                         color: Colors.teal,
                       ),
                     ),
@@ -629,144 +623,5 @@ class GraphicalMoveView {
         ],
       ),
     );
-  }
-}
-
-/// A widget that lays out children in a Wrap and draws subtle horizontal
-/// separator lines between visual rows when children overflow to a new line.
-class _SeparatedWrap extends StatelessWidget {
-  final double spacing;
-  final List<Widget> children;
-
-  const _SeparatedWrap({required this.spacing, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    // Wrap with a custom paint layer that draws row separators.
-    // We use a Wrap inside a _SeparatedWrapRenderWrapper that inspects
-    // child positions after layout.
-    return _SeparatedWrapLayout(spacing: spacing, children: children);
-  }
-}
-
-/// Uses a Wrap and post-layout inspection to draw divider lines between rows.
-class _SeparatedWrapLayout extends StatefulWidget {
-  final double spacing;
-  final List<Widget> children;
-
-  const _SeparatedWrapLayout({required this.spacing, required this.children});
-
-  @override
-  State<_SeparatedWrapLayout> createState() => _SeparatedWrapLayoutState();
-}
-
-class _SeparatedWrapLayoutState extends State<_SeparatedWrapLayout> {
-  final GlobalKey _wrapKey = GlobalKey();
-  List<double> _rowBottoms = [];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _computeRows());
-  }
-
-  @override
-  void didUpdateWidget(covariant _SeparatedWrapLayout oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _computeRows());
-  }
-
-  void _computeRows() {
-    final renderBox = _wrapKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null || !renderBox.hasSize) return;
-
-    // Walk through Wrap's children via their parent data to find row breaks.
-    // We inspect each child's offset.dy to detect row boundaries.
-    final wrapRender = renderBox;
-    final List<double> bottoms = [];
-    double currentRowTop = -1;
-    double currentRowBottom = 0;
-
-    void visitChild(RenderObject child) {
-      if (child is RenderBox && child.hasSize) {
-        final offset = child.localToGlobal(Offset.zero, ancestor: wrapRender);
-        final top = offset.dy;
-        final bottom = top + child.size.height;
-
-        if (currentRowTop < 0) {
-          // First child
-          currentRowTop = top;
-          currentRowBottom = bottom;
-        } else if (top > currentRowBottom - 1) {
-          // New row detected — save the midpoint between rows as divider pos
-          bottoms.add((currentRowBottom + top) / 2);
-          currentRowTop = top;
-          currentRowBottom = bottom;
-        } else {
-          // Same row
-          if (bottom > currentRowBottom) currentRowBottom = bottom;
-        }
-      }
-    }
-
-    wrapRender.visitChildren(visitChild);
-
-    if (!mounted) return;
-    if (_rowBottoms.length != bottoms.length ||
-        !_listEquals(_rowBottoms, bottoms)) {
-      setState(() {
-        _rowBottoms = bottoms;
-      });
-    }
-  }
-
-  bool _listEquals(List<double> a, List<double> b) {
-    if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
-      if ((a[i] - b[i]).abs() > 0.5) return false;
-    }
-    return true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      foregroundPainter: _RowSeparatorPainter(
-        rowBottoms: _rowBottoms,
-        color: Colors.grey.withValues(alpha: 0.25),
-      ),
-      child: Wrap(
-        key: _wrapKey,
-        spacing: widget.spacing,
-        runSpacing: 10,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: widget.children,
-      ),
-    );
-  }
-}
-
-/// Draws thin horizontal lines at the given Y positions (midpoints between rows).
-class _RowSeparatorPainter extends CustomPainter {
-  final List<double> rowBottoms;
-  final Color color;
-
-  _RowSeparatorPainter({required this.rowBottoms, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (rowBottoms.isEmpty) return;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 0.5;
-
-    for (final y in rowBottoms) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _RowSeparatorPainter oldDelegate) {
-    return oldDelegate.rowBottoms != rowBottoms || oldDelegate.color != color;
   }
 }
