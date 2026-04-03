@@ -82,8 +82,7 @@ class _BackupModalState extends State<BackupModal> {
               const Divider(height: 32),
               */
               _buildSectionTitle(
-                LocalizationService.translate('export_title', lang) ??
-                    'Export Title',
+                LocalizationService.translate('export_title', lang),
               ),
               _buildBackupTile(
                 title: lang == 'fr'
