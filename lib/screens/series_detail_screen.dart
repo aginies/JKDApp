@@ -296,10 +296,13 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 onCancel: () => Navigator.of(ctx).pop(),
               ),
             ),
-            floatingActionButton: FloatingActionButton(
-              heroTag: 'combo_builder_help',
-              onPressed: () => EditHelpDialog.show(ctx, lang),
-              child: const Icon(Icons.help_outline),
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.only(bottom: 60.0),
+              child: FloatingActionButton(
+                heroTag: 'combo_builder_help',
+                onPressed: () => EditHelpDialog.show(ctx, lang),
+                child: const Icon(Icons.help_outline),
+              ),
             ),
           );
         },
