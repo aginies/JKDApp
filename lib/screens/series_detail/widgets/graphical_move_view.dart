@@ -66,7 +66,9 @@ class GraphicalMoveView {
 
     int lineCount = 0;
     for (int j = 0; j < subs.length; j++) {
-      final linesForThis = subs[j].counterName != null ? 2 : 1;
+      final hasCounter =
+          subs[j].counterName != null || subs[j].hasStructuredCounter;
+      final linesForThis = hasCounter ? 2 : 1;
       if (subIndex >= lineCount && subIndex < lineCount + linesForThis) {
         return j;
       }
@@ -78,7 +80,9 @@ class GraphicalMoveView {
   /// Whether the answer part of a sub-move is currently being spoken.
   /// True when subIndex points to the second TtsLine of a sub-move with counter.
   static bool _isAnswerActive(Move subMove, int subIndex, int linesBefore) {
-    if (subMove.counterName == null) return false;
+    if (subMove.counterName == null && !subMove.hasStructuredCounter) {
+      return false;
+    }
     // attack line is at linesBefore, answer line is at linesBefore + 1
     return subIndex == linesBefore + 1;
   }
@@ -87,7 +91,9 @@ class GraphicalMoveView {
   static int _linesBeforeSubMove(List<Move> subs, int targetIndex) {
     int count = 0;
     for (int j = 0; j < targetIndex; j++) {
-      count += subs[j].counterName != null ? 2 : 1;
+      final hasCounter =
+          subs[j].counterName != null || subs[j].hasStructuredCounter;
+      count += hasCounter ? 2 : 1;
     }
     return count;
   }
@@ -179,7 +185,7 @@ class GraphicalMoveView {
                 );
               }).toList(),
             ),
-            if (move.counterName != null) ...[
+            if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
               _buildCounterBox(move, lang),
             ],
@@ -221,7 +227,7 @@ class GraphicalMoveView {
                 }).toList(),
               ),
             ),
-            if (move.counterName != null) ...[
+            if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
               _buildCounterBox(move, lang),
             ],
@@ -262,7 +268,7 @@ class GraphicalMoveView {
                 );
               }).toList(),
             ),
-            if (move.counterName != null) ...[
+            if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
               _buildCounterBox(move, lang),
             ],
@@ -361,7 +367,7 @@ class GraphicalMoveView {
                   ],
                 ),
               ),
-              if (move.counterName != null) ...[
+              if (move.counterName != null || move.hasStructuredCounter) ...[
                 const SizedBox(height: 4),
                 _buildCounterBox(move, lang, isActive: isActiveAnswer),
               ],
@@ -427,34 +433,117 @@ class GraphicalMoveView {
     return _SeparatedWrap(spacing: 4, children: children);
   }
 
-  /// Read-only counter (answer) box.
+  /// Read-only counter (answer) box — supports simple, simultaneous, and chain counters.
   static Widget _buildCounterBox(
     Move move,
     String lang, {
     bool isActive = false,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: isActive
-            ? Colors.amber.withValues(alpha: 0.15)
-            : Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: isActive
-              ? Colors.amber.withValues(alpha: 0.8)
-              : Colors.red.withValues(alpha: 0.3),
-          width: isActive ? 2 : 1,
-        ),
-      ),
-      child: Column(
+    final borderColor = isActive
+        ? Colors.amber.withValues(alpha: 0.8)
+        : Colors.red.withValues(alpha: 0.3);
+    final bgColor = isActive
+        ? Colors.amber.withValues(alpha: 0.15)
+        : Colors.red.withValues(alpha: 0.1);
+    final labelColor = isActive ? Colors.amber[800]! : Colors.red;
+
+    // Build inner content based on counter structure
+    Widget counterContent;
+
+    if (move.hasCounterCombo) {
+      // SIMULTANEOUS counter (A+B answer)
+      counterContent = Column(
         children: [
           Text(
             LocalizationService.translate('answer', lang).toUpperCase(),
             style: TextStyle(
               fontSize: 8,
               fontWeight: FontWeight.bold,
-              color: isActive ? Colors.amber[800] : Colors.red,
+              color: labelColor,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'SIMULTANEOUS',
+            style: TextStyle(
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: move.counterSubMoves.map((sm) {
+                return _buildMiniMoveCard(sm, lang);
+              }).toList(),
+            ),
+          ),
+        ],
+      );
+    } else if (move.hasCounterChain) {
+      // CHAIN counter (A->+ answer)
+      counterContent = Column(
+        children: [
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: labelColor,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'CHAIN',
+            style: TextStyle(
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: move.counterChain.asMap().entries.map((e) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildMiniMoveCard(e.value, lang),
+                  if (e.key < move.counterChain.length - 1)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        size: 12,
+                        color: Colors.teal,
+                      ),
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      );
+    } else {
+      // Simple single counter (existing behavior)
+      counterContent = Column(
+        children: [
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: labelColor,
             ),
           ),
           const SizedBox(height: 2),
@@ -487,6 +576,65 @@ class GraphicalMoveView {
               ],
             ),
           ],
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: borderColor, width: isActive ? 2 : 1),
+      ),
+      child: counterContent,
+    );
+  }
+
+  /// Small card for rendering a single move inside a structured counter box.
+  static Widget _buildMiniMoveCard(Move move, String lang) {
+    final color = MoveDisplayWidgets.getCategoryColor(move.category);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            MoveDisplayWidgets.getCategoryIcon(move.category),
+            size: 14,
+            color: color,
+          ),
+          Text(
+            move.name,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          if (move.side.isNotEmpty || move.level.isNotEmpty)
+            Wrap(
+              spacing: 2,
+              children: [
+                if (move.side.isNotEmpty)
+                  MoveDisplayWidgets.sideCircle(
+                    LocalizationService.translate(
+                      move.side == 'L' ? 'left' : 'right',
+                      lang,
+                    ).substring(0, 1),
+                    move.side,
+                    mini: true,
+                  ),
+                if (move.level.isNotEmpty)
+                  MoveDisplayWidgets.levelIcon(
+                    move.level,
+                    size: 10,
+                    mini: true,
+                  ),
+              ],
+            ),
         ],
       ),
     );

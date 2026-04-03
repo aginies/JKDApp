@@ -25,6 +25,12 @@ class Move {
   final String? counterCategory;
   final Map<String, String> counterTranslations;
 
+  /// Structured counter: simultaneous answer moves (A+B for answer).
+  final List<Move> counterSubMoves;
+
+  /// Structured counter: sequential answer chain (A->+ for answer).
+  final List<Move> counterChain;
+
   final List<Move> subMoves;
   final List<Move> chain;
 
@@ -48,12 +54,17 @@ class Move {
     this.counterSpecialAction,
     this.counterCategory,
     this.counterTranslations = const {},
+    this.counterSubMoves = const [],
+    this.counterChain = const [],
     this.subMoves = const [],
     this.chain = const [],
   }) : uKey = uKey ?? const Uuid().v4();
 
   bool get isCombo => subMoves.isNotEmpty;
   bool get isChain => chain.isNotEmpty;
+  bool get hasCounterCombo => counterSubMoves.isNotEmpty;
+  bool get hasCounterChain => counterChain.isNotEmpty;
+  bool get hasStructuredCounter => hasCounterCombo || hasCounterChain;
 
   /// Returns the effective category for icon/color display purposes.
   /// For 'simultaneous' moves, resolves to the first sub-move's category.
@@ -98,6 +109,12 @@ class Move {
       'counter_special_action': counterSpecialAction,
       'counter_category': counterCategory,
       'counter_translations': json.encode(counterTranslations),
+      'counter_sub_moves_json': counterSubMoves.isNotEmpty
+          ? json.encode(counterSubMoves.map((m) => m.toMap()).toList())
+          : null,
+      'counter_chain_json': counterChain.isNotEmpty
+          ? json.encode(counterChain.map((m) => m.toMap()).toList())
+          : null,
       'sub_moves_json': subMoves.isNotEmpty
           ? json.encode(subMoves.map((m) => m.toMap()).toList())
           : null,
@@ -141,6 +158,34 @@ class Move {
       }
     }
 
+    List<Move> counterSubs = [];
+    if (map['counter_sub_moves_json'] != null) {
+      try {
+        final decoded = json.decode(map['counter_sub_moves_json']);
+        if (decoded is List) {
+          counterSubs = decoded
+              .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('Error parsing counter_sub_moves_json: $e');
+      }
+    }
+
+    List<Move> counterChainItems = [];
+    if (map['counter_chain_json'] != null) {
+      try {
+        final decoded = json.decode(map['counter_chain_json']);
+        if (decoded is List) {
+          counterChainItems = decoded
+              .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('Error parsing counter_chain_json: $e');
+      }
+    }
+
     return Move(
       id: map['id'],
       glossaryId: map['glossary_id'],
@@ -163,6 +208,8 @@ class Move {
       counterSpecialAction: map['counter_special_action'],
       counterCategory: map['counter_category'],
       counterTranslations: counterTrans,
+      counterSubMoves: counterSubs,
+      counterChain: counterChainItems,
       subMoves: subs,
       chain: chainItems,
     );
@@ -188,6 +235,8 @@ class Move {
     String? counterSpecialAction,
     String? counterCategory,
     Map<String, String>? counterTranslations,
+    List<Move>? counterSubMoves,
+    List<Move>? counterChain,
     List<Move>? subMoves,
     List<Move>? chain,
   }) {
@@ -213,6 +262,8 @@ class Move {
       counterSpecialAction: counterSpecialAction ?? this.counterSpecialAction,
       counterCategory: counterCategory ?? this.counterCategory,
       counterTranslations: counterTranslations ?? this.counterTranslations,
+      counterSubMoves: counterSubMoves ?? this.counterSubMoves,
+      counterChain: counterChain ?? this.counterChain,
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
     );

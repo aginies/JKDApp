@@ -30,11 +30,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
   bool _isCounterSelected = false;
+  int?
+  _selectedCounterIndex; // Which sub-item inside a structured counter is selected (null = whole counter)
 
   // Modes
   bool _isDefenseMode = false;
   bool _isSimultaneousMode = false;
   bool _isChainMode = false;
+  bool _isCounterSimultaneousMode = false;
+  bool _isCounterChainMode = false;
 
   @override
   void initState() {
@@ -84,6 +88,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       counterLevel: m.counterLevel ?? '',
       subMoves: m.subMoves.map((sm) => _convertFromMove(sm)).toList(),
       chain: m.chain.map((cm) => _convertFromMove(cm)).toList(),
+      counterSubMoves: m.counterSubMoves
+          .map((cm) => _convertFromMove(cm))
+          .toList(),
+      counterChain: m.counterChain.map((cm) => _convertFromMove(cm)).toList(),
     );
   }
 
@@ -157,6 +165,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
+  void _clearAllModes() {
+    _isSimultaneousMode = false;
+    _isChainMode = false;
+    _isDefenseMode = false;
+    _isCounterSimultaneousMode = false;
+    _isCounterChainMode = false;
+  }
+
   Widget _buildTopToolbar(String lang) {
     return Row(
       children: [
@@ -173,23 +189,28 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   null,
-                  _isSimultaneousMode ? Colors.green : Colors.blueAccent,
+                  (_isSimultaneousMode || _isCounterSimultaneousMode)
+                      ? Colors.green
+                      : Colors.blueAccent,
                   () {
                     if (_selectedPath != null) {
                       setState(() {
-                        _isSimultaneousMode = true;
-                        _isChainMode = false;
-                        _isDefenseMode = false;
+                        _clearAllModes();
+                        if (_isCounterSelected) {
+                          _isCounterSimultaneousMode = true;
+                        } else {
+                          _isSimultaneousMode = true;
+                        }
                       });
                       _showGlossaryPicker();
                     }
                   },
-                  isActive: _isSimultaneousMode,
+                  isActive: _isSimultaneousMode || _isCounterSimultaneousMode,
                   customChild: Builder(
                     builder: (context) {
-                      final fg = _isSimultaneousMode
-                          ? Colors.white
-                          : Colors.blueAccent;
+                      final active =
+                          _isSimultaneousMode || _isCounterSimultaneousMode;
+                      final fg = active ? Colors.white : Colors.blueAccent;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -225,21 +246,27 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   null,
-                  _isChainMode ? Colors.green : Colors.teal,
+                  (_isChainMode || _isCounterChainMode)
+                      ? Colors.green
+                      : Colors.teal,
                   () {
                     if (_selectedPath != null) {
                       setState(() {
-                        _isChainMode = true;
-                        _isSimultaneousMode = false;
-                        _isDefenseMode = false;
+                        _clearAllModes();
+                        if (_isCounterSelected) {
+                          _isCounterChainMode = true;
+                        } else {
+                          _isChainMode = true;
+                        }
                       });
                       _showGlossaryPicker();
                     }
                   },
-                  isActive: _isChainMode,
+                  isActive: _isChainMode || _isCounterChainMode,
                   customChild: Builder(
                     builder: (context) {
-                      final fg = _isChainMode ? Colors.white : Colors.teal;
+                      final active = _isChainMode || _isCounterChainMode;
+                      final fg = active ? Colors.white : Colors.teal;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -272,9 +299,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   () {
                     if (_selectedPath != null) {
                       setState(() {
+                        _clearAllModes();
                         _isDefenseMode = true;
-                        _isChainMode = false;
-                        _isSimultaneousMode = false;
                       });
                       _showGlossaryPicker();
                     }
@@ -659,6 +685,71 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return card;
   }
 
+  /// Builds a single counter sub-item card (used inside simultaneous/chain counter boxes).
+  Widget _buildCounterSubCard(
+    List<int> path,
+    BuilderCardData sm,
+    int index,
+    String lang,
+    bool isTopSelected,
+  ) {
+    final color = MoveDisplayWidgets.getCategoryColor(sm.category);
+    final bool isSubSelected =
+        isTopSelected && _isCounterSelected && _selectedCounterIndex == index;
+
+    return GestureDetector(
+      onTap: () => _selectPath(path, isCounter: true, counterIndex: index),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isSubSelected ? color : color.withValues(alpha: 0.3),
+            width: isSubSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              MoveDisplayWidgets.getCategoryIcon(sm.category),
+              size: 18,
+              color: color,
+            ),
+            Text(
+              sm.name,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            if (sm.side.isNotEmpty || sm.level.isNotEmpty || sm.isFeint)
+              Wrap(
+                spacing: 2,
+                children: [
+                  if (sm.side.isNotEmpty)
+                    MoveDisplayWidgets.sideCircle(
+                      LocalizationService.translate(
+                        sm.side == 'L' ? 'left' : 'right',
+                        lang,
+                      ).substring(0, 1),
+                      sm.side,
+                      mini: true,
+                    ),
+                  if (sm.level.isNotEmpty)
+                    MoveDisplayWidgets.levelIcon(
+                      sm.level,
+                      size: 12,
+                      mini: true,
+                    ),
+                  if (sm.isFeint) MoveDisplayWidgets.drawBox(mini: true),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCounterBox(
     List<int> path,
     BuilderCardData data,
@@ -666,6 +757,153 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     bool isTopSelected,
   ) {
     final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
+    // Whole-counter selected (no specific sub-item)
+    final bool isWholeCounterSelected =
+        isThisCounterSelected && _selectedCounterIndex == null;
+
+    // Build inner content based on counter structure
+    Widget counterContent;
+
+    if (data.hasCounterCombo) {
+      // SIMULTANEOUS counter (A+B answer)
+      counterContent = Column(
+        children: [
+          const Text(
+            'ANSWER',
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'SIMULTANEOUS',
+            style: TextStyle(
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: data.counterSubMoves.asMap().entries.map((e) {
+                return _buildCounterSubCard(
+                  path,
+                  e.value,
+                  e.key,
+                  lang,
+                  isTopSelected,
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      );
+    } else if (data.hasCounterChain) {
+      // CHAIN counter (A->+ answer)
+      counterContent = Column(
+        children: [
+          const Text(
+            'ANSWER',
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'CHAIN',
+            style: TextStyle(
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: data.counterChain.asMap().entries.map((e) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildCounterSubCard(
+                    path,
+                    e.value,
+                    e.key,
+                    lang,
+                    isTopSelected,
+                  ),
+                  if (e.key < data.counterChain.length - 1)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        size: 12,
+                        color: Colors.teal,
+                      ),
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      );
+    } else {
+      // Simple single counter (existing behavior)
+      counterContent = Column(
+        children: [
+          const Text(
+            'ANSWER',
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data.counterName!,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          if (data.counterSide.isNotEmpty || data.counterLevel.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 2,
+              children: [
+                if (data.counterSide.isNotEmpty)
+                  MoveDisplayWidgets.sideCircle(
+                    LocalizationService.translate(
+                      data.counterSide == 'L' ? 'left' : 'right',
+                      lang,
+                    ).substring(0, 1),
+                    data.counterSide,
+                    mini: true,
+                  ),
+                if (data.counterLevel.isNotEmpty)
+                  MoveDisplayWidgets.levelIcon(
+                    data.counterLevel,
+                    size: 10,
+                    mini: true,
+                  ),
+              ],
+            ),
+          ],
+        ],
+      );
+    }
 
     return GestureDetector(
       onTap: () => _selectPath(path, isCounter: true),
@@ -675,54 +913,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isThisCounterSelected
+            color:
+                isWholeCounterSelected ||
+                    (isThisCounterSelected && !data.hasStructuredCounter)
                 ? Colors.red
                 : Colors.red.withValues(alpha: 0.3),
-            width: isThisCounterSelected ? 2 : 1,
+            width:
+                isWholeCounterSelected ||
+                    (isThisCounterSelected && !data.hasStructuredCounter)
+                ? 2
+                : 1,
           ),
         ),
-        child: Column(
-          children: [
-            const Text(
-              'ANSWER',
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              data.counterName!,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            if (data.counterSide.isNotEmpty ||
-                data.counterLevel.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 2,
-                children: [
-                  if (data.counterSide.isNotEmpty)
-                    MoveDisplayWidgets.sideCircle(
-                      LocalizationService.translate(
-                        data.counterSide == 'L' ? 'left' : 'right',
-                        lang,
-                      ).substring(0, 1),
-                      data.counterSide,
-                      mini: true,
-                    ),
-                  if (data.counterLevel.isNotEmpty)
-                    MoveDisplayWidgets.levelIcon(
-                      data.counterLevel,
-                      size: 10,
-                      mini: true,
-                    ),
-                ],
-              ),
-            ],
-          ],
-        ),
+        child: counterContent,
       ),
     );
   }
@@ -737,10 +940,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return true;
   }
 
-  void _selectPath(List<int> path, {bool isCounter = false}) {
+  void _selectPath(
+    List<int> path, {
+    bool isCounter = false,
+    int? counterIndex,
+  }) {
     setState(() {
       _selectedPath = List<int>.from(path);
       _isCounterSelected = isCounter;
+      _selectedCounterIndex = isCounter ? counterIndex : null;
     });
   }
 
@@ -763,9 +971,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _onAddClick() {
     setState(() {
-      _isSimultaneousMode = false;
-      _isChainMode = false;
-      _isDefenseMode = false;
+      _clearAllModes();
     });
     _showGlossaryPicker();
   }
@@ -774,7 +980,77 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     if (_selectedPath == null) return;
 
     setState(() {
-      if (_isCounterSelected) {
+      if (_isCounterSelected && _selectedCounterIndex != null) {
+        // DELETE A SPECIFIC SUB-ITEM inside a structured counter
+        final idx = _selectedCounterIndex!;
+        _updateDataAtPath(_selectedPath!, (item) {
+          if (item.hasCounterCombo) {
+            final newList = List<BuilderCardData>.from(item.counterSubMoves);
+            if (idx >= newList.length) return item;
+            newList.removeAt(idx);
+            if (newList.isEmpty) {
+              // No items left — clear counter entirely
+              return item.copyWith(
+                counterName: null,
+                counterCategory: null,
+                counterGlossaryId: null,
+                counterSide: '',
+                counterLevel: '',
+                counterSubMoves: const [],
+              );
+            }
+            if (newList.length == 1) {
+              // Unwrap: single item becomes a simple counter
+              final remaining = newList.first;
+              return item.copyWith(
+                counterName: remaining.name,
+                counterCategory: remaining.category,
+                counterGlossaryId: remaining.glossaryId,
+                counterSide: remaining.side,
+                counterLevel: remaining.level,
+                counterSubMoves: const [],
+              );
+            }
+            return item.copyWith(
+              counterSubMoves: newList,
+              counterName: newList.map((m) => m.name).join(' + '),
+            );
+          } else if (item.hasCounterChain) {
+            final newList = List<BuilderCardData>.from(item.counterChain);
+            if (idx >= newList.length) return item;
+            newList.removeAt(idx);
+            if (newList.isEmpty) {
+              // No items left — clear counter entirely
+              return item.copyWith(
+                counterName: null,
+                counterCategory: null,
+                counterGlossaryId: null,
+                counterSide: '',
+                counterLevel: '',
+                counterChain: const [],
+              );
+            }
+            if (newList.length == 1) {
+              // Unwrap: single item becomes a simple counter
+              final remaining = newList.first;
+              return item.copyWith(
+                counterName: remaining.name,
+                counterCategory: remaining.category,
+                counterGlossaryId: remaining.glossaryId,
+                counterSide: remaining.side,
+                counterLevel: remaining.level,
+                counterChain: const [],
+              );
+            }
+            return item.copyWith(
+              counterChain: newList,
+              counterName: newList.map((m) => m.name).join(' -> '),
+            );
+          }
+          return item;
+        });
+        _selectedCounterIndex = null;
+      } else if (_isCounterSelected) {
         // DELETE ONLY THE ANSWER of the item at the selected path
         _updateDataAtPath(_selectedPath!, (item) {
           return item.copyWith(
@@ -783,9 +1059,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterGlossaryId: null,
             counterSide: '',
             counterLevel: '',
+            counterSubMoves: const [],
+            counterChain: const [],
           );
         });
         _isCounterSelected = false;
+        _selectedCounterIndex = null;
       } else if (_selectedPath!.length > 1) {
         // DELETE ONLY THE TARGETED SUB-ITEM
         final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
@@ -812,6 +1091,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 counterGlossaryId: parent.counterGlossaryId,
                 counterSide: parent.counterSide,
                 counterLevel: parent.counterLevel,
+                counterSubMoves: parent.counterSubMoves,
+                counterChain: parent.counterChain,
               );
             }
             return remaining;
@@ -823,10 +1104,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         });
 
         _selectedPath = null;
+        _selectedCounterIndex = null;
       } else {
         // DELETE ENTIRE TOP-LEVEL CARD
         _workspaceCards.removeAt(_selectedPath![0]);
         _selectedPath = null;
+        _selectedCounterIndex = null;
       }
     });
   }
@@ -864,6 +1147,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterCategory: data.counterCategory,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
+        counterSubMoves: data.counterSubMoves
+            .map((m) => _convertToMove(m))
+            .toList(),
+        counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
 
@@ -877,6 +1164,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterCategory: data.counterCategory,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
+        counterSubMoves: data.counterSubMoves
+            .map((m) => _convertToMove(m))
+            .toList(),
+        counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
 
@@ -893,6 +1184,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       counterCategory: data.counterCategory,
       counterSide: data.counterSide,
       counterLevel: data.counterLevel,
+      counterSubMoves: data.counterSubMoves
+          .map((m) => _convertToMove(m))
+          .toList(),
+      counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
     );
   }
 
@@ -928,6 +1223,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 counterGlossaryId: current.counterGlossaryId,
                 counterSide: current.counterSide,
                 counterLevel: current.counterLevel,
+                counterSubMoves: current.counterSubMoves,
+                counterChain: current.counterChain,
               );
             }
             return remaining;
@@ -952,6 +1249,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 counterGlossaryId: current.counterGlossaryId,
                 counterSide: current.counterSide,
                 counterLevel: current.counterLevel,
+                counterSubMoves: current.counterSubMoves,
+                counterChain: current.counterChain,
               );
             }
             return remaining;
@@ -994,7 +1293,46 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
     setState(() {
       _updateDataAtPath(_selectedPath!, (item) {
-        if (_isCounterSelected) {
+        if (_isCounterSelected && _selectedCounterIndex != null) {
+          // Update a specific sub-item inside a structured counter
+          final idx = _selectedCounterIndex!;
+          if (item.hasCounterCombo && idx < item.counterSubMoves.length) {
+            final subItem = item.counterSubMoves[idx];
+            String finalSide = subItem.side;
+            if (side != null) {
+              finalSide = (subItem.side == side) ? '' : side;
+            }
+            String finalLevel = subItem.level;
+            if (level != null) {
+              finalLevel = (subItem.level == level) ? '' : level;
+            }
+            final newList = List<BuilderCardData>.from(item.counterSubMoves);
+            newList[idx] = subItem.copyWith(
+              side: finalSide,
+              level: finalLevel,
+              isFeint: toggleFeint ? !subItem.isFeint : subItem.isFeint,
+            );
+            return item.copyWith(counterSubMoves: newList);
+          } else if (item.hasCounterChain && idx < item.counterChain.length) {
+            final subItem = item.counterChain[idx];
+            String finalSide = subItem.side;
+            if (side != null) {
+              finalSide = (subItem.side == side) ? '' : side;
+            }
+            String finalLevel = subItem.level;
+            if (level != null) {
+              finalLevel = (subItem.level == level) ? '' : level;
+            }
+            final newList = List<BuilderCardData>.from(item.counterChain);
+            newList[idx] = subItem.copyWith(
+              side: finalSide,
+              level: finalLevel,
+              isFeint: toggleFeint ? !subItem.isFeint : subItem.isFeint,
+            );
+            return item.copyWith(counterChain: newList);
+          }
+          return item;
+        } else if (_isCounterSelected) {
           // Toggle logic for counterSide
           String finalSide = item.counterSide;
           if (side != null) {
@@ -1103,7 +1441,115 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _onAddItem(BuilderCardData newItem) {
     setState(() {
-      if (_isDefenseMode && _selectedPath != null) {
+      if (_isCounterSimultaneousMode && _selectedPath != null) {
+        // A+B for ANSWER
+        _updateDataAtPath(_selectedPath!, (target) {
+          if (_selectedCounterIndex != null) {
+            // A+B on a specific counter sub-item
+            final idx = _selectedCounterIndex!;
+            if (target.hasCounterCombo && idx < target.counterSubMoves.length) {
+              // Append new item to the simultaneous group
+              final newList = List<BuilderCardData>.from(
+                target.counterSubMoves,
+              );
+              newList.insert(idx + 1, newItem);
+              return target.copyWith(
+                counterSubMoves: newList,
+                counterName: newList.map((m) => m.name).join(' + '),
+              );
+            } else if (target.hasCounterChain &&
+                idx < target.counterChain.length) {
+              // Replace the selected chain item with a simultaneous group
+              final subItem = target.counterChain[idx];
+              final simultaneous = BuilderCardData(
+                name: '${subItem.name} + ${newItem.name}',
+                category: 'simultaneous',
+                subMoves: [subItem, newItem],
+              );
+              final newList = List<BuilderCardData>.from(target.counterChain);
+              newList[idx] = simultaneous;
+              return target.copyWith(counterChain: newList);
+            }
+            return target;
+          }
+          if (target.hasCounterCombo) {
+            // Already a simultaneous counter — append
+            return target.copyWith(
+              counterSubMoves: [...target.counterSubMoves, newItem],
+              counterName:
+                  '${target.counterSubMoves.map((m) => m.name).join(' + ')} + ${newItem.name}',
+            );
+          }
+          // Create simultaneous group from existing single counter + new item
+          final existingCounter = BuilderCardData(
+            name: target.counterName ?? '',
+            category: target.counterCategory ?? '',
+            glossaryId: target.counterGlossaryId,
+            side: target.counterSide,
+            level: target.counterLevel,
+          );
+          return target.copyWith(
+            counterSubMoves: [existingCounter, newItem],
+            counterName: '${target.counterName} + ${newItem.name}',
+          );
+        });
+        _isCounterSimultaneousMode = false;
+        _selectedCounterIndex = null;
+      } else if (_isCounterChainMode && _selectedPath != null) {
+        // A->+ for ANSWER
+        _updateDataAtPath(_selectedPath!, (target) {
+          if (_selectedCounterIndex != null) {
+            // A->+ on a specific counter sub-item
+            final idx = _selectedCounterIndex!;
+            if (target.hasCounterChain && idx < target.counterChain.length) {
+              // Insert after the selected chain item
+              final newList = List<BuilderCardData>.from(target.counterChain);
+              newList.insert(idx + 1, newItem);
+              return target.copyWith(
+                counterChain: newList,
+                counterName: newList.map((m) => m.name).join(' -> '),
+              );
+            } else if (target.hasCounterCombo &&
+                idx < target.counterSubMoves.length) {
+              // Replace the selected simultaneous item with a chain
+              final subItem = target.counterSubMoves[idx];
+              final chainItem = BuilderCardData(
+                name: '${subItem.name} -> ${newItem.name}',
+                category: 'chain',
+                chain: [subItem, newItem],
+              );
+              final newList = List<BuilderCardData>.from(
+                target.counterSubMoves,
+              );
+              newList[idx] = chainItem;
+              return target.copyWith(counterSubMoves: newList);
+            }
+            return target;
+          }
+          if (target.hasCounterChain) {
+            // Already a counter chain — append
+            return target.copyWith(
+              counterChain: [...target.counterChain, newItem],
+              counterName:
+                  '${target.counterChain.map((m) => m.name).join(' -> ')} -> ${newItem.name}',
+            );
+          }
+          // Create chain from existing single counter + new item
+          final existingCounter = BuilderCardData(
+            name: target.counterName ?? '',
+            category: target.counterCategory ?? '',
+            glossaryId: target.counterGlossaryId,
+            side: target.counterSide,
+            level: target.counterLevel,
+          );
+          return target.copyWith(
+            counterChain: [existingCounter, newItem],
+            counterName: '${target.counterName} -> ${newItem.name}',
+          );
+        });
+        _isCounterChainMode = false;
+        _selectedCounterIndex = null;
+      } else if (_isDefenseMode && _selectedPath != null) {
         // Nested Answer (inside chain or combo)
         _updateDataAtPath(
           _selectedPath!,
@@ -1111,6 +1557,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterName: newItem.name,
             counterCategory: newItem.category,
             counterGlossaryId: newItem.glossaryId,
+            // Clear any structured counter when setting a simple one
+            counterSubMoves: const [],
+            counterChain: const [],
           ),
         );
         _isDefenseMode = false;
@@ -1327,6 +1776,11 @@ class BuilderCardData {
   final String counterSide;
   final String counterLevel;
 
+  // Structured counter: simultaneous answer moves (A+B for answer)
+  final List<BuilderCardData> counterSubMoves;
+  // Structured counter: sequential answer chain (A->+ for answer)
+  final List<BuilderCardData> counterChain;
+
   BuilderCardData({
     required this.name,
     required this.category,
@@ -1342,11 +1796,19 @@ class BuilderCardData {
     this.counterGlossaryId,
     this.counterSide = '',
     this.counterLevel = '',
+    this.counterSubMoves = const [],
+    this.counterChain = const [],
   });
 
   bool get isCombo => subMoves.isNotEmpty;
   bool get isChain => chain.isNotEmpty;
-  bool get hasCounter => counterName != null;
+  bool get hasCounter =>
+      counterName != null ||
+      counterSubMoves.isNotEmpty ||
+      counterChain.isNotEmpty;
+  bool get hasCounterCombo => counterSubMoves.isNotEmpty;
+  bool get hasCounterChain => counterChain.isNotEmpty;
+  bool get hasStructuredCounter => hasCounterCombo || hasCounterChain;
 
   BuilderCardData copyWith({
     String? name,
@@ -1363,6 +1825,8 @@ class BuilderCardData {
     Object? counterGlossaryId = _sentinel,
     String? counterSide,
     String? counterLevel,
+    List<BuilderCardData>? counterSubMoves,
+    List<BuilderCardData>? counterChain,
   }) {
     return BuilderCardData(
       name: name ?? this.name,
@@ -1385,6 +1849,8 @@ class BuilderCardData {
           : (counterGlossaryId as int?),
       counterSide: counterSide ?? this.counterSide,
       counterLevel: counterLevel ?? this.counterLevel,
+      counterSubMoves: counterSubMoves ?? this.counterSubMoves,
+      counterChain: counterChain ?? this.counterChain,
     );
   }
 
