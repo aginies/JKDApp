@@ -388,6 +388,7 @@ class MoveListDisplayWidget {
     required Function(String category, String moveName) onShowMediaGallery,
     required Function(List<Move> movesToInsert, int atIndex) onSetState,
     bool showTranslation = false,
+    int? singleItemIndex,
   }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final glossary = provider.glossary;
@@ -447,7 +448,8 @@ class MoveListDisplayWidget {
                           onShowMediaGallery(moves[i].category, moves[i].name),
                 child: Card(
                   margin: EdgeInsets.zero,
-                  color: trainingController.currentIndex == i
+                  color:
+                      trainingController.currentIndex == (singleItemIndex ?? i)
                       ? Colors.grey.withValues(alpha: 0.2)
                       : null,
                   child: Padding(

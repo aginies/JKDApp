@@ -14,13 +14,14 @@ class TtsLine {
 class TrainingController {
   final FlutterTts _tts;
   final Function(int) onIndexChanged;
+  final Function(int) onSubIndexChanged;
   final Function() onTrainingComplete;
   final BuildContext context;
 
   bool _isTraining = false;
   bool _isPaused = false;
   int _currentIndex = -1;
-  int _subIndex = 0; // Tracks progress within a combo/item
+  int _subIndex = -1; // -1 = not speaking any sub-item yet
   Timer? _timer;
 
   // Stored parameters for resume
@@ -35,6 +36,7 @@ class TrainingController {
   TrainingController({
     required FlutterTts tts,
     required this.onIndexChanged,
+    required this.onSubIndexChanged,
     required this.onTrainingComplete,
     required this.context,
   }) : _tts = tts;
@@ -42,6 +44,7 @@ class TrainingController {
   bool get isTraining => _isTraining;
   bool get isPaused => _isPaused;
   int get currentIndex => _currentIndex;
+  int get subIndex => _subIndex;
 
   Future<void> initTts({double speechRate = 0.50}) async {
     if (Platform.isLinux) return;
@@ -79,9 +82,14 @@ class TrainingController {
   }
 
   Future<void> speak(List<TtsLine> lines, String language) async {
-    // Start from _subIndex
-    for (int i = _subIndex; i < lines.length; i++) {
+    // Start from _subIndex (or 0 if sentinel -1)
+    final int startFrom = _subIndex < 0 ? 0 : _subIndex;
+    for (int i = startFrom; i < lines.length; i++) {
       if (!_isTraining || _isPaused) break;
+
+      // Highlight BEFORE speaking so the UI shows the active sub-item
+      _subIndex = i;
+      onSubIndexChanged(_subIndex);
 
       final line = lines[i];
       if (Platform.isLinux) {
@@ -96,12 +104,14 @@ class TrainingController {
 
       if (!_isTraining || _isPaused) break;
 
-      // Update subIndex AFTER speaking successfully
-      _subIndex = i + 1;
-
       if (line.delayMs > 0 && i < lines.length - 1) {
         await Future.delayed(Duration(milliseconds: line.delayMs));
       }
+    }
+
+    // After all lines spoken, mark sub-index past end for _playStep check
+    if (_isTraining && !_isPaused) {
+      _subIndex = lines.length;
     }
   }
 
@@ -188,7 +198,7 @@ class TrainingController {
     _isTraining = true;
     _isPaused = false;
     _currentIndex = startIndex - 1;
-    _subIndex = 0;
+    _subIndex = -1;
     onIndexChanged(_currentIndex);
 
     _playStep(
@@ -247,7 +257,7 @@ class TrainingController {
     if (_currentIndex >= endIndex) {
       if (isLooping) {
         _currentIndex = startIndex - 1;
-        _subIndex = 0;
+        _subIndex = -1;
         onIndexChanged(_currentIndex);
       } else {
         stop();
@@ -266,7 +276,8 @@ class TrainingController {
 
     // If we finished all lines for this move, move to next after interval
     if (_subIndex >= lines.length) {
-      _subIndex = 0; // Reset for next move
+      _subIndex = -1; // Sentinel: no sub-item active between moves
+      onSubIndexChanged(_subIndex);
       _timer = Timer(Duration(seconds: interval), () {
         if (_isTraining && !_isPaused) {
           _currentIndex++;
@@ -352,7 +363,7 @@ class TrainingController {
     _isTraining = false;
     _isPaused = false;
     _currentIndex = -1;
-    _subIndex = 0;
+    _subIndex = -1;
     onTrainingComplete();
   }
 

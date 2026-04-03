@@ -21,6 +21,7 @@ import 'series_detail/mixins/series_detail_utils.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/widgets/move_list_display_widget.dart';
+import 'series_detail/widgets/graphical_move_view.dart';
 import 'series_list/widgets/random_reader_widget.dart';
 import 'series_detail/builders/advanced_combo_builder.dart';
 import 'series_detail/constants/series_detail_constants.dart';
@@ -43,6 +44,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   String? _selectedMethod;
   List<Move> _moves = [];
   bool _isEditing = false;
+  bool _isGraphicalView = false;
 
   final FlutterTts _tts = FlutterTts();
   late TrainingController _trainingController;
@@ -105,6 +107,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
           if (index >= 0 && index < _moves.length) {
             _scrollToIndex(index);
           }
+        }
+      },
+      onSubIndexChanged: (subIndex) {
+        if (mounted) {
+          setState(() {});
         }
       },
       onTrainingComplete: () async {
@@ -328,6 +335,62 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         _moves = moves;
       }),
     );
+  }
+
+  /// Focused view during TTS training — shows only the currently-spoken item
+  /// centered in the available space, using graphical or list style based on
+  /// the current view mode.
+  Widget _buildTrainingFocusView(String lang) {
+    final idx = _trainingController.currentIndex;
+    final move = _moves[idx];
+
+    if (_isGraphicalView) {
+      // Single graphical card, centered
+      final cards = GraphicalMoveView.buildCards(
+        moves: [move],
+        language: lang,
+        context: context,
+        onShowMediaGallery: _showMediaGallery,
+        trainingController: _trainingController,
+        singleItemIndex: idx,
+      );
+      return Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: cards.isNotEmpty ? cards.first : const SizedBox.shrink(),
+          ),
+        ),
+      );
+    } else {
+      // Single list tile, centered
+      final tiles = MoveListDisplayWidget.buildTiles(
+        moves: [move],
+        language: lang,
+        isEditing: false,
+        trainingController: _trainingController,
+        context: context,
+        category: _selectedCategory,
+        showTranslation: Provider.of<SeriesProvider>(
+          context,
+          listen: false,
+        ).showTranslation,
+        onEdit: (_) => () {},
+        onClone: (_) => () {},
+        onDelete: (_) => () {},
+        onShowMediaGallery: _showMediaGallery,
+        onSetState: (a, b) {},
+        singleItemIndex: idx,
+      );
+      return Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: tiles.isNotEmpty ? tiles.first : const SizedBox.shrink(),
+          ),
+        ),
+      );
+    }
   }
 
   void _confirmDeleteItem(BuildContext context, int index, String lang) {
@@ -761,12 +824,36 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 if (!_isEditing &&
                     !_isFullscreen &&
                     _currentTrainingOptions == null) ...[
-                  Wrap(
-                    spacing: 8,
+                  Row(
                     children: [
-                      Chip(label: Text(_selectedCategory)),
-                      if (_selectedCategory != 'JKD Moves')
-                        Chip(label: Text(_selectedType)),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          Chip(label: Text(_selectedCategory)),
+                          if (_selectedCategory != 'JKD Moves')
+                            Chip(label: Text(_selectedType)),
+                        ],
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          _isGraphicalView
+                              ? Icons.view_list
+                              : Icons.grid_view_rounded,
+                          size: 22,
+                        ),
+                        tooltip: _isGraphicalView ? 'List view' : 'Card view',
+                        onPressed: () {
+                          setState(() {
+                            _isGraphicalView = !_isGraphicalView;
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -829,6 +916,28 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                             });
                           },
                           children: _buildMoveListTiles(lang),
+                        )
+                      : _trainingController.isTraining &&
+                            _trainingController.currentIndex >= 0 &&
+                            _trainingController.currentIndex < _moves.length
+                      ? _buildTrainingFocusView(lang)
+                      : _isGraphicalView
+                      ? SingleChildScrollView(
+                          controller: _movesScrollController,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 12,
+                              children: GraphicalMoveView.buildCards(
+                                moves: _moves,
+                                language: lang,
+                                context: context,
+                                onShowMediaGallery: _showMediaGallery,
+                                trainingController: _trainingController,
+                              ),
+                            ),
+                          ),
                         )
                       : ListView(
                           controller: _movesScrollController,
