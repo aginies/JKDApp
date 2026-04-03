@@ -1452,7 +1452,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
             Expanded(
               child: DefaultTabController(
-                length: 7,
+                length: 8,
                 initialIndex: _isDefenseMode ? 2 : 0,
                 child: Column(
                   children: [
@@ -1464,6 +1464,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                         const Tab(text: 'Packs'),
                         const Tab(text: 'Trapping'),
                         const Tab(text: 'JKD Moves'),
+                        const Tab(text: 'Kali'),
                         const Tab(text: 'Move'),
                         Tab(
                           icon: Icon(
@@ -1482,6 +1483,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           _buildGlossaryTab('packs', scrollController),
                           _buildGlossaryTab('trapping', scrollController),
                           _buildGlossaryTab('jkd_moves', scrollController),
+                          _buildGlossaryTab('kali', scrollController),
                           _buildGlossaryTab('move', scrollController),
                           _buildTextTab(),
                         ],

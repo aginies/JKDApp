@@ -30,6 +30,7 @@ class DatabaseService {
     'assets/jkd-series-footwork.json',
     'assets/jkd-series-abc.json',
     'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
+    'assets/jkd-series-sinawali-series.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -49,7 +50,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 1, // Reset to 1 for development
+      version: 2, // Reset to trigger re-seed
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );

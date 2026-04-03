@@ -159,7 +159,9 @@
     {"name": "Pay Pay", "translations": {"en": "Pay Pay (3 hits)", "fr": "Pay Pay (3 coups)"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Ikis", "translations": {"en": "X pattern", "fr": "Ikis (en X)"}, "possible_level": "H,M", "removal": {}},
     {"name": "Dos Ikis", "translations": {"en": "Double X (4 hits)", "fr": "Dos Ikis (Double X, 4 coups)"}, "possible_level": "H,L", "removal": {}},
-    {"name": "H L H (through)", "translations": {"en": "High Low High (Last through)", "fr": "H L H (Dernier traversant)"}, "possible_level": "H,L", "removal": {}},
+    {"name": "H L H", "translations": {"en": "High Low High", "fr": "H L H"}, "possible_level": "H,L", "removal": {}},
+    {"name": "H L", "translations": {"en": "High Low", "fr": "Haut Bas"}, "possible_level": "H,L", "removal": {}},
+    {"name": "H L (Through)", "translations": {"en": "High Low (Through)", "fr": "Haut Bas (Traveserant)"}, "possible_level": "H,L", "removal": {}},
     {"name": "Umbrella Heaven", "translations": {"en": "Umbrella High", "fr": "Umbrella Haut Haut Haut"}, "possible_level": "H", "removal": {}},
     {"name": "Umbrella Standard", "translations": {"en": "Umbrella H M H", "fr": "Umbrella Haut Milieu Haut"}, "possible_level": "H,M", "removal": {}},
     {"name": "Umbrella Earth", "translations": {"en": "Umbrella Low", "fr": "Umbrella Bas"}, "possible_level": "L", "removal": {}},
@@ -170,6 +172,7 @@
     {"name": "Backend Six Standard", "translations": {"en": "Backend Six H M H", "fr": "Backend Six H M H"}, "possible_level": "H,M", "removal": {}},
     {"name": "Backend Six Earth", "translations": {"en": "Backend Six Low", "fr": "Backend Six Bas"}, "possible_level": "L", "removal": {}},
     {"name": "Wings", "translations": {"en": "Wings", "fr": "Aile en couverture"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Spining", "translations": {"en": "Spining", "fr": "Rotation"}, "possible_level": "H", "removal": {}},
     {"name": "Shield", "translations": {"en": "Shield", "fr": "Bouclier"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Pluma", "translations": {"en": "Pluma", "fr": "Pluma (poitne kali)"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Roof Block", "translations": {"en": "Roof Block", "fr": "Toit Bouclier"}, "possible_level": "H,M,L", "removal": {}},
@@ -177,6 +180,12 @@
     {"name": "Ordabis Motion", "translations": {"en": "Ordabis Motion", "fr": "Mouvement Ordabis"}, "possible_level": "H,M,L", "removal": {}},
     {"name": "Upword Six count", "translations": {"en": "Upword Six count", "fr": "Six count ascendant"}, "possible_level": "M", "removal": {}},
     {"name": "Ordabis Motion", "translations": {"en": "Ordabis Motion", "fr": "Mouvement Ordabis"}, "possible_level": "H,M,L", "removal": {}},
-    {"name": "Sang Kite", "translations": {"en": "Sang Kite", "fr": "Sang Kite"}, "possible_level": "H,M,L", "removal": {}}
+    {"name": "Sang Kite", "translations": {"en": "Sang Kite", "fr": "Sang Kite"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Tigbass", "translations": {"en": "Open", "fr": "Ouvert"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Ordabis", "translations": {"en": "Closed", "fr": "Fermé"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Inwood", "translations": {"en": "Open", "fr": "Ouvert"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Backend", "translations": {"en": "Closed", "fr": "Fermé"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "Witick", "translations": {"en": "", "fr": "Restracte"}, "possible_level": "H,M,L", "removal": {}},
+    {"name": "LobStick", "translations": {"en": "Through", "fr": "Traverse"}, "possible_level": "H,M,L", "removal": {}}
   ]
 }
