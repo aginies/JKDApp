@@ -681,7 +681,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             if (data.level.isNotEmpty)
                               MoveDisplayWidgets.levelIcon(
                                 data.level,
-                                size: 12,
                                 mini: true,
                               ),
                             if (data.isFeint)
@@ -795,11 +794,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                       mini: true,
                     ),
                   if (sm.level.isNotEmpty)
-                    MoveDisplayWidgets.levelIcon(
-                      sm.level,
-                      size: 12,
-                      mini: true,
-                    ),
+                    MoveDisplayWidgets.levelIcon(sm.level, mini: true),
                   if (sm.isFeint) MoveDisplayWidgets.drawBox(mini: true),
                 ],
               ),
@@ -958,11 +953,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     mini: true,
                   ),
                 if (data.counterLevel.isNotEmpty)
-                  MoveDisplayWidgets.levelIcon(
-                    data.counterLevel,
-                    size: 10,
-                    mini: true,
-                  ),
+                  MoveDisplayWidgets.levelIcon(data.counterLevel, mini: true),
               ],
             ),
           ],

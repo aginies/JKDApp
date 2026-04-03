@@ -356,7 +356,6 @@ class GraphicalMoveView {
                           if (move.level.isNotEmpty)
                             MoveDisplayWidgets.levelIcon(
                               move.level,
-                              size: 12,
                               mini: true,
                             ),
                           if (move.isFeint)
@@ -568,11 +567,7 @@ class GraphicalMoveView {
                     mini: true,
                   ),
                 if ((move.counterLevel ?? '').isNotEmpty)
-                  MoveDisplayWidgets.levelIcon(
-                    move.counterLevel!,
-                    size: 10,
-                    mini: true,
-                  ),
+                  MoveDisplayWidgets.levelIcon(move.counterLevel!, mini: true),
               ],
             ),
           ],
@@ -628,11 +623,7 @@ class GraphicalMoveView {
                     mini: true,
                   ),
                 if (move.level.isNotEmpty)
-                  MoveDisplayWidgets.levelIcon(
-                    move.level,
-                    size: 10,
-                    mini: true,
-                  ),
+                  MoveDisplayWidgets.levelIcon(move.level, mini: true),
               ],
             ),
         ],

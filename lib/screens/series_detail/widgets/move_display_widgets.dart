@@ -24,7 +24,7 @@ class MoveDisplayWidgets {
       ),
       child: Icon(
         id,
-        size: size ?? (mini ? 11 : 12),
+        size: size ?? (mini ? 12 : 14),
         color: color ?? Colors.white,
       ),
     );
@@ -32,7 +32,7 @@ class MoveDisplayWidgets {
 
   /// Draw/Feint indicator box
   static Widget drawBox({bool mini = false}) => Container(
-    padding: EdgeInsets.symmetric(horizontal: mini ? 4 : 6, vertical: 2),
+    padding: EdgeInsets.symmetric(horizontal: mini ? 6 : 8, vertical: 2),
     decoration: BoxDecoration(
       color: Colors.orange.shade800,
       borderRadius: BorderRadius.circular(4),
@@ -40,7 +40,7 @@ class MoveDisplayWidgets {
     child: Text(
       'D',
       style: TextStyle(
-        fontSize: mini ? 10 : 11,
+        fontSize: mini ? 12 : 14,
         color: Colors.white,
         fontWeight: FontWeight.bold,
       ),
@@ -67,7 +67,7 @@ class MoveDisplayWidgets {
       child: Text(
         label.substring(0, 1),
         style: TextStyle(
-          fontSize: mini ? 11 : 12,
+          fontSize: mini ? 12 : 14,
           color: textColor ?? Colors.white,
           fontWeight: FontWeight.bold,
         ),

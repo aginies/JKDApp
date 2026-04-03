@@ -145,7 +145,6 @@ class SeriesProvider with ChangeNotifier {
     await _initGalleryDirectories();
     await loadGlossary();
     await loadSeries();
-    await _usageService.init(_series);
     await loadAllPrograms();
     await loadActiveProgram();
   }

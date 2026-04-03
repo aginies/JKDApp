@@ -15,7 +15,7 @@ void main() async {
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => SeriesProvider()..loadSeries(),
+      create: (context) => SeriesProvider(),
       child: const JkdApp(),
     ),
   );
