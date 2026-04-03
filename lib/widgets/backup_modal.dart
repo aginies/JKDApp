@@ -233,6 +233,7 @@ class _BackupModalState extends State<BackupModal> {
 
   // --- Handlers ---
 
+  // ignore: unused_element
   Future<void> _handleGlobalBackup(SeriesProvider provider) async {
     final action = await _showActionDialog('Full Backup');
     if (action == null) return;
@@ -269,6 +270,7 @@ class _BackupModalState extends State<BackupModal> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _handleGlobalRestore(SeriesProvider provider) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,

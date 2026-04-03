@@ -5,7 +5,6 @@ import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../glossary/glossary_data_service.dart';
-import '../glossary/glossary_ui_builder.dart';
 
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
@@ -177,7 +176,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             isActive: _isSimultaneousMode,
           ),
           _toolbarButton(
-            '',
+            'After',
             Icons.arrow_forward,
             _isChainMode ? Colors.green : Colors.teal,
             () {
@@ -636,8 +635,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   bool _isPathSelected(List<int> path) {
-    if (_selectedPath == null || _selectedPath!.length != path.length)
+    if (_selectedPath == null || _selectedPath!.length != path.length) {
       return false;
+    }
     for (int i = 0; i < path.length; i++) {
       if (_selectedPath![i] != path[i]) return false;
     }
@@ -675,51 +675,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       _isDefenseMode = false;
     });
     _showGlossaryPicker();
-  }
-
-  void _onMoveClick() {
-    if (_selectedPath == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Select Special Action',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: GlossaryDataService.fetchGlossaryByCategory('move'),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const CircularProgressIndicator();
-                final items = snapshot.data!;
-                return Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return ListTile(
-                        leading: const Icon(Icons.star, color: Colors.amber),
-                        title: Text(item['name']),
-                        onTap: () {
-                          _updateSelectedCard(specialAction: item['name']);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _onRemoveClick() {
@@ -1051,8 +1006,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: GlossaryDataService.fetchGlossaryByCategory(category),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final items = snapshot.data!;
         return ListView.builder(
           controller: scrollController,
@@ -1105,55 +1061,67 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     );
                     _isDefenseMode = false;
                   } else if (_isChainMode && _selectedPath != null) {
-                    // SMART APPEND into existing chain or create new one.
-                    // NEVER CREATE NESTED CHAINS.
-                    // Strategy: find the nearest ancestor chain and append
-                    // to it. If none exists, wrap the selected item into a
-                    // new chain at its current position.
-                    bool appended = false;
+                    // CHAIN / INSERT AFTER — context-aware:
+                    // - Nested inside a chain: insert after the selected
+                    //   sub-item position within that chain.
+                    // - Top-level chain: append new item at end of chain.
+                    // - Top-level standalone: wrap selected + new into a
+                    //   new chain.
 
-                    // 1. If the selected item IS a chain, append directly
-                    final selectedData = _getDataAtPath(_selectedPath!);
-                    if (selectedData != null && selectedData.isChain) {
-                      _updateDataAtPath(_selectedPath!, (target) {
-                        return target.copyWith(
-                          chain: [...target.chain, newItem],
-                        );
-                      });
-                      appended = true;
-                    }
-
-                    // 2. Walk up ancestors to find the nearest chain
-                    if (!appended && _selectedPath!.length > 1) {
+                    if (_selectedPath!.length > 1) {
+                      // Nested item — find the nearest chain ancestor and
+                      // insert after the child index within that chain.
                       for (
                         int depth = _selectedPath!.length - 1;
                         depth >= 1;
                         depth--
                       ) {
-                        final ancestorPath = _selectedPath!.sublist(0, depth);
-                        final ancestor = _getDataAtPath(ancestorPath);
-                        if (ancestor != null && ancestor.isChain) {
-                          _updateDataAtPath(ancestorPath, (parent) {
-                            return parent.copyWith(
-                              chain: [...parent.chain, newItem],
+                        final parentPath = _selectedPath!.sublist(0, depth);
+                        // Check if parent at this depth is a chain by
+                        // attempting the insert via _updateDataAtPath.
+                        final childIndex = _selectedPath![depth];
+                        bool inserted = false;
+                        _updateDataAtPath(parentPath, (parent) {
+                          if (parent.isChain) {
+                            final newChain = List<BuilderCardData>.from(
+                              parent.chain,
                             );
-                          });
-                          appended = true;
+                            newChain.insert(childIndex + 1, newItem);
+                            inserted = true;
+                            return parent.copyWith(chain: newChain);
+                          }
+                          return parent;
+                        });
+                        if (inserted) {
+                          // Select the newly inserted item
+                          _selectedPath = [...parentPath, childIndex + 1];
                           break;
                         }
                       }
-                    }
+                    } else {
+                      // Top-level card
+                      final topIndex = _selectedPath![0];
+                      final selected = _getDataAtPath(_selectedPath!);
 
-                    // 3. No ancestor chain found — create a NEW flat chain
-                    //    containing the selected item + the new item
-                    if (!appended) {
-                      _updateDataAtPath(_selectedPath!, (target) {
-                        return BuilderCardData(
+                      if (selected != null && selected.isChain) {
+                        // Already a chain — append new item at end
+                        _updateDataAtPath(_selectedPath!, (target) {
+                          return target.copyWith(
+                            chain: [...target.chain, newItem],
+                          );
+                        });
+                        // Select the newly appended item
+                        _selectedPath = [topIndex, selected.chain.length];
+                      } else {
+                        // Standalone card — wrap selected + new into a chain
+                        _workspaceCards[topIndex] = BuilderCardData(
                           name: 'Chain',
                           category: 'chain',
-                          chain: [target, newItem],
+                          chain: [_workspaceCards[topIndex], newItem],
                         );
-                      });
+                        // Select the new item inside the chain
+                        _selectedPath = [topIndex, 1];
+                      }
                     }
                     _isChainMode = false;
                   } else if (_isSimultaneousMode && _selectedPath != null) {
@@ -1191,7 +1159,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     }
                     _isSimultaneousMode = false;
                   } else {
-                    _workspaceCards.add(newItem);
+                    // Insert after selected top-level card, or append at end
+                    if (_selectedPath != null && _selectedPath!.length == 1) {
+                      final insertIndex = _selectedPath![0] + 1;
+                      _workspaceCards.insert(insertIndex, newItem);
+                    } else {
+                      _workspaceCards.add(newItem);
+                    }
                   }
                 });
                 Navigator.pop(context);

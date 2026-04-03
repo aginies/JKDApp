@@ -373,6 +373,7 @@ class MoveListDisplayWidget {
       ],
     );
   }
+
   /// Builds the move list tiles
   static List<Widget> buildTiles({
     required List<Move> moves,
