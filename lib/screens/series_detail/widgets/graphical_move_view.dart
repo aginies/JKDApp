@@ -177,7 +177,7 @@ class GraphicalMoveView {
                         padding: EdgeInsets.symmetric(horizontal: 4.0),
                         child: Icon(
                           Icons.arrow_forward,
-                          size: 24,
+                          size: 28,
                           color: Colors.teal,
                         ),
                       ),
@@ -248,7 +248,7 @@ class GraphicalMoveView {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSubItemsWrap(
-              children: move.subMoves.asMap().entries.map((e) {
+              children: move.subMoves.asMap().entries.expand((e) {
                 final subActive = isCurrentMove && activeSubIdx == e.key;
                 final linesBefore = _linesBeforeSubMove(move.subMoves, e.key);
                 final answerActive =
@@ -258,14 +258,28 @@ class GraphicalMoveView {
                       trainingController.subIndex,
                       linesBefore,
                     );
-                return _buildMoveCard(
-                  e.value,
-                  lang,
-                  context,
-                  onShowMediaGallery,
-                  isActiveSubItem: subActive,
-                  isActiveAnswer: answerActive,
-                );
+                return [
+                  if (e.key > 0)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6.0),
+                      child: Text(
+                        '+',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  _buildMoveCard(
+                    e.value,
+                    lang,
+                    context,
+                    onShowMediaGallery,
+                    isActiveSubItem: subActive,
+                    isActiveAnswer: answerActive,
+                  ),
+                ];
               }).toList(),
             ),
             if (move.counterName != null || move.hasStructuredCounter) ...[
@@ -496,17 +510,34 @@ class GraphicalMoveView {
             child: Wrap(
               spacing: 4,
               runSpacing: 4,
-              children: move.counterSubMoves.map((sm) {
-                return _buildMiniMoveCard(sm, lang);
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: move.counterSubMoves.asMap().entries.expand((e) {
+                final idx = e.key;
+                final sm = e.value;
+                return [
+                  if (idx > 0)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6.0),
+                      child: Text(
+                        '+',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  _buildMiniMoveCard(sm, lang),
+                ];
               }).toList(),
             ),
           ),
-        ],
-      );
-    } else if (move.hasCounterChain) {
-      // CHAIN counter (A->+ answer)
-      counterContent = Column(
-        children: [
+          ],
+          );
+          } else if (move.hasCounterChain) {
+          // CHAIN counter (A->+ answer)
+          counterContent = Column(
+          children: [
           Text(
             LocalizationService.translate('answer', lang).toUpperCase(),
             style: TextStyle(
@@ -516,40 +547,29 @@ class GraphicalMoveView {
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'CHAIN',
-            style: TextStyle(
-              fontSize: 7,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
           const SizedBox(height: 4),
           Wrap(
             spacing: 4,
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
-            children: move.counterChain.asMap().entries.map((e) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMiniMoveCard(e.value, lang),
-                  if (e.key < move.counterChain.length - 1)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 2.0),
-                      child: Icon(
-                        Icons.arrow_forward,
-                        size: 18,
-                        color: Colors.teal,
-                      ),
-                    ),
-                ],
-              );
+            children: move.counterChain.asMap().entries.expand((e) {
+              final idx = e.key;
+              final sm = e.value;
+              return [
+                if (idx > 0)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.0),
+                    child:
+                        Icon(Icons.arrow_forward, size: 28, color: Colors.teal),
+                  ),
+                _buildMiniMoveCard(sm, lang),
+              ];
             }).toList(),
           ),
-        ],
-      );
-    } else {
+          ],
+          );
+          }
+ else {
       // Simple single counter (existing behavior)
       counterContent = Column(
         children: [

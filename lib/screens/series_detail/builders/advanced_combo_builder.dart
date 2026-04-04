@@ -583,7 +583,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                               padding: EdgeInsets.symmetric(horizontal: 4.0),
                               child: Icon(
                                 Icons.arrow_forward,
-                                size: 16,
+                                size: 28, // Standardized large size
                                 color: Colors.teal,
                               ),
                             ),
@@ -640,9 +640,23 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     child: SeparatedWrap(
                       spacing: 4,
                       runSpacing: 10,
-                      children: data.subMoves.asMap().entries.map((e) {
+                      children: data.subMoves.asMap().entries.expand((e) {
                         final itemPath = [...path, e.key];
-                        return _buildCard(itemPath, e.value, lang);
+                        return [
+                          if (e.key > 0)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6.0),
+                              child: Text(
+                                '+',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          _buildCard(itemPath, e.value, lang),
+                        ];
                       }).toList(),
                     ),
                   ),
@@ -859,18 +873,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             isTopSelected,
                           ),
                           if (sm.isChain && idx < sm.chain.length - 1)
-                            const Icon(
-                              Icons.arrow_forward,
-                              size: 10,
-                              color: Colors.grey,
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Icon(
+                                Icons.arrow_forward,
+                                size: 28,
+                                color: Colors.grey,
+                              ),
                             ),
                           if (sm.isCombo && idx < sm.subMoves.length - 1)
-                            const Text(
-                              '+',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6.0),
+                              child: Text(
+                                '+',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                         ],
@@ -989,14 +1009,28 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             child: SeparatedWrap(
               spacing: 4,
               runSpacing: 10,
-              children: data.counterSubMoves.asMap().entries.map((e) {
-                return _buildCounterSubCard(
-                  path,
-                  e.value,
-                  [e.key],
-                  lang,
-                  isTopSelected,
-                );
+              children: data.counterSubMoves.asMap().entries.expand((e) {
+                return [
+                  if (e.key > 0)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6.0),
+                      child: Text(
+                        '+',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  _buildCounterSubCard(
+                    path,
+                    e.value,
+                    [e.key],
+                    lang,
+                    isTopSelected,
+                  ),
+                ];
               }).toList(),
             ),
           ),
@@ -1039,12 +1073,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     isTopSelected,
                   ),
                   if (e.key < data.counterChain.length - 1)
-
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 2.0),
+                      padding: EdgeInsets.symmetric(horizontal: 4.0),
                       child: Icon(
                         Icons.arrow_forward,
-                        size: 12,
+                        size: 28,
                         color: Colors.teal,
                       ),
                     ),

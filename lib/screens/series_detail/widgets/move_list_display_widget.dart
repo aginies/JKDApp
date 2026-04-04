@@ -174,24 +174,20 @@ class MoveListDisplayWidget {
             size: 28,
             color: Colors.orange,
           ),
-          const Text(
-            'SIMUL.',
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
           ...move.counterSubMoves.asMap().entries.expand((e) {
             final idx = e.key;
             final cm = e.value;
             return [
               if (idx > 0)
-                const Text(
-                  '+',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Text(
+                    '+',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               _buildMoveContent(
@@ -217,20 +213,15 @@ class MoveListDisplayWidget {
             size: 28,
             color: Colors.orange,
           ),
-          const Text(
-            'CHAIN',
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
           ...move.counterChain.asMap().entries.expand((e) {
             final idx = e.key;
             final cm = e.value;
             return [
               if (idx > 0)
-                const Icon(Icons.arrow_forward, size: 14, color: Colors.teal),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Icon(Icons.arrow_forward, size: 28, color: Colors.teal),
+                ),
               _buildMoveContent(
                 cm,
                 language,
@@ -263,14 +254,6 @@ class MoveListDisplayWidget {
         runSpacing: 4,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Text(
-            sub.isChain ? 'CHAIN' : 'SIMUL.',
-            style: const TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
           Wrap(
             spacing: 4,
             runSpacing: 4,
@@ -293,18 +276,24 @@ class MoveListDisplayWidget {
                         onEdit: onEdit,
                       ),
                       if (sub.isChain && idx < sub.chain.length - 1)
-                        const Icon(
-                          Icons.arrow_forward,
-                          size: 12,
-                          color: Colors.grey,
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Icon(
+                            Icons.arrow_forward,
+                            size: 28, // Standardized large size
+                            color: Colors.grey,
+                          ),
                         ),
                       if (sub.isCombo && idx < sub.subMoves.length - 1)
-                        const Text(
-                          '+',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.0),
+                          child: Text(
+                            '+',
+                            style: TextStyle(
+                              fontSize: 24, // Increased size
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                     ],
