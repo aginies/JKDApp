@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/search_result.dart';
 import '../models/series.dart';
 import '../models/training_program.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
+import 'empty_state_illustration.dart';
 import '../screens/series_detail_screen.dart';
 import '../screens/program_detail_screen.dart';
 import '../utils/translation_utils.dart';
@@ -82,19 +84,7 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
             ),
           )
         else if (results.isEmpty)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.search_off, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(
-                  LocalizationService.translate('nothing', provider.language),
-                  style: const TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-              ],
-            ),
-          )
+          const EmptyStateIllustration(titleKey: 'nothing')
         else
           ListView.builder(
             itemCount: results.length,
@@ -105,6 +95,7 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
                 title: Text(result.title),
                 subtitle: Text(result.subtitle),
                 onTap: () {
+                  HapticFeedback.lightImpact();
                   _handleResultSelection(context, result, provider);
                 },
               );

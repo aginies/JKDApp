@@ -1103,27 +1103,39 @@ class MoveListDisplayWidget {
                   child: Center(
                     child: CircleAvatar(
                       radius: 15,
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: provider.themeColor,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (moves[i].subLetter == null)
                             Text(
                               '${displayNumbers[i]}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color:
+                                    ThemeData.estimateBrightnessForColor(
+                                          provider.themeColor,
+                                        ) ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                                 height: 1.0,
                               ),
                             )
                           else
                             Text(
                               '${displayNumbers[i]}${moves[i].subLetter}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.yellowAccent,
+                                color:
+                                    ThemeData.estimateBrightnessForColor(
+                                          provider.themeColor,
+                                        ) ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                                 height: 1.0,
                               ),
                             ),

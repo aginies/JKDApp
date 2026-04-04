@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import '../models/training_program.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
-import 'program_detail_screen.dart';
+import '../widgets/empty_state_illustration.dart';
 import 'program_create_screen.dart';
+import 'program_detail_screen.dart';
 
 class ProgramsListScreen extends StatefulWidget {
   const ProgramsListScreen({super.key});
@@ -120,11 +121,9 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : filteredPrograms.isEmpty
-          ? Center(
-              child: Text(
-                LocalizationService.translate('no_programs_found', lang),
-                style: theme.textTheme.bodyLarge,
-              ),
+          ? const EmptyStateIllustration(
+              titleKey: 'no_programs_found',
+              icon: Icons.list_alt_rounded,
             )
           : ListView.builder(
               padding: const EdgeInsets.all(16),

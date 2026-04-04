@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../widgets/separated_wrap.dart';
 import '../glossary/glossary_data_service.dart';
+import '../../../widgets/empty_state_illustration.dart';
 
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
@@ -127,6 +129,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
+  bool _shouldShowBottomToolbar() {
+    if (_selectedPath == null) return false;
+    if (_isCounterSelected) return false;
+
+    final data = _getDataAtPath(_selectedPath!);
+    if (data == null) return false;
+
+    // Action cards are NOT containers (Chain or Combo)
+    if (data.isChain || data.isCombo) return false;
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
@@ -190,10 +205,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
 
-          const SizedBox(height: 8),
-
-          // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
-          _buildBottomToolbar(lang),
+          if (_shouldShowBottomToolbar()) ...[
+            const SizedBox(height: 8),
+            // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
+            _buildBottomToolbar(lang),
+          ],
         ],
       ),
     );
@@ -218,7 +234,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             child: Row(
               children: [
                 _toolbarButton('', Icons.add, Colors.blue, _onAddClick),
-                _toolbarButton('', Icons.remove, Colors.red, _onRemoveClick),
+                _toolbarButton('', Icons.remove, Colors.red, _onDeleteSelected),
                 const SizedBox(width: 8, child: VerticalDivider()),
                 _toolbarButton(
                   '',
@@ -1034,11 +1050,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     _showGlossaryPicker();
   }
 
-  void _onRemoveClick() {
+  void _onDeleteSelected() {
     if (_selectedPath == null) return;
+    HapticFeedback.lightImpact();
 
     setState(() {
       if (_isCounterSelected && _selectedCounterIndex != null) {
+
         // DELETE A SPECIFIC SUB-ITEM inside a structured counter
         final idx = _selectedCounterIndex!;
         _updateDataAtPath(_selectedPath!, (item) {
@@ -1459,7 +1477,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness ==
+                              color:
+                                  Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.grey[800]
                                   : Colors.grey[200],
@@ -1475,48 +1494,53 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                     listen: false,
                                   ).language,
                                 ),
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: Colors.grey,
-                                  ),
-                                  suffixIcon: _glossarySearchQuery.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(
-                                            Icons.clear,
-                                            size: 20,
-                                            color: Colors.grey,
-                                          ),
-                                          onPressed: () {
-                                            setModalState(() {
-                                              _glossarySearchQuery = '';
-                                            });
-                                          },
-                                        )
-                                      : null,
-                                  border: InputBorder.none,
-                                  isDense: true,
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
+                                ),
+                                suffixIcon: _glossarySearchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 20,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          HapticFeedback.lightImpact();
+                                          setModalState(() {
+                                            _glossarySearchQuery = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                                isDense: true,
                                 ),
                                 controller: TextEditingController.fromValue(
-                                  TextEditingValue(
-                                    text: _glossarySearchQuery,
-                                    selection: TextSelection.collapsed(
-                                      offset: _glossarySearchQuery.length,
-                                    ),
+                                TextEditingValue(
+                                  text: _glossarySearchQuery,
+                                  selection: TextSelection.collapsed(
+                                    offset: _glossarySearchQuery.length,
                                   ),
                                 ),
+                                ),
                                 onChanged: (val) {
-                                  setModalState(() => _glossarySearchQuery = val);
+                                setModalState(() => _glossarySearchQuery = val);
                                 },
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                    ),
+                                ),
+                                ),
+                                ),
+                                IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.pop(context);
+                                },
+                                ),
+                                ],
+                                ),
+                                ),
+
                   Expanded(
                     child: _glossarySearchQuery.isEmpty
                         ? DefaultTabController(
@@ -1690,7 +1714,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.01),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.01),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -1728,7 +1754,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         subtitle: translation.isNotEmpty
             ? Text(
                 translation,
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: 13,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               )
@@ -1747,6 +1776,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   void _onAddItem(BuilderCardData newItem) {
+    HapticFeedback.lightImpact();
     setState(() {
       if (_isCounterSimultaneousMode && _selectedPath != null) {
         // A+B for ANSWER
@@ -2050,19 +2080,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     }).toList();
 
     if (results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              LocalizationService.translate('nothing', lang),
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
+      return const EmptyStateIllustration(titleKey: 'nothing');
     }
 
     return ListView.builder(

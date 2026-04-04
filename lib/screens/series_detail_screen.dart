@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:file_picker/file_picker.dart';
@@ -475,6 +476,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   }
 
   void _confirmDeleteItem(BuildContext context, int index, String lang) {
+    HapticFeedback.lightImpact();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

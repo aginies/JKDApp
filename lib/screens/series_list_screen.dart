@@ -15,6 +15,8 @@ import '../utils/translation_utils.dart';
 import '../widgets/active_program_card.dart';
 import '../utils/category_utils.dart';
 import '../widgets/global_search_delegate.dart';
+import '../widgets/empty_state_illustration.dart';
+import 'package:flutter/services.dart';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -312,6 +314,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                             color: Colors.grey,
                                           ),
                                           onPressed: () {
+                                            HapticFeedback.lightImpact();
                                             setModalState(() {
                                               _glossarySearchQuery = '';
                                             });
@@ -334,7 +337,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                           const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.pop(context);
+                            },
                             style: IconButton.styleFrom(
                               backgroundColor:
                                   Theme.of(context).brightness ==
@@ -392,7 +398,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 icon: Icon(_getCategoryIcon('trapping')),
                               ),
                               Tab(
-                                text: LocalizationService.translate('move', lang),
+                                text: LocalizationService.translate(
+                                  'move',
+                                  lang,
+                                ),
                                 icon: Icon(_getCategoryIcon('move')),
                               ),
                               Tab(
@@ -403,7 +412,10 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 icon: Icon(_getCategoryIcon('jkd_moves')),
                               ),
                               Tab(
-                                text: LocalizationService.translate('kali', lang),
+                                text: LocalizationService.translate(
+                                  'kali',
+                                  lang,
+                                ),
                                 icon: Icon(_getCategoryIcon('kali')),
                               ),
                               Tab(
@@ -463,19 +475,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     }).toList();
 
     if (results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              LocalizationService.translate('nothing', lang),
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
+      return const EmptyStateIllustration(titleKey: 'nothing');
     }
 
     return ListView.builder(
@@ -499,19 +499,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
         final items = snapshot.data!;
 
         if (items.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                Text(
-                  LocalizationService.translate('nothing', lang),
-                  style: const TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-              ],
-            ),
-          );
+          return const EmptyStateIllustration(titleKey: 'nothing');
         }
 
         return ListView.builder(
@@ -539,13 +527,13 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Card(
       elevation: 0,
-      color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.01),
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.03)
+          : Colors.black.withValues(alpha: 0.01),
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
+        side: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -627,7 +615,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       ),
     );
   }
-
 
   void _showVoiceNotesModal(BuildContext context, String lang) {
     showModalBottomSheet(

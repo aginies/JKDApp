@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/move.dart';
+import '../../../services/series_provider.dart';
 import '../../../services/localization_service.dart';
 import '../controllers/training_controller.dart';
 import 'move_display_widgets.dart';
@@ -107,6 +109,8 @@ class GraphicalMoveView {
     bool isActiveAnswer = false,
   }) {
     final theme = Theme.of(context);
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final themeColor = provider.themeColor;
     final color = MoveDisplayWidgets.getCategoryColor(move.category);
 
     // Determine if this top-level card is the one currently being spoken
@@ -392,21 +396,39 @@ class GraphicalMoveView {
             ),
           card,
           Positioned(
-            top: -6,
-            left: -6,
+            top: -10,
+            left: -10,
             child: Container(
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
-                color: isCurrentMove ? Colors.amber[700] : Colors.grey[700],
+                color: isCurrentMove ? Colors.amber[700] : themeColor,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               alignment: Alignment.center,
               child: Text(
                 '$cardNumber',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
+                style: TextStyle(
+                  color: isCurrentMove
+                      ? Colors.white
+                      : (ThemeData.estimateBrightnessForColor(themeColor) ==
+                                Brightness.dark
+                            ? Colors.white
+                            : Colors.black),
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
