@@ -39,7 +39,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   bool _isCounterSelected = false;
   int? _selectedCounterIndex;
   List<int>? _selectedCounterPath; // Secondary path for structured counters
- // Which sub-item inside a structured counter is selected (null = whole counter)
+  // Which sub-item inside a structured counter is selected (null = whole counter)
 
   // Modes
   bool _isDefenseMode = false;
@@ -379,8 +379,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   _isDefenseMode
                       ? Colors.green
                       : ((_selectedPath != null && _isCounterSelected)
-                          ? Colors.grey
-                          : Colors.orange),
+                            ? Colors.grey
+                            : Colors.orange),
                   () {
                     // Prevent nested answers: disable if an answer is already selected
                     if (_selectedPath != null && !_isCounterSelected) {
@@ -839,8 +839,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // RECURSIVE rendering for nested groups inside an answer
       final color = MoveDisplayWidgets.getCategoryColor(sm.category);
       return GestureDetector(
-        onTap:
-            () => _selectPath(path, isCounter: true, counterPath: counterPath),
+        onTap: () =>
+            _selectPath(path, isCounter: true, counterPath: counterPath),
         child: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
@@ -1362,10 +1362,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       }
       // Answers don't disappear if empty, they just become simple counters again
       if (newList.isEmpty) {
-        return root.copyWith(
-          counterName: null,
-          counterSubMoves: const [],
-        );
+        return root.copyWith(counterName: null, counterSubMoves: const []);
       }
       return root.copyWith(counterSubMoves: newList);
     } else if (root.hasCounterChain && idx < root.counterChain.length) {
@@ -1377,10 +1374,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         newList[idx] = updated;
       }
       if (newList.isEmpty) {
-        return root.copyWith(
-          counterName: null,
-          counterChain: const [],
-        );
+        return root.copyWith(counterName: null, counterChain: const []);
       }
       return root.copyWith(counterChain: newList);
     }
@@ -1472,7 +1466,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   void _onFinishClick() {
     LoggingService.log('AdvancedComboBuilder: Finish/Verify clicked');
     if (_workspaceCards.isEmpty) {
-      LoggingService.log('AdvancedComboBuilder: Workspace is empty, ignoring click');
+      LoggingService.log(
+        'AdvancedComboBuilder: Workspace is empty, ignoring click',
+      );
       return;
     }
 
@@ -1504,8 +1500,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
         counterIsFeint: data.counterIsFeint,
-        counterSubMoves:
-            data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
+        counterSubMoves: data.counterSubMoves
+            .map((cm) => _convertToMove(cm))
+            .toList(),
         counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
@@ -1521,8 +1518,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
         counterIsFeint: data.counterIsFeint,
-        counterSubMoves:
-            data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
+        counterSubMoves: data.counterSubMoves
+            .map((cm) => _convertToMove(cm))
+            .toList(),
         counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
@@ -1541,8 +1539,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       counterSide: data.counterSide,
       counterLevel: data.counterLevel,
       counterIsFeint: data.counterIsFeint,
-      counterSubMoves:
-          data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
+      counterSubMoves: data.counterSubMoves
+          .map((cm) => _convertToMove(cm))
+          .toList(),
       counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
     );
   }
@@ -1744,8 +1743,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           return item.copyWith(
             counterSide: finalSide,
             counterLevel: finalLevel,
-            counterIsFeint:
-                toggleFeint ? !item.counterIsFeint : item.counterIsFeint,
+            counterIsFeint: toggleFeint
+                ? !item.counterIsFeint
+                : item.counterIsFeint,
           );
         } else {
           // Top-level attacker toggle logic
@@ -2578,11 +2578,10 @@ class DiagonalCrossPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color.withValues(alpha: 0.5)
-          ..strokeWidth = 2.5
-          ..strokeCap = StrokeCap.round;
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.5)
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
 
     // Draw X
     canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);

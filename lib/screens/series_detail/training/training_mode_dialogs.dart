@@ -27,10 +27,13 @@ class TrainingModeDialogs {
                 children: [
                   Text(
                     LocalizationService.translate('training_mode', lang),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Level Selection
                   _buildLevelCard(
                     context,
@@ -67,7 +70,7 @@ class TrainingModeDialogs {
                       showItemSelection(context, moves, TrainingLevel.expert);
                     },
                   ),
-                  
+
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => Navigator.pop(modalCtx),
@@ -76,7 +79,7 @@ class TrainingModeDialogs {
                 ],
               ),
             );
-          }
+          },
         );
       },
     );
@@ -105,7 +108,11 @@ class TrainingModeDialogs {
     );
   }
 
-  static void showItemSelection(BuildContext context, List<Move> moves, TrainingLevel level) {
+  static void showItemSelection(
+    BuildContext context,
+    List<Move> moves,
+    TrainingLevel level,
+  ) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 
@@ -121,7 +128,10 @@ class TrainingModeDialogs {
             children: [
               Text(
                 LocalizationService.translate('select_item_to_train', lang),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 24),
               Flexible(
@@ -141,7 +151,9 @@ class TrainingModeDialogs {
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        backgroundColor: provider.themeColor.withValues(alpha: 0.1),
+                        backgroundColor: provider.themeColor.withValues(
+                          alpha: 0.1,
+                        ),
                         foregroundColor: provider.themeColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -149,7 +161,10 @@ class TrainingModeDialogs {
                       ),
                       child: Text(
                         '${index + 1}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     );
                   },
@@ -167,15 +182,22 @@ class TrainingModeDialogs {
     );
   }
 
-  static void _startTraining(BuildContext context, List<Move> moves, int index, TrainingLevel level) async {
+  static void _startTraining(
+    BuildContext context,
+    List<Move> moves,
+    int index,
+    TrainingLevel level,
+  ) async {
     final originalMove = moves[index];
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 
-    LoggingService.log('TrainingModeDialogs: Starting builder for item #${index + 1} at level $level');
-    
+    LoggingService.log(
+      'TrainingModeDialogs: Starting builder for item #${index + 1} at level $level',
+    );
+
     final NavigatorState navigator = Navigator.of(context);
-    
+
     try {
       final attempt = await navigator.push<Move>(
         MaterialPageRoute(
@@ -197,14 +219,21 @@ class TrainingModeDialogs {
             body: SafeArea(
               child: AdvancedComboBuilder(
                 onFinish: (move) {
-                  LoggingService.log('TrainingModeDialogs: Builder onFinish called');
+                  LoggingService.log(
+                    'TrainingModeDialogs: Builder onFinish called',
+                  );
                   Navigator.of(ctx).pop(move);
                 },
                 onCancel: () {
-                  LoggingService.log('TrainingModeDialogs: Builder onCancel called');
+                  LoggingService.log(
+                    'TrainingModeDialogs: Builder onCancel called',
+                  );
                   Navigator.of(ctx).pop();
                 },
-                finishButtonLabel: LocalizationService.translate('verify', lang),
+                finishButtonLabel: LocalizationService.translate(
+                  'verify',
+                  lang,
+                ),
               ),
             ),
           ),
@@ -212,10 +241,16 @@ class TrainingModeDialogs {
       );
 
       if (attempt != null) {
-        LoggingService.log('TrainingModeDialogs: Attempt received, showing results');
-        _showResults(navigator.context, originalMove, attempt, moves, index, level);
+        LoggingService.log(
+          'TrainingModeDialogs: Attempt received, showing results',
+        );
+        if (context.mounted) {
+          _showResults(context, originalMove, attempt, moves, index, level);
+        }
       } else {
-        LoggingService.log('TrainingModeDialogs: Builder returned null (cancelled)');
+        LoggingService.log(
+          'TrainingModeDialogs: Builder returned null (cancelled)',
+        );
       }
     } catch (e, stack) {
       LoggingService.log('TrainingModeDialogs: Error in training flow: $e');
@@ -233,10 +268,16 @@ class TrainingModeDialogs {
   ) {
     LoggingService.log('TrainingModeDialogs: _showResults called');
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    
+
     try {
-      final result = ComboVerificationService.verifyMove(original, attempt, level);
-      LoggingService.log('TrainingModeDialogs: Verification complete (isCorrect: ${result.isCorrect})');
+      final result = ComboVerificationService.verifyMove(
+        original,
+        attempt,
+        level,
+      );
+      LoggingService.log(
+        'TrainingModeDialogs: Verification complete (isCorrect: ${result.isCorrect})',
+      );
 
       showDialog(
         context: context,
@@ -252,7 +293,9 @@ class TrainingModeDialogs {
               _startTraining(context, allMoves, index, level);
             },
             onFinish: () {
-              LoggingService.log('TrainingModeDialogs: Training session finished');
+              LoggingService.log(
+                'TrainingModeDialogs: Training session finished',
+              );
               Navigator.pop(ctx);
             },
           ),

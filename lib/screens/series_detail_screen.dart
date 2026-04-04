@@ -941,8 +941,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           const SizedBox(width: 8),
                           FloatingActionButton.small(
                             heroTag: 'training_mode_btn',
-                            onPressed:
-                                () => TrainingModeDialogs.showTrainingSetup(
+                            onPressed: () =>
+                                TrainingModeDialogs.showTrainingSetup(
                                   context,
                                   _moves,
                                 ),

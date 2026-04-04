@@ -150,9 +150,7 @@ class LocalizationService {
       'no_active_training':
           'No active training program. Select a program from the Training Programs tab to start.',
       'all': 'All',
-      'beginner': 'Beginner',
       'intermediate': 'Intermediate',
-      'advanced': 'Advanced',
       'days': 'days',
       'day': 'Day',
       'resume': 'Resume',
@@ -354,9 +352,7 @@ class LocalizationService {
       'no_active_training':
           'Aucun programme actif. Sélectionnez un programme dans l\'onglet "Programmes d\'Entraînement" pour commencer.',
       'all': 'Tous',
-      'beginner': 'Débutant',
       'intermediate': 'Intermédiaire',
-      'advanced': 'Avancé',
       'days': 'jours',
       'weeks': 'semaines',
       'day': 'Jour',

@@ -246,7 +246,7 @@ class Move {
     List<Move>? counterChain,
     List<Move>? subMoves,
     List<Move>? chain,
-    }) {
+  }) {
     return Move(
       id: id ?? this.id,
       glossaryId: glossaryId ?? this.glossaryId,
@@ -256,7 +256,9 @@ class Move {
       category: category ?? this.category,
       side: side ?? this.side,
       level: level ?? this.level,
-      subLetter: subLetter == _sentinel ? this.subLetter : (subLetter as String?),
+      subLetter: subLetter == _sentinel
+          ? this.subLetter
+          : (subLetter as String?),
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,
@@ -273,8 +275,7 @@ class Move {
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
     );
-    }
-
+  }
 
   static const _sentinel = Object();
 }

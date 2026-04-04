@@ -532,12 +532,12 @@ class GraphicalMoveView {
               }).toList(),
             ),
           ),
-          ],
-          );
-          } else if (move.hasCounterChain) {
-          // CHAIN counter (A->+ answer)
-          counterContent = Column(
-          children: [
+        ],
+      );
+    } else if (move.hasCounterChain) {
+      // CHAIN counter (A->+ answer)
+      counterContent = Column(
+        children: [
           Text(
             LocalizationService.translate('answer', lang).toUpperCase(),
             style: TextStyle(
@@ -559,17 +559,19 @@ class GraphicalMoveView {
                 if (idx > 0)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 4.0),
-                    child:
-                        Icon(Icons.arrow_forward, size: 28, color: Colors.teal),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 28,
+                      color: Colors.teal,
+                    ),
                   ),
                 _buildMiniMoveCard(sm, lang),
               ];
             }).toList(),
           ),
-          ],
-          );
-          }
- else {
+        ],
+      );
+    } else {
       // Simple single counter (existing behavior)
       counterContent = Column(
         children: [
@@ -774,11 +776,10 @@ class DiagonalCrossPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color.withValues(alpha: 0.5)
-          ..strokeWidth = 2.5
-          ..strokeCap = StrokeCap.round;
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.5)
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
 
     // Draw X
     canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);

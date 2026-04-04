@@ -220,7 +220,11 @@ class MoveListDisplayWidget {
               if (idx > 0)
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Icon(Icons.arrow_forward, size: 28, color: Colors.teal),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    size: 28,
+                    color: Colors.teal,
+                  ),
                 ),
               _buildMoveContent(
                 cm,
@@ -323,8 +327,10 @@ class MoveListDisplayWidget {
               const SizedBox(width: 4),
               Text(
                 sub.name,
-                style:
-                    TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (sub.side.isNotEmpty)
                 Padding(
@@ -727,7 +733,9 @@ class MoveListDisplayWidget {
                                             language,
                                             onShowMediaGallery,
                                             subDisplayNumber: subDisplayNumber,
-                                            onEdit: isEditing ? onEdit(i) : null,
+                                            onEdit: isEditing
+                                                ? onEdit(i)
+                                                : null,
                                           )
                                         else if (isChain)
                                           _buildChainContent(
@@ -736,7 +744,9 @@ class MoveListDisplayWidget {
                                             language,
                                             onShowMediaGallery,
                                             subDisplayNumber: subDisplayNumber,
-                                            onEdit: isEditing ? onEdit(i) : null,
+                                            onEdit: isEditing
+                                                ? onEdit(i)
+                                                : null,
                                           )
                                         else
                                           Row(
@@ -823,45 +833,81 @@ class MoveListDisplayWidget {
                                                             sub,
                                                             language,
                                                             onShowMediaGallery,
-                                                            isEditing ? onEdit(i) : null,
+                                                            isEditing
+                                                                ? onEdit(i)
+                                                                : null,
                                                           )
                                                         : DiagonalCross(
-                                                            show: sub.counterIsFeint,
-                                                            color: Colors.purple,
+                                                            show: sub
+                                                                .counterIsFeint,
+                                                            color:
+                                                                Colors.purple,
                                                             child: Wrap(
                                                               spacing: 6,
-                                                              crossAxisAlignment: WrapCrossAlignment.center,
+                                                              crossAxisAlignment:
+                                                                  WrapCrossAlignment
+                                                                      .center,
                                                               children: [
                                                                 const Icon(
-                                                                  Icons.subdirectory_arrow_right,
+                                                                  Icons
+                                                                      .subdirectory_arrow_right,
                                                                   size: 28,
-                                                                  color: Colors.orange,
+                                                                  color: Colors
+                                                                      .orange,
                                                                 ),
                                                                 Icon(
-                                                                  MoveDisplayWidgets.getCategoryIcon(sub.counterCategory ?? ''),
+                                                                  MoveDisplayWidgets.getCategoryIcon(
+                                                                    sub.counterCategory ??
+                                                                        '',
+                                                                  ),
                                                                   size: 22,
-                                                                  color: MoveDisplayWidgets.getCategoryColor(sub.counterCategory ?? ''),
+                                                                  color: MoveDisplayWidgets.getCategoryColor(
+                                                                    sub.counterCategory ??
+                                                                        '',
+                                                                  ),
                                                                 ),
                                                                 Text(
                                                                   sub.counterName!,
                                                                   style: TextStyle(
-                                                                    fontSize: 13,
-                                                                    color: Theme.of(context).colorScheme.secondary,
-                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize:
+                                                                        13,
+                                                                    color: Theme.of(
+                                                                      context,
+                                                                    ).colorScheme.secondary,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
                                                                   ),
                                                                 ),
-                                                                if (sub.counterSide?.isNotEmpty ?? false)
+                                                                if (sub
+                                                                        .counterSide
+                                                                        ?.isNotEmpty ??
+                                                                    false)
                                                                   MoveDisplayWidgets.sideCircle(
                                                                     LocalizationService.translate(
-                                                                      sub.counterSide == 'L' ? 'left' : (sub.counterSide == 'R' ? 'right' : 'mid'),
+                                                                      sub.counterSide ==
+                                                                              'L'
+                                                                          ? 'left'
+                                                                          : (sub.counterSide ==
+                                                                                    'R'
+                                                                                ? 'right'
+                                                                                : 'mid'),
                                                                       language,
-                                                                    ).substring(0, 1),
-                                                                    sub.counterSide ?? '',
+                                                                    ).substring(
+                                                                      0,
+                                                                      1,
+                                                                    ),
+                                                                    sub.counterSide ??
+                                                                        '',
                                                                     mini: true,
                                                                   ),
-                                                                if (sub.counterLevel?.isNotEmpty ?? false)
+                                                                if (sub
+                                                                        .counterLevel
+                                                                        ?.isNotEmpty ??
+                                                                    false)
                                                                   MoveDisplayWidgets.levelIcon(
-                                                                    sub.counterLevel ?? '',
+                                                                    sub.counterLevel ??
+                                                                        '',
                                                                     mini: true,
                                                                   ),
                                                               ],
@@ -963,25 +1009,23 @@ class MoveListDisplayWidget {
                                                     children: [
                                                       Icon(
                                                         MoveDisplayWidgets.getCategoryIcon(
-                                                          moves[i]
-                                                                  .counterCategory ??
+                                                          moves[i].counterCategory ??
                                                               '',
                                                         ),
                                                         size: 28,
-                                                        color: MoveDisplayWidgets
-                                                            .getCategoryColor(
-                                                              moves[i]
-                                                                      .counterCategory ??
-                                                                  '',
-                                                            ),
+                                                        color: MoveDisplayWidgets.getCategoryColor(
+                                                          moves[i].counterCategory ??
+                                                              '',
+                                                        ),
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         moves[i].counterName!,
                                                         style: TextStyle(
-                                                          color: Theme.of(
-                                                            context,
-                                                          ).colorScheme.secondary,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .secondary,
                                                           fontWeight:
                                                               FontWeight.bold,
                                                         ),
@@ -992,28 +1036,21 @@ class MoveListDisplayWidget {
                                                           false)
                                                         Padding(
                                                           padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                            left: 4.0,
-                                                          ),
-                                                          child:
-                                                              MoveDisplayWidgets
-                                                                  .sideCircle(
-                                                            LocalizationService
-                                                                .translate(
-                                                              moves[i]
-                                                                          .counterSide ==
+                                                              const EdgeInsets.only(
+                                                                left: 4.0,
+                                                              ),
+                                                          child: MoveDisplayWidgets.sideCircle(
+                                                            LocalizationService.translate(
+                                                              moves[i].counterSide ==
                                                                       'L'
                                                                   ? 'left'
-                                                                  : (moves[i]
-                                                                              .counterSide ==
+                                                                  : (moves[i].counterSide ==
                                                                             'R'
                                                                         ? 'right'
                                                                         : 'mid'),
                                                               language,
                                                             ).substring(0, 1),
-                                                            moves[i]
-                                                                    .counterSide ??
+                                                            moves[i].counterSide ??
                                                                 '',
                                                             mini: true,
                                                           ),
@@ -1024,15 +1061,11 @@ class MoveListDisplayWidget {
                                                           false)
                                                         Padding(
                                                           padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                            left: 4.0,
-                                                          ),
-                                                          child:
-                                                              MoveDisplayWidgets
-                                                                  .levelIcon(
-                                                            moves[i]
-                                                                    .counterLevel ??
+                                                              const EdgeInsets.only(
+                                                                left: 4.0,
+                                                              ),
+                                                          child: MoveDisplayWidgets.levelIcon(
+                                                            moves[i].counterLevel ??
                                                                 '',
                                                             mini: true,
                                                           ),
@@ -1053,9 +1086,7 @@ class MoveListDisplayWidget {
                                                     ),
                                                     backgroundColor: Colors
                                                         .purple
-                                                        .withValues(
-                                                          alpha: 0.2,
-                                                        ),
+                                                        .withValues(alpha: 0.2),
                                                     padding: EdgeInsets.zero,
                                                     materialTapTargetSize:
                                                         MaterialTapTargetSize
@@ -1231,11 +1262,10 @@ class DiagonalCrossPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color.withValues(alpha: 0.5)
-          ..strokeWidth = 2.5
-          ..strokeCap = StrokeCap.round;
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.5)
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
 
     // Draw X
     canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);
