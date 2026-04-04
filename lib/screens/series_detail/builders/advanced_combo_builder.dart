@@ -27,6 +27,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Current state of the workspace
   final List<BuilderCardData> _workspaceCards = [];
   final _customTextController = TextEditingController();
+  String _glossarySearchQuery = '';
 
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
@@ -1431,69 +1432,316 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   void _showGlossaryPicker() {
+    _glossarySearchQuery = '';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                _isDefenseMode ? 'Select Answer' : 'Select Item to Add',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            Expanded(
-              child: DefaultTabController(
-                length: 8,
-                initialIndex: _isDefenseMode ? 2 : 0,
-                child: Column(
-                  children: [
-                    TabBar(
-                      isScrollable: true,
-                      tabs: [
-                        const Tab(text: 'Punches'),
-                        const Tab(text: 'Kicks'),
-                        const Tab(text: 'Packs'),
-                        const Tab(text: 'Trapping'),
-                        const Tab(text: 'JKD Moves'),
-                        const Tab(text: 'Kali'),
-                        const Tab(text: 'Move'),
-                        Tab(
-                          icon: Icon(
-                            MoveDisplayWidgets.getCategoryIcon('text'),
-                            size: 16,
-                          ),
-                          text: 'Text',
-                        ),
-                      ],
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              maxChildSize: 0.95,
+              minChildSize: 0.5,
+              expand: false,
+              builder: (context, scrollController) => Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 16.0,
+                      right: 8.0,
+                      top: 12.0,
                     ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _buildGlossaryTab('punch', scrollController),
-                          _buildGlossaryTab('kick', scrollController),
-                          _buildGlossaryTab('packs', scrollController),
-                          _buildGlossaryTab('trapping', scrollController),
-                          _buildGlossaryTab('jkd_moves', scrollController),
-                          _buildGlossaryTab('kali', scrollController),
-                          _buildGlossaryTab('move', scrollController),
-                          _buildTextTab(),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextField(
+                              autofocus: false,
+                              decoration: InputDecoration(
+                                hintText: LocalizationService.translate(
+                                  'search_hint',
+                                  Provider.of<SeriesProvider>(
+                                    context,
+                                    listen: false,
+                                  ).language,
+                                ),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  suffixIcon: _glossarySearchQuery.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setModalState(() {
+                                              _glossarySearchQuery = '';
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                                controller: TextEditingController.fromValue(
+                                  TextEditingValue(
+                                    text: _glossarySearchQuery,
+                                    selection: TextSelection.collapsed(
+                                      offset: _glossarySearchQuery.length,
+                                    ),
+                                  ),
+                                ),
+                                onChanged: (val) {
+                                  setModalState(() => _glossarySearchQuery = val);
+                                },
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  Expanded(
+                    child: _glossarySearchQuery.isEmpty
+                        ? DefaultTabController(
+                            length: 5,
+                            child: Column(
+                              children: [
+                                const TabBar(
+                                  isScrollable: true,
+                                  tabs: [
+                                    Tab(text: 'Punches / Kicks'),
+                                    Tab(text: 'Packs / Trapping'),
+                                    Tab(text: 'JKD Moves / Move'),
+                                    Tab(text: 'Kali'),
+                                    Tab(text: 'Text'),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: TabBarView(
+                                    children: [
+                                      _buildDualGlossaryTab(
+                                        'punch',
+                                        'kick',
+                                        scrollController,
+                                      ),
+                                      _buildDualGlossaryTab(
+                                        'packs',
+                                        'trapping',
+                                        scrollController,
+                                      ),
+                                      _buildDualGlossaryTab(
+                                        'jkd_moves',
+                                        'move',
+                                        scrollController,
+                                      ),
+                                      _buildDualGlossaryTab(
+                                        'kali',
+                                        null,
+                                        scrollController,
+                                      ),
+                                      _buildDualGlossaryTab(
+                                        'text',
+                                        null,
+                                        scrollController,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _buildGlobalGlossarySearchResults(scrollController),
+                  ),
+                ],
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDualGlossaryTab(
+    String cat1,
+    String? cat2,
+    ScrollController scrollController,
+  ) {
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+
+    // Special case for Text alone
+    if (cat1 == 'text') {
+      return SingleChildScrollView(
+        controller: scrollController,
+        child: _buildTextTab(),
+      );
+    }
+
+    return FutureBuilder<List<List<Map<String, dynamic>>>>(
+      future: Future.wait([
+        GlossaryDataService.fetchGlossaryByCategory(cat1),
+        cat2 != null
+            ? GlossaryDataService.fetchGlossaryByCategory(cat2)
+            : Future.value(<Map<String, dynamic>>[]),
+      ]),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final items1 = snapshot.data![0];
+        final items2 = snapshot.data![1];
+
+        // If cat2 is null, split cat1 into two columns
+        if (cat2 == null) {
+          final half = (items1.length / 2).ceil();
+          return ListView.builder(
+            controller: scrollController,
+            itemCount: half,
+            itemBuilder: (context, index) {
+              final idx1 = index;
+              final idx2 = index + half;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildCompactGlossaryTile(items1[idx1], cat1, lang),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.grey.withValues(alpha: 0.1),
+                  ),
+                  Expanded(
+                    child: idx2 < items1.length
+                        ? _buildCompactGlossaryTile(items1[idx2], cat1, lang)
+                        : const SizedBox(),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+
+        // Standard dual category mode
+        final maxLen = items1.length > items2.length
+            ? items1.length
+            : items2.length;
+
+        return ListView.builder(
+          controller: scrollController,
+          itemCount: maxLen,
+          itemBuilder: (context, index) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: index < items1.length
+                      ? _buildCompactGlossaryTile(items1[index], cat1, lang)
+                      : const SizedBox(),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.grey.withValues(alpha: 0.1),
+                ),
+                Expanded(
+                  child: index < items2.length
+                      ? _buildCompactGlossaryTile(items2[index], cat2, lang)
+                      : const SizedBox(),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactGlossaryTile(
+    Map<String, dynamic> item,
+    String category,
+    String lang,
+  ) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final themeColor = provider.themeColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final translations = GlossaryDataService.parseTranslations(
+      item['translations'],
+    );
+    final translation = GlossaryDataService.getTranslation(translations, lang);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.01),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                themeColor.withValues(alpha: isDark ? 0.25 : 0.15),
+                themeColor.withValues(alpha: isDark ? 0.1 : 0.05),
+              ],
             ),
-          ],
+            border: Border.all(
+              color: themeColor.withValues(alpha: 0.2),
+              width: 0.5,
+            ),
+          ),
+          child: Icon(
+            MoveDisplayWidgets.getCategoryIcon(category),
+            color: MoveDisplayWidgets.getCategoryColor(category),
+            size: 22,
+          ),
         ),
+        title: Text(
+          item['name'],
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: translation.isNotEmpty
+            ? Text(
+                translation,
+                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null,
+        onTap: () {
+          final newItem = BuilderCardData(
+            name: item['name'],
+            category: category,
+            glossaryId: item['id'],
+          );
+          _onAddItem(newItem);
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -1789,59 +2037,41 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  Widget _buildGlossaryTab(String category, ScrollController scrollController) {
-    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+  Widget _buildGlobalGlossarySearchResults(ScrollController scrollController) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final query = _glossarySearchQuery.toLowerCase();
+    final lang = provider.language;
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: GlossaryDataService.fetchGlossaryByCategory(category),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final items = snapshot.data!;
-        return ListView.builder(
-          controller: scrollController,
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            final translations = GlossaryDataService.parseTranslations(
-              item['translations'],
-            );
-            final translation = GlossaryDataService.getTranslation(
-              translations,
-              lang,
-            );
+    final results = provider.glossary.where((item) {
+      final name = item['name'].toString().toLowerCase();
+      final trans = GlossaryDataService.parseTranslations(item['translations']);
+      final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
+      return name.contains(query) || t.contains(query);
+    }).toList();
 
-            return ListTile(
-              leading: Icon(
-                MoveDisplayWidgets.getCategoryIcon(category),
-                color: MoveDisplayWidgets.getCategoryColor(category),
-              ),
-              title: Text(
-                item['name'],
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: translation.isNotEmpty
-                  ? Text(
-                      translation,
-                      style: const TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 12,
-                      ),
-                    )
-                  : null,
-              onTap: () {
-                final newItem = BuilderCardData(
-                  name: item['name'],
-                  category: category,
-                  glossaryId: item['id'],
-                );
-                _onAddItem(newItem);
-                Navigator.pop(context);
-              },
-            );
-          },
-        );
+    if (results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              LocalizationService.translate('nothing', lang),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index];
+        final category = item['category'] ?? 'other';
+        return _buildCompactGlossaryTile(item, category, lang);
       },
     );
   }

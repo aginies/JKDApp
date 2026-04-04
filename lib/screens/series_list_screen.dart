@@ -287,6 +287,14 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: TextField(
+                                controller: TextEditingController.fromValue(
+                                  TextEditingValue(
+                                    text: _glossarySearchQuery,
+                                    selection: TextSelection.collapsed(
+                                      offset: _glossarySearchQuery.length,
+                                    ),
+                                  ),
+                                ),
                                 decoration: InputDecoration(
                                   hintText: LocalizationService.translate(
                                     'search_hint',
@@ -296,6 +304,20 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                     Icons.search,
                                     color: Colors.grey,
                                   ),
+                                  suffixIcon: _glossarySearchQuery.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setModalState(() {
+                                              _glossarySearchQuery = '';
+                                            });
+                                          },
+                                        )
+                                      : null,
                                   border: InputBorder.none,
                                   isDense: true,
                                 ),
@@ -509,6 +531,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     String category,
   ) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final themeColor = provider.themeColor;
     final galleryPath = provider.galleryPath;
     final trans = TranslationUtils.parseTranslations(item['translations']);
     final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
@@ -516,7 +539,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Card(
       elevation: 0,
-      color: isDark ? Colors.grey[900] : Colors.grey[50],
+      color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.01),
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -533,16 +556,25 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      themeColor.withValues(alpha: isDark ? 0.25 : 0.15),
+                      themeColor.withValues(alpha: isDark ? 0.1 : 0.05),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: themeColor.withValues(alpha: 0.25),
+                    width: 0.5,
+                  ),
                 ),
                 child: Icon(
                   _getCategoryIcon(category),
-                  color: Theme.of(context).colorScheme.primary,
+                  color: CategoryUtils.getCategoryColor(category),
                   size: 24,
                 ),
               ),
