@@ -10,8 +10,9 @@ import 'combo_verification_service.dart';
 import 'training_result_view.dart';
 
 class TrainingModeDialogs {
-  // Track completed indices for the current session
+  // Track completed and failed indices for the current session
   static final Set<int> _completedIndices = {};
+  static final Set<int> _failedIndices = {};
 
   static void showTrainingSetup(
     BuildContext context,
@@ -21,6 +22,7 @@ class TrainingModeDialogs {
   }) {
     // Reset state for new setup
     _completedIndices.clear();
+    _failedIndices.clear();
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 
@@ -183,6 +185,12 @@ class TrainingModeDialogs {
                   itemCount: moves.length,
                   itemBuilder: (gridCtx, index) {
                     final isCompleted = _completedIndices.contains(index);
+                    final isFailed = _failedIndices.contains(index);
+                    
+                    Color color = provider.themeColor;
+                    if (isCompleted) color = Colors.green;
+                    else if (isFailed) color = Colors.red;
+
                     return ElevatedButton(
                       onPressed: () {
                         Navigator.pop(modalCtx);
@@ -197,16 +205,12 @@ class TrainingModeDialogs {
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        backgroundColor: isCompleted
-                            ? Colors.green.withValues(alpha: 0.2)
-                            : provider.themeColor.withValues(alpha: 0.1),
-                        foregroundColor: isCompleted
-                            ? Colors.green
-                            : provider.themeColor,
+                        backgroundColor: color.withValues(alpha: 0.1),
+                        foregroundColor: color,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: isCompleted
-                              ? const BorderSide(color: Colors.green, width: 2)
+                          side: (isCompleted || isFailed)
+                              ? BorderSide(color: color, width: 2)
                               : BorderSide.none,
                         ),
                       ),
@@ -228,6 +232,16 @@ class TrainingModeDialogs {
                                 Icons.check_circle,
                                 size: 14,
                                 color: Colors.green,
+                              ),
+                            ),
+                          if (isFailed && !isCompleted)
+                            const Positioned(
+                              top: 2,
+                              right: 2,
+                              child: Icon(
+                                Icons.cancel,
+                                size: 14,
+                                color: Colors.red,
                               ),
                             ),
                         ],
@@ -362,6 +376,8 @@ class TrainingModeDialogs {
 
       if (result.isCorrect) {
         _completedIndices.add(index);
+      } else {
+        _failedIndices.add(index);
       }
 
       final bool hasNext = index < allMoves.length - 1;
@@ -425,19 +441,55 @@ class TrainingModeDialogs {
                   }
                 }
 
-                // SHOW ANIMATION and AUTO-EXIT
+                // SHOW SUMMARY and AUTO-EXIT
                 if (context.mounted) {
-                  CongratulationsAnimation.show(
-                    context,
-                    isDayComplete: anyDayComplete,
+                  final int total = allMoves.length;
+                  final int errors = _failedIndices.length;
+                  
+                  await showDialog(
+                    context: context,
+                    builder: (summaryCtx) => AlertDialog(
+                      title: Text(LocalizationService.translate('training_complete_title', lang)),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildSummaryRow(
+                            Icons.check_circle, 
+                            Colors.green, 
+                            'Correct: $total',
+                          ),
+                          if (errors > 0)
+                            _buildSummaryRow(
+                              Icons.error, 
+                              Colors.red, 
+                              'Errors: $errors',
+                            ),
+                          const SizedBox(height: 16),
+                          Text(LocalizationService.translate('training_complete_desc', lang)),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(summaryCtx),
+                          child: Text(LocalizationService.translate('finish', lang)),
+                        ),
+                      ],
+                    ),
                   );
 
-                  // Wait for animation then return to dashboard
-                  Future.delayed(const Duration(milliseconds: 2500), () {
-                    if (context.mounted) {
-                      Navigator.of(context).pop(); // Exit SeriesDetailScreen
-                    }
-                  });
+                  if (context.mounted) {
+                    CongratulationsAnimation.show(
+                      context,
+                      isDayComplete: anyDayComplete,
+                    );
+
+                    // Wait for animation then return to dashboard
+                    Future.delayed(const Duration(milliseconds: 2500), () {
+                      if (context.mounted) {
+                        Navigator.of(context).pop(); // Exit SeriesDetailScreen
+                      }
+                    });
+                  }
                 }
                 return;
               }
@@ -459,5 +511,18 @@ class TrainingModeDialogs {
       LoggingService.log('TrainingModeDialogs: Error displaying results: $e');
       debugPrint(stack.toString());
     }
+  }
+
+  static Widget _buildSummaryRow(IconData icon, Color color, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
   }
 }
