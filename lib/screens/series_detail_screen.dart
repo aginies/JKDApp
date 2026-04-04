@@ -937,14 +937,21 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     child: Row(
                       children: [
                         const Expanded(child: Divider()),
-                        if (!_isEditing && _currentTrainingOptions == null) ...[
+                        if (!_isEditing &&
+                            _currentTrainingOptions == null &&
+                            _selectedCategory != 'JKD Moves') ...[
                           const SizedBox(width: 8),
                           FloatingActionButton.small(
                             heroTag: 'training_mode_btn',
-                            onPressed: () =>
-                                TrainingModeDialogs.showTrainingSetup(
+                            onPressed:
+                                () => TrainingModeDialogs.showTrainingSetup(
                                   context,
                                   _moves,
+                                  seriesIds:
+                                      widget.series?.id != null
+                                          ? [widget.series!.id!]
+                                          : null,
+                                  seriesTitle: widget.series?.title,
                                 ),
                             backgroundColor: Colors.orangeAccent,
                             child: const Icon(
@@ -954,6 +961,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                             ),
                           ),
                         ],
+
                         if (_isEditing) ...[
                           const SizedBox(width: 8),
                           Consumer<SeriesProvider>(

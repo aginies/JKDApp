@@ -9,11 +9,14 @@ import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
 import '../models/series.dart';
+import '../models/move.dart';
 import '../services/series_provider.dart';
 import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import '../widgets/program_calendar_widget.dart';
 import 'program_create_screen.dart';
+import '../services/logging_service.dart';
+import 'series_detail/training/training_mode_dialogs.dart';
 import 'series_detail_screen.dart';
 
 class ProgramDetailScreen extends StatefulWidget {
@@ -662,57 +665,117 @@ class _DayCardState extends State<_DayCard> {
                     }),
                     if (widget.isCurrentDay) ...[
                       const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            final List<JkdSeries> seriesList = [];
-                            for (final sa in widget.day.seriesAssignments!) {
-                              final matching = provider.series.firstWhere(
-                                (s) => s.id == sa.seriesId,
-                                orElse: () => JkdSeries(
-                                  id: sa.seriesId,
-                                  title: 'Unknown',
-                                  category: 'Other',
-                                  moves: [],
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                final List<JkdSeries> seriesList = [];
+                                for (final sa in widget.day.seriesAssignments!) {
+                                  final matching = provider.series.firstWhere(
+                                    (s) => s.id == sa.seriesId,
+                                    orElse: () => JkdSeries(
+                                      id: sa.seriesId,
+                                      title: 'Unknown',
+                                      category: 'Other',
+                                      moves: [],
+                                    ),
+                                  );
+                                  if (matching.title != 'Unknown') {
+                                    seriesList.add(matching);
+                                  }
+                                }
+
+                                if (seriesList.isEmpty) return;
+
+                                if (seriesList.length == 1) {
+                                  final s = seriesList.first;
+                                  final range = widget.day.seriesAssignments!
+                                      .firstWhere((a) => a.seriesId == s.id)
+                                      .itemRange;
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SeriesDetailScreen(
+                                        series: s,
+                                        itemRange: range,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  _showSeriesSelection(
+                                    context,
+                                    seriesList,
+                                    widget.day,
+                                    widget.lang,
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.play_arrow),
+                              label: Text(
+                                LocalizationService.translate(
+                                  'start',
+                                  widget.lang,
                                 ),
-                              );
-                              if (matching.title != 'Unknown') {
-                                seriesList.add(matching);
-                              }
-                            }
-
-                            if (seriesList.isEmpty) return;
-
-                            if (seriesList.length == 1) {
-                              final s = seriesList.first;
-                              final range = widget.day.seriesAssignments!
-                                  .firstWhere((a) => a.seriesId == s.id)
-                                  .itemRange;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SeriesDetailScreen(
-                                    series: s,
-                                    itemRange: range,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              _showSeriesSelection(
-                                context,
-                                seriesList,
-                                widget.day,
-                                widget.lang,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.play_arrow),
-                          label: Text(
-                            LocalizationService.translate('start', widget.lang),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              final List<Move> allMoves = [];
+                              final List<int> seriesIds = [];
+                              final List<String> seriesTitles = [];
+                              for (final sa in widget.day.seriesAssignments!) {
+                                seriesIds.add(sa.seriesId);
+                                final series = provider.series.firstWhere(
+                                  (s) => s.id == sa.seriesId,
+                                  orElse: () => JkdSeries(
+                                    title: '',
+                                    category: '',
+                                    moves: [],
+                                  ),
+                                );
+                                if (series.title.isNotEmpty) {
+                                  seriesTitles.add(series.title);
+                                  List<Move> filtered = series.moves;
+                                  if (sa.itemRange != null) {
+                                    final parts = sa.itemRange!.split('-');
+                                    if (parts.length == 2) {
+                                      final start =
+                                          int.tryParse(parts[0]) ?? 1;
+                                      final end =
+                                          int.tryParse(parts[1]) ??
+                                          series.moves.length;
+                                      filtered = series.moves.sublist(
+                                        (start - 1).clamp(
+                                          0,
+                                          series.moves.length,
+                                        ),
+                                        end.clamp(0, series.moves.length),
+                                      );
+                                    }
+                                  }
+                                  allMoves.addAll(filtered);
+                                }
+                              }
+                              if (allMoves.isNotEmpty) {
+                                TrainingModeDialogs.showTrainingSetup(
+                                  context,
+                                  allMoves,
+                                  seriesIds: seriesIds,
+                                  seriesTitle: seriesTitles.join(', '),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orangeAccent,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Icon(Icons.school),
+                          ),
+                        ],
                       ),
                     ],
                   ],

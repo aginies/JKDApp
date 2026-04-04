@@ -57,8 +57,13 @@ class ComboVerificationService {
     TrainingLevel level,
   ) {
     // 1. Basic property comparison
-    if (orig.name.toLowerCase().trim() != att.name.toLowerCase().trim()) {
-      diffs.add('$context: Name expected "${orig.name}" but got "${att.name}"');
+    // Ignore name for wrapper categories (combo/chain) because attempt names are auto-generated
+    if (!orig.isCombo && !orig.isChain) {
+      if (orig.name.toLowerCase().trim() != att.name.toLowerCase().trim()) {
+        diffs.add(
+          '$context: Name expected "${orig.name}" but got "${att.name}"',
+        );
+      }
     }
 
     // Check Side based on level

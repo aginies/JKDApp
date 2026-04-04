@@ -9,6 +9,7 @@ class TrainingResultView extends StatelessWidget {
   final String language;
   final VoidCallback onRetry;
   final VoidCallback onFinish;
+  final VoidCallback? onNext;
 
   const TrainingResultView({
     super.key,
@@ -16,6 +17,7 @@ class TrainingResultView extends StatelessWidget {
     required this.language,
     required this.onRetry,
     required this.onFinish,
+    this.onNext,
   });
 
   @override
@@ -59,14 +61,8 @@ class TrainingResultView extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       result.isCorrect
-                          ? LocalizationService.translate(
-                              'correct_combo',
-                              language,
-                            )
-                          : LocalizationService.translate(
-                              'incorrect_combo',
-                              language,
-                            ),
+                          ? LocalizationService.translate('correct_combo', language)
+                          : LocalizationService.translate('incorrect_combo', language),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -80,29 +76,20 @@ class TrainingResultView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // User Attempt Section
-            _buildSectionTitle(
-              LocalizationService.translate('your_attempt', language),
-              theme,
-            ),
+            _buildSectionTitle(LocalizationService.translate('your_attempt', language), theme),
             const SizedBox(height: 8),
             _buildMovePreview(result.attempt, context),
-
+            
             const SizedBox(height: 24),
 
             // Original Section
-            _buildSectionTitle(
-              LocalizationService.translate('original_move', language),
-              theme,
-            ),
+            _buildSectionTitle(LocalizationService.translate('original_move', language), theme),
             const SizedBox(height: 8),
             _buildMovePreview(result.original, context),
 
             if (result.differences.isNotEmpty) ...[
               const SizedBox(height: 24),
-              _buildSectionTitle(
-                LocalizationService.translate('differences', language),
-                theme,
-              ),
+              _buildSectionTitle(LocalizationService.translate('differences', language), theme),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -113,60 +100,71 @@ class TrainingResultView extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: result.differences
-                      .map(
-                        (d) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.arrow_right,
-                                size: 16,
-                                color: Colors.red,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  d,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  children: result.differences.map((d) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.arrow_right, size: 16, color: Colors.red),
+                        Expanded(child: Text(d, style: const TextStyle(fontSize: 13))),
+                      ],
+                    ),
+                  )).toList(),
                 ),
               ),
             ],
-
+            
             const SizedBox(height: 32),
-
+            
             // Actions
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh),
-                    label: Text(
-                      LocalizationService.translate('retry', language),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
+                if (!result.isCorrect) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(
+                        LocalizationService.translate('retry', language),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.all(12),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                ],
+                if (onNext != null) ...[
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: onNext,
+                      icon: const Icon(Icons.arrow_forward),
+                      label: Text(
+                        LocalizationService.translate('next', language),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(12),
+                        backgroundColor: Colors.orangeAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: onFinish,
-                    icon: const Icon(Icons.check),
+                    icon: Icon(
+                      onNext == null ? Icons.check_circle : Icons.apps,
+                    ),
                     label: Text(
-                      LocalizationService.translate('finish', language),
+                      LocalizationService.translate(
+                        onNext == null ? 'finish' : 'selection',
+                        language,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                     ),
