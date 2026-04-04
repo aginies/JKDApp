@@ -131,10 +131,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   bool _shouldShowBottomToolbar() {
     if (_selectedPath == null) return false;
-    if (_isCounterSelected) return false;
 
     final data = _getDataAtPath(_selectedPath!);
     if (data == null) return false;
+
+    if (_isCounterSelected) {
+      if (_selectedCounterIndex != null) {
+        // Selecting a specific sub-item in a structured answer (A+B or A->B)
+        return true;
+      }
+      // Selecting the "whole" answer box. Only show if it's a simple answer (not structured).
+      return !data.hasStructuredCounter;
+    }
 
     // Action cards are NOT containers (Chain or Combo)
     if (data.isChain || data.isCombo) return false;
@@ -345,9 +353,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   Icons.subdirectory_arrow_right,
-                  _isDefenseMode ? Colors.green : Colors.orange,
+                  _isDefenseMode
+                      ? Colors.green
+                      : ((_selectedPath != null && _isCounterSelected)
+                          ? Colors.grey
+                          : Colors.orange),
                   () {
-                    if (_selectedPath != null) {
+                    // Prevent nested answers: disable if an answer is already selected
+                    if (_selectedPath != null && !_isCounterSelected) {
                       setState(() {
                         _clearAllModes();
                         _isDefenseMode = true;
