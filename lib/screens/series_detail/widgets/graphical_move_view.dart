@@ -606,47 +606,113 @@ class GraphicalMoveView {
     );
   }
 
-  /// Small card for rendering a single move inside a structured counter box.
+  /// Small card for rendering a single move (or nested group) inside a structured counter box.
   static Widget _buildMiniMoveCard(Move move, String lang) {
-    final color = MoveDisplayWidgets.getCategoryColor(move.category);
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            MoveDisplayWidgets.getCategoryIcon(move.category),
-            size: 14,
-            color: color,
-          ),
-          Text(
-            move.name,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          if (move.side.isNotEmpty || move.level.isNotEmpty)
-            Wrap(
-              spacing: 2,
-              children: [
-                if (move.side.isNotEmpty)
-                  MoveDisplayWidgets.sideCircle(
-                    LocalizationService.translate(
-                      move.side == 'L' ? 'left' : 'right',
-                      lang,
-                    ).substring(0, 1),
-                    move.side,
-                    mini: true,
-                  ),
-                if (move.level.isNotEmpty)
-                  MoveDisplayWidgets.levelIcon(move.level, mini: true),
-              ],
+    if (move.isChain || move.isCombo) {
+      // RECURSIVE rendering for nested groups inside an answer
+      final color = MoveDisplayWidgets.getCategoryColor(move.category);
+      return Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              move.isChain ? 'CHAIN' : 'SIMUL.',
+              style: const TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
-        ],
+            const SizedBox(height: 2),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: (move.isChain ? move.chain : move.subMoves)
+                  .asMap()
+                  .entries
+                  .map((e) {
+                    final idx = e.key;
+                    final item = e.value;
+
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildMiniMoveCard(item, lang),
+                        if (move.isChain && idx < move.chain.length - 1)
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 10,
+                            color: Colors.grey,
+                          ),
+                        if (move.isCombo && idx < move.subMoves.length - 1)
+                          const Text(
+                            '+',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    );
+                  })
+                  .toList(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final color = MoveDisplayWidgets.getCategoryColor(move.category);
+    return DiagonalCross(
+      show: move.isFeint,
+      color: Colors.purple,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              MoveDisplayWidgets.getCategoryIcon(move.category),
+              size: 14,
+              color: color,
+            ),
+            Text(
+              move.name,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            if (move.side.isNotEmpty || move.level.isNotEmpty)
+              Wrap(
+                spacing: 2,
+                children: [
+                  if (move.side.isNotEmpty)
+                    MoveDisplayWidgets.sideCircle(
+                      LocalizationService.translate(
+                        move.side == 'L' ? 'left' : 'right',
+                        lang,
+                      ).substring(0, 1),
+                      move.side,
+                      mini: true,
+                    ),
+                  if (move.level.isNotEmpty)
+                    MoveDisplayWidgets.levelIcon(move.level, mini: true),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
