@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../../models/move.dart';
+import '../../../services/logging_service.dart';
 
 enum TrainingLevel {
   beginner, // Ignore Side (L/R) and Level (H/M/L)
@@ -24,6 +27,12 @@ class VerificationResult {
 
 class ComboVerificationService {
   static VerificationResult verifyMove(Move original, Move attempt, TrainingLevel level) {
+    debugPrint('--- VERIFICATION DEBUG ---');
+    debugPrint('LEVEL: $level');
+    debugPrint('ORIGINAL: ${json.encode(original.toMap())}');
+    debugPrint('ATTEMPT:  ${json.encode(attempt.toMap())}');
+    LoggingService.log('Verifying move at level $level');
+
     List<String> differences = [];
     _compareMoves(original, attempt, differences, "Move", level);
 

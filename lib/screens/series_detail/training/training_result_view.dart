@@ -25,7 +25,9 @@ class TrainingResultView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(LocalizationService.translate('training_result', language)),
+        title: Text(
+          '${LocalizationService.translate('training_result', language)} - ${LocalizationService.translate(result.level.name, language)}',
+        ),
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
