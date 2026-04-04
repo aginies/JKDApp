@@ -520,111 +520,121 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
     // BOX: CHAIN
     if (data.isChain) {
-      card = GestureDetector(
-        onTap: () => _selectPath(path),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _getSurfaceColor(theme),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: (isSelected && !_isCounterSelected)
-                  ? Colors.green
-                  : _getBorderColor(Colors.grey, theme),
-              width: (isSelected && !_isCounterSelected) ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'CHAIN',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+      card = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _selectPath(path),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _getSurfaceColor(theme),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (isSelected && !_isCounterSelected)
+                      ? Colors.green
+                      : _getBorderColor(Colors.grey, theme),
+                  width: (isSelected && !_isCounterSelected) ? 2 : 1,
                 ),
               ),
-              const SizedBox(height: 4),
-              SeparatedWrap(
-                spacing: 4,
-                runSpacing: 10,
-                children: data.chain.asMap().entries.map((e) {
-                  final itemPath = [...path, e.key];
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildCard(itemPath, e.value, lang),
-                      if (e.key < data.chain.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            size: 16,
-                            color: Colors.teal,
-                          ),
-                        ),
-                    ],
-                  );
-                }).toList(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'CHAIN',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  SeparatedWrap(
+                    spacing: 4,
+                    runSpacing: 10,
+                    children: data.chain.asMap().entries.map((e) {
+                      final itemPath = [...path, e.key];
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildCard(itemPath, e.value, lang),
+                          if (e.key < data.chain.length - 1)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: Colors.teal,
+                              ),
+                            ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
-              if (data.hasCounter) ...[
-                const SizedBox(height: 4),
-                _buildCounterBox(path, data, lang, isSelected),
-              ],
-            ],
+            ),
           ),
-        ),
+          if (data.hasCounter) ...[
+            const SizedBox(height: 4),
+            _buildCounterBox(path, data, lang, isSelected),
+          ],
+        ],
       );
     } else if (data.isCombo) {
-      card = GestureDetector(
-        onTap: () => _selectPath(path),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _getSurfaceColor(theme),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: (isSelected && !_isCounterSelected)
-                  ? Colors.green
-                  : _getBorderColor(Colors.grey, theme),
-              width: (isSelected && !_isCounterSelected) ? 2 : 1,
+      card = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _selectPath(path),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _getSurfaceColor(theme),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (isSelected && !_isCounterSelected)
+                      ? Colors.green
+                      : _getBorderColor(Colors.grey, theme),
+                  width: (isSelected && !_isCounterSelected) ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'SIMULTANEOUS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: _getAlphaColor(Colors.grey, theme),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: SeparatedWrap(
+                      spacing: 4,
+                      runSpacing: 10,
+                      children: data.subMoves.asMap().entries.map((e) {
+                        final itemPath = [...path, e.key];
+                        return _buildCard(itemPath, e.value, lang);
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'SIMULTANEOUS',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: _getAlphaColor(Colors.grey, theme),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SeparatedWrap(
-                  spacing: 4,
-                  runSpacing: 10,
-                  children: data.subMoves.asMap().entries.map((e) {
-                    final itemPath = [...path, e.key];
-                    return _buildCard(itemPath, e.value, lang);
-                  }).toList(),
-                ),
-              ),
-              if (data.hasCounter) ...[
-                const SizedBox(height: 4),
-                _buildCounterBox(path, data, lang, isSelected),
-              ],
-            ],
-          ),
-        ),
+          if (data.hasCounter) ...[
+            const SizedBox(height: 4),
+            _buildCounterBox(path, data, lang, isSelected),
+          ],
+        ],
       );
     } else {
       // RENDER LEAF ITEM
