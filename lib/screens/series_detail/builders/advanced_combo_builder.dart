@@ -1456,6 +1456,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) {
+        final lang = Provider.of<SeriesProvider>(context, listen: false).language;
         return StatefulBuilder(
           builder: (context, setModalState) {
             return DraggableScrollableSheet(
@@ -1547,16 +1548,36 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             length: 5,
                             child: Column(
                               children: [
-                                const TabBar(
+                                TabBar(
                                   isScrollable: true,
                                   tabs: [
-                                    Tab(text: 'Punches / Kicks'),
-                                    Tab(text: 'Packs / Trapping'),
-                                    Tab(text: 'JKD Moves / Move'),
-                                    Tab(text: 'Kali'),
-                                    Tab(text: 'Text'),
+                                    Tab(
+                                      text:
+                                          '${LocalizationService.translate('punches', lang)} / ${LocalizationService.translate('kicks', lang)}',
+                                    ),
+                                    Tab(
+                                      text:
+                                          '${LocalizationService.translate('packs', lang)} / ${LocalizationService.translate('trapping', lang)}',
+                                    ),
+                                    Tab(
+                                      text:
+                                          '${LocalizationService.translate('jkd_moves', lang)} / ${LocalizationService.translate('move', lang)}',
+                                    ),
+                                    Tab(
+                                      text: LocalizationService.translate(
+                                        'kali',
+                                        lang,
+                                      ),
+                                    ),
+                                    Tab(
+                                      text: LocalizationService.translate(
+                                        'text',
+                                        lang,
+                                      ),
+                                    ),
                                   ],
                                 ),
+
                                 Expanded(
                                   child: TabBarView(
                                     children: [
@@ -2021,16 +2042,17 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildTextTab() {
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           TextField(
             controller: _customTextController,
-            decoration: const InputDecoration(
-              labelText: 'Custom Text',
-              border: OutlineInputBorder(),
-              hintText: 'Enter custom instruction or move name',
+            decoration: InputDecoration(
+              labelText: LocalizationService.translate('custom_text', lang),
+              border: const OutlineInputBorder(),
+              hintText: LocalizationService.translate('custom_text_hint', lang),
             ),
             autofocus: true,
             onSubmitted: (val) {
@@ -2057,7 +2079,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               }
             },
             icon: const Icon(Icons.add),
-            label: const Text('Add Custom Text'),
+            label: Text(LocalizationService.translate('add_custom_text', lang)),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 45),
             ),
