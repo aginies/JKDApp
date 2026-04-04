@@ -325,96 +325,99 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Builder(
-                      builder: (context) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        return TabBar(
-                          isScrollable: true,
-                          indicatorSize: TabBarIndicatorSize.label,
-                          indicatorColor: isDark
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).primaryColor,
-                          labelColor: isDark
-                              ? Colors.white
-                              : Theme.of(context).primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: [
-                            Tab(
-                              text: LocalizationService.translate(
-                                'punches',
-                                lang,
+                    if (_glossarySearchQuery.isEmpty)
+                      Builder(
+                        builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return TabBar(
+                            isScrollable: true,
+                            indicatorSize: TabBarIndicatorSize.label,
+                            indicatorColor: isDark
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).primaryColor,
+                            labelColor: isDark
+                                ? Colors.white
+                                : Theme.of(context).primaryColor,
+                            unselectedLabelColor: Colors.grey,
+                            tabs: [
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'punches',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('punch')),
                               ),
-                              icon: Icon(_getCategoryIcon('punch')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'kicks',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'kicks',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('kick')),
                               ),
-                              icon: Icon(_getCategoryIcon('kick')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'packs',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'packs',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('packs')),
                               ),
-                              icon: Icon(_getCategoryIcon('packs')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'trapping',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'trapping',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('trapping')),
                               ),
-                              icon: Icon(_getCategoryIcon('trapping')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate('move', lang),
-                              icon: Icon(_getCategoryIcon('move')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'jkd_moves',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate('move', lang),
+                                icon: Icon(_getCategoryIcon('move')),
                               ),
-                              icon: Icon(_getCategoryIcon('jkd_moves')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate('kali', lang),
-                              icon: Icon(_getCategoryIcon('kali')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'general',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'jkd_moves',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('jkd_moves')),
                               ),
-                              icon: Icon(_getCategoryIcon('general')),
-                            ),
-                            Tab(
-                              text: LocalizationService.translate(
-                                'other',
-                                lang,
+                              Tab(
+                                text: LocalizationService.translate('kali', lang),
+                                icon: Icon(_getCategoryIcon('kali')),
                               ),
-                              icon: Icon(_getCategoryIcon('other')),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _buildGlossaryList('punch', lang),
-                          _buildGlossaryList('kick', lang),
-                          _buildGlossaryList('packs', lang),
-                          _buildGlossaryList('trapping', lang),
-                          _buildGlossaryList('move', lang),
-                          _buildGlossaryList('jkd_moves', lang),
-                          _buildGlossaryList('kali', lang),
-                          _buildGlossaryList('general', lang),
-                          _buildGlossaryList('other', lang),
-                        ],
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'general',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('general')),
+                              ),
+                              Tab(
+                                text: LocalizationService.translate(
+                                  'other',
+                                  lang,
+                                ),
+                                icon: Icon(_getCategoryIcon('other')),
+                              ),
+                            ],
+                          );
+                        },
                       ),
+                    Expanded(
+                      child: _glossarySearchQuery.isEmpty
+                          ? TabBarView(
+                              children: [
+                                _buildGlossaryList('punch', lang),
+                                _buildGlossaryList('kick', lang),
+                                _buildGlossaryList('packs', lang),
+                                _buildGlossaryList('trapping', lang),
+                                _buildGlossaryList('move', lang),
+                                _buildGlossaryList('jkd_moves', lang),
+                                _buildGlossaryList('kali', lang),
+                                _buildGlossaryList('general', lang),
+                                _buildGlossaryList('other', lang),
+                              ],
+                            )
+                          : _buildGlobalGlossarySearchResults(lang),
                     ),
                   ],
                 ),
@@ -426,29 +429,52 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     );
   }
 
-  Widget _buildGlossaryList(String category, String lang) {
+  Widget _buildGlobalGlossarySearchResults(String lang) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final galleryPath = provider.galleryPath;
+    final query = _glossarySearchQuery.toLowerCase();
 
+    final results = provider.glossary.where((item) {
+      final name = item['name'].toString().toLowerCase();
+      final trans = TranslationUtils.parseTranslations(item['translations']);
+      final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
+      return name.contains(query) || t.contains(query);
+    }).toList();
+
+    if (results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              LocalizationService.translate('nothing', lang),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index];
+        final category = item['category'] ?? 'other';
+        return _buildGlossaryItemCard(item, lang, category);
+      },
+    );
+  }
+
+  Widget _buildGlossaryList(String category, String lang) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: DatabaseService().getGlossaryByCategory(category),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        var items = snapshot.data!;
-
-        if (_glossarySearchQuery.isNotEmpty) {
-          final query = _glossarySearchQuery.toLowerCase();
-          items = items.where((item) {
-            final name = item['name'].toString().toLowerCase();
-            final trans = TranslationUtils.parseTranslations(
-              item['translations'],
-            );
-            final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
-            return name.contains(query) || t.contains(query);
-          }).toList();
-        }
+        final items = snapshot.data!;
 
         if (items.isEmpty) {
           return Center(
@@ -470,104 +496,106 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           padding: const EdgeInsets.all(8),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            final item = items[index];
-            final trans = TranslationUtils.parseTranslations(
-              item['translations'],
-            );
-            final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-
-            return Card(
-              elevation: 0,
-              color: isDark ? Colors.grey[900] : Colors.grey[50],
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _showMediaGallery(category, item['name']),
-                onDoubleTap: () => _showMediaGallery(category, item['name']),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(category),
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['name'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            if (translation.isNotEmpty)
-                              Text(
-                                translation,
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (galleryPath != null)
-                        FutureBuilder<List<File>>(
-                          future: _mediaService.getImagesForMove(
-                            galleryPath,
-                            category,
-                            item['name'],
-                          ),
-                          builder: (context, snapshot) {
-                            final hasImages =
-                                snapshot.hasData && snapshot.data!.isNotEmpty;
-                            return Icon(
-                              Icons.image,
-                              size: 18,
-                              color: hasImages ? Colors.blue : Colors.grey[300],
-                            );
-                          },
-                        ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
+            return _buildGlossaryItemCard(items[index], lang, category);
           },
         );
       },
     );
   }
+
+  Widget _buildGlossaryItemCard(
+    Map<String, dynamic> item,
+    String lang,
+    String category,
+  ) {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final galleryPath = provider.galleryPath;
+    final trans = TranslationUtils.parseTranslations(item['translations']);
+    final translation = trans[lang] ?? trans['en'] ?? trans['fr'] ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      elevation: 0,
+      color: isDark ? Colors.grey[900] : Colors.grey[50],
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showMediaGallery(category, item['name']),
+        onDoubleTap: () => _showMediaGallery(category, item['name']),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  _getCategoryIcon(category),
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name'],
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    if (translation.isNotEmpty)
+                      Text(
+                        translation,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (galleryPath != null)
+                FutureBuilder<List<File>>(
+                  future: _mediaService.getImagesForMove(
+                    galleryPath,
+                    category,
+                    item['name'],
+                  ),
+                  builder: (context, snapshot) {
+                    final hasImages =
+                        snapshot.hasData && snapshot.data!.isNotEmpty;
+                    return Icon(
+                      Icons.image,
+                      size: 18,
+                      color: hasImages ? Colors.blue : Colors.grey[300],
+                    );
+                  },
+                ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   void _showVoiceNotesModal(BuildContext context, String lang) {
     showModalBottomSheet(
