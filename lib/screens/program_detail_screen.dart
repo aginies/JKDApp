@@ -15,7 +15,6 @@ import '../services/training_program_service.dart';
 import '../services/localization_service.dart';
 import '../widgets/program_calendar_widget.dart';
 import 'program_create_screen.dart';
-import '../services/logging_service.dart';
 import 'series_detail/training/training_mode_dialogs.dart';
 import 'series_detail_screen.dart';
 
@@ -316,6 +315,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
 
         return _DayCard(
           day: day,
+          program: widget.program,
+          progress: _progress,
           isCurrentDay: isCurrentDay,
           isCompleted: isCompleted,
           isPast: isPast,
@@ -513,6 +514,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
 
 class _DayCard extends StatefulWidget {
   final ProgramDay day;
+  final TrainingProgram program;
+  final UserProgramProgress? progress;
   final bool isCurrentDay;
   final bool isCompleted;
   final bool isPast;
@@ -520,6 +523,8 @@ class _DayCard extends StatefulWidget {
 
   const _DayCard({
     required this.day,
+    required this.program,
+    required this.progress,
     required this.isCurrentDay,
     required this.isCompleted,
     required this.isPast,
@@ -584,13 +589,12 @@ class _DayCardState extends State<_DayCard> {
                     ? '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}: ${LocalizationService.translate('rest_day', widget.lang)}'
                     : '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}',
                 style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: widget.isCurrentDay
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight:
+                      widget.isCurrentDay ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
-              if (widget.isCompleted) ...[
-                const SizedBox(width: 8),
+              const Spacer(),
+              if (widget.isCompleted)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 6,
@@ -608,8 +612,39 @@ class _DayCardState extends State<_DayCard> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                )
+              else if (widget.progress != null)
+                Builder(
+                  builder: (context) {
+                    final dayPct = widget.progress!.getDayPercentage(
+                      widget.program,
+                      widget.day.dayNumber,
+                    );
+                    if (dayPct > 0) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.2,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${(dayPct * 100).toInt()}%',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
-              ],
             ],
           ),
           subtitle: widget.day.notes != null

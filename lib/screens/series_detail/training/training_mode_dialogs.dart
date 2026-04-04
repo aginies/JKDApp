@@ -307,12 +307,11 @@ class TrainingModeDialogs {
               Navigator.pop(ctx);
 
               if (isSessionComplete) {
-                // RECORD PROGRESS if we have seriesIds
+                // RECORD PROGRESS
                 final provider = Provider.of<SeriesProvider>(context, listen: false);
                 bool anyDayComplete = false;
                 
                 if (seriesIds != null && seriesIds.isNotEmpty) {
-                  LoggingService.log('TrainingModeDialogs: Recording completion for ${seriesIds.length} series');
                   for (final sid in seriesIds) {
                     final info = await provider.recordSeriesCompletion(sid);
                     if (info != null && info['day_complete'] == true) {
@@ -321,57 +320,22 @@ class TrainingModeDialogs {
                   }
                 }
 
-                // Show completion dialog and then EXIT training mode entirely
+                // SHOW ANIMATION and AUTO-EXIT
                 if (context.mounted) {
-                  await showDialog(
-                    context: context,
-                    builder: (finishCtx) => AlertDialog(
-                      title: Row(
-                        children: [
-                          const Icon(Icons.stars, color: Colors.amber),
-                          const SizedBox(width: 8),
-                          Text(
-                            LocalizationService.translate(
-                              'training_complete_title',
-                              lang,
-                            ),
-                          ),
-                        ],
-                      ),
-                      content: Text(
-                        LocalizationService.translate(
-                          'training_complete_desc',
-                          lang,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(finishCtx),
-                          child: Text(
-                            LocalizationService.translate('finish', lang),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  // Show congrats animation
-                  if (seriesIds != null && seriesIds.isNotEmpty) {
-                    CongratulationsAnimation.show(context, isDayComplete: anyDayComplete);
-                    
-                    // Auto-exit the series detail screen to return to "Training Active"
-                    Future.delayed(const Duration(milliseconds: 2000), () {
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    });
-                  }
+                  CongratulationsAnimation.show(context, isDayComplete: anyDayComplete);
+                  
+                  // Wait for animation then return to dashboard
+                  Future.delayed(const Duration(milliseconds: 2500), () {
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // Exit SeriesDetailScreen
+                    }
+                  });
                 }
                 return;
               }
 
               // Session not complete: Return to item selection grid
-              showItemSelection(context, allMoves, level, seriesIds: seriesIds);
+              showItemSelection(context, allMoves, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
             },
           ),
         ),

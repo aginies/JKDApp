@@ -124,7 +124,6 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
       return;
     }
 
-    final db = DatabaseService();
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 

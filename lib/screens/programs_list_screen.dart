@@ -273,8 +273,8 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
                   children: [
                     Expanded(
                       child: LinearProgressIndicator(
-                        value: provider.activeProgram!.getCompletionPercentage(
-                          program.durationDays,
+                        value: provider.activeProgram!.getGlobalPercentage(
+                          program,
                         ),
                         backgroundColor:
                             theme.colorScheme.surfaceContainerHighest,

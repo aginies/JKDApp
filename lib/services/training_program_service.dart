@@ -146,9 +146,7 @@ class TrainingProgramService {
       throw Exception('Program not found');
     }
 
-    final completionPercentage = matchingProgress.getCompletionPercentage(
-      program.durationDays,
-    );
+    final completionPercentage = matchingProgress.getGlobalPercentage(program);
     final currentStreak = matchingProgress.getCurrentStreak();
     final completedCount = matchingProgress.completedDays.length;
     final remainingDays = program.durationDays - completedCount;

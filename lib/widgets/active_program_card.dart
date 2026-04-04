@@ -24,9 +24,7 @@ class ActiveProgramCard extends StatelessWidget {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final theme = Theme.of(context);
     final lang = provider.language;
-    final completionPercentage = progress.getCompletionPercentage(
-      program.durationDays,
-    );
+    final completionPercentage = progress.getGlobalPercentage(program);
     final currentStreak = progress.getCurrentStreak();
 
     return Card(

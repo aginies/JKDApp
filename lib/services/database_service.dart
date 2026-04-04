@@ -50,7 +50,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 3, // Increment version for schema change
+      version: 4, // Increment version for granular progress
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -199,7 +199,7 @@ class DatabaseService {
         started_at TEXT NOT NULL,
         current_day INTEGER DEFAULT 1,
         completed_days TEXT,
-        todays_completed_series_ids TEXT DEFAULT '{}',
+        completed_series_json TEXT DEFAULT '{}',
         status TEXT DEFAULT 'active',
         completed_at TEXT,
         FOREIGN KEY (program_id) REFERENCES training_programs(id)
@@ -753,12 +753,7 @@ class DatabaseService {
 
     if (results.isEmpty) return null;
 
-    // Get total days for completion percentage calculation
-    final program = await getProgramById(programId);
-    return UserProgramProgress.fromMap(
-      results.first,
-      totalDays: program?.durationDays,
-    );
+    return UserProgramProgress.fromMap(results.first);
   }
 
   /// Get the currently active program progress (if any)
@@ -773,12 +768,7 @@ class DatabaseService {
 
     if (results.isEmpty) return null;
 
-    final progress = results.first;
-    final program = await getProgramById(progress['program_id'] as int);
-    return UserProgramProgress.fromMap(
-      progress,
-      totalDays: program?.durationDays,
-    );
+    return UserProgramProgress.fromMap(results.first);
   }
 
   /// Get all user progress records
@@ -791,10 +781,7 @@ class DatabaseService {
 
     List<UserProgramProgress> progressList = [];
     for (var map in progressMaps) {
-      final program = await getProgramById(map['program_id'] as int);
-      progressList.add(
-        UserProgramProgress.fromMap(map, totalDays: program?.durationDays),
-      );
+      progressList.add(UserProgramProgress.fromMap(map));
     }
 
     return progressList;
@@ -952,82 +939,127 @@ class DatabaseService {
   /// Requires 2 completions per series before counting as complete
   /// Returns a map with: {dayCompleted: bool, streak: int, progress: double}
   Future<Map<String, dynamic>?> recordSeriesCompletion(int seriesId) async {
-    final db = await database;
-
-    // Get active program
     final activeProgress = await getActiveProgress();
-    if (activeProgress == null) return null; // No active program
+    if (activeProgress == null) return null;
 
-    // Get today's assigned series
     final program = await getProgramById(activeProgress.programId);
     if (program == null) return null;
 
-    final currentDayData = program.days.firstWhere(
-      (day) => day.dayNumber == activeProgress.currentDay,
-      orElse: () => ProgramDay(
-        programId: activeProgress.programId,
-        dayNumber: activeProgress.currentDay,
-        seriesIds: [],
-      ),
-    );
+    // Find WHICH DAY this series belongs to.
+    // We prioritize the currentDay, but look through all days to be safe.
+    int targetDayNum = activeProgress.currentDay;
+    ProgramDay? targetDay;
 
-    // Check if this series is in today's assignment
-    if (!currentDayData.seriesIds.contains(seriesId)) {
-      return null; // Not part of today's program
+    // Helper to check if a day contains the series
+    bool dayContainsSeries(ProgramDay day) {
+      final assignedSeriesIds =
+          (day.seriesAssignments != null && day.seriesAssignments!.isNotEmpty)
+              ? day.seriesAssignments!.map((a) => a.seriesId).toSet()
+              : day.seriesIds.toSet();
+      return assignedSeriesIds.contains(seriesId);
     }
 
-    // Increment completion count for this series
-    final updatedCounts = Map<int, int>.from(
-      activeProgress.todaysSeriesCompletionCounts,
-    );
-    updatedCounts[seriesId] = (updatedCounts[seriesId] ?? 0) + 1;
-
-    // Convert to string keys for JSON encoding
-    final countsAsStrings = updatedCounts.map(
-      (key, value) => MapEntry(key.toString(), value),
+    // Check current day first
+    final currentDay = program.days.firstWhere(
+      (d) => d.dayNumber == activeProgress.currentDay,
+      orElse: () => program.days.first,
     );
 
-    // Update the progress record
+    if (dayContainsSeries(currentDay)) {
+      targetDay = currentDay;
+    } else {
+      // Look through all other days
+      for (var day in program.days) {
+        if (dayContainsSeries(day)) {
+          targetDay = day;
+          targetDayNum = day.dayNumber;
+          break;
+        }
+      }
+    }
+
+    if (targetDay == null) {
+      LoggingService.log(
+        'Series $seriesId is not part of the active program "${program.title}". Progress not recorded.',
+      );
+      return null;
+    }
+
+    // Update completed series for the target day
+    final Map<String, List<int>> completedMap = Map.from(
+      activeProgress.completedSeriesPerDay,
+    );
+    final String dayKey = targetDayNum.toString();
+    final List<int> dayCompleted = List.from(completedMap[dayKey] ?? []);
+
+    if (!dayCompleted.contains(seriesId)) {
+      dayCompleted.add(seriesId);
+      completedMap[dayKey] = dayCompleted;
+    }
+
+    // Check if the target day is now fully complete
+    final assignedSeriesIds =
+        (targetDay.seriesAssignments != null &&
+                targetDay.seriesAssignments!.isNotEmpty)
+            ? targetDay.seriesAssignments!.map((a) => a.seriesId).toSet()
+            : targetDay.seriesIds.toSet();
+
+    bool isTargetDayNowComplete = true;
+    for (final sid in assignedSeriesIds) {
+      if (!dayCompleted.contains(sid)) {
+        isTargetDayNowComplete = false;
+        break;
+      }
+    }
+
+    final db = await database;
+    final List<int> completedDays = List.from(activeProgress.completedDays);
+
+    if (isTargetDayNowComplete) {
+      if (!completedDays.contains(targetDayNum)) {
+        completedDays.add(targetDayNum);
+      }
+    }
+
+    // Determine if we should advance the 'current_day' pointer.
+    // We only advance if the current day was just completed.
+    int nextCurrentDay = activeProgress.currentDay;
+    if (targetDayNum == activeProgress.currentDay && isTargetDayNowComplete) {
+      if (nextCurrentDay < program.durationDays) {
+        nextCurrentDay++;
+      }
+    }
+
+    final isProgramComplete = completedDays.length >= program.durationDays;
+    final status = isProgramComplete ? 'completed' : 'active';
+    final completedAt = isProgramComplete ? DateTime.now().toIso8601String() : null;
+
     await db.update(
       'user_program_progress',
-      {'todays_completed_series_ids': json.encode(countsAsStrings)},
+      {
+        'current_day': nextCurrentDay,
+        'completed_days': json.encode(completedDays),
+        'completed_series_json': json.encode(completedMap),
+        'status': status,
+        'completed_at': completedAt,
+      },
       where: 'id = ?',
       whereArgs: [activeProgress.id],
     );
 
-    // Check if all series for today have been completed at least 2 times
-    final allSeriesComplete = currentDayData.seriesIds.every(
-      (id) => (updatedCounts[id] ?? 0) >= 2,
+    final updatedProgress = activeProgress.copyWith(
+      completedDays: completedDays,
+      completedSeriesPerDay: completedMap,
+      currentDay: nextCurrentDay,
+      status: status,
     );
 
-    // Count how many series are fully complete (2+ reps)
-    final completedSeriesCount = currentDayData.seriesIds
-        .where((id) => (updatedCounts[id] ?? 0) >= 2)
-        .length;
-
-    if (allSeriesComplete) {
-      // Auto-mark day complete
-      await markDayComplete(activeProgress.id!, activeProgress.currentDay);
-
-      // Reload progress to get updated values
-      final updatedProgress = await getActiveProgress();
-      if (updatedProgress != null) {
-        return {
-          'dayCompleted': true,
-          'dayNumber': activeProgress.currentDay,
-          'streak': updatedProgress.getCurrentStreak(),
-          'progress': updatedProgress.getCompletionPercentage(
-            program.durationDays,
-          ),
-        };
-      }
-    }
-
     return {
-      'dayCompleted': false,
-      'completedSeries': completedSeriesCount,
-      'totalSeries': currentDayData.seriesIds.length,
-      'currentSeriesCount': updatedCounts[seriesId] ?? 0,
+      'day_complete': isTargetDayNowComplete,
+      'program_complete': isProgramComplete,
+      'next_day': nextCurrentDay,
+      'day_percentage': updatedProgress.getDayPercentage(program, targetDayNum),
+      'global_percentage': updatedProgress.getGlobalPercentage(program),
     };
   }
 

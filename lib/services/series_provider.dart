@@ -602,6 +602,6 @@ class SeriesProvider with ChangeNotifier {
   /// Check if a specific series has been completed today
   bool isSeriesCompletedToday(int seriesId) {
     if (_activeProgram == null) return false;
-    return _activeProgram!.todaysSeriesCompletionCounts.containsKey(seriesId);
+    return _activeProgram!.isSeriesCompleted(_activeProgram!.currentDay, seriesId);
   }
 }
