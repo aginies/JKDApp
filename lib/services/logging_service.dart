@@ -5,7 +5,7 @@ import 'package:file_picker/file_picker.dart';
 
 class LoggingService {
   static final List<String> _logs = [];
-  static const String appVersion = "2.0.0+6";
+  static const String appVersion = "1.9.3:4";
 
   static void log(String message) {
     final timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());

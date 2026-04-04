@@ -98,8 +98,8 @@ function update_version() {
     sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
 
     # 2. Update settings_screen.dart (both occurrences)
-    # Match pattern vX.X.X+X or vX.X.X
-    sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+\(+[0-9]\+\)\?/$NEW_VERSION/g" lib/screens/settings_screen.dart
+    # Match pattern vX.X.X+X or vX.X.X (v is optional)
+    sed -i "s/v\?[0-9]\+\.[0-9]\+\.[0-9]\+\(+[0-9]\+\)\?/$NEW_VERSION/g" lib/screens/settings_screen.dart
 
     # 3. Update logging_service.dart
     sed -i "s/appVersion = \".*\"/appVersion = \"$NEW_VERSION\"/" lib/services/logging_service.dart
