@@ -1,9 +1,9 @@
 [
   {
-    "title": "3 & 4 Counts Advanced - 2 Weeks",
+    "title": "3 & 4 Counts Advanced - 6-Day",
     "description": "Master the full 3 Counts series and the foundational 14 patterns of 4 Counts.",
     "difficulty_level": "intermediate",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -66,108 +66,9 @@
         ],
         "notes": "4 COUNTS 9-14: Advanced combinations involving guard changes and lateral steps. Full series goal reached.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "assignments": [
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "FULL SERIES: Flow through all 14 patterns of 4 counts.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Both series mastered at advanced level.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          }
-        ],
-        "notes": "Increased volume. Focus on explosive transitions between strikes.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "assignments": [
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Increased volume. Work on the flow of spinning and lateral movements.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Combined series. Switch rhythms frequently.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Endurance day. High repetitions of all 26 patterns.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Speed training. Explode into each combo and return to guard instantly.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Advanced Graduation! Your combination arsenal is now formidable.",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

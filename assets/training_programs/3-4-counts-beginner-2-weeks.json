@@ -1,9 +1,9 @@
 [
   {
-    "title": "3 & 4 Counts Beginner - 2 Weeks",
+    "title": "3 & 4 Counts Beginner - 6-Day",
     "description": "Foundational combinations. Master the first 8 patterns of both 3 Counts and 4 Counts series.",
     "difficulty_level": "beginner",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -66,108 +66,9 @@
         ],
         "notes": "4 COUNTS 5-8: Hand-hand-foot-foot sequences. Build rhythmic endurance.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "assignments": [
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "4 COUNTS 1-8: Integration. Keep your hands up during the entire sequence.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Both foundational sets mastered.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Increased volume. Focus on precision and non-telegraphed movements.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "assignments": [
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Increased volume. Work on the flow between counts 2 and 3.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-8"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Combined series. Switch between 3 and 4 count rhythms.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-8"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Endurance day. Maintain technical form even when fatigued.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-8"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Speed training. Focus on the rapid transition from count 4 back to guard.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-8"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Graduation Day. You've mastered the foundational 3 and 4 count patterns!",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

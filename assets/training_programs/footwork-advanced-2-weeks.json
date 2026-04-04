@@ -1,9 +1,9 @@
 [
   {
-    "title": "Footwork Advanced - 2 Weeks",
+    "title": "Footwork Advanced - 6-Day",
     "description": "Expand your mobility with Push Shuffle and Rock Shuffle. Learn explosive entries and rhythmic weight shifting.",
     "difficulty_level": "intermediate",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -54,82 +54,9 @@
         ],
         "notes": "Varying speed. Use Step and Slide for distance management and Push Shuffle for entry.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "series_ids": [
-          "Slide and Step",
-          "Rock Shuffle"
-        ],
-        "notes": "Defensive mobility. Use Rock Shuffle to time entries and Slide and Step to evade.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Prepare for higher intensity transitions in week 2.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "series_ids": [
-          "Push Shuffle"
-        ],
-        "notes": "Max explosiveness. Focus on quick recovery after the burst forward.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "series_ids": [
-          "Rock Shuffle"
-        ],
-        "notes": "Advanced timing. Keep your center of gravity low and stable.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle"
-        ],
-        "notes": "Integration day. Flow through all four patterns based on imaginary distance cues.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "series_ids": [
-          "Push Shuffle",
-          "Rock Shuffle"
-        ],
-        "notes": "Speed and agility. Minimize the time between different footwork patterns.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle"
-        ],
-        "notes": "High volume integration. Maintain structure even when tired.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle"
-        ],
-        "notes": "Advanced graduation! You now possess dynamic JKD mobility.",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

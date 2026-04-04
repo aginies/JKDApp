@@ -33,7 +33,8 @@ class LocalizationService {
       'next': 'Next',
       'selection': 'Selection',
       'training_complete_title': 'Training Session Finished!',
-      'training_complete_desc': 'You have successfully reconstructed all moves in this session.',
+      'training_complete_desc':
+          'You have successfully reconstructed all moves in this session.',
       'general': 'General',
       'other': 'Other',
       'left': 'Left',
@@ -134,8 +135,30 @@ class LocalizationService {
       'glossary_backup_desc': 'Export your entire glossary to JSON',
       'glossary_restore_desc': 'Import glossary from JSON (Overwrites current)',
       'reset_database': 'Reset Database',
-      'reset_database_desc': 'Reset database to factory defaults',
-      'reset_db_title': 'Reset Database',
+      'reset_database_desc': 'Reset database to factory settings',
+      'reset_knowledge_title': 'Reset Technical Library',
+      'reset_knowledge_desc': 'Reset Glossary and System Series only',
+      'reset_knowledge_warning':
+          'This will reset the Glossary and System Series to factory defaults. Your custom programs and progress will be preserved.',
+      'reset_knowledge_confirm': 'Reset Library?',
+      'reset_progress_title': 'Reset All Progress',
+      'reset_progress_desc': 'Clear all completion history and stats',
+      'reset_progress_warning':
+          'This will permanently delete all your training history, streaks, and completion percentages. This cannot be undone!',
+      'reset_active_title': 'Reset Active Program',
+      'reset_active_desc': 'Stop current program and clear its progress',
+      'reset_active_warning':
+          'This will stop your current training program and reset you to Day 1.',
+      'reset_programs_title': 'Reset Training Programs',
+      'reset_programs_desc': 'Restore system programs and delete custom ones',
+      'reset_programs_warning':
+          'This will delete all custom training programs you created and restore the original system programs.',
+      'reset_action': 'Reset',
+      'reset_library_action': 'Reset Library',
+      'reset_program_action': 'Reset Program',
+      'reset_progress_action': 'Reset Progress',
+      'reset_db_title': 'Factory Reset',
+
       'reset_db_warning':
           'WARNING: This will DELETE ALL your data and restore the database to factory defaults with system series only. This action CANNOT be undone!',
       'reset_db_confirm': 'Are you absolutely sure?',
@@ -241,7 +264,8 @@ class LocalizationService {
       'next': 'Suivant',
       'selection': 'Sélection',
       'training_complete_title': 'Entraînement Terminé !',
-      'training_complete_desc': 'Vous avez reconstruit avec succès tous les mouvements de cette session.',
+      'training_complete_desc':
+          'Vous avez reconstruit avec succès tous les mouvements de cette session.',
       'general': 'Général',
       'other': 'Autre',
       'left': 'Gauche',
@@ -339,7 +363,31 @@ class LocalizationService {
       'glossary_restore_desc': 'Importer le glossaire (Écrase l\'actuel)',
       'reset_database': 'Réinitialiser la Base de Données',
       'reset_database_desc': 'Réinitialiser la base aux paramètres d\'usine',
-      'reset_db_title': 'Réinitialiser la Base de Données',
+      'reset_knowledge_title': 'Réinitialiser la Bibliothèque Technique',
+      'reset_knowledge_desc':
+          'Réinitialiser uniquement le Glossaire et les Séries Système',
+      'reset_knowledge_warning':
+          'Cela va réinitialiser le Glossaire et les Séries Système aux paramètres d\'usine. Vos programmes personnalisés et votre progression seront préservés.',
+      'reset_knowledge_confirm': 'Réinitialiser la Bibliothèque ?',
+      'reset_progress_title': 'Réinitialiser toute la Progression',
+      'reset_progress_desc': 'Effacer tout l\'historique et les statistiques',
+      'reset_progress_warning':
+          'Cela va supprimer définitivement tout votre historique d\'entraînement, vos séries et vos pourcentages de réussite. Cette action est irréversible !',
+      'reset_active_title': 'Réinitialiser le Programme Actif',
+      'reset_active_desc':
+          'Arrêter le programme en cours et effacer sa progression',
+      'reset_active_warning':
+          'Cela va arrêter votre programme d\'entraînement actuel et vous remettre au Jour 1.',
+      'reset_programs_title': 'Réinitialiser les Programmes d\'Entraînement',
+      'reset_programs_desc':
+          'Restaurer les programmes système et supprimer les personnalisés',
+      'reset_programs_warning':
+          'Cela va supprimer tous les programmes d\'entraînement personnalisés que vous avez créés et restaurer les programmes système originaux.',
+      'reset_action': 'Réinitialiser',
+      'reset_library_action': 'Réinitialiser la Bibliothèque',
+      'reset_program_action': 'Réinitialiser le Programme',
+      'reset_progress_action': 'Réinitialiser la Progression',
+      'reset_db_title': 'Remise à zéro complète',
       'reset_db_warning':
           'ATTENTION : Cela va SUPPRIMER TOUTES vos données et restaurer la base aux paramètres d\'usine avec uniquement les séries système. Cette action NE PEUT PAS être annulée !',
       'reset_db_confirm': 'Êtes-vous absolument sûr ?',

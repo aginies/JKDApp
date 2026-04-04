@@ -28,6 +28,199 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _handleResetTrainingProgress(
+    BuildContext context,
+    String lang,
+    SeriesProvider provider,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          LocalizationService.translate('reset_progress_title', lang),
+          style: const TextStyle(color: Colors.red),
+        ),
+        content: Text(
+          LocalizationService.translate('reset_progress_warning', lang),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              LocalizationService.translate('reset_progress_action', lang),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      await provider.resetTrainingProgress();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All progress has been reset')),
+      );
+    }
+  }
+
+  Future<void> _handleResetActiveProgram(
+    BuildContext context,
+    String lang,
+    SeriesProvider provider,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          LocalizationService.translate('reset_active_title', lang),
+          style: const TextStyle(color: Colors.orange),
+        ),
+        content: Text(
+          LocalizationService.translate('reset_active_warning', lang),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              LocalizationService.translate('reset_program_action', lang),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      await provider.resetActiveProgram();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Active program reset')));
+    }
+  }
+
+  Future<void> _handleResetTrainingPrograms(
+    BuildContext context,
+    String lang,
+    SeriesProvider provider,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          LocalizationService.translate('reset_programs_title', lang),
+          style: const TextStyle(color: Colors.orange),
+        ),
+        content: Text(
+          LocalizationService.translate('reset_programs_warning', lang),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              LocalizationService.translate('reset_program_action', lang),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      await provider.resetTrainingPrograms();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Training programs reset')));
+    }
+  }
+
+  Future<void> _handleResetTechnicalLibrary(
+    BuildContext context,
+    String lang,
+    SeriesProvider provider,
+  ) async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          LocalizationService.translate('reset_knowledge_title', lang),
+          style: const TextStyle(color: Colors.orange),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              LocalizationService.translate('reset_knowledge_warning', lang),
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              LocalizationService.translate('reset_knowledge_confirm', lang),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              LocalizationService.translate('reset_library_action', lang),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      try {
+        await DatabaseService().resetTechnicalLibrary();
+
+        // Reload data to reflect changes
+        await provider.loadGlossary();
+        await provider.loadSeries();
+        await provider.loadAllPrograms();
+
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('reset_db_success', lang),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Reset failed: $e')));
+      }
+    }
+  }
+
   Future<void> _handleResetDatabase(
     BuildContext context,
     String lang,
@@ -554,6 +747,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       LocalizationService.translate('select_folder', lang),
                     ),
                   ),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.history_toggle_off,
+                    color: Colors.red,
+                  ),
+                  title: Text(
+                    LocalizationService.translate('reset_progress_title', lang),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.translate('reset_progress_desc', lang),
+                  ),
+                  onTap: () =>
+                      _handleResetTrainingProgress(context, lang, provider),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.restart_alt, color: Colors.orange),
+                  title: Text(
+                    LocalizationService.translate('reset_active_title', lang),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.translate('reset_active_desc', lang),
+                  ),
+                  onTap: () =>
+                      _handleResetActiveProgram(context, lang, provider),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.model_training,
+                    color: Colors.orange,
+                  ),
+                  title: Text(
+                    LocalizationService.translate('reset_programs_title', lang),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.translate('reset_programs_desc', lang),
+                  ),
+                  onTap: () =>
+                      _handleResetTrainingPrograms(context, lang, provider),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.auto_stories, color: Colors.orange),
+                  title: Text(
+                    LocalizationService.translate(
+                      'reset_knowledge_title',
+                      lang,
+                    ),
+                  ),
+                  subtitle: Text(
+                    LocalizationService.translate('reset_knowledge_desc', lang),
+                  ),
+                  onTap: () =>
+                      _handleResetTechnicalLibrary(context, lang, provider),
                 ),
                 ListTile(
                   leading: const Icon(Icons.restore, color: Colors.red),

@@ -61,10 +61,10 @@ class ImportService {
           await dbService.insertSeries(newSeries);
           existingTitles.add(finalTitle);
         }
-        
+
         // RELOAD DATA to refresh UI
         await provider.loadSeries();
-        
+
         return true;
       }
       return false;
@@ -96,10 +96,10 @@ class ImportService {
           cleanItem.remove('id'); // Fresh IDs
           await dbService.insertGlossaryItem(cleanItem);
         }
-        
+
         // RELOAD GLOSSARY to refresh UI
         await provider.loadGlossary();
-        
+
         return true;
       }
       return false;

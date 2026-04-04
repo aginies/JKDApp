@@ -358,19 +358,22 @@ class _BackupModalState extends State<BackupModal> {
                         lang == 'fr' ? 'Toutes les séries' : 'All Series',
                       ),
                       value: 'all',
+                      // ignore: deprecated_member_use
                       groupValue: exportType,
-                      onChanged: (val) => setModalState(() => exportType = val!),
+                      // ignore: deprecated_member_use
+                      onChanged: (val) =>
+                          setModalState(() => exportType = val!),
                     ),
                     RadioListTile<String>(
                       title: Text(
-                        LocalizationService.translate(
-                          'export_category',
-                          lang,
-                        ),
+                        LocalizationService.translate('export_category', lang),
                       ),
                       value: 'category',
+                      // ignore: deprecated_member_use
                       groupValue: exportType,
-                      onChanged: (val) => setModalState(() => exportType = val!),
+                      // ignore: deprecated_member_use
+                      onChanged: (val) =>
+                          setModalState(() => exportType = val!),
                     ),
                     if (exportType == 'category')
                       Padding(
@@ -405,8 +408,11 @@ class _BackupModalState extends State<BackupModal> {
                         LocalizationService.translate('export_single', lang),
                       ),
                       value: 'single',
+                      // ignore: deprecated_member_use
                       groupValue: exportType,
-                      onChanged: (val) => setModalState(() => exportType = val!),
+                      // ignore: deprecated_member_use
+                      onChanged: (val) =>
+                          setModalState(() => exportType = val!),
                     ),
                     if (exportType == 'single')
                       Padding(

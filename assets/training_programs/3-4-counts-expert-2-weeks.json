@@ -1,9 +1,9 @@
 [
   {
-    "title": "3 & 4 Counts Expert - 2 Weeks",
+    "title": "3 & 4 Counts Expert - 6-Day",
     "description": "Total mastery of 3 and 4 count combinations. Integration with footwork and advanced timing.",
     "difficulty_level": "advanced",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -78,120 +78,9 @@
         ],
         "notes": "Adding Footwork: Push Shuffle into 4 Counts, Rock Shuffle during 3 Counts.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Full Integration: All patterns with all footwork from Fundamentals.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Expert integration targets reached.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "High Volume Speed: Minimum recovery between combinations.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Shadow Boxing: Use 3 and 4 counts as the core of your shadow boxing.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Complex Rhythms: Focus on the transition between hand and foot strikes.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Endurance Flow: Continuous movement and combinations for 3 minute rounds.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Max Effort: Full power and speed for every combination.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "assignments": [
-          {
-            "title": "3 counts",
-            "range": "1-12"
-          },
-          {
-            "title": "4 counts",
-            "range": "1-14"
-          }
-        ],
-        "notes": "Expert Graduation! You have mastered the core JKD combination system.",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

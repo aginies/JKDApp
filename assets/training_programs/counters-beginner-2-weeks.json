@@ -1,9 +1,9 @@
 [
   {
-    "title": "Counters Beginner - 2 Weeks",
+    "title": "Counters Beginner - 6-Day",
     "description": "Fundamental defensive responses to Jab-Cross and Jab-Hook attacks. Learn the first 8 essential counters for each series.",
     "difficulty_level": "beginner",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -66,108 +66,9 @@
         ],
         "notes": "COUNTERS 5-8 (Jab-Hook): Shoulder Stops, White Cover, Panatukan, Silat. Advanced defensive structures.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "assignments": [
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "COUNTERS 1-8 (Jab-Hook): Integration. Maintain balance during lateral and forward entries.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Review both series mentally.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "assignments": [
-          {
-            "title": "Contre Jab Cross",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Increased volume. Focus on precision and intercepting at the right moment.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "assignments": [
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Increased volume. Ensure you are moving 'through' the opponent, not just reacting.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "assignments": [
-          {
-            "title": "Contre Jab Cross",
-            "range": "1-8"
-          },
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Combined series. Practice responding to both Cross and Hook attacks.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "assignments": [
-          {
-            "title": "Contre Jab Cross",
-            "range": "1-8"
-          },
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Endurance day. High repetitions of all 16 counters.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "assignments": [
-          {
-            "title": "Contre Jab Cross",
-            "range": "1-8"
-          },
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Speed training. Respond as quickly as possible to imaginary attacks.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "assignments": [
-          {
-            "title": "Contre Jab Cross",
-            "range": "1-8"
-          },
-          {
-            "title": "Contre Jab Hook",
-            "range": "1-8"
-          }
-        ],
-        "notes": "Graduation Day. You've mastered the foundational counters for JKD!",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

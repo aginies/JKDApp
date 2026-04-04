@@ -6,14 +6,14 @@ class UserProgramProgress {
   final int programId;
   final DateTime startedAt;
   final int currentDay;
-  
+
   /// Array of day numbers that have been fully completed
-  final List<int> completedDays; 
-  
+  final List<int> completedDays;
+
   /// Map of Day Number -> List of completed series IDs for that day
   /// Key is String because JSON only supports string keys for Maps
   final Map<String, List<int>> completedSeriesPerDay;
-  
+
   final String status; // 'active', 'paused', 'completed', 'abandoned'
   final DateTime? completedAt;
 
@@ -51,11 +51,12 @@ class UserProgramProgress {
       (d) => d.dayNumber == dayNumber,
       orElse: () => throw Exception('Day $dayNumber not found in program'),
     );
-    
+
     int totalInDay = (day.seriesAssignments?.length ?? day.seriesIds.length);
     if (totalInDay == 0) return 1.0; // Rest day or empty day is 100%
 
-    final completedInDay = completedSeriesPerDay[dayNumber.toString()]?.length ?? 0;
+    final completedInDay =
+        completedSeriesPerDay[dayNumber.toString()]?.length ?? 0;
     return (completedInDay / totalInDay).clamp(0.0, 1.0);
   }
 
@@ -127,14 +128,18 @@ class UserProgramProgress {
 
     Map<String, List<int>> parsedCompletedSeries = {};
     // Try new column name first, fallback to old one for migration safety
-    final seriesJson = map['completed_series_json'] ?? map['todays_completed_series_ids'];
+    final seriesJson =
+        map['completed_series_json'] ?? map['todays_completed_series_ids'];
     if (seriesJson != null) {
       try {
         final decoded = json.decode(seriesJson as String);
         if (decoded is Map) {
           parsedCompletedSeries = decoded.map((key, value) {
             if (value is List) {
-              return MapEntry(key.toString(), value.map((e) => e as int).toList());
+              return MapEntry(
+                key.toString(),
+                value.map((e) => e as int).toList(),
+              );
             } else if (value is int) {
               // Handle migration from old 'todays_completed_series_ids' which was Map<int, int>
               // We'll put it in the 'currentDay' slot

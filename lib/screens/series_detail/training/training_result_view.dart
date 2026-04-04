@@ -61,8 +61,14 @@ class TrainingResultView extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       result.isCorrect
-                          ? LocalizationService.translate('correct_combo', language)
-                          : LocalizationService.translate('incorrect_combo', language),
+                          ? LocalizationService.translate(
+                              'correct_combo',
+                              language,
+                            )
+                          : LocalizationService.translate(
+                              'incorrect_combo',
+                              language,
+                            ),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -76,20 +82,29 @@ class TrainingResultView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // User Attempt Section
-            _buildSectionTitle(LocalizationService.translate('your_attempt', language), theme),
+            _buildSectionTitle(
+              LocalizationService.translate('your_attempt', language),
+              theme,
+            ),
             const SizedBox(height: 8),
             _buildMovePreview(result.attempt, context),
-            
+
             const SizedBox(height: 24),
 
             // Original Section
-            _buildSectionTitle(LocalizationService.translate('original_move', language), theme),
+            _buildSectionTitle(
+              LocalizationService.translate('original_move', language),
+              theme,
+            ),
             const SizedBox(height: 8),
             _buildMovePreview(result.original, context),
 
             if (result.differences.isNotEmpty) ...[
               const SizedBox(height: 24),
-              _buildSectionTitle(LocalizationService.translate('differences', language), theme),
+              _buildSectionTitle(
+                LocalizationService.translate('differences', language),
+                theme,
+              ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -100,22 +115,35 @@ class TrainingResultView extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: result.differences.map((d) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.arrow_right, size: 16, color: Colors.red),
-                        Expanded(child: Text(d, style: const TextStyle(fontSize: 13))),
-                      ],
-                    ),
-                  )).toList(),
+                  children: result.differences
+                      .map(
+                        (d) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.arrow_right,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  d,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 32),
-            
+
             // Actions
             Row(
               children: [

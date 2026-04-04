@@ -13,7 +13,12 @@ class TrainingModeDialogs {
   // Track completed indices for the current session
   static final Set<int> _completedIndices = {};
 
-  static void showTrainingSetup(BuildContext context, List<Move> moves, {List<int>? seriesIds, String? seriesTitle}) {
+  static void showTrainingSetup(
+    BuildContext context,
+    List<Move> moves, {
+    List<int>? seriesIds,
+    String? seriesTitle,
+  }) {
     // Reset state for new setup
     _completedIndices.clear();
     final provider = Provider.of<SeriesProvider>(context, listen: false);
@@ -33,10 +38,13 @@ class TrainingModeDialogs {
                 children: [
                   Text(
                     LocalizationService.translate('training_mode', lang),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Level Selection
                   _buildLevelCard(
                     context,
@@ -46,7 +54,13 @@ class TrainingModeDialogs {
                     Colors.green,
                     () {
                       Navigator.pop(modalCtx);
-                      showItemSelection(context, moves, TrainingLevel.beginner, seriesIds: seriesIds, seriesTitle: seriesTitle);
+                      showItemSelection(
+                        context,
+                        moves,
+                        TrainingLevel.beginner,
+                        seriesIds: seriesIds,
+                        seriesTitle: seriesTitle,
+                      );
                     },
                   ),
                   const SizedBox(height: 12),
@@ -58,7 +72,13 @@ class TrainingModeDialogs {
                     Colors.orange,
                     () {
                       Navigator.pop(modalCtx);
-                      showItemSelection(context, moves, TrainingLevel.advanced, seriesIds: seriesIds, seriesTitle: seriesTitle);
+                      showItemSelection(
+                        context,
+                        moves,
+                        TrainingLevel.advanced,
+                        seriesIds: seriesIds,
+                        seriesTitle: seriesTitle,
+                      );
                     },
                   ),
                   const SizedBox(height: 12),
@@ -70,10 +90,16 @@ class TrainingModeDialogs {
                     Colors.red,
                     () {
                       Navigator.pop(modalCtx);
-                      showItemSelection(context, moves, TrainingLevel.expert, seriesIds: seriesIds, seriesTitle: seriesTitle);
+                      showItemSelection(
+                        context,
+                        moves,
+                        TrainingLevel.expert,
+                        seriesIds: seriesIds,
+                        seriesTitle: seriesTitle,
+                      );
                     },
                   ),
-                  
+
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => Navigator.pop(modalCtx),
@@ -82,7 +108,7 @@ class TrainingModeDialogs {
                 ],
               ),
             );
-          }
+          },
         );
       },
     );
@@ -111,7 +137,13 @@ class TrainingModeDialogs {
     );
   }
 
-  static void showItemSelection(BuildContext context, List<Move> moves, TrainingLevel level, {List<int>? seriesIds, String? seriesTitle}) {
+  static void showItemSelection(
+    BuildContext context,
+    List<Move> moves,
+    TrainingLevel level, {
+    List<int>? seriesIds,
+    String? seriesTitle,
+  }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 
@@ -127,7 +159,10 @@ class TrainingModeDialogs {
             children: [
               Text(
                 LocalizationService.translate('select_item_to_train', lang),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (seriesTitle != null) ...[
                 const SizedBox(height: 4),
@@ -151,14 +186,23 @@ class TrainingModeDialogs {
                     return ElevatedButton(
                       onPressed: () {
                         Navigator.pop(modalCtx);
-                        _startTraining(context, moves, index, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
+                        _startTraining(
+                          context,
+                          moves,
+                          index,
+                          level,
+                          seriesIds: seriesIds,
+                          seriesTitle: seriesTitle,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
                         backgroundColor: isCompleted
                             ? Colors.green.withValues(alpha: 0.2)
                             : provider.themeColor.withValues(alpha: 0.1),
-                        foregroundColor: isCompleted ? Colors.green : provider.themeColor,
+                        foregroundColor: isCompleted
+                            ? Colors.green
+                            : provider.themeColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: isCompleted
@@ -180,7 +224,11 @@ class TrainingModeDialogs {
                             const Positioned(
                               top: 2,
                               right: 2,
-                              child: Icon(Icons.check_circle, size: 14, color: Colors.green),
+                              child: Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: Colors.green,
+                              ),
                             ),
                         ],
                       ),
@@ -200,15 +248,24 @@ class TrainingModeDialogs {
     );
   }
 
-  static void _startTraining(BuildContext context, List<Move> moves, int index, TrainingLevel level, {List<int>? seriesIds, String? seriesTitle}) async {
+  static void _startTraining(
+    BuildContext context,
+    List<Move> moves,
+    int index,
+    TrainingLevel level, {
+    List<int>? seriesIds,
+    String? seriesTitle,
+  }) async {
     final originalMove = moves[index];
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
 
-    LoggingService.log('TrainingModeDialogs: Starting builder for item #${index + 1} at level $level');
-    
+    LoggingService.log(
+      'TrainingModeDialogs: Starting builder for item #${index + 1} at level $level',
+    );
+
     final NavigatorState navigator = Navigator.of(context);
-    
+
     try {
       final attempt = await navigator.push<Move>(
         MaterialPageRoute(
@@ -230,14 +287,21 @@ class TrainingModeDialogs {
             body: SafeArea(
               child: AdvancedComboBuilder(
                 onFinish: (move) {
-                  LoggingService.log('TrainingModeDialogs: Builder onFinish called');
+                  LoggingService.log(
+                    'TrainingModeDialogs: Builder onFinish called',
+                  );
                   Navigator.of(ctx).pop(move);
                 },
                 onCancel: () {
-                  LoggingService.log('TrainingModeDialogs: Builder onCancel called');
+                  LoggingService.log(
+                    'TrainingModeDialogs: Builder onCancel called',
+                  );
                   Navigator.of(ctx).pop();
                 },
-                finishButtonLabel: LocalizationService.translate('verify', lang),
+                finishButtonLabel: LocalizationService.translate(
+                  'verify',
+                  lang,
+                ),
                 trainingOriginalMove: originalMove,
                 trainingLevel: level,
               ),
@@ -247,12 +311,25 @@ class TrainingModeDialogs {
       );
 
       if (attempt != null) {
-        LoggingService.log('TrainingModeDialogs: Attempt received, showing results');
+        LoggingService.log(
+          'TrainingModeDialogs: Attempt received, showing results',
+        );
         if (context.mounted) {
-          _showResults(context, originalMove, attempt, moves, index, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
+          _showResults(
+            context,
+            originalMove,
+            attempt,
+            moves,
+            index,
+            level,
+            seriesIds: seriesIds,
+            seriesTitle: seriesTitle,
+          );
         }
       } else {
-        LoggingService.log('TrainingModeDialogs: Builder returned null (cancelled)');
+        LoggingService.log(
+          'TrainingModeDialogs: Builder returned null (cancelled)',
+        );
       }
     } catch (e, stack) {
       LoggingService.log('TrainingModeDialogs: Error in training flow: $e');
@@ -272,17 +349,24 @@ class TrainingModeDialogs {
   }) {
     LoggingService.log('TrainingModeDialogs: _showResults called');
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    
+
     try {
-      final result = ComboVerificationService.verifyMove(original, attempt, level);
-      LoggingService.log('TrainingModeDialogs: Verification complete (isCorrect: ${result.isCorrect})');
+      final result = ComboVerificationService.verifyMove(
+        original,
+        attempt,
+        level,
+      );
+      LoggingService.log(
+        'TrainingModeDialogs: Verification complete (isCorrect: ${result.isCorrect})',
+      );
 
       if (result.isCorrect) {
         _completedIndices.add(index);
       }
 
       final bool hasNext = index < allMoves.length - 1;
-      final bool isSessionComplete = _completedIndices.length == allMoves.length;
+      final bool isSessionComplete =
+          _completedIndices.length == allMoves.length;
 
       showDialog(
         context: context,
@@ -295,22 +379,43 @@ class TrainingModeDialogs {
             onRetry: () {
               LoggingService.log('TrainingModeDialogs: Retry requested');
               Navigator.pop(ctx);
-              _startTraining(context, allMoves, index, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
+              _startTraining(
+                context,
+                allMoves,
+                index,
+                level,
+                seriesIds: seriesIds,
+                seriesTitle: seriesTitle,
+              );
             },
-            onNext: hasNext ? () {
-              LoggingService.log('TrainingModeDialogs: Next move requested');
-              Navigator.pop(ctx);
-              _startTraining(context, allMoves, index + 1, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
-            } : null,
+            onNext: hasNext
+                ? () {
+                    LoggingService.log(
+                      'TrainingModeDialogs: Next move requested',
+                    );
+                    Navigator.pop(ctx);
+                    _startTraining(
+                      context,
+                      allMoves,
+                      index + 1,
+                      level,
+                      seriesIds: seriesIds,
+                      seriesTitle: seriesTitle,
+                    );
+                  }
+                : null,
             onFinish: () async {
               LoggingService.log('TrainingModeDialogs: Result view closed');
               Navigator.pop(ctx);
 
               if (isSessionComplete) {
                 // RECORD PROGRESS
-                final provider = Provider.of<SeriesProvider>(context, listen: false);
+                final provider = Provider.of<SeriesProvider>(
+                  context,
+                  listen: false,
+                );
                 bool anyDayComplete = false;
-                
+
                 if (seriesIds != null && seriesIds.isNotEmpty) {
                   for (final sid in seriesIds) {
                     final info = await provider.recordSeriesCompletion(sid);
@@ -322,8 +427,11 @@ class TrainingModeDialogs {
 
                 // SHOW ANIMATION and AUTO-EXIT
                 if (context.mounted) {
-                  CongratulationsAnimation.show(context, isDayComplete: anyDayComplete);
-                  
+                  CongratulationsAnimation.show(
+                    context,
+                    isDayComplete: anyDayComplete,
+                  );
+
                   // Wait for animation then return to dashboard
                   Future.delayed(const Duration(milliseconds: 2500), () {
                     if (context.mounted) {
@@ -335,7 +443,13 @@ class TrainingModeDialogs {
               }
 
               // Session not complete: Return to item selection grid
-              showItemSelection(context, allMoves, level, seriesIds: seriesIds, seriesTitle: seriesTitle);
+              showItemSelection(
+                context,
+                allMoves,
+                level,
+                seriesIds: seriesIds,
+                seriesTitle: seriesTitle,
+              );
             },
           ),
         ),

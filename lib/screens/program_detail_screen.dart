@@ -589,8 +589,9 @@ class _DayCardState extends State<_DayCard> {
                     ? '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}: ${LocalizationService.translate('rest_day', widget.lang)}'
                     : '${LocalizationService.translate('day', widget.lang)} ${widget.day.dayNumber}',
                 style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight:
-                      widget.isCurrentDay ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: widget.isCurrentDay
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
               ),
               const Spacer(),
@@ -706,7 +707,8 @@ class _DayCardState extends State<_DayCard> {
                             child: ElevatedButton.icon(
                               onPressed: () {
                                 final List<JkdSeries> seriesList = [];
-                                for (final sa in widget.day.seriesAssignments!) {
+                                for (final sa
+                                    in widget.day.seriesAssignments!) {
                                   final matching = provider.series.firstWhere(
                                     (s) => s.id == sa.seriesId,
                                     orElse: () => JkdSeries(
@@ -778,8 +780,7 @@ class _DayCardState extends State<_DayCard> {
                                   if (sa.itemRange != null) {
                                     final parts = sa.itemRange!.split('-');
                                     if (parts.length == 2) {
-                                      final start =
-                                          int.tryParse(parts[0]) ?? 1;
+                                      final start = int.tryParse(parts[0]) ?? 1;
                                       final end =
                                           int.tryParse(parts[1]) ??
                                           series.moves.length;

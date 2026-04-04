@@ -534,6 +534,23 @@ class SeriesProvider with ChangeNotifier {
     await loadAllPrograms();
   }
 
+  Future<void> resetTrainingProgress() async {
+    await _dbService.resetTrainingProgress();
+    await loadActiveProgram();
+    await loadAllPrograms();
+  }
+
+  Future<void> resetActiveProgram() async {
+    await _dbService.resetActiveProgram();
+    await loadActiveProgram();
+  }
+
+  Future<void> resetTrainingPrograms() async {
+    await _dbService.resetTrainingPrograms();
+    await loadActiveProgram();
+    await loadAllPrograms();
+  }
+
   /// Mark a day as complete in the active program
   Future<void> markDayComplete(
     int dayNumber, {
@@ -602,6 +619,9 @@ class SeriesProvider with ChangeNotifier {
   /// Check if a specific series has been completed today
   bool isSeriesCompletedToday(int seriesId) {
     if (_activeProgram == null) return false;
-    return _activeProgram!.isSeriesCompleted(_activeProgram!.currentDay, seriesId);
+    return _activeProgram!.isSeriesCompleted(
+      _activeProgram!.currentDay,
+      seriesId,
+    );
   }
 }

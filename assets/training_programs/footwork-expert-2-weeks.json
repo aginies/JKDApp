@@ -1,9 +1,9 @@
 [
   {
-    "title": "Footwork Expert - 2 Weeks",
+    "title": "Footwork Expert - 6-Day",
     "description": "The complete JKD mobility system. Integrate Pendulum footwork for elite level entry, exit, and angle creation.",
     "difficulty_level": "advanced",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -56,89 +56,9 @@
         ],
         "notes": "Rhythm and recoil. Use Rock Shuffle to setup Pendulum entries.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "series_ids": [
-          "Pendulum",
-          "Step and Slide"
-        ],
-        "notes": "Tactical distance management. Use Step and Slide to probe, Pendulum to strike.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "Week 1 complete! Week 2 focuses on full integration of all 5 patterns.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle",
-          "Pendulum"
-        ],
-        "notes": "Complete arsenal. Focus on smooth transitions from any pattern to any other.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "series_ids": [
-          "Pendulum"
-        ],
-        "notes": "Pendulum endurance and speed. Constant movement with rapid changes in direction.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle",
-          "Pendulum"
-        ],
-        "notes": "Complex flow. Practice responding to varying distance scenarios.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "series_ids": [
-          "Push Shuffle",
-          "Pendulum"
-        ],
-        "notes": "Explosive mastery. Your ability to bridge the gap should now be seamless.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle",
-          "Pendulum"
-        ],
-        "notes": "High intensity flow. Maintain perfect structure while moving at full speed.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "series_ids": [
-          "Step and Slide",
-          "Slide and Step",
-          "Push Shuffle",
-          "Rock Shuffle",
-          "Pendulum"
-        ],
-        "notes": "Expert Graduation! You have mastered the complete JKD footwork system.",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

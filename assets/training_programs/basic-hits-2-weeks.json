@@ -1,9 +1,9 @@
 [
   {
-    "title": "Basic Hits - 2 Weeks",
+    "title": "Basic Hits - 6-Day",
     "description": "Progressive training for JKD essentials: 22 Punches and 18 Kicks. Master them in manageable groups of 6.",
     "difficulty_level": "beginner",
-    "duration_days": 14,
+    "duration_days": 6,
     "is_system": 1,
     "days": [
       {
@@ -71,96 +71,9 @@
         ],
         "notes": "PUNCHES 19-22: Final set. Marteau strikes and Lead OverHeads. Finalize the 22 punches series.",
         "is_rest_day": 0
-      },
-      {
-        "day_number": 7,
-        "assignments": [
-          {
-            "title": "22 Coups de poings",
-            "range": "1-22"
-          }
-        ],
-        "notes": "PUNCHES 1-22: Graduation day for punches. Flow through all 22 without hesitation.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 8,
-        "series_ids": [],
-        "notes": "REST DAY: Recovery and preparation for the 18 Kicks series.",
-        "is_rest_day": 1
-      },
-      {
-        "day_number": 9,
-        "assignments": [
-          {
-            "title": "18 Kicks",
-            "range": "1-6"
-          }
-        ],
-        "notes": "KICKS 1-6: Jeet Tek, Hou Jeet Tek, Jik Tek, Hou Jik Tek, Nan Tek, Hou Nan Tek. Lead leg intercepting kicks.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 10,
-        "assignments": [
-          {
-            "title": "18 Kicks",
-            "range": "7-12"
-          }
-        ],
-        "notes": "KICKS 7-12: Juk Tek, Hou Juk Tek, Gwa Tek, Hou Gwa Tek, So Tek, Hou So Tek. Power side kicks and sweeps.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 11,
-        "assignments": [
-          {
-            "title": "18 Kicks",
-            "range": "1-12"
-          }
-        ],
-        "notes": "KICKS 1-12: Full integration of the first 12 kicks. Focus on hip stability.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 12,
-        "assignments": [
-          {
-            "title": "18 Kicks",
-            "range": "13-18"
-          }
-        ],
-        "notes": "KICKS 13-18: Jun Juk Tek, Jun Gwa Tek, Jun So Tek (and Hou versions). Spinning and advanced entries.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 13,
-        "assignments": [
-          {
-            "title": "18 Kicks",
-            "range": "1-18"
-          }
-        ],
-        "notes": "KICKS 1-18: Full integration of all kicks. Fluidity and timing are your goals.",
-        "is_rest_day": 0
-      },
-      {
-        "day_number": 14,
-        "assignments": [
-          {
-            "title": "22 Coups de poings",
-            "range": "1-22"
-          },
-          {
-            "title": "18 Kicks",
-            "range": "1-18"
-          }
-        ],
-        "notes": "TOTAL HIT MASTERY: Graduation Day! Flow through all 22 punches and 18 kicks.",
-        "is_rest_day": 0
       }
     ],
-    "Author": "Antoine Giniès",
+    "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
     "Date": "2026-04-03"

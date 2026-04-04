@@ -557,6 +557,22 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               onPressed: () => setState(() => _isFullscreen = false),
               child: const Icon(Icons.fullscreen_exit),
             )
+          : (!_isEditing &&
+                  _currentTrainingOptions == null &&
+                  _selectedCategory != 'JKD Moves')
+          ? FloatingActionButton(
+              heroTag: 'training_mode_btn',
+              onPressed:
+                  () => TrainingModeDialogs.showTrainingSetup(
+                    context,
+                    _moves,
+                    seriesIds:
+                        widget.series?.id != null ? [widget.series!.id!] : null,
+                    seriesTitle: widget.series?.title,
+                  ),
+              backgroundColor: Colors.orangeAccent,
+              child: const Icon(Icons.school, size: 28, color: Colors.white),
+            )
           : null,
       appBar: (_currentTrainingOptions != null || _isFullscreen)
           ? null
@@ -600,6 +616,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     widget.series!.category != 'JKD Moves')
                   Builder(
                     builder: (context) {
+                      final theme = Theme.of(context);
                       final provider = Provider.of<SeriesProvider>(context);
                       final isDone = provider.isSeriesCompletedToday(
                         widget.series!.id!,
@@ -607,21 +624,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       return IconButton(
                         icon: Icon(
                           Icons.play_circle_fill,
-                          color: isDone ? Colors.grey : Colors.greenAccent,
+                          color: isDone ? Colors.grey : theme.primaryColor,
                         ),
                         onPressed: isDone ? null : _showTrainingOptions,
-                        tooltip: LocalizationService.translate(
-                          'training_mode',
-                          lang,
-                        ),
+                        tooltip: lang == 'fr' ? 'Mode Lecteur' : 'Player Mode',
                       );
                     },
-                  ),
-                if (!_isEditing && widget.series != null)
-                  IconButton(
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () => setState(() => _isFullscreen = true),
-                    tooltip: LocalizationService.translate('fullscreen', lang),
                   ),
                 if (_isEditing)
                   IconButton(
@@ -910,6 +918,19 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ),
                       const Spacer(),
                       IconButton(
+                        icon: const Icon(Icons.fullscreen, size: 24),
+                        tooltip: LocalizationService.translate(
+                          'fullscreen',
+                          lang,
+                        ),
+                        onPressed: () => setState(() => _isFullscreen = true),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                      ),
+                      IconButton(
                         icon: Icon(
                           _isGraphicalView
                               ? Icons.view_list
@@ -937,32 +958,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     child: Row(
                       children: [
                         const Expanded(child: Divider()),
-                        if (!_isEditing &&
-                            _currentTrainingOptions == null &&
-                            _selectedCategory != 'JKD Moves') ...[
-                          const SizedBox(width: 8),
-                          FloatingActionButton.small(
-                            heroTag: 'training_mode_btn',
-                            onPressed:
-                                () => TrainingModeDialogs.showTrainingSetup(
-                                  context,
-                                  _moves,
-                                  seriesIds:
-                                      widget.series?.id != null
-                                          ? [widget.series!.id!]
-                                          : null,
-                                  seriesTitle: widget.series?.title,
-                                ),
-                            backgroundColor: Colors.orangeAccent,
-                            child: const Icon(
-                              Icons.school,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-
                         if (_isEditing) ...[
+
                           const SizedBox(width: 8),
                           Consumer<SeriesProvider>(
                             builder: (context, provider, child) => Row(
