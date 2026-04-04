@@ -7,18 +7,21 @@ import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../widgets/separated_wrap.dart';
 import '../glossary/glossary_data_service.dart';
+import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
 
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
   final VoidCallback onCancel;
   final Move? initialMove;
+  final String? finishButtonLabel;
 
   const AdvancedComboBuilder({
     super.key,
     required this.onFinish,
     required this.onCancel,
     this.initialMove,
+    this.finishButtonLabel,
   });
 
   @override
@@ -398,7 +401,17 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _toolbarButton('', Icons.check, Colors.green, _onFinishClick),
+            _toolbarButton(
+              (widget.finishButtonLabel == null ||
+                      widget.finishButtonLabel!.isEmpty)
+                  ? ''
+                  : widget.finishButtonLabel!,
+              Icons.check,
+              Colors.green,
+              _onFinishClick,
+              isActive: true,
+            ),
+
             _toolbarButton(
               '',
               Icons.close,
@@ -1457,16 +1470,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   void _onFinishClick() {
-    if (_workspaceCards.isEmpty) return;
+    LoggingService.log('AdvancedComboBuilder: Finish/Verify clicked');
+    if (_workspaceCards.isEmpty) {
+      LoggingService.log('AdvancedComboBuilder: Workspace is empty, ignoring click');
+      return;
+    }
 
     Move finalMove;
     if (_workspaceCards.length == 1) {
-      // Single card: return it directly as the series item
       finalMove = _convertToMove(_workspaceCards.first);
     } else {
-      // Multiple cards: bundle into ONE series item with category 'combo'.
-      // Each workspace card becomes a numbered sub-item (1. Jab  2. Cross  3. Jik Tek)
-      // displayed one per line in the series view.
       final subMoves = _workspaceCards.map((c) => _convertToMove(c)).toList();
       finalMove = Move(
         name: 'Combo: ${subMoves.first.name} + ...',
@@ -1475,6 +1488,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       );
     }
 
+    LoggingService.log('AdvancedComboBuilder: Calling onFinish callback');
     widget.onFinish(finalMove);
   }
 

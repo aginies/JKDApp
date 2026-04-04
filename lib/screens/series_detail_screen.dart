@@ -12,6 +12,7 @@ import '../services/export_service.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
 import 'series_detail/dialogs/congratulations_animation.dart';
+import 'series_detail/training/training_mode_dialogs.dart';
 
 import 'series_detail/dialogs/edit_help_dialog.dart';
 import 'series_detail/services/media_gallery_service.dart';
@@ -936,6 +937,23 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     child: Row(
                       children: [
                         const Expanded(child: Divider()),
+                        if (!_isEditing && _currentTrainingOptions == null) ...[
+                          const SizedBox(width: 8),
+                          FloatingActionButton.small(
+                            heroTag: 'training_mode_btn',
+                            onPressed:
+                                () => TrainingModeDialogs.showItemSelection(
+                                  context,
+                                  _moves,
+                                ),
+                            backgroundColor: Colors.orangeAccent,
+                            child: const Icon(
+                              Icons.school,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                         if (_isEditing) ...[
                           const SizedBox(width: 8),
                           Consumer<SeriesProvider>(
