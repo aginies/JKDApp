@@ -942,7 +942,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           FloatingActionButton.small(
                             heroTag: 'training_mode_btn',
                             onPressed:
-                                () => TrainingModeDialogs.showItemSelection(
+                                () => TrainingModeDialogs.showTrainingSetup(
                                   context,
                                   _moves,
                                 ),
