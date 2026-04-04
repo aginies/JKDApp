@@ -7,8 +7,10 @@ import '../models/series.dart';
 import '../models/move.dart';
 import 'database_service.dart';
 
+import 'series_provider.dart';
+
 class ImportService {
-  static Future<bool> importSeries() async {
+  static Future<bool> importSeries(SeriesProvider provider) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -59,6 +61,10 @@ class ImportService {
           await dbService.insertSeries(newSeries);
           existingTitles.add(finalTitle);
         }
+        
+        // RELOAD DATA to refresh UI
+        await provider.loadSeries();
+        
         return true;
       }
       return false;
@@ -68,7 +74,7 @@ class ImportService {
     }
   }
 
-  static Future<bool> importGlossary() async {
+  static Future<bool> importGlossary(SeriesProvider provider) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -90,6 +96,10 @@ class ImportService {
           cleanItem.remove('id'); // Fresh IDs
           await dbService.insertGlossaryItem(cleanItem);
         }
+        
+        // RELOAD GLOSSARY to refresh UI
+        await provider.loadGlossary();
+        
         return true;
       }
       return false;

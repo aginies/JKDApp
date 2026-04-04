@@ -519,6 +519,21 @@ class SeriesProvider with ChangeNotifier {
     await loadActiveProgram();
   }
 
+  Future<void> createProgram(TrainingProgram program) async {
+    await _dbService.createProgram(program);
+    await loadAllPrograms();
+  }
+
+  Future<void> updateProgram(TrainingProgram program) async {
+    await _dbService.updateProgram(program);
+    await loadAllPrograms();
+  }
+
+  Future<void> deleteProgram(int programId) async {
+    await _dbService.deleteProgram(programId);
+    await loadAllPrograms();
+  }
+
   /// Mark a day as complete in the active program
   Future<void> markDayComplete(
     int dayNumber, {

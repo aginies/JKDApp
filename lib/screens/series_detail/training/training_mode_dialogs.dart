@@ -358,6 +358,13 @@ class TrainingModeDialogs {
                   // Show congrats animation
                   if (seriesIds != null && seriesIds.isNotEmpty) {
                     CongratulationsAnimation.show(context, isDayComplete: anyDayComplete);
+                    
+                    // Auto-exit the series detail screen to return to "Training Active"
+                    Future.delayed(const Duration(milliseconds: 2000), () {
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    });
                   }
                 }
                 return;

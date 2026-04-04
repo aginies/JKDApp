@@ -161,8 +161,8 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
 
     try {
       if (widget.program == null) {
-        // Create new program
-        await db.createProgram(program);
+        // Create new program via provider to trigger UI refresh
+        await provider.createProgram(program);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -174,8 +174,8 @@ class _ProgramCreateScreenState extends State<ProgramCreateScreen> {
         if (!mounted) return;
         Navigator.pop(context, true);
       } else {
-        // Update existing program
-        await db.updateProgram(program);
+        // Update existing program via provider to trigger UI refresh
+        await provider.updateProgram(program);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

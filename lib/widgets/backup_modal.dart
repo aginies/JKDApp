@@ -55,32 +55,6 @@ class _BackupModalState extends State<BackupModal> {
           ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              /*
-              _buildSectionTitle(
-                LocalizationService.translate('export_title', lang) ?? 'Export Title',
-              ),
-              _buildBackupTile(
-                title: lang == 'fr'
-                    ? 'Tout exporter (Full Backup)'
-                    : 'Export Everything (Full Backup)',
-                subtitle: lang == 'fr'
-                    ? 'Série, Glossaire, Media dans un ZIP'
-                    : 'Series, Glossary, Media in a ZIP',
-                icon: Icons.all_inclusive,
-                color: Colors.purple,
-                onTap: () => _handleGlobalBackup(provider),
-              ),
-              _buildBackupTile(
-                title: LocalizationService.translate('restore_everything', lang),
-                subtitle: lang == 'fr'
-                    ? 'Restaurer depuis un fichier ZIP global'
-                    : 'Restore from a full ZIP backup',
-                icon: Icons.restore_page,
-                color: Colors.purpleAccent,
-                onTap: () => _handleGlobalRestore(provider),
-              ),
-              const Divider(height: 32),
-              */
               _buildSectionTitle(
                 LocalizationService.translate('export_title', lang),
               ),
@@ -154,7 +128,7 @@ class _BackupModalState extends State<BackupModal> {
                 ),
                 icon: Icons.auto_stories,
                 color: Colors.orangeAccent,
-                onTap: () => _handleGlossaryRestore(),
+                onTap: () => _handleGlossaryRestore(provider),
               ),
               const Divider(height: 32),
               _buildSectionTitle(
@@ -202,7 +176,7 @@ class _BackupModalState extends State<BackupModal> {
                     : 'Restore photos from ZIP',
                 icon: Icons.unarchive,
                 color: Colors.greenAccent,
-                onTap: () => _handleMediaRestore(provider.galleryPath),
+                onTap: () => _handleMediaRestore(provider),
               ),
             ],
           ),
@@ -263,7 +237,6 @@ class _BackupModalState extends State<BackupModal> {
 
   // --- Handlers ---
 
-  // ignore: unused_element
   Future<void> _handleGlobalBackup(SeriesProvider provider) async {
     final action = await _showActionDialog('Full Backup');
     if (action == null) return;
@@ -300,7 +273,6 @@ class _BackupModalState extends State<BackupModal> {
     }
   }
 
-  // ignore: unused_element
   Future<void> _handleGlobalRestore(SeriesProvider provider) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -378,87 +350,89 @@ class _BackupModalState extends State<BackupModal> {
             return AlertDialog(
               title: Text(LocalizationService.translate('export_title', lang)),
               content: SingleChildScrollView(
-                child: RadioGroup<String>(
-                  groupValue: exportType,
-                  onChanged: (val) => setModalState(() => exportType = val!),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      RadioListTile<String>(
-                        title: Text(
-                          lang == 'fr' ? 'Toutes les séries' : 'All Series',
-                        ),
-                        value: 'all',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<String>(
+                      title: Text(
+                        lang == 'fr' ? 'Toutes les séries' : 'All Series',
                       ),
-                      RadioListTile<String>(
-                        title: Text(
-                          LocalizationService.translate(
-                            'export_category',
-                            lang,
-                          ),
+                      value: 'all',
+                      groupValue: exportType,
+                      onChanged: (val) => setModalState(() => exportType = val!),
+                    ),
+                    RadioListTile<String>(
+                      title: Text(
+                        LocalizationService.translate(
+                          'export_category',
+                          lang,
                         ),
-                        value: 'category',
                       ),
-                      if (exportType == 'category')
-                        Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownButton<String>(
-                            value: selectedCategory,
-                            isExpanded: true,
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Jun Fan Gung Fu',
-                                child: Text('Jun Fan Gung Fu'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Jun Fan Kick Boxing',
-                                child: Text('Jun Fan Kick Boxing'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'JKD Moves',
-                                child: Text('JKD Moves'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Kali',
-                                child: Text('Kali'),
-                              ),
-                            ],
-                            onChanged: (val) =>
-                                setModalState(() => selectedCategory = val!),
-                          ),
-                        ),
-                      RadioListTile<String>(
-                        title: Text(
-                          LocalizationService.translate('export_single', lang),
-                        ),
-                        value: 'single',
-                      ),
-                      if (exportType == 'single')
-                        Padding(
-                          padding: const EdgeInsets.only(left: 32.0),
-                          child: DropdownButton<JkdSeries>(
-                            value: selectedSeries,
-                            isExpanded: true,
-                            hint: Text(
-                              LocalizationService.translate(
-                                'select_series',
-                                lang,
-                              ),
+                      value: 'category',
+                      groupValue: exportType,
+                      onChanged: (val) => setModalState(() => exportType = val!),
+                    ),
+                    if (exportType == 'category')
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownButton<String>(
+                          value: selectedCategory,
+                          isExpanded: true,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'Jun Fan Gung Fu',
+                              child: Text('Jun Fan Gung Fu'),
                             ),
-                            items: allSeries
-                                .map(
-                                  (s) => DropdownMenuItem(
-                                    value: s,
-                                    child: Text(s.title),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (val) =>
-                                setModalState(() => selectedSeries = val),
-                          ),
+                            DropdownMenuItem(
+                              value: 'Jun Fan Kick Boxing',
+                              child: Text('Jun Fan Kick Boxing'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'JKD Moves',
+                              child: Text('JKD Moves'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Kali',
+                              child: Text('Kali'),
+                            ),
+                          ],
+                          onChanged: (val) =>
+                              setModalState(() => selectedCategory = val!),
                         ),
-                    ],
-                  ),
+                      ),
+                    RadioListTile<String>(
+                      title: Text(
+                        LocalizationService.translate('export_single', lang),
+                      ),
+                      value: 'single',
+                      groupValue: exportType,
+                      onChanged: (val) => setModalState(() => exportType = val!),
+                    ),
+                    if (exportType == 'single')
+                      Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: DropdownButton<JkdSeries>(
+                          value: selectedSeries,
+                          isExpanded: true,
+                          hint: Text(
+                            LocalizationService.translate(
+                              'select_series',
+                              lang,
+                            ),
+                          ),
+                          items: allSeries
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text(s.title),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setModalState(() => selectedSeries = val),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               actions: [
@@ -533,8 +507,7 @@ class _BackupModalState extends State<BackupModal> {
 
   Future<void> _handleSeriesImport(SeriesProvider provider) async {
     _setLoading(true);
-    final success = await ImportService.importSeries();
-    if (success) await provider.loadSeries();
+    final success = await ImportService.importSeries(provider);
     _setLoading(false);
 
     if (mounted) {
@@ -564,9 +537,9 @@ class _BackupModalState extends State<BackupModal> {
     _setLoading(false);
   }
 
-  Future<void> _handleGlossaryRestore() async {
+  Future<void> _handleGlossaryRestore(SeriesProvider provider) async {
     _setLoading(true);
-    final success = await ImportService.importGlossary();
+    final success = await ImportService.importGlossary(provider);
     _setLoading(false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -653,10 +626,6 @@ class _BackupModalState extends State<BackupModal> {
       final content = await file.readAsString();
       final List<dynamic> data = json.decode(content);
 
-      final dbService = DatabaseService();
-      final existingPrograms = await dbService.getAllPrograms();
-      final existingTitles = existingPrograms.map((p) => p.title).toList();
-
       for (var item in data) {
         final Map<String, dynamic> programMap = Map<String, dynamic>.from(item);
         final List<dynamic> daysData = programMap['days'] ?? [];
@@ -667,23 +636,14 @@ class _BackupModalState extends State<BackupModal> {
         }).toList();
         final program = TrainingProgram.fromMap(programMap, days: days);
 
-        String finalTitle = program.title;
-        if (existingTitles.contains(finalTitle)) {
-          finalTitle =
-              "$finalTitle (Imported ${DateFormat('yyyy-MM-dd').format(DateTime.now())})";
-        }
-
         final newProgram = program.copyWith(
           id: null, // New ID
-          title: finalTitle,
           isSystem: false, // Imported are always custom
         );
 
-        await dbService.insertProgram(newProgram);
-        existingTitles.add(finalTitle);
+        await provider.createProgram(newProgram);
       }
 
-      await provider.loadAllPrograms();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -740,7 +700,8 @@ class _BackupModalState extends State<BackupModal> {
     }
   }
 
-  Future<void> _handleMediaRestore(String? targetPath) async {
+  Future<void> _handleMediaRestore(SeriesProvider provider) async {
+    final targetPath = provider.galleryPath;
     if (targetPath == null) return;
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -753,6 +714,9 @@ class _BackupModalState extends State<BackupModal> {
       targetPath,
       result.files.single.path!,
     );
+    if (success) {
+      await provider.loadSeries(); // Refresh to show icons
+    }
     _setLoading(false);
 
     if (mounted) {
@@ -791,5 +755,23 @@ class _BackupModalState extends State<BackupModal> {
         ],
       ),
     );
+  }
+}
+
+class RadioGroup<T> extends StatelessWidget {
+  final T groupValue;
+  final ValueChanged<T?> onChanged;
+  final Widget child;
+
+  const RadioGroup({
+    super.key,
+    required this.groupValue,
+    required this.onChanged,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return child;
   }
 }
