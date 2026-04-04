@@ -23,6 +23,7 @@ class Move {
   final String? counterLevel;
   final String? counterSpecialAction;
   final String? counterCategory;
+  final bool counterIsFeint;
   final Map<String, String> counterTranslations;
 
   /// Structured counter: simultaneous answer moves (A+B for answer).
@@ -53,6 +54,7 @@ class Move {
     this.counterLevel,
     this.counterSpecialAction,
     this.counterCategory,
+    this.counterIsFeint = false,
     this.counterTranslations = const {},
     this.counterSubMoves = const [],
     this.counterChain = const [],
@@ -110,6 +112,7 @@ class Move {
       'counter_level': counterLevel,
       'counter_special_action': counterSpecialAction,
       'counter_category': counterCategory,
+      'counter_is_feint': counterIsFeint ? 1 : 0,
       'counter_translations': json.encode(counterTranslations),
       'counter_sub_moves_json': counterSubMoves.isNotEmpty
           ? json.encode(counterSubMoves.map((m) => m.toMap()).toList())
@@ -209,6 +212,7 @@ class Move {
       counterLevel: map['counter_level'],
       counterSpecialAction: map['counter_special_action'],
       counterCategory: map['counter_category'],
+      counterIsFeint: (map['counter_is_feint'] ?? 0) == 1,
       counterTranslations: counterTrans,
       counterSubMoves: counterSubs,
       counterChain: counterChainItems,
@@ -236,12 +240,13 @@ class Move {
     String? counterLevel,
     String? counterSpecialAction,
     String? counterCategory,
+    bool? counterIsFeint,
     Map<String, String>? counterTranslations,
     List<Move>? counterSubMoves,
     List<Move>? counterChain,
     List<Move>? subMoves,
     List<Move>? chain,
-  }) {
+    }) {
     return Move(
       id: id ?? this.id,
       glossaryId: glossaryId ?? this.glossaryId,
@@ -251,9 +256,7 @@ class Move {
       category: category ?? this.category,
       side: side ?? this.side,
       level: level ?? this.level,
-      subLetter: subLetter == _sentinel
-          ? this.subLetter
-          : (subLetter as String?),
+      subLetter: subLetter == _sentinel ? this.subLetter : (subLetter as String?),
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,
@@ -263,13 +266,15 @@ class Move {
       counterLevel: counterLevel ?? this.counterLevel,
       counterSpecialAction: counterSpecialAction ?? this.counterSpecialAction,
       counterCategory: counterCategory ?? this.counterCategory,
+      counterIsFeint: counterIsFeint ?? this.counterIsFeint,
       counterTranslations: counterTranslations ?? this.counterTranslations,
       counterSubMoves: counterSubMoves ?? this.counterSubMoves,
       counterChain: counterChain ?? this.counterChain,
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
     );
-  }
+    }
+
 
   static const _sentinel = Object();
 }

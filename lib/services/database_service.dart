@@ -50,7 +50,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     return await openDatabase(
       path,
-      version: 2, // Reset to trigger re-seed
+      version: 3, // Increment version for schema change
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -125,6 +125,7 @@ class DatabaseService {
         counter_side TEXT, 
         counter_level TEXT, 
         counter_special_action TEXT, 
+        counter_is_feint INTEGER DEFAULT 0,
         counter_translations TEXT, 
         counter_sub_moves_json TEXT, 
         counter_chain_json TEXT, 
@@ -317,6 +318,7 @@ class DatabaseService {
               'counter_side': move['counter_side'],
               'counter_level': move['counter_level'],
               'counter_special_action': move['counter_special_action'],
+              'counter_is_feint': move['counter_is_feint'] ?? 0,
               'counter_translations': move['counter_translations'],
               'counter_sub_moves_json': move['counter_sub_moves_json'],
               'counter_chain_json': move['counter_chain_json'],

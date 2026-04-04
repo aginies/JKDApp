@@ -120,6 +120,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       counterCategory: m.counterCategory,
       counterSide: m.counterSide ?? '',
       counterLevel: m.counterLevel ?? '',
+      counterIsFeint: m.counterIsFeint,
       subMoves: m.subMoves.map((sm) => _convertFromMove(sm)).toList(),
       chain: m.chain.map((cm) => _convertFromMove(cm)).toList(),
       counterSubMoves: m.counterSubMoves
@@ -1249,9 +1250,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterCategory: data.counterCategory,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
-        counterSubMoves: data.counterSubMoves
-            .map((m) => _convertToMove(m))
-            .toList(),
+        counterIsFeint: data.counterIsFeint,
+        counterSubMoves:
+            data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
         counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
@@ -1266,9 +1267,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         counterCategory: data.counterCategory,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
-        counterSubMoves: data.counterSubMoves
-            .map((m) => _convertToMove(m))
-            .toList(),
+        counterIsFeint: data.counterIsFeint,
+        counterSubMoves:
+            data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
         counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
       );
     }
@@ -1286,9 +1287,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       counterCategory: data.counterCategory,
       counterSide: data.counterSide,
       counterLevel: data.counterLevel,
-      counterSubMoves: data.counterSubMoves
-          .map((m) => _convertToMove(m))
-          .toList(),
+      counterIsFeint: data.counterIsFeint,
+      counterSubMoves:
+          data.counterSubMoves.map((cm) => _convertToMove(cm)).toList(),
       counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
     );
   }
@@ -1450,6 +1451,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           return item.copyWith(
             counterSide: finalSide,
             counterLevel: finalLevel,
+            counterIsFeint: toggleFeint ? !item.counterIsFeint : item.counterIsFeint,
           );
         } else {
           // Toggle logic for side
@@ -2163,6 +2165,7 @@ class BuilderCardData {
   final int? counterGlossaryId;
   final String counterSide;
   final String counterLevel;
+  final bool counterIsFeint;
 
   // Structured counter: simultaneous answer moves (A+B for answer)
   final List<BuilderCardData> counterSubMoves;
@@ -2184,6 +2187,7 @@ class BuilderCardData {
     this.counterGlossaryId,
     this.counterSide = '',
     this.counterLevel = '',
+    this.counterIsFeint = false,
     this.counterSubMoves = const [],
     this.counterChain = const [],
   });
@@ -2213,6 +2217,7 @@ class BuilderCardData {
     Object? counterGlossaryId = _sentinel,
     String? counterSide,
     String? counterLevel,
+    bool? counterIsFeint,
     List<BuilderCardData>? counterSubMoves,
     List<BuilderCardData>? counterChain,
   }) {
@@ -2237,6 +2242,7 @@ class BuilderCardData {
           : (counterGlossaryId as int?),
       counterSide: counterSide ?? this.counterSide,
       counterLevel: counterLevel ?? this.counterLevel,
+      counterIsFeint: counterIsFeint ?? this.counterIsFeint,
       counterSubMoves: counterSubMoves ?? this.counterSubMoves,
       counterChain: counterChain ?? this.counterChain,
     );
