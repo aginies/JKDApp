@@ -296,74 +296,74 @@ class GraphicalMoveView {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Attacker box
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isActiveSubItem && !isActiveAnswer
-                      ? Colors.amber.withValues(alpha: 0.15)
-                      : color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: color.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      MoveDisplayWidgets.getCategoryIcon(move.category),
-                      size: 20,
-                      color: color,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      move.name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
+              DiagonalCross(
+                show: move.isFeint,
+                color: Colors.purple,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isActiveSubItem && !isActiveAnswer
+                        ? Colors.amber.withValues(alpha: 0.15)
+                        : color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: color.withValues(alpha: 0.2)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        MoveDisplayWidgets.getCategoryIcon(move.category),
+                        size: 20,
+                        color: color,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (move.specialAction != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0),
-                        child: Chip(
-                          label: Text(
-                            move.specialAction!,
-                            style: const TextStyle(fontSize: 8),
-                          ),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    if (move.side.isNotEmpty ||
-                        move.level.isNotEmpty ||
-                        move.isFeint) ...[
                       const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 4,
-                        children: [
-                          if (move.side.isNotEmpty)
-                            MoveDisplayWidgets.sideCircle(
-                              LocalizationService.translate(
-                                move.side == 'L'
-                                    ? 'left'
-                                    : (move.side == 'R' ? 'right' : 'mid'),
-                                lang,
-                              ).substring(0, 1),
-                              move.side,
-                              mini: true,
-                            ),
-                          if (move.level.isNotEmpty)
-                            MoveDisplayWidgets.levelIcon(
-                              move.level,
-                              mini: true,
-                            ),
-                          if (move.isFeint)
-                            MoveDisplayWidgets.drawBox(mini: true),
-                        ],
+                      Text(
+                        move.name,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
+                      if (move.specialAction != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0),
+                          child: Chip(
+                            label: Text(
+                              move.specialAction!,
+                              style: const TextStyle(fontSize: 8),
+                            ),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      if (move.side.isNotEmpty || move.level.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 4,
+                          children: [
+                            if (move.side.isNotEmpty)
+                              MoveDisplayWidgets.sideCircle(
+                                LocalizationService.translate(
+                                  move.side == 'L'
+                                      ? 'left'
+                                      : (move.side == 'R' ? 'right' : 'mid'),
+                                  lang,
+                                ).substring(0, 1),
+                                move.side,
+                                mini: true,
+                              ),
+                            if (move.level.isNotEmpty)
+                              MoveDisplayWidgets.levelIcon(
+                                move.level,
+                                mini: true,
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               if (move.counterName != null || move.hasStructuredCounter) ...[
@@ -591,14 +591,18 @@ class GraphicalMoveView {
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: borderColor, width: isActive ? 2 : 1),
+    return DiagonalCross(
+      show: move.isFeint,
+      color: Colors.purple,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: borderColor, width: isActive ? 2 : 1),
+        ),
+        child: counterContent,
       ),
-      child: counterContent,
     );
   }
 
@@ -646,4 +650,55 @@ class GraphicalMoveView {
       ),
     );
   }
+}
+
+class DiagonalCross extends StatelessWidget {
+  final Widget child;
+  final bool show;
+  final Color color;
+
+  const DiagonalCross({
+    super.key,
+    required this.child,
+    required this.show,
+    this.color = Colors.purple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!show) return child;
+
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: DiagonalCrossPainter(color: color)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class DiagonalCrossPainter extends CustomPainter {
+  final Color color;
+
+  DiagonalCrossPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color.withValues(alpha: 0.5)
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round;
+
+    // Draw X
+    canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

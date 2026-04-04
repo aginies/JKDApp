@@ -654,81 +654,81 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               // ATTACKER BOX
               GestureDetector(
                 onTap: () => _selectPath(path, isCounter: false),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: _getAlphaColor(color, theme),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: _getBorderColor(
-                        color,
-                        theme,
-                        isSelected: isSelected && !_isCounterSelected,
+                child: DiagonalCross(
+                  show: data.isFeint,
+                  color: Colors.purple,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: _getAlphaColor(color, theme),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _getBorderColor(
+                          color,
+                          theme,
+                          isSelected: isSelected && !_isCounterSelected,
+                        ),
+                        width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
                       ),
-                      width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        MoveDisplayWidgets.getCategoryIcon(data.category),
-                        size: 20,
-                        color: color,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        data.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: theme.brightness == Brightness.dark
-                              ? FontWeight.w600
-                              : FontWeight.bold,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          MoveDisplayWidgets.getCategoryIcon(data.category),
+                          size: 20,
+                          color: color,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (data.specialAction != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2.0),
-                          child: Chip(
-                            label: Text(
-                              data.specialAction!,
-                              style: const TextStyle(fontSize: 8),
-                            ),
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      if (data.side.isNotEmpty ||
-                          data.level.isNotEmpty ||
-                          data.isFeint) ...[
                         const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 4,
-                          children: [
-                            if (data.side.isNotEmpty)
-                              MoveDisplayWidgets.sideCircle(
-                                LocalizationService.translate(
-                                  data.side == 'L'
-                                      ? 'left'
-                                      : (data.side == 'R' ? 'right' : 'mid'),
-                                  lang,
-                                ).substring(0, 1),
-                                data.side,
-                                mini: true,
-                              ),
-                            if (data.level.isNotEmpty)
-                              MoveDisplayWidgets.levelIcon(
-                                data.level,
-                                mini: true,
-                              ),
-                            if (data.isFeint)
-                              MoveDisplayWidgets.drawBox(mini: true),
-                          ],
+                        Text(
+                          data.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: theme.brightness == Brightness.dark
+                                ? FontWeight.w600
+                                : FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
+                        if (data.specialAction != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Chip(
+                              label: Text(
+                                data.specialAction!,
+                                style: const TextStyle(fontSize: 8),
+                              ),
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        if (data.side.isNotEmpty || data.level.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            children: [
+                              if (data.side.isNotEmpty)
+                                MoveDisplayWidgets.sideCircle(
+                                  LocalizationService.translate(
+                                    data.side == 'L'
+                                        ? 'left'
+                                        : (data.side == 'R' ? 'right' : 'mid'),
+                                    lang,
+                                  ).substring(0, 1),
+                                  data.side,
+                                  mini: true,
+                                ),
+                              if (data.level.isNotEmpty)
+                                MoveDisplayWidgets.levelIcon(
+                                  data.level,
+                                  mini: true,
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -1002,27 +1002,31 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
     return GestureDetector(
       onTap: () => _selectPath(path, isCounter: true),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: _getAlphaColor(Colors.red, theme),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: _getBorderColor(
-              Colors.red,
-              theme,
-              isSelected:
+      child: DiagonalCross(
+        show: data.isFeint,
+        color: Colors.purple,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: _getAlphaColor(Colors.red, theme),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: _getBorderColor(
+                Colors.red,
+                theme,
+                isSelected:
+                    isWholeCounterSelected ||
+                    (isThisCounterSelected && !data.hasStructuredCounter),
+              ),
+              width:
                   isWholeCounterSelected ||
-                  (isThisCounterSelected && !data.hasStructuredCounter),
+                      (isThisCounterSelected && !data.hasStructuredCounter)
+                  ? 2
+                  : 1,
             ),
-            width:
-                isWholeCounterSelected ||
-                    (isThisCounterSelected && !data.hasStructuredCounter)
-                ? 2
-                : 1,
           ),
+          child: counterContent,
         ),
-        child: counterContent,
       ),
     );
   }
@@ -2239,4 +2243,55 @@ class BuilderCardData {
   }
 
   static const _sentinel = Object();
+}
+
+class DiagonalCross extends StatelessWidget {
+  final Widget child;
+  final bool show;
+  final Color color;
+
+  const DiagonalCross({
+    super.key,
+    required this.child,
+    required this.show,
+    this.color = Colors.purple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!show) return child;
+
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: DiagonalCrossPainter(color: color)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class DiagonalCrossPainter extends CustomPainter {
+  final Color color;
+
+  DiagonalCrossPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color.withValues(alpha: 0.5)
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round;
+
+    // Draw X
+    canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
