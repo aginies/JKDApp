@@ -16,9 +16,15 @@ class TranslationUtils {
       }
 
       if (translationsField is String) {
-        if (translationsField.isEmpty) return {};
+        final trimmed = translationsField.trim();
+        if (trimmed.isEmpty) return {};
 
-        final decoded = json.decode(translationsField);
+        // Quick check: if it doesn't look like a JSON object, don't even try decoding
+        if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
+          return {};
+        }
+
+        final decoded = json.decode(trimmed);
         if (decoded is Map) {
           return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
         }

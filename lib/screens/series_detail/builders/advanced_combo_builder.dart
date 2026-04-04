@@ -1056,7 +1056,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
     setState(() {
       if (_isCounterSelected && _selectedCounterIndex != null) {
-
         // DELETE A SPECIFIC SUB-ITEM inside a structured counter
         final idx = _selectedCounterIndex!;
         _updateDataAtPath(_selectedPath!, (item) {
@@ -1456,7 +1455,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) {
-        final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+        final lang = Provider.of<SeriesProvider>(
+          context,
+          listen: false,
+        ).language;
         return StatefulBuilder(
           builder: (context, setModalState) {
             return DraggableScrollableSheet(
@@ -1516,31 +1518,31 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                     : null,
                                 border: InputBorder.none,
                                 isDense: true,
-                                ),
-                                controller: TextEditingController.fromValue(
+                              ),
+                              controller: TextEditingController.fromValue(
                                 TextEditingValue(
                                   text: _glossarySearchQuery,
                                   selection: TextSelection.collapsed(
                                     offset: _glossarySearchQuery.length,
                                   ),
                                 ),
-                                ),
-                                onChanged: (val) {
+                              ),
+                              onChanged: (val) {
                                 setModalState(() => _glossarySearchQuery = val);
-                                },
-                                ),
-                                ),
-                                ),
-                                IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.pop(context);
-                                },
-                                ),
-                                ],
-                                ),
-                                ),
+                              },
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
 
                   Expanded(
                     child: _glossarySearchQuery.isEmpty

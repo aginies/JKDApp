@@ -66,8 +66,7 @@ class Move {
   bool get hasCounterChain => counterChain.isNotEmpty;
   bool get hasStructuredCounter => hasCounterCombo || hasCounterChain;
 
-  bool get hasCounter =>
-      counterName != null || hasStructuredCounter;
+  bool get hasCounter => counterName != null || hasStructuredCounter;
 
   /// Returns the effective category for icon/color display purposes.
   /// For 'simultaneous' moves, resolves to the first sub-move's category.
