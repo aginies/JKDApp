@@ -235,6 +235,7 @@ class TrainingModeDialogs {
                   lang,
                 ),
                 trainingOriginalMove: originalMove,
+                trainingLevel: level,
               ),
             ),
           ),

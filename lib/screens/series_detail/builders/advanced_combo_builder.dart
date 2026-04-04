@@ -54,6 +54,26 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   bool _isCounterSimultaneousMode = false;
   bool _isCounterChainMode = false;
 
+  Set<String> _getRelevantCategories(Move move) {
+    Set<String> cats = {move.category};
+    if (move.counterCategory != null && move.counterCategory!.isNotEmpty) {
+      cats.add(move.counterCategory!);
+    }
+    for (var m in move.subMoves) {
+      cats.addAll(_getRelevantCategories(m));
+    }
+    for (var m in move.chain) {
+      cats.addAll(_getRelevantCategories(m));
+    }
+    for (var m in move.counterSubMoves) {
+      cats.addAll(_getRelevantCategories(m));
+    }
+    for (var m in move.counterChain) {
+      cats.addAll(_getRelevantCategories(m));
+    }
+    return cats;
+  }
+
   Set<String> _getTrainingMoves(Move move) {
     Set<String> names = {move.name.toLowerCase().trim()};
     if (move.counterName != null && move.counterName!.isNotEmpty) {
@@ -1932,73 +1952,120 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
                   Expanded(
                     child: _glossarySearchQuery.isEmpty
-                        ? DefaultTabController(
-                            length: 5,
-                            child: Column(
-                              children: [
-                                TabBar(
-                                  isScrollable: true,
-                                  tabs: [
-                                    Tab(
-                                      text:
-                                          '${LocalizationService.translate('punches', lang)} / ${LocalizationService.translate('kicks', lang)}',
-                                    ),
-                                    Tab(
-                                      text:
-                                          '${LocalizationService.translate('packs', lang)} / ${LocalizationService.translate('trapping', lang)}',
-                                    ),
-                                    Tab(
-                                      text:
-                                          '${LocalizationService.translate('jkd_moves', lang)} / ${LocalizationService.translate('move', lang)}',
-                                    ),
-                                    Tab(
-                                      text: LocalizationService.translate(
-                                        'kali',
-                                        lang,
+                        ? Builder(
+                            builder: (context) {
+                              // Define all possible tabs
+                              final allTabs = [
+                                {
+                                  'id': 'punch_kick',
+                                  'label':
+                                      '${LocalizationService.translate('punches', lang)} / ${LocalizationService.translate('kicks', lang)}',
+                                  'cats': ['punch', 'kick'],
+                                  'view': (ScrollController sc) =>
+                                      _buildDualGlossaryTab(
+                                        'punch',
+                                        'kick',
+                                        sc,
                                       ),
+                                },
+                                {
+                                  'id': 'packs_trapping',
+                                  'label':
+                                      '${LocalizationService.translate('packs', lang)} / ${LocalizationService.translate('trapping', lang)}',
+                                  'cats': ['packs', 'trapping'],
+                                  'view': (ScrollController sc) =>
+                                      _buildDualGlossaryTab(
+                                        'packs',
+                                        'trapping',
+                                        sc,
+                                      ),
+                                },
+                                {
+                                  'id': 'jkd_move',
+                                  'label':
+                                      '${LocalizationService.translate('jkd_moves', lang)} / ${LocalizationService.translate('move', lang)}',
+                                  'cats': ['jkd_moves', 'move'],
+                                  'view': (ScrollController sc) =>
+                                      _buildDualGlossaryTab(
+                                        'jkd_moves',
+                                        'move',
+                                        sc,
+                                      ),
+                                },
+                                {
+                                  'id': 'kali',
+                                  'label': LocalizationService.translate(
+                                    'kali',
+                                    lang,
+                                  ),
+                                  'cats': ['kali'],
+                                  'view': (ScrollController sc) =>
+                                      _buildDualGlossaryTab('kali', null, sc),
+                                },
+                                {
+                                  'id': 'text',
+                                  'label': LocalizationService.translate(
+                                    'text',
+                                    lang,
+                                  ),
+                                  'cats': ['text'],
+                                  'view': (ScrollController sc) =>
+                                      _buildDualGlossaryTab('text', null, sc),
+                                },
+                              ];
+
+                              // Filter if in Beginner mode
+                              var enabledTabs = allTabs;
+                              if (widget.trainingLevel ==
+                                      TrainingLevel.beginner &&
+                                  widget.trainingOriginalMove != null) {
+                                final relevantCats = _getRelevantCategories(
+                                  widget.trainingOriginalMove!,
+                                );
+                                enabledTabs = allTabs.where((tab) {
+                                  final cats = tab['cats'] as List<String>;
+                                  // Text tab is always relevant for custom notes
+                                  if (tab['id'] == 'text') return true;
+                                  return cats.any(
+                                    (c) => relevantCats.contains(c),
+                                  );
+                                }).toList();
+                              }
+
+                              if (enabledTabs.isEmpty) {
+                                enabledTabs = [
+                                  allTabs.last,
+                                ]; // Fallback to Text
+                              }
+
+                              return DefaultTabController(
+                                length: enabledTabs.length,
+                                child: Column(
+                                  children: [
+                                    TabBar(
+                                      isScrollable: true,
+                                      tabs: enabledTabs.map((tab) {
+                                        return Tab(
+                                          text: tab['label'] as String,
+                                        );
+                                      }).toList(),
                                     ),
-                                    Tab(
-                                      text: LocalizationService.translate(
-                                        'text',
-                                        lang,
+                                    Expanded(
+                                      child: TabBarView(
+                                        children: enabledTabs.map((tab) {
+                                          final builder =
+                                              tab['view']
+                                                  as Widget Function(
+                                                    ScrollController,
+                                                  );
+                                          return builder(scrollController);
+                                        }).toList(),
                                       ),
                                     ),
                                   ],
                                 ),
-
-                                Expanded(
-                                  child: TabBarView(
-                                    children: [
-                                      _buildDualGlossaryTab(
-                                        'punch',
-                                        'kick',
-                                        scrollController,
-                                      ),
-                                      _buildDualGlossaryTab(
-                                        'packs',
-                                        'trapping',
-                                        scrollController,
-                                      ),
-                                      _buildDualGlossaryTab(
-                                        'jkd_moves',
-                                        'move',
-                                        scrollController,
-                                      ),
-                                      _buildDualGlossaryTab(
-                                        'kali',
-                                        null,
-                                        scrollController,
-                                      ),
-                                      _buildDualGlossaryTab(
-                                        'text',
-                                        null,
-                                        scrollController,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           )
                         : _buildGlobalGlossarySearchResults(scrollController),
                   ),
