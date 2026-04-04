@@ -1103,7 +1103,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return GestureDetector(
       onTap: () => _selectPath(path, isCounter: true),
       child: DiagonalCross(
-        show: data.isFeint,
+        show: data.counterIsFeint,
         color: Colors.purple,
         child: Container(
           padding: const EdgeInsets.all(6),

@@ -592,7 +592,7 @@ class GraphicalMoveView {
     }
 
     return DiagonalCross(
-      show: move.isFeint,
+      show: move.counterIsFeint,
       color: Colors.purple,
       child: Container(
         padding: const EdgeInsets.all(6),
