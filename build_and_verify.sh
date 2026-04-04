@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-FLUTTER_PATH="/home/aginies/devel/flutter/bin/flutter"
-DART_PATH="/home/aginies/devel/flutter/bin/dart"
+FLUTTER_PATH=$(command -v flutter || echo "/home/aginies/devel/flutter/bin/flutter")
+DART_PATH=$(command -v dart || echo "/home/aginies/devel/flutter/bin/dart")
 DB_PATH=".dart_tool/sqflite_common_ffi/databases/jkd_notes.db"
 
 # OS Detection
@@ -86,28 +86,31 @@ function quality_checks() {
 }
 
 function update_version() {
-    local NEW_VERSION=$1
-    if [ -z "$NEW_VERSION" ]; then
+    local INPUT_VERSION=$1
+    if [ -z "$INPUT_VERSION" ]; then
         echo "[ERROR] Please provide a new version number (e.g., 1.5.1+3)"
         exit 1
     fi
 
-    echo "[INFO] Updating version to $NEW_VERSION..."
+    # Strip any leading 'v' from the input to normalize it
+    local CLEAN_VERSION=$(echo $INPUT_VERSION | sed 's/^v//')
 
-    # 1. Update pubspec.yaml
-    sed -i "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+    echo "[INFO] Updating version to $CLEAN_VERSION..."
 
-    # 2. Update settings_screen.dart (both occurrences)
-    # Match pattern vX.X.X+X or vX.X.X (v is optional)
-    sed -i "s/v\?[0-9]\+\.[0-9]\+\.[0-9]\+\(+[0-9]\+\)\?/$NEW_VERSION/g" lib/screens/settings_screen.dart
+    # 1. Update pubspec.yaml (Must NOT have 'v' prefix)
+    sed -i "s/^version: .*/version: $CLEAN_VERSION/" pubspec.yaml
+
+    # 2. Update settings_screen.dart (Should have 'v' prefix for UI)
+    # Match pattern vX.X.X+X or vX.X.X (v is optional in the search)
+    sed -i "s/v\?[0-9]\+\.[0-9]\+\.[0-9]\+\(+[0-9]\+\)\?/v$CLEAN_VERSION/g" lib/screens/settings_screen.dart
 
     # 3. Update logging_service.dart
-    sed -i "s/appVersion = \".*\"/appVersion = \"$NEW_VERSION\"/" lib/services/logging_service.dart
+    sed -i "s/appVersion = \".*\"/appVersion = \"$CLEAN_VERSION\"/" lib/services/logging_service.dart
 
-    # 4. Update README.md
-    sed -i "s/Recent Updates (v.*)/Recent Updates (v$NEW_VERSION)/" README.md
+    # 4. Update README.md (Should have 'v' prefix)
+    sed -i "s/Recent Updates (v.*)/Recent Updates (v$CLEAN_VERSION)/" README.md
 
-    echo "[SUCCESS] Version updated to $NEW_VERSION in all files."
+    echo "[SUCCESS] Version updated to $CLEAN_VERSION in all files."
 }
 
 function build_apk() {
