@@ -7,6 +7,8 @@ import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../widgets/separated_wrap.dart';
 import '../glossary/glossary_data_service.dart';
+import '../training/combo_verification_service.dart';
+import '../../../services/usage_statistics_service.dart';
 import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
 
@@ -15,6 +17,8 @@ class AdvancedComboBuilder extends StatefulWidget {
   final VoidCallback onCancel;
   final Move? initialMove;
   final String? finishButtonLabel;
+  final Move? trainingOriginalMove;
+  final TrainingLevel? trainingLevel;
 
   const AdvancedComboBuilder({
     super.key,
@@ -22,6 +26,8 @@ class AdvancedComboBuilder extends StatefulWidget {
     required this.onCancel,
     this.initialMove,
     this.finishButtonLabel,
+    this.trainingOriginalMove,
+    this.trainingLevel,
   });
 
   @override
@@ -47,6 +53,66 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   bool _isChainMode = false;
   bool _isCounterSimultaneousMode = false;
   bool _isCounterChainMode = false;
+
+  Set<String> _getTrainingMoves(Move move) {
+    Set<String> names = {move.name.toLowerCase().trim()};
+    if (move.counterName != null && move.counterName!.isNotEmpty) {
+      names.add(move.counterName!.toLowerCase().trim());
+    }
+    for (var m in move.subMoves) {
+      names.addAll(_getTrainingMoves(m));
+    }
+    for (var m in move.chain) {
+      names.addAll(_getTrainingMoves(m));
+    }
+    for (var m in move.counterSubMoves) {
+      names.addAll(_getTrainingMoves(m));
+    }
+    for (var m in move.counterChain) {
+      names.addAll(_getTrainingMoves(m));
+    }
+    return names;
+  }
+
+  List<Map<String, dynamic>> _filterGlossaryForTraining(
+    List<Map<String, dynamic>> items,
+  ) {
+    if (widget.trainingOriginalMove == null) return items;
+
+    final allowedNames = _getTrainingMoves(widget.trainingOriginalMove!);
+    final List<Map<String, dynamic>> correct = [];
+    final List<Map<String, dynamic>> distractors = [];
+
+    for (var item in items) {
+      final name = item['name']?.toString().toLowerCase().trim() ?? '';
+      if (allowedNames.contains(name)) {
+        correct.add(item);
+      } else {
+        distractors.add(item);
+      }
+    }
+
+    // Distractors are already sorted by usage in fetchGlossaryByCategory.
+    // Pick up to 5 random ones from the top distractors to provide variety.
+    // We shuffle the first 15 distractors and take 5.
+    final topDistractors = distractors.take(15).toList();
+    topDistractors.shuffle();
+    final finalDistractors = topDistractors.take(5).toList();
+
+    final result = [...correct, ...finalDistractors];
+    // Re-sort result by usage count to maintain the UI triage
+    final usageService = UsageStatisticsService();
+    result.sort((a, b) {
+      final countA = usageService.getCount(a['name'] ?? '');
+      final countB = usageService.getCount(b['name'] ?? '');
+      if (countA != countB) {
+        return countB.compareTo(countA);
+      }
+      return 0;
+    });
+
+    return result;
+  }
 
   @override
   void initState() {
@@ -1971,8 +2037,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final items1 = snapshot.data![0];
-        final items2 = snapshot.data![1];
+        final items1 = _filterGlossaryForTraining(snapshot.data![0]);
+        final items2 = _filterGlossaryForTraining(snapshot.data![1]);
 
         // If cat2 is null, split cat1 into two columns
         if (cat2 == null) {
@@ -2416,12 +2482,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     final query = _glossarySearchQuery.toLowerCase();
     final lang = provider.language;
 
-    final results = provider.glossary.where((item) {
+    final baseResults = provider.glossary.where((item) {
       final name = item['name'].toString().toLowerCase();
       final trans = GlossaryDataService.parseTranslations(item['translations']);
       final t = (trans[lang] ?? trans['en'] ?? '').toLowerCase();
       return name.contains(query) || t.contains(query);
     }).toList();
+
+    final results = _filterGlossaryForTraining(baseResults);
 
     if (results.isEmpty) {
       return const EmptyStateIllustration(titleKey: 'nothing');

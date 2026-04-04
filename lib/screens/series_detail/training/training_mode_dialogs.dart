@@ -234,6 +234,7 @@ class TrainingModeDialogs {
                   'verify',
                   lang,
                 ),
+                trainingOriginalMove: originalMove,
               ),
             ),
           ),
