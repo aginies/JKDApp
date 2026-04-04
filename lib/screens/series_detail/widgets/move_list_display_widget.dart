@@ -327,34 +327,53 @@ class MoveListDisplayWidget {
     return InkWell(
       onDoubleTap: onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
       child: _attackerBox(
-        mini: iconSize < 28,
         Wrap(
           spacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Icon(
-              MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
-              size: iconSize,
-              color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
-            ),
-            Text(
-              sub.name,
-              style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
-            ),
-            MoveDisplayWidgets.sideCircle(
-              LocalizationService.translate(
-                sub.side == 'L' ? 'left' : (sub.side == 'R' ? 'right' : 'mid'),
-                language,
-              ).substring(0, 1),
-              sub.side,
-              mini: iconSize < 28,
-            ),
-            MoveDisplayWidgets.levelIcon(sub.level, size: iconSize / 2),
-            if (sub.isFeint)
-              Padding(
-                padding: const EdgeInsets.only(left: 4.0),
-                child: MoveDisplayWidgets.drawBox(mini: iconSize < 28),
+            DiagonalCross(
+              show: sub.isFeint,
+              color: Colors.purple,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
+                    size: iconSize,
+                    color: MoveDisplayWidgets.getCategoryColor(
+                      sub.displayCategory,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    sub.name,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (sub.side.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.sideCircle(
+                        LocalizationService.translate(
+                          sub.side == 'L'
+                              ? 'left'
+                              : (sub.side == 'R' ? 'right' : 'mid'),
+                          language,
+                        ).substring(0, 1),
+                        sub.side,
+                        mini: true,
+                      ),
+                    ),
+                  if (sub.level.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.levelIcon(sub.level, mini: true),
+                    ),
+                ],
               ),
+            ),
             if (sub.specialAction != null)
               Chip(
                 label: Text(
@@ -367,6 +386,7 @@ class MoveListDisplayWidget {
               ),
           ],
         ),
+        mini: iconSize < 28,
       ),
     );
   }
@@ -991,50 +1011,91 @@ class MoveListDisplayWidget {
                                                   size: 28,
                                                   color: Colors.orange,
                                                 ),
-                                                Icon(
-                                                  MoveDisplayWidgets.getCategoryIcon(
-                                                    moves[i].counterCategory ??
-                                                        '',
-                                                  ),
-                                                  size: 28,
-                                                  color: MoveDisplayWidgets.getCategoryColor(
-                                                    moves[i].counterCategory ??
-                                                        '',
-                                                  ),
-                                                ),
-                                                Text(
-                                                  moves[i].counterName!,
-                                                  style: TextStyle(
-                                                    color: Theme.of(
-                                                      context,
-                                                    ).colorScheme.secondary,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                MoveDisplayWidgets.sideCircle(
-                                                  (moves[i].counterSide !=
-                                                              null &&
+                                                DiagonalCross(
+                                                  show: moves[i].counterIsFeint,
+                                                  color: Colors.purple,
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        MoveDisplayWidgets.getCategoryIcon(
                                                           moves[i]
-                                                              .counterSide!
-                                                              .isNotEmpty)
-                                                      ? LocalizationService.translate(
-                                                          moves[i].counterSide ==
-                                                                  'L'
-                                                              ? 'left'
-                                                              : (moves[i].counterSide ==
-                                                                        'R'
-                                                                    ? 'right'
-                                                                    : 'mid'),
-                                                          language,
-                                                        ).substring(0, 1)
-                                                      : '',
-                                                  moves[i].counterSide ?? '',
-                                                  mini: true,
-                                                ),
-                                                MoveDisplayWidgets.levelIcon(
-                                                  moves[i].counterLevel ?? '',
-                                                  size: 10,
-                                                  mini: true,
+                                                                  .counterCategory ??
+                                                              '',
+                                                        ),
+                                                        size: 28,
+                                                        color: MoveDisplayWidgets
+                                                            .getCategoryColor(
+                                                              moves[i]
+                                                                      .counterCategory ??
+                                                                  '',
+                                                            ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        moves[i].counterName!,
+                                                        style: TextStyle(
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.secondary,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      if (moves[i]
+                                                              .counterSide
+                                                              ?.isNotEmpty ??
+                                                          false)
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                            left: 4.0,
+                                                          ),
+                                                          child:
+                                                              MoveDisplayWidgets
+                                                                  .sideCircle(
+                                                            LocalizationService
+                                                                .translate(
+                                                              moves[i]
+                                                                          .counterSide ==
+                                                                      'L'
+                                                                  ? 'left'
+                                                                  : (moves[i]
+                                                                              .counterSide ==
+                                                                            'R'
+                                                                        ? 'right'
+                                                                        : 'mid'),
+                                                              language,
+                                                            ).substring(0, 1),
+                                                            moves[i]
+                                                                    .counterSide ??
+                                                                '',
+                                                            mini: true,
+                                                          ),
+                                                        ),
+                                                      if (moves[i]
+                                                              .counterLevel
+                                                              ?.isNotEmpty ??
+                                                          false)
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                            left: 4.0,
+                                                          ),
+                                                          child:
+                                                              MoveDisplayWidgets
+                                                                  .levelIcon(
+                                                            moves[i]
+                                                                    .counterLevel ??
+                                                                '',
+                                                            mini: true,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
                                                 ),
                                                 if (moves[i]
                                                         .counterSpecialAction !=
@@ -1049,7 +1110,9 @@ class MoveListDisplayWidget {
                                                     ),
                                                     backgroundColor: Colors
                                                         .purple
-                                                        .withValues(alpha: 0.2),
+                                                        .withValues(
+                                                          alpha: 0.2,
+                                                        ),
                                                     padding: EdgeInsets.zero,
                                                     materialTapTargetSize:
                                                         MaterialTapTargetSize
