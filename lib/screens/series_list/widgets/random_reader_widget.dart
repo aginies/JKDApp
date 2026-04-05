@@ -33,6 +33,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   String? _selectedSeriesId;
   String _selectedGuard = 'L';
   double _delaySeconds = 1.5;
+  int _maxMovesCount = 10;
   String _currentMoveDisplay = "";
   String _currentSeriesTitle = "";
   Timer? _timer;
@@ -43,6 +44,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   void initState() {
     super.initState();
     _selectedSeriesId = widget.forcedSeriesId?.toString();
+    _maxMovesCount = widget.maxMoves ?? 10;
     _initTts();
     _initSelection();
   }
@@ -169,7 +171,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     );
 
     // Auto-switch guard if in forced mode with 80 moves
-    if (widget.forcedSeriesId != null && widget.maxMoves == 80) {
+    if (widget.forcedSeriesId != null && _maxMovesCount == 80) {
       if (_movesCount < 40) {
         if (_selectedGuard != 'L') {
           setState(() => _selectedGuard = 'L');
@@ -191,7 +193,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     }
 
     // Stop if maxMoves reached
-    if (widget.maxMoves != null && _movesCount >= widget.maxMoves!) {
+    if (_movesCount >= _maxMovesCount) {
       _stop();
       // Record series completion if in forced mode
       if (widget.forcedSeriesId != null && mounted) {
@@ -324,45 +326,47 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
           if (widget.showSelection)
             Row(
               children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.language == 'fr' ? 'Série' : 'Series',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                if (widget.forcedSeriesId == null)
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.language == 'fr' ? 'Série' : 'Series',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      DropdownButton<String>(
-                        value: _selectedSeriesId,
-                        isExpanded: true,
-                        underline: Container(
-                          height: 1,
-                          color: Colors.blue.withValues(alpha: 0.2),
-                        ),
-                        items: jkdSeries
-                            .map(
-                              (s) => DropdownMenuItem(
-                                value: s.id.toString(),
-                                child: Text(
-                                  s.title,
-                                  overflow: TextOverflow.ellipsis,
+                        DropdownButton<String>(
+                          value: _selectedSeriesId,
+                          isExpanded: true,
+                          underline: Container(
+                            height: 1,
+                            color: Colors.blue.withValues(alpha: 0.2),
+                          ),
+                          items: jkdSeries
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s.id.toString(),
+                                  child: Text(
+                                    s.title,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (_isPlaying && !_isPaused)
-                            ? null
-                            : (val) => setState(() => _selectedSeriesId = val!),
-                      ),
-                    ],
+                              )
+                              .toList(),
+                          onChanged: (_isPlaying && !_isPaused)
+                              ? null
+                              : (val) =>
+                                  setState(() => _selectedSeriesId = val!),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                if (widget.forcedSeriesId == null) const SizedBox(width: 12),
                 Expanded(
                   flex: 1,
                   child: Column(
@@ -446,35 +450,69 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.language == 'fr' ? 'Nb. Items' : 'Count',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      DropdownButton<int>(
+                        value: _maxMovesCount,
+                        isExpanded: true,
+                        underline: Container(
+                          height: 1,
+                          color: Colors.blue.withValues(alpha: 0.2),
+                        ),
+                        items: [5, 10, 20, 50, 80, 100]
+                            .map(
+                              (count) => DropdownMenuItem(
+                                value: count,
+                                child: Text('$count'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (_isPlaying && !_isPaused)
+                            ? null
+                            : (val) => setState(() => _maxMovesCount = val!),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             )
           else ...[
             // Progress bar when selection is hidden (forced mode)
-            if (widget.maxMoves != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: _movesCount / widget.maxMoves!,
-                      backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.blue,
-                      ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: _movesCount / _maxMovesCount,
+                    backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.blue,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${((_movesCount / widget.maxMoves!) * 100).toInt()}%',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '${((_movesCount / _maxMovesCount) * 100).toInt()}%',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ],
           if (_currentMoveDisplay.isNotEmpty) ...[
             const SizedBox(height: 20),

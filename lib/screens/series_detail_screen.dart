@@ -994,8 +994,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                   RandomReaderWidget(
                     language: lang,
                     forcedSeriesId: widget.series!.id,
-                    maxMoves: 10,
-                    showSelection: false,
+                    showSelection: true,
                   ),
                 Expanded(
                   child: _isEditing
