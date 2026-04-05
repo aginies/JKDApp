@@ -361,7 +361,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
                           onChanged: (_isPlaying && !_isPaused)
                               ? null
                               : (val) =>
-                                  setState(() => _selectedSeriesId = val!),
+                                    setState(() => _selectedSeriesId = val!),
                         ),
                       ],
                     ),
