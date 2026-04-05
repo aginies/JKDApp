@@ -186,10 +186,13 @@ class TrainingModeDialogs {
                   itemBuilder: (gridCtx, index) {
                     final isCompleted = _completedIndices.contains(index);
                     final isFailed = _failedIndices.contains(index);
-                    
+
                     Color color = provider.themeColor;
-                    if (isCompleted) color = Colors.green;
-                    else if (isFailed) color = Colors.red;
+                    if (isCompleted) {
+                      color = Colors.green;
+                    } else if (isFailed) {
+                      color = Colors.red;
+                    }
 
                     return ElevatedButton(
                       onPressed: () {
@@ -445,33 +448,45 @@ class TrainingModeDialogs {
                 if (context.mounted) {
                   final int total = allMoves.length;
                   final int errors = _failedIndices.length;
-                  
+
                   await showDialog(
                     context: context,
                     builder: (summaryCtx) => AlertDialog(
-                      title: Text(LocalizationService.translate('training_complete_title', lang)),
+                      title: Text(
+                        LocalizationService.translate(
+                          'training_complete_title',
+                          lang,
+                        ),
+                      ),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildSummaryRow(
-                            Icons.check_circle, 
-                            Colors.green, 
+                            Icons.check_circle,
+                            Colors.green,
                             'Correct: $total',
                           ),
                           if (errors > 0)
                             _buildSummaryRow(
-                              Icons.error, 
-                              Colors.red, 
+                              Icons.error,
+                              Colors.red,
                               'Errors: $errors',
                             ),
                           const SizedBox(height: 16),
-                          Text(LocalizationService.translate('training_complete_desc', lang)),
+                          Text(
+                            LocalizationService.translate(
+                              'training_complete_desc',
+                              lang,
+                            ),
+                          ),
                         ],
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(summaryCtx),
-                          child: Text(LocalizationService.translate('finish', lang)),
+                          child: Text(
+                            LocalizationService.translate('finish', lang),
+                          ),
                         ),
                       ],
                     ),

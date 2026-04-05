@@ -64,10 +64,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         cards: List.from(_workspaceCards),
         selectedPath: _selectedPath != null ? List.from(_selectedPath!) : null,
         isCounterSelected: _isCounterSelected,
-        selectedCounterPath:
-            _selectedCounterPath != null
-                ? List.from(_selectedCounterPath!)
-                : null,
+        selectedCounterPath: _selectedCounterPath != null
+            ? List.from(_selectedCounterPath!)
+            : null,
         selectedCounterIndex: _selectedCounterIndex,
       ),
     );
@@ -84,13 +83,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       _redoStack.add(
         _HistoryEntry(
           cards: List.from(_workspaceCards),
-          selectedPath:
-              _selectedPath != null ? List.from(_selectedPath!) : null,
+          selectedPath: _selectedPath != null
+              ? List.from(_selectedPath!)
+              : null,
           isCounterSelected: _isCounterSelected,
-          selectedCounterPath:
-              _selectedCounterPath != null
-                  ? List.from(_selectedCounterPath!)
-                  : null,
+          selectedCounterPath: _selectedCounterPath != null
+              ? List.from(_selectedCounterPath!)
+              : null,
           selectedCounterIndex: _selectedCounterIndex,
         ),
       );
@@ -111,13 +110,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       _undoStack.add(
         _HistoryEntry(
           cards: List.from(_workspaceCards),
-          selectedPath:
-              _selectedPath != null ? List.from(_selectedPath!) : null,
+          selectedPath: _selectedPath != null
+              ? List.from(_selectedPath!)
+              : null,
           isCounterSelected: _isCounterSelected,
-          selectedCounterPath:
-              _selectedCounterPath != null
-                  ? List.from(_selectedCounterPath!)
-                  : null,
+          selectedCounterPath: _selectedCounterPath != null
+              ? List.from(_selectedCounterPath!)
+              : null,
           selectedCounterIndex: _selectedCounterIndex,
         ),
       );
@@ -371,46 +370,43 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color:
-                      theme.brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : theme.scaffoldBackgroundColor.withValues(
-                            alpha: 0.5,
-                          ),
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: theme.dividerColor.withValues(alpha: 0.5),
                   ),
                 ),
-                child:
-                    _workspaceCards.isEmpty
-                        ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              LocalizationService.translate(
-                                'add_items_to_start',
-                                lang,
-                              ),
-                              style: const TextStyle(color: Colors.grey),
+                child: _workspaceCards.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            LocalizationService.translate(
+                              'add_items_to_start',
+                              lang,
                             ),
-                          ),
-                        )
-                        : SingleChildScrollView(
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children:
-                                _workspaceCards.asMap().entries.map((entry) {
-                                  return _buildCard(
-                                    [entry.key],
-                                    entry.value,
-                                    lang,
-                                    cardNumber: entry.key + 1,
-                                  );
-                                }).toList(),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         ),
+                      )
+                    : SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _workspaceCards.asMap().entries.map((
+                            entry,
+                          ) {
+                            return _buildCard(
+                              [entry.key],
+                              entry.value,
+                              lang,
+                              cardNumber: entry.key + 1,
+                            );
+                          }).toList(),
+                        ),
+                      ),
               ),
             ),
 
