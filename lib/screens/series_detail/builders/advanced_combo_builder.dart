@@ -54,6 +54,83 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   bool _isCounterSimultaneousMode = false;
   bool _isCounterChainMode = false;
 
+  // History for undo/redo
+  final List<_HistoryEntry> _undoStack = [];
+  final List<_HistoryEntry> _redoStack = [];
+
+  void _saveHistory() {
+    _undoStack.add(
+      _HistoryEntry(
+        cards: List.from(_workspaceCards),
+        selectedPath: _selectedPath != null ? List.from(_selectedPath!) : null,
+        isCounterSelected: _isCounterSelected,
+        selectedCounterPath:
+            _selectedCounterPath != null
+                ? List.from(_selectedCounterPath!)
+                : null,
+        selectedCounterIndex: _selectedCounterIndex,
+      ),
+    );
+    _redoStack.clear();
+    if (_undoStack.length > 50) {
+      _undoStack.removeAt(0);
+    }
+  }
+
+  void _undo() {
+    if (_undoStack.isEmpty) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _redoStack.add(
+        _HistoryEntry(
+          cards: List.from(_workspaceCards),
+          selectedPath:
+              _selectedPath != null ? List.from(_selectedPath!) : null,
+          isCounterSelected: _isCounterSelected,
+          selectedCounterPath:
+              _selectedCounterPath != null
+                  ? List.from(_selectedCounterPath!)
+                  : null,
+          selectedCounterIndex: _selectedCounterIndex,
+        ),
+      );
+      final entry = _undoStack.removeLast();
+      _workspaceCards.clear();
+      _workspaceCards.addAll(entry.cards);
+      _selectedPath = entry.selectedPath;
+      _isCounterSelected = entry.isCounterSelected;
+      _selectedCounterPath = entry.selectedCounterPath;
+      _selectedCounterIndex = entry.selectedCounterIndex;
+    });
+  }
+
+  void _redo() {
+    if (_redoStack.isEmpty) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _undoStack.add(
+        _HistoryEntry(
+          cards: List.from(_workspaceCards),
+          selectedPath:
+              _selectedPath != null ? List.from(_selectedPath!) : null,
+          isCounterSelected: _isCounterSelected,
+          selectedCounterPath:
+              _selectedCounterPath != null
+                  ? List.from(_selectedCounterPath!)
+                  : null,
+          selectedCounterIndex: _selectedCounterIndex,
+        ),
+      );
+      final entry = _redoStack.removeLast();
+      _workspaceCards.clear();
+      _workspaceCards.addAll(entry.cards);
+      _selectedPath = entry.selectedPath;
+      _isCounterSelected = entry.isCounterSelected;
+      _selectedCounterPath = entry.selectedCounterPath;
+      _selectedCounterIndex = entry.selectedCounterIndex;
+    });
+  }
+
   Set<String> _getRelevantCategories(Move move) {
     Set<String> cats = {move.category};
     if (move.counterCategory != null && move.counterCategory!.isNotEmpty) {
@@ -264,70 +341,86 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     final lang = Provider.of<SeriesProvider>(context).language;
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: _getSurfaceColor(theme),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Column(
-        children: [
-          // TOP TOOLBAR: Structural buttons (stuck to top)
-          _buildTopToolbar(lang),
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
+        const SingleActivator(LogicalKeyboardKey.keyY, control: true): _redo,
+        const SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: true,
+          shift: true,
+        ): _redo,
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          color: _getSurfaceColor(theme),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          children: [
+            // TOP TOOLBAR: Structural buttons (stuck to top)
+            _buildTopToolbar(lang),
 
-          const SizedBox(height: 8),
-
-          // MAIN WORKSPACE (scrollable, takes all available space)
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.dividerColor.withValues(alpha: 0.5),
-                ),
-              ),
-              child: _workspaceCards.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          LocalizationService.translate(
-                            'add_items_to_start',
-                            lang,
-                          ),
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _workspaceCards.asMap().entries.map((entry) {
-                          return _buildCard(
-                            [entry.key],
-                            entry.value,
-                            lang,
-                            cardNumber: entry.key + 1,
-                          );
-                        }).toList(),
-                      ),
-                    ),
-            ),
-          ),
-
-          if (_shouldShowBottomToolbar()) ...[
             const SizedBox(height: 8),
-            // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
-            _buildBottomToolbar(lang),
+
+            // MAIN WORKSPACE (scrollable, takes all available space)
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color:
+                      theme.brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : theme.scaffoldBackgroundColor.withValues(
+                            alpha: 0.5,
+                          ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.5),
+                  ),
+                ),
+                child:
+                    _workspaceCards.isEmpty
+                        ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              LocalizationService.translate(
+                                'add_items_to_start',
+                                lang,
+                              ),
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        )
+                        : SingleChildScrollView(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                _workspaceCards.asMap().entries.map((entry) {
+                                  return _buildCard(
+                                    [entry.key],
+                                    entry.value,
+                                    lang,
+                                    cardNumber: entry.key + 1,
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+              ),
+            ),
+
+            if (_shouldShowBottomToolbar()) ...[
+              const SizedBox(height: 8),
+              // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
+              _buildBottomToolbar(lang),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -352,6 +445,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               children: [
                 _toolbarButton('', Icons.add, Colors.blue, _onAddClick),
                 _toolbarButton('', Icons.remove, Colors.red, _onDeleteSelected),
+                const SizedBox(width: 8, child: VerticalDivider()),
+                _toolbarButton(
+                  '',
+                  Icons.undo,
+                  Colors.grey,
+                  _undo,
+                  isActive: _undoStack.isNotEmpty,
+                ),
+                _toolbarButton(
+                  '',
+                  Icons.redo,
+                  Colors.grey,
+                  _redo,
+                  isActive: _redoStack.isNotEmpty,
+                ),
                 const SizedBox(width: 8, child: VerticalDivider()),
                 _toolbarButton(
                   '',
@@ -1471,6 +1579,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   void _onDeleteSelected() {
     if (_selectedPath == null) return;
     HapticFeedback.lightImpact();
+    _saveHistory();
 
     setState(() {
       if (_isCounterSelected && _selectedCounterPath != null) {
@@ -1804,6 +1913,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? specialAction,
   }) {
     if (_selectedPath == null) return;
+    _saveHistory();
 
     setState(() {
       _updateDataAtPath(_selectedPath!, (item) {
@@ -2253,6 +2363,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _onAddItem(BuilderCardData newItem) {
     HapticFeedback.lightImpact();
+    _saveHistory();
     setState(() {
       if (_isCounterSimultaneousMode && _selectedPath != null) {
         // A+B for ANSWER
@@ -2725,4 +2836,20 @@ class DiagonalCrossPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _HistoryEntry {
+  final List<BuilderCardData> cards;
+  final List<int>? selectedPath;
+  final bool isCounterSelected;
+  final List<int>? selectedCounterPath;
+  final int? selectedCounterIndex;
+
+  _HistoryEntry({
+    required this.cards,
+    this.selectedPath,
+    this.isCounterSelected = false,
+    this.selectedCounterPath,
+    this.selectedCounterIndex,
+  });
 }
