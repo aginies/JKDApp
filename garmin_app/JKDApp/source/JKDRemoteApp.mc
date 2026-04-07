@@ -28,8 +28,13 @@ class JKDRemoteApp extends Application.AppBase {
     // Handle messages from the phone companion app.
     function onPhoneAppMessage(msg) {
         var data = msg.data;
-        if (data != null && data.hasKey("ttsComplete")) {
-            if (JKDSettings.currentView != null) {
+        System.println("Message from phone: " + data);
+        if (data == null || !(data instanceof Dictionary)) { return; }
+
+        // Handle TTS completion signal from phone
+        if (data.hasKey("ttsComplete")) {
+            System.println("TTS Complete signal received");
+            if (JKDSettings.currentView != null && JKDSettings.currentView has :onTtsComplete) {
                 JKDSettings.currentView.onTtsComplete();
             }
         }

@@ -177,11 +177,15 @@ class GarminService {
           await _playBeep();
         }
       }
+      
+      // Send completion ONLY after the loop finishes successfully
+      _sendTtsComplete();
     } catch (e) {
       LoggingService.log('Garmin _speakCombo error: $e');
+      // Still notify watch on error to avoid getting stuck
+      _sendTtsComplete();
     } finally {
       _isSpeaking = false;
-      _sendTtsComplete();
     }
   }
 

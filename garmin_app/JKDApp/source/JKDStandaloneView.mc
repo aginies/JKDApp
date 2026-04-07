@@ -31,6 +31,7 @@ class JKDStandaloneView extends WatchUi.View {
     function initialize(series as JKDSeries.Series) {
         View.initialize();
         _series = series;
+        JKDSettings.currentView = self;
         Sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
         var info = Sensor.getInfo();
         if (info != null && info.heartRate != null) {
@@ -63,15 +64,24 @@ class JKDStandaloneView extends WatchUi.View {
                 if (_heartRate > _sessionMaxHR) { _sessionMaxHR = _heartRate; }
             }
 
-            // When voice coaching is active, the timer only starts AFTER TTS completes.
-            if (JKDSettings.autoAdvanceSec > 0 && !_isWaitingForTts) {
-                _autoAdvanceTicks++;
-                if (_autoAdvanceTicks >= JKDSettings.autoAdvanceSec) {
-                    _autoAdvanceTicks = 0;
-                    if (JKDSettings.enableBeep && Attention has :playTone) {
-                        Attention.playTone(Attention.TONE_LOUD_BEEP);
+            // If voice coaching was disabled while we were waiting, clear the flag
+            if (!JKDSettings.enableVoice && _isWaitingForTts) {
+                _isWaitingForTts = false;
+            }
+
+            // Auto-advance logic
+            if (JKDSettings.autoAdvanceSec > 0) {
+                // If voice is on, we MUST wait for the completion signal first.
+                // If voice is off, we advance normally.
+                if (!JKDSettings.enableVoice || !_isWaitingForTts) {
+                    _autoAdvanceTicks++;
+                    if (_autoAdvanceTicks >= JKDSettings.autoAdvanceSec) {
+                        _autoAdvanceTicks = 0;
+                        if (JKDSettings.enableBeep && Attention has :playTone) {
+                            Attention.playTone(Attention.TONE_LOUD_BEEP);
+                        }
+                        nextCombo();
                     }
-                    nextCombo();
                 }
             }
 
@@ -152,8 +162,10 @@ class JKDStandaloneView extends WatchUi.View {
     // Called by JKDRemoteApp.onPhoneAppMessage when the phone finishes TTS.
     // Starts the auto-advance countdown ONLY after pronunciation is complete.
     function onTtsComplete() {
+        System.println("onTtsComplete called in View");
         _isWaitingForTts = false;
         _autoAdvanceTicks = 0; // Countdown starts from NOW
+        vibrate();
         WatchUi.requestUpdate();
     }
 
