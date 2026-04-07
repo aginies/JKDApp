@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../models/search_result.dart';
 import '../models/user_program_progress.dart';
 import '../models/training_program.dart';
 import '../services/database_service.dart';
+import '../services/garmin_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
 import '../services/training_program_service.dart';
@@ -41,6 +43,12 @@ class SeriesProvider with ChangeNotifier {
   JkdThemeMode _themeMode = JkdThemeMode.system;
   Color _themeColor = Colors.blue;
   bool _voiceEnabled = false;
+  bool _garminCoachingTtsEnabled = false;
+  bool _garminConnected = false;
+  bool _garminCoachingVoiceActive = false;
+  StreamSubscription<bool>? _garminConnectionSub;
+  StreamSubscription<bool>? _garminCoachingVoiceSub;
+  final GarminService _garminService = GarminService();
   bool _developerMode = false;
   bool _showTranslation = true;
   String? _projectPath;
@@ -65,6 +73,9 @@ class SeriesProvider with ChangeNotifier {
   JkdThemeMode get themeMode => _themeMode;
   Color get themeColor => _themeColor;
   bool get voiceEnabled => _voiceEnabled;
+  bool get garminCoachingTtsEnabled => _garminCoachingTtsEnabled;
+  bool get garminConnected => _garminConnected;
+  bool get garminCoachingVoiceActive => _garminCoachingVoiceActive;
   bool get developerMode => _developerMode;
   bool get showTranslation => _showTranslation;
   String? get projectPath => _projectPath;
@@ -101,6 +112,22 @@ class SeriesProvider with ChangeNotifier {
 
     // Voice
     _voiceEnabled = !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
+
+    // Garmin coaching TTS
+    _garminCoachingTtsEnabled = (Platform.isAndroid || Platform.isIOS) &&
+        (prefs['garmin_coaching_tts_enabled'] ?? '0') == '1';
+    _garminService.initialize(
+      ttsEnabled: _garminCoachingTtsEnabled,
+      speechRate: _speechRate,
+    );
+    _garminConnectionSub = _garminService.onConnectionChanged.listen((v) {
+      _garminConnected = v;
+      notifyListeners();
+    });
+    _garminCoachingVoiceSub = _garminService.onCoachingVoiceChanged.listen((v) {
+      _garminCoachingVoiceActive = v;
+      notifyListeners();
+    });
 
     // Developer Mode
     _developerMode = (prefs['developer_mode'] ?? '0') == '1';
@@ -219,7 +246,16 @@ class SeriesProvider with ChangeNotifier {
 
   void setSpeechRate(double rate) async {
     _speechRate = rate;
+    _garminService.setSpeechRate(rate);
     await _dbService.saveSetting('speech_rate', rate.toString());
+    notifyListeners();
+  }
+
+  void setGarminCoachingTtsEnabled(bool enabled) async {
+    if (!(Platform.isAndroid || Platform.isIOS) && enabled) return;
+    _garminCoachingTtsEnabled = enabled;
+    _garminService.setTtsEnabled(enabled);
+    await _dbService.saveSetting('garmin_coaching_tts_enabled', enabled ? '1' : '0');
     notifyListeners();
   }
 
