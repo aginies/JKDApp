@@ -624,7 +624,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       return IconButton(
                         icon: Icon(
                           Icons.play_circle_fill,
-                          color: isDone ? Colors.grey : theme.primaryColor,
+                          color: isDone ? Colors.grey : Colors.orangeAccent,
                         ),
                         onPressed: isDone ? null : _showTrainingOptions,
                         tooltip: lang == 'fr' ? 'Mode Lecteur' : 'Player Mode',
