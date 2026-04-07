@@ -84,6 +84,8 @@ class GarminPlugin(private val context: Context) :
                 result.success(null)
             }
             "isWatchConnected" -> {
+                // Refresh devices list
+                pairedDevices = connectIQ?.knownDevices ?: emptyList()
                 val connected = pairedDevices.any { it.status == IQDevice.IQDeviceStatus.CONNECTED }
                 result.success(connected)
             }
@@ -93,8 +95,17 @@ class GarminPlugin(private val context: Context) :
                 }
                 result.success(list)
             }
+            "sendMessage" -> {
+                val data = call.arguments as? Map<String, Any>
+                if (data != null) {
+                    sendMessage(data)
+                    result.success(true)
+                } else {
+                    result.error("INVALID_ARGUMENT", "Data must be a Map", null)
+                }
+            }
             "sendTtsComplete" -> {
-                sendTtsComplete()
+                sendMessage(mapOf("ttsComplete" to true))
                 result.success(null)
             }
             "shutdown" -> {
@@ -117,18 +128,18 @@ class GarminPlugin(private val context: Context) :
         mainHandler.post { eventSink?.success(data) }
     }
 
-    private fun sendTtsComplete() {
+    private fun sendMessage(data: Map<String, Any?>) {
         val ciq = connectIQ ?: return
         val watchApp = IQApp(WATCH_APP_UUID)
         for (device in pairedDevices) {
             if (device.status == IQDevice.IQDeviceStatus.CONNECTED) {
                 try {
-                    ciq.sendMessage(device, watchApp, mapOf("ttsComplete" to true),
+                    ciq.sendMessage(device, watchApp, data,
                         object : ConnectIQ.IQSendMessageListener {
                             override fun onMessageStatus(d: IQDevice?, a: IQApp?, s: ConnectIQ.IQMessageStatus?) {}
                         })
                 } catch (e: Exception) {
-                    sendEvent(mapOf("type" to "error", "message" to "sendTtsComplete failed: ${e.message}"))
+                    sendEvent(mapOf("type" to "error", "message" to "sendMessage failed: ${e.message}"))
                 }
             }
         }

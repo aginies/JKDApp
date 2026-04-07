@@ -185,44 +185,60 @@ class GarminService {
     }
   }
 
+  void syncMoveToWatch({
+    required String text,
+    required int index,
+    required int total,
+  }) {
+    if (!_isMobile) return;
+    sendMessage({
+      'sync': {
+        'text': text,
+        'index': index,
+        'total': total,
+      }
+    });
+  }
+
+  void _sendTtsComplete() {
+    sendMessage({'ttsComplete': true});
+  }
+
+  void sendMessage(Map<String, dynamic> data) {
+    if (!_isMobile) return;
+    _methodChannel.invokeMethod<void>('sendMessage', data).catchError((e) {
+      LoggingService.log('Garmin sendMessage error: $e');
+    });
+  }
+
   Future<void> _speakFragment(String text) async {
     final completer = Completer<void>();
     _tts.setCompletionHandler(() {
       if (!completer.isCompleted) completer.complete();
     });
+    _tts.setErrorHandler((_) {
+      if (!completer.isCompleted) completer.complete();
+    });
     _tts.setCancelHandler(() {
       if (!completer.isCompleted) completer.complete();
     });
-    _tts.setErrorHandler((msg) {
-      LoggingService.log('Garmin TTS error: $msg');
-      if (!completer.isCompleted) completer.complete();
-    });
-    
-    await _tts.setSpeechRate(_speechRate);
+
     await _tts.speak(text);
-    await completer.future;
+    await completer.future.timeout(const Duration(seconds: 10), onTimeout: () {
+      LoggingService.log('Garmin TTS fragment timeout: $text');
+    });
   }
 
   Future<void> _playBeep() async {
-    final completer = Completer<void>();
-    StreamSubscription? subscription;
-    
-    subscription = _beepPlayer.onPlayerComplete.listen((_) {
-      subscription?.cancel();
-      if (!completer.isCompleted) completer.complete();
-    });
-
     try {
       await _beepPlayer.play(BytesSource(_beepWav));
-      await completer.future.timeout(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       LoggingService.log('Garmin _playBeep error: $e');
-      subscription.cancel();
-      if (!completer.isCompleted) completer.complete();
     }
   }
 
-  void _sendTtsComplete() {
+  void _sendTtsCompleteLegacy() {
     _methodChannel.invokeMethod<void>('sendTtsComplete').catchError((e) {
       LoggingService.log('Garmin sendTtsComplete error: $e');
     });
@@ -294,7 +310,8 @@ class GarminService {
     try {
       final result =
           await _methodChannel.invokeMethod<bool>('isWatchConnected');
-      return result ?? false;
+      _isConnected = result ?? false;
+      return _isConnected;
     } catch (e) {
       LoggingService.log('Garmin isWatchConnected error: $e');
       return false;
