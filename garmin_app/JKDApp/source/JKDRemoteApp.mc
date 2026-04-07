@@ -25,7 +25,18 @@ class JKDRemoteApp extends Application.AppBase {
         return [ new JKDSplashView() ];
     }
 
-    // Phone messaging removed as remote mode is disabled
+    // Handle messages from the phone companion app.
     function onPhoneAppMessage(msg) {
+        var data = msg.data;
+        System.println("Message from phone: " + data);
+        if (data == null || !(data instanceof Dictionary)) { return; }
+
+        // Handle TTS completion signal from phone
+        if (data.hasKey("ttsComplete")) {
+            System.println("TTS Complete signal received");
+            if (JKDSettings.currentView != null && JKDSettings.currentView has :onTtsComplete) {
+                JKDSettings.currentView.onTtsComplete();
+            }
+        }
     }
 }
