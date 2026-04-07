@@ -271,6 +271,7 @@ class SeriesProvider with ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = query;
+    _filteredCache.clear();
     notifyListeners();
   }
 
@@ -278,6 +279,7 @@ class SeriesProvider with ChangeNotifier {
     _galleryPath = path;
     await _dbService.saveSetting('gallery_path', path);
     await _initGalleryDirectories();
+    _filteredCache.clear();
     notifyListeners();
   }
 
@@ -389,6 +391,7 @@ class SeriesProvider with ChangeNotifier {
     if (_developerMode && _projectPath != null) {
       await _exportToProjectJson(series);
     }
+    _filteredCache.clear();
     await loadSeries();
   }
 
@@ -505,8 +508,9 @@ class SeriesProvider with ChangeNotifier {
     await addSeries(newSeries);
   }
 
+  /// Get filtered series list for a specific category
   List<JkdSeries> getFilteredSeries(String category) {
-    if (_filteredCache.containsKey(category)) {
+    if (_filteredCache.containsKey(category) && _searchQuery.isEmpty) {
       return _filteredCache[category]!;
     }
 
@@ -521,7 +525,12 @@ class SeriesProvider with ChangeNotifier {
             s.moves.any((m) => m.name.toLowerCase().contains(query));
       }).toList();
     }
-    _filteredCache[category] = filtered;
+
+    // Only cache if not searching to prevent cache explosion or stale results
+    if (_searchQuery.isEmpty) {
+      _filteredCache[category] = filtered;
+    }
+
     return filtered;
   }
 
