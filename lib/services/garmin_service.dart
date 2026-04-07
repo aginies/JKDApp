@@ -12,7 +12,7 @@ import 'logging_service.dart';
 /// Bridges Garmin ConnectIQ watch messages to Flutter TTS.
 ///
 /// Message types from the watch:
-///   {"speak": "<combo text>"}      — speak the text via TTS
+///   {"speak": "combo text"}      — speak the text via TTS
 ///   {"coachingVoice": true/false}  — coaching voice toggled on the watch
 ///
 /// After TTS completes, sends {"ttsComplete": true} back to the watch so it
@@ -25,10 +25,12 @@ import 'logging_service.dart';
 ///   - standalone "R" → "Right" / "Droite"
 ///   - ", " separators → short beep tone instead of being spoken
 class GarminService {
-  static const MethodChannel _methodChannel =
-      MethodChannel('org.ginies.jkd/garmin');
-  static const EventChannel _eventChannel =
-      EventChannel('org.ginies.jkd/garmin_events');
+  static const MethodChannel _methodChannel = MethodChannel(
+    'org.ginies.jkd/garmin',
+  );
+  static const EventChannel _eventChannel = EventChannel(
+    'org.ginies.jkd/garmin_events',
+  );
 
   static final GarminService _instance = GarminService._internal();
   factory GarminService() => _instance;
@@ -71,21 +73,23 @@ class GarminService {
     _tts.setSpeechRate(_speechRate);
 
     _eventSubscription?.cancel();
-    _eventSubscription = _eventChannel
-        .receiveBroadcastStream()
-        .listen(_handleEvent, onError: _handleError);
+    _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
+      _handleEvent,
+      onError: _handleError,
+    );
 
     _methodChannel.invokeMethod<void>('initialize').catchError((e) {
       LoggingService.log('Garmin initialize error: $e');
     });
 
     LoggingService.log(
-        'GarminService initialized (ttsEnabled=$ttsEnabled, lang=$_language)');
+      'GarminService initialized (ttsEnabled=$ttsEnabled, lang=$_language)',
+    );
   }
 
   void _handleEvent(dynamic rawEvent) {
     if (rawEvent is! Map) return;
-    final event = Map<String, dynamic>.from(rawEvent as Map);
+    final event = Map<String, dynamic>.from(rawEvent);
     final type = event['type'] as String?;
 
     switch (type) {
@@ -125,7 +129,8 @@ class GarminService {
 
       case 'sdkReady':
         LoggingService.log(
-            'Garmin SDK ready (${event['deviceCount']} devices)');
+          'Garmin SDK ready (${event['deviceCount']} devices)',
+        );
         break;
 
       case 'error':
@@ -177,7 +182,7 @@ class GarminService {
           await _playBeep();
         }
       }
-      
+
       // Send completion ONLY after the loop finishes successfully
       _sendTtsComplete();
     } catch (e) {
@@ -196,11 +201,7 @@ class GarminService {
   }) {
     if (!_isMobile) return;
     sendMessage({
-      'sync': {
-        'text': text,
-        'index': index,
-        'total': total,
-      }
+      'sync': {'text': text, 'index': index, 'total': total},
     });
   }
 
@@ -228,9 +229,12 @@ class GarminService {
     });
 
     await _tts.speak(text);
-    await completer.future.timeout(const Duration(seconds: 10), onTimeout: () {
-      LoggingService.log('Garmin TTS fragment timeout: $text');
-    });
+    await completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        LoggingService.log('Garmin TTS fragment timeout: $text');
+      },
+    );
   }
 
   Future<void> _playBeep() async {
@@ -240,12 +244,6 @@ class GarminService {
     } catch (e) {
       LoggingService.log('Garmin _playBeep error: $e');
     }
-  }
-
-  void _sendTtsCompleteLegacy() {
-    _methodChannel.invokeMethod<void>('sendTtsComplete').catchError((e) {
-      LoggingService.log('Garmin sendTtsComplete error: $e');
-    });
   }
 
   /// Generates a minimal in-memory WAV: 880 Hz, 70 ms, 8-bit mono, 8000 Hz,
@@ -265,7 +263,9 @@ class GarminService {
       if (i < fadeLen) envelope = i / fadeLen;
       if (i > numSamples - fadeLen) envelope = (numSamples - i) / fadeLen;
       final sample =
-          amplitude * envelope * math.sin(2 * math.pi * frequency * i / sampleRate);
+          amplitude *
+          envelope *
+          math.sin(2 * math.pi * frequency * i / sampleRate);
       pcm[i] = (127 + sample).round().clamp(0, 255);
     }
 
@@ -282,12 +282,12 @@ class GarminService {
     setStr(8, 'WAVE');
     setStr(12, 'fmt ');
     wav.setUint32(16, 16, Endian.little); // fmt chunk size
-    wav.setUint16(20, 1, Endian.little);  // PCM
-    wav.setUint16(22, 1, Endian.little);  // mono
+    wav.setUint16(20, 1, Endian.little); // PCM
+    wav.setUint16(22, 1, Endian.little); // mono
     wav.setUint32(24, sampleRate, Endian.little);
     wav.setUint32(28, sampleRate, Endian.little); // byte rate (8-bit mono)
-    wav.setUint16(32, 1, Endian.little);  // block align
-    wav.setUint16(34, 8, Endian.little);  // bits per sample
+    wav.setUint16(32, 1, Endian.little); // block align
+    wav.setUint16(34, 8, Endian.little); // bits per sample
     setStr(36, 'data');
     wav.setUint32(40, numSamples, Endian.little);
     final result = wav.buffer.asUint8List();
@@ -312,8 +312,9 @@ class GarminService {
   Future<bool> isWatchConnected() async {
     if (!_isMobile) return false;
     try {
-      final result =
-          await _methodChannel.invokeMethod<bool>('isWatchConnected');
+      final result = await _methodChannel.invokeMethod<bool>(
+        'isWatchConnected',
+      );
       _isConnected = result ?? false;
       return _isConnected;
     } catch (e) {

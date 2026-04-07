@@ -679,7 +679,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? Icons.bluetooth_connected
                           : Icons.bluetooth_disabled,
                       size: 14,
-                      color: provider.garminConnected ? Colors.blue : Colors.grey,
+                      color: provider.garminConnected
+                          ? Colors.blue
+                          : Colors.grey,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -687,17 +689,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? (lang == 'fr' ? 'Connectée' : 'Connected')
                           : (lang == 'fr' ? 'Non connectée' : 'Not connected'),
                       style: TextStyle(
-                        color: provider.garminConnected ? Colors.blue : Colors.grey,
+                        color: provider.garminConnected
+                            ? Colors.blue
+                            : Colors.grey,
                         fontSize: 12,
                       ),
                     ),
-                    if (provider.garminConnected && provider.garminCoachingVoiceActive) ...[
+                    if (provider.garminConnected &&
+                        provider.garminCoachingVoiceActive) ...[
                       const SizedBox(width: 8),
-                      const Icon(Icons.record_voice_over, size: 14, color: Colors.green),
+                      const Icon(
+                        Icons.record_voice_over,
+                        size: 14,
+                        color: Colors.green,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         lang == 'fr' ? 'Coaching actif' : 'Coaching active',
-                        style: const TextStyle(color: Colors.green, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ],

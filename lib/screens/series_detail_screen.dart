@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:file_picker/file_picker.dart';
 import '../models/move.dart';
 import '../models/series.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
-import '../services/pdf_service.dart';
 import '../services/export_service.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
@@ -28,7 +25,6 @@ import 'series_detail/widgets/graphical_move_view.dart';
 import 'series_list/widgets/random_reader_widget.dart';
 import 'series_detail/builders/advanced_combo_builder.dart';
 import 'series_detail/constants/series_detail_constants.dart';
-import '../utils/string_utils.dart';
 
 class SeriesDetailScreen extends StatefulWidget {
   final JkdSeries? series;
@@ -132,7 +128,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             final completionInfo = await provider.recordSeriesCompletion(
               widget.series!.id!,
             );
-            if (completionInfo != null && mounted) {
+            if (completionInfo != null && context.mounted) {
               final dayDone = completionInfo['day_complete'] == true;
               CongratulationsAnimation.show(context, isDayComplete: dayDone);
               _showCompletionDialog(completionInfo, provider);
@@ -189,7 +185,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       await provider.updateSeries(series);
     }
 
-    if (mounted) {
+    if (context.mounted) {
       // Show a temporary success dialog
       showDialog(
         context: context,
@@ -218,7 +214,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
 
       // Dismiss the dialog and pop the screen after a short delay
       Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
+        if (context.mounted) {
           Navigator.of(context).pop(); // Dismiss success dialog
           Navigator.of(context).pop(); // Pop the series detail screen
         }
@@ -314,7 +310,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         },
       ),
     );
-    if (result != null && mounted) {
+    if (result != null && context.mounted) {
       setState(() {
         if (editIndex != null) {
           _moves[editIndex] = result;
@@ -502,7 +498,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     widget.series!.category != 'JKD Moves')
                   Builder(
                     builder: (context) {
-                      final theme = Theme.of(context);
                       final provider = Provider.of<SeriesProvider>(context);
                       final isDone = provider.isSeriesCompletedToday(
                         widget.series!.id!,

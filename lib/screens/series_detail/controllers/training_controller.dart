@@ -85,7 +85,9 @@ class TrainingController {
 
   Future<void> speak(List<TtsLine> lines, String language) async {
     // Sync current move to watch at start of speaking
-    if (_moves != null && _currentIndex >= 0 && _currentIndex < _moves!.length) {
+    if (_moves != null &&
+        _currentIndex >= 0 &&
+        _currentIndex < _moves!.length) {
       _garminService.syncMoveToWatch(
         text: _getWatchMoveText(_moves![_currentIndex]),
         index: _currentIndex + 1,

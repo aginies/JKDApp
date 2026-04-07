@@ -46,8 +46,6 @@ class SeriesProvider with ChangeNotifier {
   bool _garminCoachingTtsEnabled = false;
   bool _garminConnected = false;
   bool _garminCoachingVoiceActive = false;
-  StreamSubscription<bool>? _garminConnectionSub;
-  StreamSubscription<bool>? _garminCoachingVoiceSub;
   final GarminService _garminService = GarminService();
   bool _developerMode = false;
   bool _showTranslation = true;
@@ -114,18 +112,19 @@ class SeriesProvider with ChangeNotifier {
     _voiceEnabled = !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
 
     // Garmin coaching TTS
-    _garminCoachingTtsEnabled = (Platform.isAndroid || Platform.isIOS) &&
+    _garminCoachingTtsEnabled =
+        (Platform.isAndroid || Platform.isIOS) &&
         (prefs['garmin_coaching_tts_enabled'] ?? '0') == '1';
     _garminService.initialize(
       ttsEnabled: _garminCoachingTtsEnabled,
       speechRate: _speechRate,
       language: _language,
     );
-    _garminConnectionSub = _garminService.onConnectionChanged.listen((v) {
+    _garminService.onConnectionChanged.listen((v) {
       _garminConnected = v;
       notifyListeners();
     });
-    _garminCoachingVoiceSub = _garminService.onCoachingVoiceChanged.listen((v) {
+    _garminService.onCoachingVoiceChanged.listen((v) {
       _garminCoachingVoiceActive = v;
       notifyListeners();
     });
@@ -257,7 +256,10 @@ class SeriesProvider with ChangeNotifier {
     if (!(Platform.isAndroid || Platform.isIOS) && enabled) return;
     _garminCoachingTtsEnabled = enabled;
     _garminService.setTtsEnabled(enabled);
-    await _dbService.saveSetting('garmin_coaching_tts_enabled', enabled ? '1' : '0');
+    await _dbService.saveSetting(
+      'garmin_coaching_tts_enabled',
+      enabled ? '1' : '0',
+    );
     notifyListeners();
   }
 
