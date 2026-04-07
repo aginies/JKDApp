@@ -93,6 +93,10 @@ class GarminPlugin(private val context: Context) :
                 }
                 result.success(list)
             }
+            "sendTtsComplete" -> {
+                sendTtsComplete()
+                result.success(null)
+            }
             "shutdown" -> {
                 shutdown()
                 result.success(null)
@@ -111,6 +115,23 @@ class GarminPlugin(private val context: Context) :
 
     private fun sendEvent(data: Map<String, Any?>) {
         mainHandler.post { eventSink?.success(data) }
+    }
+
+    private fun sendTtsComplete() {
+        val ciq = connectIQ ?: return
+        val watchApp = IQApp(WATCH_APP_UUID)
+        for (device in pairedDevices) {
+            if (device.status == IQDevice.IQDeviceStatus.CONNECTED) {
+                try {
+                    ciq.sendMessage(device, watchApp, mapOf("ttsComplete" to true),
+                        object : ConnectIQ.IQSendMessageListener {
+                            override fun onMessageStatus(d: IQDevice?, a: IQApp?, s: ConnectIQ.IQMessageStatus?) {}
+                        })
+                } catch (e: Exception) {
+                    sendEvent(mapOf("type" to "error", "message" to "sendTtsComplete failed: ${e.message}"))
+                }
+            }
+        }
     }
 
     fun shutdown() {

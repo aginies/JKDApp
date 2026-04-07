@@ -19,6 +19,9 @@ module JKDSettings {
     var enableVoice = false;
     var language = LANG_EN;
 
+    // Reference to the active training view so onPhoneAppMessage can call back into it.
+    var currentView = null;
+
     function loadSettings() {
         var s = Application.Storage.getValue("trainingMode");
         trainingMode = (s != null) ? s : MODE_SEQUENTIAL;

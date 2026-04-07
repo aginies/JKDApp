@@ -41,12 +41,14 @@ class JKDStandaloneView extends WatchUi.View {
     }
 
     function onShow() {
-        _hrTimer.start(method(:onAnimate), 100, true); 
+        JKDSettings.currentView = self;
+        _hrTimer.start(method(:onAnimate), 100, true);
         sendComboToPhone(); // Send initial combo
     }
 
     function onHide() {
         _hrTimer.stop();
+        JKDSettings.currentView = null;
     }
 
     function onAnimate() {
@@ -60,7 +62,9 @@ class JKDStandaloneView extends WatchUi.View {
                 if (_heartRate > _sessionMaxHR) { _sessionMaxHR = _heartRate; }
             }
 
-            if (JKDSettings.autoAdvanceSec > 0) {
+            // When voice coaching is active the phone drives advance via ttsComplete.
+            // The timer only auto-advances when voice is off.
+            if (JKDSettings.autoAdvanceSec > 0 && !JKDSettings.enableVoice) {
                 _autoAdvanceTicks++;
                 if (_autoAdvanceTicks >= JKDSettings.autoAdvanceSec) {
                     _autoAdvanceTicks = 0;
@@ -140,6 +144,17 @@ class JKDStandaloneView extends WatchUi.View {
             }
             
             Communications.transmit({"speak" => cleanText}, null, new CommListener());
+        }
+    }
+
+    // Called by JKDRemoteApp.onPhoneAppMessage when the phone finishes TTS.
+    // Triggers the next combo when auto-advance + voice are both active.
+    function onTtsComplete() {
+        if (JKDSettings.autoAdvanceSec > 0) {
+            if (JKDSettings.enableBeep && Attention has :playTone) {
+                Attention.playTone(Attention.TONE_LOUD_BEEP);
+            }
+            nextCombo();
         }
     }
 

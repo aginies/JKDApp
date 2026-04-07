@@ -119,6 +119,7 @@ class SeriesProvider with ChangeNotifier {
     _garminService.initialize(
       ttsEnabled: _garminCoachingTtsEnabled,
       speechRate: _speechRate,
+      language: _language,
     );
     _garminConnectionSub = _garminService.onConnectionChanged.listen((v) {
       _garminConnected = v;
@@ -201,6 +202,7 @@ class SeriesProvider with ChangeNotifier {
 
   void setLanguage(String lang) async {
     _language = lang;
+    _garminService.setLanguage(lang);
     await _dbService.saveSetting('language', lang);
     notifyListeners();
   }
