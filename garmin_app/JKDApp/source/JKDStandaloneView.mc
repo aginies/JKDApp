@@ -26,6 +26,7 @@ class JKDStandaloneView extends WatchUi.View {
     private var _pauseTicks = 0;
     private var _autoAdvanceTicks = 0;
     private var _tickCount = 0;
+    private var _isWaitingForTts = false;
 
     function initialize(series as JKDSeries.Series) {
         View.initialize();
@@ -62,9 +63,8 @@ class JKDStandaloneView extends WatchUi.View {
                 if (_heartRate > _sessionMaxHR) { _sessionMaxHR = _heartRate; }
             }
 
-            // When voice coaching is active the phone drives advance via ttsComplete.
-            // The timer only auto-advances when voice is off.
-            if (JKDSettings.autoAdvanceSec > 0 && !JKDSettings.enableVoice) {
+            // When voice coaching is active, the timer only starts AFTER TTS completes.
+            if (JKDSettings.autoAdvanceSec > 0 && !_isWaitingForTts) {
                 _autoAdvanceTicks++;
                 if (_autoAdvanceTicks >= JKDSettings.autoAdvanceSec) {
                     _autoAdvanceTicks = 0;
@@ -130,7 +130,9 @@ class JKDStandaloneView extends WatchUi.View {
     }
 
     function sendComboToPhone() {
+        _autoAdvanceTicks = 0; // Reset timer when we show/start a new combo
         if (JKDSettings.enableVoice) {
+            _isWaitingForTts = true;
             var comboText = _series.combos[_comboIndex];
             // Format for speech (strip + and -> for cleaner pronunciation)
             var cleanText = comboText;
@@ -148,14 +150,11 @@ class JKDStandaloneView extends WatchUi.View {
     }
 
     // Called by JKDRemoteApp.onPhoneAppMessage when the phone finishes TTS.
-    // Triggers the next combo when auto-advance + voice are both active.
+    // Starts the auto-advance countdown ONLY after pronunciation is complete.
     function onTtsComplete() {
-        if (JKDSettings.autoAdvanceSec > 0) {
-            if (JKDSettings.enableBeep && Attention has :playTone) {
-                Attention.playTone(Attention.TONE_LOUD_BEEP);
-            }
-            nextCombo();
-        }
+        _isWaitingForTts = false;
+        _autoAdvanceTicks = 0; // Countdown starts from NOW
+        WatchUi.requestUpdate();
     }
 
     function resetScroll() {
