@@ -10,6 +10,7 @@ class JKDRemoteApp extends Application.AppBase {
     // onStart() is called on application start up
     function onStart(state) {
         JKDSettings.loadSettings();
+        Communications.registerForPhoneAppMessages(method(:onPhoneAppMessage));
         // Inform paired phone of current coaching voice state
         Communications.transmit(
             {"coachingVoice" => JKDSettings.enableVoice}, null, new CommListener()
@@ -26,7 +27,7 @@ class JKDRemoteApp extends Application.AppBase {
     }
 
     // Handle messages from the phone companion app.
-    function onPhoneAppMessage(msg) {
+    function onPhoneAppMessage(msg as Communications.PhoneAppMessage) as Void {
         var data = msg.data;
         System.println("Message from phone: " + data);
         if (data == null || !(data instanceof Dictionary)) { return; }
