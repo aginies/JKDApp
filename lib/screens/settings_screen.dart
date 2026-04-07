@@ -665,6 +665,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const Divider(),
+              // Garmin Watch Coaching Voice section
+              ListTile(
+                leading: Icon(
+                  Icons.watch,
+                  color: provider.garminConnected ? Colors.blue : Colors.grey,
+                ),
+                title: Text(lang == 'fr' ? 'Montre Garmin' : 'Garmin Watch'),
+                subtitle: Row(
+                  children: [
+                    Icon(
+                      provider.garminConnected
+                          ? Icons.bluetooth_connected
+                          : Icons.bluetooth_disabled,
+                      size: 14,
+                      color: provider.garminConnected ? Colors.blue : Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      provider.garminConnected
+                          ? (lang == 'fr' ? 'Connectée' : 'Connected')
+                          : (lang == 'fr' ? 'Non connectée' : 'Not connected'),
+                      style: TextStyle(
+                        color: provider.garminConnected ? Colors.blue : Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (provider.garminConnected && provider.garminCoachingVoiceActive) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.record_voice_over, size: 14, color: Colors.green),
+                      const SizedBox(width: 2),
+                      Text(
+                        lang == 'fr' ? 'Coaching actif' : 'Coaching active',
+                        style: const TextStyle(color: Colors.green, fontSize: 12),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
+                ListTile(
+                  leading: const Icon(Icons.info_outline, color: Colors.grey),
+                  title: Text(
+                    lang == 'fr'
+                        ? 'Coaching vocal Garmin non disponible sur ce système'
+                        : 'Garmin coaching voice not available on this platform',
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                )
+              else
+                SwitchListTile(
+                  secondary: const Icon(Icons.record_voice_over),
+                  title: Text(
+                    lang == 'fr'
+                        ? 'Accepter les messages de coaching'
+                        : 'Accept Watch Coaching Messages',
+                  ),
+                  subtitle: Text(
+                    lang == 'fr'
+                        ? 'Parler les combos envoyés par la montre via TTS'
+                        : 'Speak combos sent from the Garmin watch via TTS',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  value: provider.garminCoachingTtsEnabled,
+                  onChanged: (val) => provider.setGarminCoachingTtsEnabled(val),
+                ),
+              const Divider(),
               ListTile(
                 leading: const Icon(Icons.folder_open),
                 title: Text(
