@@ -157,19 +157,32 @@ class GarminService {
     return text.split(', ').where((s) => s.trim().isNotEmpty).toList();
   }
 
+  bool _isSpeaking = false;
+
   /// Speaks each fragment with a short beep between them, then acks the watch.
   Future<void> _speakCombo(String raw) async {
-    final fragments = _prepareFragments(raw);
-    LoggingService.log('Garmin TTS fragments: $fragments');
-
-    for (int i = 0; i < fragments.length; i++) {
-      await _speakFragment(fragments[i]);
-      if (i < fragments.length - 1) {
-        await _playBeep();
-      }
+    if (_isSpeaking) {
+      LoggingService.log('Garmin TTS already speaking, skipping new request');
+      return;
     }
+    _isSpeaking = true;
 
-    _sendTtsComplete();
+    try {
+      final fragments = _prepareFragments(raw);
+      LoggingService.log('Garmin TTS fragments: $fragments');
+
+      for (int i = 0; i < fragments.length; i++) {
+        await _speakFragment(fragments[i]);
+        if (i < fragments.length - 1) {
+          await _playBeep();
+        }
+      }
+    } catch (e) {
+      LoggingService.log('Garmin _speakCombo error: $e');
+    } finally {
+      _isSpeaking = false;
+      _sendTtsComplete();
+    }
   }
 
   Future<void> _speakFragment(String text) async {
@@ -180,6 +193,11 @@ class GarminService {
     _tts.setCancelHandler(() {
       if (!completer.isCompleted) completer.complete();
     });
+    _tts.setErrorHandler((msg) {
+      LoggingService.log('Garmin TTS error: $msg');
+      if (!completer.isCompleted) completer.complete();
+    });
+    
     await _tts.setSpeechRate(_speechRate);
     await _tts.speak(text);
     await completer.future;
@@ -187,11 +205,21 @@ class GarminService {
 
   Future<void> _playBeep() async {
     final completer = Completer<void>();
-    _beepPlayer.onPlayerComplete.first.then((_) {
+    StreamSubscription? subscription;
+    
+    subscription = _beepPlayer.onPlayerComplete.listen((_) {
+      subscription?.cancel();
       if (!completer.isCompleted) completer.complete();
     });
-    await _beepPlayer.play(BytesSource(_beepWav));
-    await completer.future;
+
+    try {
+      await _beepPlayer.play(BytesSource(_beepWav));
+      await completer.future.timeout(const Duration(milliseconds: 500));
+    } catch (e) {
+      LoggingService.log('Garmin _playBeep error: $e');
+      subscription.cancel();
+      if (!completer.isCompleted) completer.complete();
+    }
   }
 
   void _sendTtsComplete() {
