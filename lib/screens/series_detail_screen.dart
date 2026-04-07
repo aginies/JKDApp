@@ -20,6 +20,7 @@ import 'series_detail/services/voice_processing_service.dart';
 import 'series_detail/services/training_management_service.dart'
     as training_service;
 import 'series_detail/mixins/series_detail_utils.dart';
+import 'series_detail/mixins/series_detail_dialogs_mixin.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/widgets/move_list_display_widget.dart';
@@ -39,7 +40,7 @@ class SeriesDetailScreen extends StatefulWidget {
 }
 
 class _SeriesDetailScreenState extends State<SeriesDetailScreen>
-    with SeriesDetailUtils {
+    with SeriesDetailUtils, SeriesDetailDialogsMixin {
   final _titleController = TextEditingController();
   String _selectedCategory = 'Jun Fan Gung Fu';
   String _selectedType = 'Attack';
@@ -61,7 +62,10 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   final training_service.TrainingManagementService _trainingManagementService =
       training_service.TrainingManagementService();
 
-  // Getters required by SeriesDetailUtils mixin
+  // Getters required by SeriesDetailUtils and SeriesDetailDialogsMixin
+  @override
+  JkdSeries? get series => widget.series;
+
   @override
   List<Move> get moves => _moves;
 
@@ -343,7 +347,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         });
       },
       onDelete: (index) =>
-          () => _confirmDeleteItem(context, index, lang),
+          () => confirmDeleteItem(context, index, lang),
       onShowMediaGallery: _showMediaGallery,
       onSetState: (moves, atIndex) => setState(() {
         _moves = moves;
@@ -426,124 +430,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         ),
       ),
     );
-  }
-
-  void _showPrintOptions(String lang) {
-    if (widget.series == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              LocalizationService.translate('export_to_pdf', lang),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.grid_view, color: Colors.blue),
-              title: const Text('Graphical Card View'),
-              subtitle: const Text('Visual cards, mirrors the app interface'),
-              onTap: () {
-                Navigator.pop(context);
-                PdfService.exportSeriesToPdf(
-                  widget.series!,
-                  lang,
-                  isGraphical: true,
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.list, color: Colors.teal),
-              title: const Text('Compact List View'),
-              subtitle: const Text('Text-focused, space-efficient list'),
-              onTap: () {
-                Navigator.pop(context);
-                PdfService.exportSeriesToPdf(
-                  widget.series!,
-                  lang,
-                  isGraphical: false,
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmDeleteItem(BuildContext context, int index, String lang) {
-    HapticFeedback.lightImpact();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(LocalizationService.translate('delete_item', lang)),
-        content: Text(
-          LocalizationService.translate('confirm_delete_item', lang),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(LocalizationService.translate('cancel', lang)),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() => _moves.removeAt(index));
-              Navigator.pop(context);
-            },
-            child: Text(
-              LocalizationService.translate('finish', lang),
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleExportJson() async {
-    if (widget.series == null) return;
-    String? dir = await FilePicker.platform.getDirectoryPath();
-    if (dir == null) return;
-    final fileName =
-        'jkd-series-${StringUtils.slugify(widget.series!.title)}.json';
-    if (!mounted) return;
-    final proceed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Export to JSON'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [Text('File: $fileName'), Text('Dir: $dir')],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('FINISH'),
-          ),
-        ],
-      ),
-    );
-    if (proceed == true) {
-      final path = await ExportService.exportToJson(
-        [widget.series!],
-        fileName: fileName,
-        customDirectory: dir,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(path != null ? 'Success: $path' : 'Error')),
-        );
-      }
-    }
   }
 
   @override
@@ -643,9 +529,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       if (value == 'edit') {
                         setState(() => _isEditing = true);
                       } else if (value == 'print') {
-                        _showPrintOptions(lang);
+                        showPrintOptions(lang);
                       } else if (value == 'export') {
-                        _handleExportJson();
+                        handleExportJson();
                       } else if (value == 'share') {
                         ExportService.shareSeriesJson(
                           [widget.series!],

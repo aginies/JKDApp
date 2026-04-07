@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
+import '../../../services/garmin_service.dart';
 
 class TtsLine {
   final String text;
@@ -17,6 +18,7 @@ class TrainingController {
   final Function(int) onSubIndexChanged;
   final Function() onTrainingComplete;
   final BuildContext context;
+  final GarminService _garminService = GarminService();
 
   bool _isTraining = false;
   bool _isPaused = false;
@@ -82,6 +84,15 @@ class TrainingController {
   }
 
   Future<void> speak(List<TtsLine> lines, String language) async {
+    // Sync current move to watch at start of speaking
+    if (_moves != null && _currentIndex >= 0 && _currentIndex < _moves!.length) {
+      _garminService.syncMoveToWatch(
+        text: _getWatchMoveText(_moves![_currentIndex]),
+        index: _currentIndex + 1,
+        total: _moves!.length,
+      );
+    }
+
     // Start from _subIndex (or 0 if sentinel -1)
     final int startFrom = _subIndex < 0 ? 0 : _subIndex;
     for (int i = startFrom; i < lines.length; i++) {
@@ -382,6 +393,26 @@ class TrainingController {
       } catch (e) {
         debugPrint("spd-say stop warning: $e");
       }
+    }
+  }
+
+  String _getWatchMoveText(Move move) {
+    if (move.isChain) {
+      return move.chain.map((m) => _getWatchMoveText(m)).join(' -> ');
+    } else if (move.isCombo) {
+      return move.subMoves.map((m) => _getWatchMoveText(m)).join(' + ');
+    } else {
+      StringBuffer sb = StringBuffer();
+      if (move.side.isNotEmpty) sb.write('${move.side} ');
+      sb.write(move.name);
+      if (move.level.isNotEmpty) sb.write(' ${move.level}');
+      if (move.counterName != null) {
+        sb.write(' -> ');
+        if (move.counterSide != null) sb.write('${move.counterSide} ');
+        sb.write(move.counterName);
+        if (move.counterLevel != null) sb.write(' ${move.counterLevel}');
+      }
+      return sb.toString();
     }
   }
 }
