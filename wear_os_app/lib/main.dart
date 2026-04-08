@@ -415,46 +415,90 @@ class _WearTrainingViewState extends State<WearTrainingView>
     }
   }
 
+  Widget _buildActionBubble(String text, double fontSize) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: _buildRichText(
+          text,
+          fontSize: fontSize,
+          isBold: true,
+          defaultColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
   TextSpan _buildRichText(String text,
       {required double fontSize,
       required bool isBold,
       required Color defaultColor}) {
     final List<TextSpan> spans = [];
-    // Capturing delimiters with () in RegExp keeps them in the result
-    // Explicitly include ->, ↳, and + in the split/capture
-    final allParts = text.split(RegExp(r'(\s+|↳|->|\+|\.|:|\/|\(|\)|↵)'));
+    
+    // Pattern that matches words, symbols, or whitespace as individual tokens.
+    // This ensures NOTHING is lost during processing.
+    final pattern = RegExp(r'(↳|➜|\+|\.|:|\/|\(|\)|↵|↑|—|↓|\s+|[^\s↳➜\+\.:\/\(\)↵↑—↓]+)');
+    final matches = pattern.allMatches(text);
 
-    for (var part in allParts) {
+    for (final match in matches) {
+      final part = match.group(0)!;
       if (part.isEmpty) continue;
 
       Color color = defaultColor;
-      final normalized = part.trim().toUpperCase();
+      double finalFontSize = fontSize;
+      final trimmed = part.trim();
+      final normalized = trimmed.toUpperCase();
 
+      // Keyword and Symbol identification
       if (['CROSS', 'HOOK', 'JAB'].contains(normalized)) {
         color = Colors.green;
       } else if (normalized == 'L') {
         color = Colors.blue;
       } else if (normalized == 'R') {
         color = Colors.red;
-      } else if (['↳', '->', '+', '↵', '/'].contains(part.trim())) {
-        // Make separators stand out
+      } else if (['↳', '➜', '+', '↵', '/'].contains(trimmed)) {
         color = Colors.orangeAccent;
+        finalFontSize = fontSize * 1.2;
+      } else if (['↑', '—', '↓'].contains(trimmed)) {
+        color = Colors.cyanAccent;
+        finalFontSize = fontSize * 1.1;
+      } else if (part.contains(RegExp(r'\s+'))) {
+        // Pure whitespace tokens
+        spans.add(TextSpan(
+          text: part,
+          style: TextStyle(color: defaultColor, fontSize: fontSize),
+        ));
+        continue;
       }
 
       spans.add(TextSpan(
         text: part,
         style: TextStyle(
           color: color,
-          fontSize: fontSize,
+          fontSize: finalFontSize,
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          // Symbols should not be italicized even in translation (if we ever restore it)
-          fontStyle: ['↳', '->', '+', '↵'].contains(part.trim())
+          fontStyle: ['↳', '➜', '+', '↵', '↑', '—', '↓'].contains(trimmed)
               ? FontStyle.normal
               : (isBold ? FontStyle.normal : FontStyle.italic),
         ),
       ));
     }
-    return TextSpan(children: spans);
+    
+    return TextSpan(
+      children: spans,
+      style: TextStyle(color: defaultColor, fontSize: fontSize),
+    );
   }
 
   String _getFullMoveText(Move m) {
@@ -462,23 +506,32 @@ class _WearTrainingViewState extends State<WearTrainingView>
       return m.subMoves.map(_getFullMoveText).join(' + ');
     }
     if (m.chain.isNotEmpty) {
-      return m.chain.map(_getFullMoveText).join(' -> ');
+      return m.chain.map(_getFullMoveText).join(' ➜ ');
     }
 
     String res = '';
     if (m.side.isNotEmpty) {
-      res += '${m.side}. ';
+      res += '${m.side} '; // Removed the dot for a cleaner "L Jab" look
     }
     res += m.name;
+    
     if (m.level.isNotEmpty) {
-      res += ' (${m.level})';
+      final lv = m.level.toLowerCase();
+      if (lv.contains('high') || lv == 'h') {
+        res += ' ↑';
+      } else if (lv.contains('low') || lv == 'l') {
+        res += ' ↓';
+      } else if (lv.contains('mid') || lv == 'm') {
+        res += ' —';
+      } else {
+        res += ' ($lv)';
+      }
     }
 
-    // Counters
     if (m.counterSubMoves.isNotEmpty) {
       res += ' / ${m.counterSubMoves.map(_getFullMoveText).join(' + ')}';
     } else if (m.counterChain.isNotEmpty) {
-      res += ' / ${m.counterChain.map(_getFullMoveText).join(' -> ')}';
+      res += ' / ${m.counterChain.map(_getFullMoveText).join(' ➜ ')}';
     } else if (m.counterName != null && m.counterName!.isNotEmpty) {
       res += ' / ${m.counterName}';
     }
@@ -493,28 +546,28 @@ class _WearTrainingViewState extends State<WearTrainingView>
     final isRound =
         MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
 
-    // Get the full descriptive text for the move
     String displayName = _getFullMoveText(move);
 
-    if (displayName.startsWith('Combo: ')) {
-      displayName = displayName.substring(7);
-    } else if (displayName.startsWith('Chain: ')) {
-      displayName = displayName.substring(7);
-    }
+    if (displayName.startsWith('Combo: ')) displayName = displayName.substring(7);
+    if (displayName.startsWith('Chain: ')) displayName = displayName.substring(7);
 
-    // Apply semantic delimiters for Wear OS
-    // ↳ for counters, -> for sequences, \n for items
+    // Apply semantic delimiters and split into vertical chunks
     displayName = displayName
-        .replaceAll(' / ', '\n↳ ')
-        .replaceAll('Counter: ', '\n↳ ')
-        .replaceAll('Answer: ', '\n↳ ')
-        .replaceAll(' -> ', '\n-> ')
-        .replaceAll(' + ', '\n+ ');
+        .replaceAll(RegExp(r'\s*/\s*'), '\n↳ ')
+        .replaceAll(RegExp(r'\s*Counter:\s*', caseSensitive: false), '\n↳ ')
+        .replaceAll(RegExp(r'\s*Answer:\s*', caseSensitive: false), '\n↳ ')
+        .replaceAll(RegExp(r'\s*➜\s*'), '\n➜ ')
+        .replaceAll(RegExp(r'\s*\+\s*'), '\n+ ');
 
-    // Dynamic font size based on content length
-    double baseFontSize = 20.0;
-    if (displayName.length > 40) baseFontSize = 16.0;
-    if (displayName.length > 80) baseFontSize = 14.0;
+    final List<String> actions = displayName
+        .split('\n')
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
+
+    // Dynamic scaling based on total content
+    double baseFontSize = 18.0;
+    if (actions.length > 3) baseFontSize = 15.0;
+    if (displayName.length > 60) baseFontSize = 14.0;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -543,8 +596,8 @@ class _WearTrainingViewState extends State<WearTrainingView>
               padding: EdgeInsets.only(
                 top: isRound ? 35 : 16,
                 bottom: isRound ? 35 : 16,
-                left: 10,
-                right: 10,
+                left: 12,
+                right: 12,
               ),
               child: Column(
                 children: [
@@ -582,26 +635,22 @@ class _WearTrainingViewState extends State<WearTrainingView>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Centered Move Content - Expanded to fill most of the screen
+                  // List of Action Bubbles
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         physics: const BouncingScrollPhysics(),
-                        child: RichText(
-                          textAlign: TextAlign.center,
-                          text: _buildRichText(
-                            displayName,
-                            fontSize: baseFontSize,
-                            isBold: true,
-                            defaultColor: Colors.white,
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: actions
+                              .map((a) => _buildActionBubble(a, baseFontSize))
+                              .toList(),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Small indicator if more content below
                   Icon(
                     Icons.keyboard_arrow_down,
                     size: 16,
