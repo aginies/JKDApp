@@ -55,6 +55,7 @@ class SeriesProvider with ChangeNotifier {
   String _searchQuery = '';
   String? _galleryPath;
   bool _isLoading = false;
+  int _autoAdvanceSec = 0; // 0 = manual, >0 = seconds
   UserProgramProgress? _activeProgram;
   TrainingProgram? _activeProgramDetails;
 
@@ -82,9 +83,12 @@ class SeriesProvider with ChangeNotifier {
   String get searchQuery => _searchQuery;
   String? get galleryPath => _galleryPath;
   bool get isLoading => _isLoading;
+  int get autoAdvanceSec => _autoAdvanceSec;
 
   SeriesProvider() {
-    _init();
+    // Run initialization in a microtask to allow the constructor to return immediately
+    // and not block the main thread during app startup.
+    scheduleMicrotask(() => _init());
   }
 
   @visibleForTesting
@@ -162,6 +166,11 @@ class SeriesProvider with ChangeNotifier {
       }
     }
 
+    // Auto Advance
+    if (prefs.containsKey('auto_advance_sec')) {
+      _autoAdvanceSec = int.tryParse(prefs['auto_advance_sec']!) ?? 0;
+    }
+
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
@@ -222,6 +231,12 @@ class SeriesProvider with ChangeNotifier {
     if (Platform.isLinux && enabled) return;
     _voiceEnabled = enabled;
     await _dbService.saveSetting('voice_enabled', enabled ? '1' : '0');
+    notifyListeners();
+  }
+
+  void setAutoAdvanceSec(int sec) async {
+    _autoAdvanceSec = sec;
+    await _dbService.saveSetting('auto_advance_sec', sec.toString());
     notifyListeners();
   }
 
