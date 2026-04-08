@@ -1261,12 +1261,54 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                               size: 38,
                             ),
                       title: Text(series.title),
-                      subtitle: Text(
-                        '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
-                        style: const TextStyle(
-                          color: Colors.pink,
-                          fontSize: 12,
-                        ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${series.moves.length} ${LocalizationService.translate('moves', lang)}',
+                            style: const TextStyle(
+                              color: Colors.pink,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Builder(
+                            builder: (context) {
+                              final provider = context.read<SeriesProvider>();
+                              final preview = series.moves.take(5).map((m) {
+                                final trans = m.getTranslation(lang);
+                                if (trans.isNotEmpty) {
+                                  return '${m.name} ($trans)';
+                                }
+                                // Fallback to glossary for preview if possible
+                                final glossaryEntry = provider.glossary.firstWhere(
+                                  (e) => e['name'].toString().toLowerCase() == m.name.toLowerCase(),
+                                  orElse: () => {},
+                                );
+                                if (glossaryEntry.isNotEmpty) {
+                                  final Map<String, dynamic> gTrans = json.decode(glossaryEntry['translations'] ?? '{}');
+                                  final gt = gTrans[lang];
+                                  if (gt != null && gt.isNotEmpty) {
+                                    return '${m.name} ($gt)';
+                                  }
+                                }
+                                return m.name;
+                              }).join(', ');
+                              
+                              return Text(
+                                preview + (series.moves.length > 5 ? '...' : ''),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       trailing: context.read<SeriesProvider>().developerMode
                           ? Row(

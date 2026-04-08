@@ -696,7 +696,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
     String res = '';
     if (m.side.isNotEmpty) {
-      res += '${m.side} '; // Removed the dot for a cleaner "L Jab" look
+      res += '${m.side} ';
     }
     res += m.name;
 
@@ -731,7 +731,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
     final isRound =
         MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
 
-    // Build the descriptive text
+    // Build the descriptive text using original names only for Wear OS
     String displayName = _getFullMoveText(move);
 
     // Initial cleanup

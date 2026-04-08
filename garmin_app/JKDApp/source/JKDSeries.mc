@@ -59,6 +59,15 @@ module JKDSeries {
                 "Nan Tek L + Cross R + Jang R + Sut Da R + Hou Nan Tek R + Nan Tek L",
                 "Nan Tek L + Cross R + Jang R + Sut Da R + Nan Tek L + Hou Nan Tek R"
             ]),
+            new Series("7 déplacements Kali", [
+                "Step In Step Back L + Step In Step Back R",
+                "Retirada Illustrissimo + Step Forward Front Leg -> Slide Back Foot",
+                "Retirada Cabaleiro + Step Forward Back Leg -> Slide Back Foot",
+                "Tadsoulok + Tadsoulok + Silat + Tadsoulok + Escrima",
+                "Iliag UPO + Position Squat",
+                "Iliag Iliag + Tadsoulok -> Bob and Wave",
+                "Ag Bong Power + Step Forward Front Leg -> Rotation 1/4 -> Step Backward Back Leg -> Slide Front Foot"
+            ]),
             new Series("ABC", [
                 "Nan Tek L + Cross R + Hook L + Cross R + Nan Tek L",
                 "Nan Tek L + Cross R + Body Hook L + Cross R + Nan Tek L",
