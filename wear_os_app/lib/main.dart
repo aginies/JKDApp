@@ -378,6 +378,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
   int _currentIndex = 0;
   AnimationController? _progressController;
   final ScrollController _scrollController = ScrollController();
+  bool _isAutoScrolling = false;
 
   @override
   void initState() {
@@ -402,37 +403,50 @@ class _WearTrainingViewState extends State<WearTrainingView>
   }
 
   void _startAutoScroll() {
-    if (!_scrollController.hasClients) return;
+    if (!_scrollController.hasClients || _isAutoScrolling) return;
 
     final maxScroll = _scrollController.position.maxScrollExtent;
     if (maxScroll <= 0) return;
 
-    // Wait a moment, then scroll down slowly
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      _scrollController
-          .animateTo(
-        maxScroll,
-        duration: Duration(milliseconds: (maxScroll * 40).toInt() + 1000),
+    _isAutoScrolling = true;
+    _runScrollLoop();
+  }
+
+  Future<void> _runScrollLoop() async {
+    while (mounted && _isAutoScrolling) {
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      if (maxExtent <= 0) break;
+
+      // Scroll a bit further (half bubble size ~20px) to ensure bottom readability
+      final targetScroll = maxExtent + 20;
+      final duration = Duration(milliseconds: (targetScroll * 25).toInt() + 500);
+
+      // 1. Scroll Down
+      await _scrollController.animateTo(
+        targetScroll,
+        duration: duration,
         curve: Curves.linear,
-      )
-          .then((_) {
-        if (!mounted) return;
-        // Wait at bottom, then scroll back up
-        Future.delayed(const Duration(seconds: 1), () {
-          if (!mounted) return;
-          _scrollController.animateTo(
-            0,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeOut,
-          );
-        });
-      });
-    });
+      );
+
+      // Pause at bottom
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted || !_isAutoScrolling) break;
+
+      // 2. Scroll back Up (smoothly)
+      await _scrollController.animateTo(
+        0,
+        duration: duration,
+        curve: Curves.linear,
+      );
+
+      // Pause at top
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
   }
 
   @override
   void dispose() {
+    _isAutoScrolling = false;
     _progressController?.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -443,6 +457,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
     if (_currentIndex < widget.series.moves.length - 1) {
       setState(() {
         _currentIndex++;
+        _isAutoScrolling = false; // Stop current loop
         if (_scrollController.hasClients) {
           _scrollController.jumpTo(0);
         }
@@ -450,6 +465,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
           _progressController!.reset();
           _progressController!.forward();
         }
+        // Restart loop for next item after layout
         WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
       });
     } else {
