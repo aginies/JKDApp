@@ -16,6 +16,7 @@ import '../widgets/active_program_card.dart';
 import '../utils/category_utils.dart';
 import '../widgets/global_search_delegate.dart';
 import '../widgets/empty_state_illustration.dart';
+import 'series_detail/widgets/move_display_widgets.dart';
 import 'package:flutter/services.dart';
 
 class SeriesListScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Rebuild to show/hide FAB based on tab
     });
@@ -1018,6 +1019,18 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Icon(MoveDisplayWidgets.getCategoryIcon('move'),
+                              size: 28,
+                              color: MoveDisplayWidgets.getCategoryColor('move')),
+                          const SizedBox(width: 8),
+                          Text(LocalizationService.translate('move', lang)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           const Icon(Icons.play_circle_fill, size: 28),
                           const SizedBox(width: 8),
                           Text(
@@ -1057,12 +1070,13 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           _buildSeriesList('Jun Fan Gung Fu', lang),
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('Kali', lang),
+          _buildSeriesList('Moves', lang),
           _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
       ),
       floatingActionButton:
-          _tabController.index == 3 || _tabController.index == 4
+          _tabController.index == 4 || _tabController.index == 5
           ? null // Hide FAB on Active Training and Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),
@@ -1106,7 +1120,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () =>
-                    _tabController.animateTo(4), // Go to Training Programs tab
+                    _tabController.animateTo(5), // Go to Training Programs tab
                 child: Text(
                   LocalizationService.translate('start_program', lang),
                 ),

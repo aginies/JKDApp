@@ -14,7 +14,7 @@ class CategoryUtils {
       case 'trapping':
         return Icons.sports_kabaddi;
       case 'move':
-        return Icons.directions_walk;
+        return Icons.directions_run;
       case 'kali':
         return Icons.change_history;
       case 'text':

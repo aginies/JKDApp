@@ -968,10 +968,37 @@
       "removal": {}
     },
     {
-      "name": "Step forward",
+      "name": "Step Forward Back Leg",
       "translations": {
-        "en": "Step forward",
-        "fr": "Avancer"
+        "en": "Step Forward Back Leg",
+        "fr": "Avancer Jambe Arrière"
+      },
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Step Forward Front Leg",
+      "translations": {
+        "en": "Step Forward Front Leg",
+        "fr": "Avancer Jambe Avant"
+      },
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Step Backward Back Leg",
+      "translations": {
+        "en": "Step Backward Back Leg",
+        "fr": "Reculer Jambe Arrière"
+      },
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Step Backward Front Leg",
+      "translations": {
+        "en": "Step Backward Front Leg",
+        "fr": "Reculer Jambe Avant"
       },
       "possible_level": "",
       "removal": {}
@@ -1006,15 +1033,26 @@
       "removal": {}
     },
     {
-      "name": "Slide Foot",
+      "name": "Slide Front Foot",
       "translations": {
-        "en": "Slide foot",
-        "fr": "Glisser le pieds"
+        "en": "Slide Front foot",
+        "fr": "Glisser pieds Avant"
       },
       "possible_direction": "F,B,L,R",
       "possible_level": "",
       "removal": {}
     },
+    {
+      "name": "Slide Back Foot",
+      "translations": {
+        "en": "Slide Back foot",
+        "fr": "Glisser pieds Arrière"
+      },
+      "possible_direction": "F,B,L,R",
+      "possible_level": "",
+      "removal": {}
+    },
+
     {
       "name": "Iliag UPO",
       "translations": {
