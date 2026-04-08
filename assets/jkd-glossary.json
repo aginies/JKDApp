@@ -914,15 +914,6 @@
       "removal": {}
     },
     {
-      "name": "Move backward",
-      "translations": {
-        "en": "Move backward",
-        "fr": "Reculer"
-      },
-      "possible_level": "",
-      "removal": {}
-    },
-    {
       "name": "Toy Ma",
       "translations": {
         "en": "Move back",
@@ -1021,6 +1012,86 @@
         "fr": "Glisser le pieds"
       },
       "possible_direction": "F,B,L,R",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Iliag UPO",
+      "translations": {
+        "en": "Squat",
+        "fr": "Squat"
+      },
+      "possible_direction": "",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Iliag UPO",
+      "translations": {
+        "en": "Squat",
+        "fr": "Squat"
+      },
+      "possible_direction": "",
+      "possible_level": "L",
+      "removal": {}
+    },
+    {
+      "name": "Iliag Iliag",
+      "translations": {
+        "en": "Tasulock 1 Step + Bob & Weave",
+        "fr": "Squat"
+      },
+      "possible_direction": "",
+      "possible_level": "L",
+      "removal": {}
+    },
+    {
+      "name": "Ag Bong Power",
+      "translations": {
+        "en": "Full size step quater turn",
+        "fr": "Pas en arrière et rotation 1/4"
+      },
+      "possible_direction": "",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Tadsoulok",
+      "translations": {
+        "en": "1 step, knee bend",
+        "fr": "1 pas, genoux plié"
+      },
+      "possible_direction": "",
+      "possible_level": "M,L",
+      "removal": {}
+    },
+    {
+      "name": "Step In Step Back",
+      "translations": {
+        "en": "Step in Step Back",
+        "fr": "Pas Avant, Pas arrière"
+      },
+      "possible_direction": "F,B",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Retirada Illustrissimo",
+      "translations": {
+        "en": "Step & Slide",
+        "fr": "Pas & Glisser"
+      },
+      "possible_direction": "F,B",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Retirada Cabaleiro",
+      "translations": {
+        "en": "Large Step of back leg, Slide foot (other)",
+        "fr": "Pas large Jambe Arrière, Glisser Pied"
+      },
+      "possible_direction": "F,B",
       "possible_level": "",
       "removal": {}
     }
