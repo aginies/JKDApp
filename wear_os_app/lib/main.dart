@@ -300,42 +300,57 @@ class WearSeriesList extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border(
-                      left: BorderSide(color: accentColor, width: 4),
-                      top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                      right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
                     children: [
-                      Text(
-                        s.title,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      // Category color indicator strip
+                      Container(
+                        width: 4,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: accentColor,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        s.category.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: accentColor.withValues(alpha: 0.8),
-                          letterSpacing: 0.5,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                s.title,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                s.category.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: accentColor.withValues(alpha: 0.8),
+                                  letterSpacing: 0.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -442,12 +457,17 @@ class _WearTrainingViewState extends State<WearTrainingView>
     }
   }
 
-  Widget _buildActionBubble(String text, double fontSize) {
+  Widget _buildActionBubble(String text, double fontSize, int totalActions) {
+    // 1 column if 1-2 actions, 2 columns if 3+
+    final isSingleColumn = totalActions <= 2;
+    
     return Container(
-      // Dynamic width for 2 columns: roughly half the screen width minus padding
-      width: 80, 
+      width: isSingleColumn ? 140 : 80, 
       margin: const EdgeInsets.all(2),
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      padding: EdgeInsets.symmetric(
+        vertical: isSingleColumn ? 10 : 6, 
+        horizontal: isSingleColumn ? 16 : 4
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
@@ -460,7 +480,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
         textAlign: TextAlign.center,
         text: _buildRichText(
           text,
-          fontSize: fontSize,
+          fontSize: isSingleColumn ? fontSize + 2 : fontSize,
           isBold: true,
           defaultColor: Colors.white,
         ),
@@ -654,7 +674,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
               ),
               child: Column(
                 children: [
-                  // Action bubbles now occupy all available vertical space
+                  // Dynamic Column Grid of Action Bubbles
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
@@ -662,15 +682,17 @@ class _WearTrainingViewState extends State<WearTrainingView>
                         physics: const BouncingScrollPhysics(),
                         child: Wrap(
                           alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 4, 
                           runSpacing: 4,
                           children: actions
-                              .map((a) => _buildActionBubble(a, baseFontSize))
+                              .map((a) => _buildActionBubble(a, baseFontSize, actions.length))
                               .toList(),
                         ),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 4),
                   Icon(
                     Icons.keyboard_arrow_down,
