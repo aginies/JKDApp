@@ -402,9 +402,10 @@ class _BackupModalState extends State<BackupModal> {
                               child: Text('Jun Fan Kick Boxing'),
                             ),
                             DropdownMenuItem(
-                              value: 'JKD Moves',
-                              child: Text('JKD Moves'),
+                              value: 'Moves',
+                              child: Text('Moves'),
                             ),
+
                             DropdownMenuItem(
                               value: 'Kali',
                               child: Text('Kali'),

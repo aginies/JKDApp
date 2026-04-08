@@ -577,7 +577,7 @@ class MoveListDisplayWidget {
       }
     }
 
-    final bool hideNumbers = category == 'JKD Moves';
+    final bool hideNumbers = category == 'Moves';
 
     return [
       for (int i = 0; i < moves.length; i++)

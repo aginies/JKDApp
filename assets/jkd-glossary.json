@@ -1022,16 +1022,6 @@
         "fr": "Squat"
       },
       "possible_direction": "",
-      "possible_level": "",
-      "removal": {}
-    },
-    {
-      "name": "Iliag UPO",
-      "translations": {
-        "en": "Squat",
-        "fr": "Squat"
-      },
-      "possible_direction": "",
       "possible_level": "L",
       "removal": {}
     },

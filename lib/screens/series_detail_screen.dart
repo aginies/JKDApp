@@ -441,7 +441,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
             )
           : (!_isEditing &&
                 _currentTrainingOptions == null &&
-                _selectedCategory != 'JKD Moves')
+                _selectedCategory != 'Moves')
           ? FloatingActionButton(
               heroTag: 'training_mode_btn',
               onPressed: () => TrainingModeDialogs.showTrainingSetup(
@@ -472,7 +472,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           asset = 'assets/icon/jfkb.png';
                         } else if (cat == 'Kali') {
                           asset = 'assets/icon/kali.png';
-                        } else if (cat == 'JKD Moves') {
+                        } else if (cat == 'Moves') {
+
                           asset = 'assets/icon/JKD.png';
                         }
                       }
@@ -495,7 +496,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               actions: [
                 if (!_isEditing &&
                     widget.series != null &&
-                    widget.series!.category != 'JKD Moves')
+                    widget.series!.category != 'Moves')
                   Builder(
                     builder: (context) {
                       final provider = Provider.of<SeriesProvider>(context);
@@ -538,7 +539,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     itemBuilder: (context) {
                       final isSystemJkdMoves =
                           widget.series!.isSystem &&
-                          widget.series!.category == 'JKD Moves';
+                          widget.series!.category == 'Moves';
                       return [
                         if (!isSystemJkdMoves)
                           PopupMenuItem(
@@ -709,11 +710,11 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         },
                       ),
                       ChoiceChip(
-                        label: const Text('JKD Moves'),
-                        selected: _selectedCategory == 'JKD Moves',
+                        label: const Text('Moves'),
+                        selected: _selectedCategory == 'Moves',
                         onSelected: (val) {
                           if (val) {
-                            setState(() => _selectedCategory = 'JKD Moves');
+                            setState(() => _selectedCategory = 'Moves');
                           }
                         },
                       ),
@@ -729,7 +730,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (_selectedCategory != 'JKD Moves') ...[
+                  if (_selectedCategory != 'Moves' && _selectedCategory != 'Kali') ...[
                     Wrap(
                       alignment: WrapAlignment.start,
                       spacing: 8,
@@ -793,7 +794,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         spacing: 8,
                         children: [
                           Chip(label: Text(_selectedCategory)),
-                          if (_selectedCategory != 'JKD Moves')
+                          if (_selectedCategory != 'Moves' &&
+                              _selectedCategory != 'Kali')
                             Chip(label: Text(_selectedType)),
                         ],
                       ),
@@ -871,7 +873,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ],
                     ),
                   ),
-                if (!_isEditing && widget.series?.category == 'JKD Moves')
+                if (!_isEditing && widget.series?.category == 'Moves')
                   RandomReaderWidget(
                     language: lang,
                     forcedSeriesId: widget.series!.id,

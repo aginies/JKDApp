@@ -33,6 +33,7 @@ class DatabaseService {
     'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
     'assets/jkd-series-sinawali-series.json',
     'assets/jkd-series-hou-ou-tek.json',
+    'assets/jkd-series-7-d-placements-kali.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;

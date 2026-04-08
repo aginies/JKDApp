@@ -32,7 +32,11 @@ class SeriesProvider with ChangeNotifier {
     'assets/jkd-series-loyda-jfk.json',
     'assets/jkd-series-trapping-base.json',
     'assets/jkd-series-footwork.json',
+    'assets/jkd-series-abc.json',
     'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
+    'assets/jkd-series-sinawali-series.json',
+    'assets/jkd-series-hou-ou-tek.json',
+    'assets/jkd-series-7-d-placements-kali.json',
   ];
 
   List<JkdSeries> _series = [];
@@ -406,7 +410,6 @@ class SeriesProvider with ChangeNotifier {
     if (_developerMode && _projectPath != null) {
       await _exportToProjectJson(series);
     }
-    _filteredCache.clear();
     await loadSeries();
   }
 
@@ -415,7 +418,6 @@ class SeriesProvider with ChangeNotifier {
     if (_developerMode && _projectPath != null) {
       await _exportToProjectJson(series);
     }
-    _filteredCache.clear();
     await loadSeries();
   }
 
