@@ -44,6 +44,7 @@ class PdfService {
     JkdSeries series,
     String lang, {
     PdfLayout layout = PdfLayout.graphical,
+    bool showTranslations = true,
   }) async {
     final (font, boldFont, italicFont) = await _getFonts();
     final icons = await _getIcons();
@@ -76,11 +77,16 @@ class PdfService {
           ..._buildCoverSection(series, categoryIcon, headerColor, lang),
           if (layout == PdfLayout.graphical)
             ...series.moves.asMap().entries.map(
-              (e) => _buildGraphicalCard(e.value, e.key + 1, lang),
+              (e) => _buildGraphicalCard(
+                e.value,
+                e.key + 1,
+                lang,
+                showTranslations,
+              ),
             )
           else
             ...series.moves.asMap().entries.map(
-              (e) => _buildListRow(e.value, e.key + 1, lang),
+              (e) => _buildListRow(e.value, e.key + 1, lang, showTranslations),
             ),
         ],
       ),
@@ -212,7 +218,12 @@ class PdfService {
   // Graphical layout
   // ---------------------------------------------------------------------------
 
-  static pw.Widget _buildGraphicalCard(Move move, int index, String lang) {
+  static pw.Widget _buildGraphicalCard(
+    Move move,
+    int index,
+    String lang,
+    bool showTranslations,
+  ) {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 12),
       padding: const pw.EdgeInsets.all(8),
@@ -229,16 +240,16 @@ class PdfService {
             children: [
               _buildCardHeader(move, lang),
               pw.SizedBox(height: 4),
-              _buildMoveBody(move, lang),
+              _buildMoveBody(move, lang, showTranslations),
               // Show counter for any move that has one (simple or structured).
               // Chain/combo containers handle sub-item counters inside _buildMoveBody.
               if (move.hasCounter && !move.isChain && !move.isCombo) ...[
                 pw.SizedBox(height: 6),
-                _buildPdfCounterBox(move, lang),
+                _buildPdfCounterBox(move, lang, showTranslations),
               ],
               if (move.hasStructuredCounter && (move.isChain || move.isCombo)) ...[
                 pw.SizedBox(height: 6),
-                _buildPdfCounterBox(move, lang),
+                _buildPdfCounterBox(move, lang, showTranslations),
               ],
             ],
           ),
@@ -288,7 +299,11 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildMoveBody(Move move, String lang) {
+  static pw.Widget _buildMoveBody(
+    Move move,
+    String lang,
+    bool showTranslations,
+  ) {
     if (move.isChain) {
       return pw.Container(
         padding: const pw.EdgeInsets.all(4),
@@ -313,7 +328,7 @@ class PdfService {
                 mainAxisSize: pw.MainAxisSize.min,
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
-                  _buildMoveItemWithCounter(m, lang, mini: true),
+                  _buildMoveItemWithCounter(m, lang, showTranslations, mini: true),
                   if (e.key < move.chain.length - 1)
                     pw.Padding(
                       padding: const pw.EdgeInsets.symmetric(horizontal: 2),
@@ -353,7 +368,7 @@ class PdfService {
                 ),
               ),
               padding: const pw.EdgeInsets.only(bottom: 2, right: 4),
-              child: _buildMoveItemWithCounter(sm, lang, mini: true),
+              child: _buildMoveItemWithCounter(sm, lang, showTranslations, mini: true),
             );
           }).toList(),
         ),
@@ -383,7 +398,9 @@ class PdfService {
                   ),
                 ),
                 pw.SizedBox(width: 4),
-                pw.Expanded(child: _buildMoveItemWithCounter(sm, lang)),
+                pw.Expanded(
+                  child: _buildMoveItemWithCounter(sm, lang, showTranslations),
+                ),
               ],
             ),
           );
@@ -391,31 +408,38 @@ class PdfService {
       );
     }
 
-    return _buildLeafItem(move, lang);
+    return _buildLeafItem(move, lang, showTranslations);
   }
 
   static pw.Widget _buildMoveItemWithCounter(
     Move move,
-    String lang, {
+    String lang,
+    bool showTranslations, {
     bool mini = false,
   }) {
     return pw.Column(
       mainAxisSize: pw.MainAxisSize.min,
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _buildLeafItem(move, lang, mini: mini),
+        _buildLeafItem(move, lang, showTranslations, mini: mini),
         if (move.hasCounter)
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 2),
-            child: _buildPdfCounterBox(move, lang, mini: true),
+            child: _buildPdfCounterBox(move, lang, showTranslations, mini: true),
           ),
       ],
     );
   }
 
-  static pw.Widget _buildLeafItem(Move move, String lang, {bool mini = false}) {
+  static pw.Widget _buildLeafItem(
+    Move move,
+    String lang,
+    bool showTranslations, {
+    bool mini = false,
+  }) {
     final category = move.displayCategory;
     final colors = _getCategoryPdfColors(category);
+    final translation = showTranslations ? (move.translations[lang] ?? '') : '';
 
     return pw.Container(
       padding: pw.EdgeInsets.all(mini ? 3 : 4),
@@ -435,6 +459,15 @@ class PdfService {
               fontWeight: pw.FontWeight.bold,
             ),
           ),
+          if (translation.isNotEmpty)
+            pw.Text(
+              translation,
+              style: pw.TextStyle(
+                fontSize: mini ? 7 : 9,
+                fontStyle: pw.FontStyle.italic,
+                color: PdfColors.grey600,
+              ),
+            ),
           if (move.side.isNotEmpty || move.level.isNotEmpty || move.isFeint)
             pw.Row(
               mainAxisSize: pw.MainAxisSize.min,
@@ -460,7 +493,8 @@ class PdfService {
 
   static pw.Widget _buildPdfCounterBox(
     Move move,
-    String lang, {
+    String lang,
+    bool showTranslations, {
     bool mini = false,
   }) {
     pw.Widget counterContent;
@@ -476,7 +510,7 @@ class PdfService {
           spacing: 2,
           runSpacing: 2,
           children: move.counterSubMoves
-              .map((sm) => _buildLeafItem(sm, lang, mini: true))
+              .map((sm) => _buildLeafItem(sm, lang, showTranslations, mini: true))
               .toList(),
         ),
       );
@@ -489,7 +523,7 @@ class PdfService {
           return pw.Row(
             mainAxisSize: pw.MainAxisSize.min,
             children: [
-              _buildLeafItem(sm, lang, mini: true),
+              _buildLeafItem(sm, lang, showTranslations, mini: true),
               if (e.key < move.counterChain.length - 1)
                 pw.Text(
                   ' > ',
@@ -500,6 +534,9 @@ class PdfService {
         }).toList(),
       );
     } else {
+      final counterTranslation = showTranslations
+          ? (move.counterTranslations[lang] ?? '')
+          : '';
       counterContent = pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -510,6 +547,15 @@ class PdfService {
               fontWeight: pw.FontWeight.bold,
             ),
           ),
+          if (counterTranslation.isNotEmpty)
+            pw.Text(
+              counterTranslation,
+              style: pw.TextStyle(
+                fontSize: mini ? 6 : 8,
+                fontStyle: pw.FontStyle.italic,
+                color: PdfColors.grey600,
+              ),
+            ),
           if ((move.counterSide ?? '').isNotEmpty ||
               (move.counterLevel ?? '').isNotEmpty)
             pw.Row(
@@ -562,7 +608,12 @@ class PdfService {
   // List layout
   // ---------------------------------------------------------------------------
 
-  static pw.Widget _buildListRow(Move move, int index, String lang) {
+  static pw.Widget _buildListRow(
+    Move move,
+    int index,
+    String lang,
+    bool showTranslations,
+  ) {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 12),
       child: pw.Row(
@@ -591,12 +642,11 @@ class PdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                _buildListMoveContent(move, lang),
-                // Bug fix #2: also handle structured counters in list mode.
+                _buildListMoveContent(move, lang, showTranslations),
                 if (move.hasCounter && !move.isCombo && !move.isChain)
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(top: 4),
-                    child: _buildListCounterRow(move, lang),
+                    child: _buildListCounterRow(move, lang, showTranslations),
                   ),
               ],
             ),
@@ -608,7 +658,8 @@ class PdfService {
 
   static pw.Widget _buildListMoveContent(
     Move move,
-    String lang, {
+    String lang,
+    bool showTranslations, {
     bool isSub = false,
   }) {
     if (move.isCombo) {
@@ -631,11 +682,11 @@ class PdfService {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      _buildListSingleMoveLine(sub, lang),
+                      _buildListSingleMoveLine(sub, lang, showTranslations),
                       if (sub.hasCounter)
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(top: 2, left: 10),
-                          child: _buildListCounterRow(sub, lang),
+                          child: _buildListCounterRow(sub, lang, showTranslations),
                         ),
                     ],
                   ),
@@ -660,11 +711,11 @@ class PdfService {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  _buildListSingleMoveLine(m, lang),
+                  _buildListSingleMoveLine(m, lang, showTranslations),
                   if (m.hasCounter)
                     pw.Padding(
                       padding: const pw.EdgeInsets.only(top: 2, left: 10),
-                      child: _buildListCounterRow(m, lang),
+                      child: _buildListCounterRow(m, lang, showTranslations),
                     ),
                 ],
               ),
@@ -685,15 +736,20 @@ class PdfService {
       );
     }
 
-    return _buildListSingleMoveLine(move, lang);
+    return _buildListSingleMoveLine(move, lang, showTranslations);
   }
 
-  static pw.Widget _buildListSingleMoveLine(Move move, String lang) {
+  static pw.Widget _buildListSingleMoveLine(
+    Move move,
+    String lang,
+    bool showTranslations,
+  ) {
     final side = move.side.isNotEmpty ? '(${move.side})' : '';
     final level = move.level.isNotEmpty
         ? LocalizationService.translate(move.level.toLowerCase(), lang)
         : '';
-    final translation = move.translations[lang] ?? '';
+    final translation =
+        showTranslations ? (move.translations[lang] ?? '') : '';
     final reps = move.repetitions > 1 ? ' x${move.repetitions}' : '';
 
     return pw.Row(
@@ -722,7 +778,11 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildListCounterRow(Move move, String lang) {
+  static pw.Widget _buildListCounterRow(
+    Move move,
+    String lang,
+    bool showTranslations,
+  ) {
     // Resolve display name for any counter type (simple, simultaneous, chain).
     final String displayName;
     if (move.hasCounterCombo) {
@@ -733,7 +793,7 @@ class PdfService {
       displayName = move.counterName!;
     }
 
-    // Side/level only meaningful for simple counters.
+    // Side/level/translation only meaningful for simple counters.
     final counterSide =
         (!move.hasStructuredCounter && (move.counterSide ?? '').isNotEmpty)
         ? '(${move.counterSide})'
@@ -742,8 +802,9 @@ class PdfService {
         (!move.hasStructuredCounter && (move.counterLevel ?? '').isNotEmpty)
         ? LocalizationService.translate(move.counterLevel!.toLowerCase(), lang)
         : '';
-    final counterTranslation =
-        move.hasStructuredCounter ? '' : (move.counterTranslations[lang] ?? '');
+    final counterTranslation = (!move.hasStructuredCounter && showTranslations)
+        ? (move.counterTranslations[lang] ?? '')
+        : '';
 
     return pw.Row(
       mainAxisSize: pw.MainAxisSize.min,

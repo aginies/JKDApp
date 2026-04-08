@@ -83,7 +83,7 @@ class _BackupModalState extends State<BackupModal> {
               ),
               const Divider(height: 32),
               _buildSectionTitle(
-                LocalizationService.translate('export_title', lang),
+                lang == 'fr' ? 'Séries' : 'Series',
               ),
               _buildBackupTile(
                 title: LocalizationService.translate(
@@ -323,6 +323,7 @@ class _BackupModalState extends State<BackupModal> {
       );
 
       if (success) {
+        await provider.reloadSettings();
         await provider.loadSeries();
         await provider.loadGlossary();
         await provider.loadActiveProgram();
@@ -653,6 +654,32 @@ class _BackupModalState extends State<BackupModal> {
 
     if (result == null || result.files.single.path == null) return;
 
+    if (!mounted) return;
+    final lang = provider.language;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(lang == 'fr' ? 'Importer des Programmes' : 'Import Training Programs'),
+        content: Text(
+          lang == 'fr'
+              ? 'Les programmes seront ajoutés à ceux existants. Continuer ?'
+              : 'Programs will be added to existing ones. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(lang == 'fr' ? 'Importer' : 'Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     _setLoading(true);
     try {
       final file = File(result.files.single.path!);
@@ -788,23 +815,5 @@ class _BackupModalState extends State<BackupModal> {
         ],
       ),
     );
-  }
-}
-
-class RadioGroup<T> extends StatelessWidget {
-  final T groupValue;
-  final ValueChanged<T?> onChanged;
-  final Widget child;
-
-  const RadioGroup({
-    super.key,
-    required this.groupValue,
-    required this.onChanged,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
   }
 }

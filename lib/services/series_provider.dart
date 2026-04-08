@@ -103,7 +103,30 @@ class SeriesProvider with ChangeNotifier {
     notifyListeners();
     LoggingService.log('Initializing SeriesProvider...');
     final prefs = await _dbService.getSettings();
+    await _loadSettings(prefs);
 
+    _garminService.initialize(
+      ttsEnabled: _garminCoachingTtsEnabled,
+      speechRate: _speechRate,
+      language: _language,
+    );
+    _garminService.onConnectionChanged.listen((v) {
+      _garminConnected = v;
+      notifyListeners();
+    });
+    _garminService.onCoachingVoiceChanged.listen((v) {
+      _garminCoachingVoiceActive = v;
+      notifyListeners();
+    });
+
+    await _initGalleryDirectories();
+    await loadGlossary();
+    await loadSeries();
+    await loadAllPrograms();
+    await loadActiveProgram();
+  }
+
+  Future<void> _loadSettings(Map<String, String> prefs) async {
     // Language
     if (prefs.containsKey('language')) {
       _language = prefs['language']!;
@@ -123,19 +146,6 @@ class SeriesProvider with ChangeNotifier {
     _garminCoachingTtsEnabled =
         (Platform.isAndroid || Platform.isIOS) &&
         (prefs['garmin_coaching_tts_enabled'] ?? '0') == '1';
-    _garminService.initialize(
-      ttsEnabled: _garminCoachingTtsEnabled,
-      speechRate: _speechRate,
-      language: _language,
-    );
-    _garminService.onConnectionChanged.listen((v) {
-      _garminConnected = v;
-      notifyListeners();
-    });
-    _garminService.onCoachingVoiceChanged.listen((v) {
-      _garminCoachingVoiceActive = v;
-      notifyListeners();
-    });
 
     // Developer Mode
     _developerMode = (prefs['developer_mode'] ?? '0') == '1';
@@ -175,19 +185,20 @@ class SeriesProvider with ChangeNotifier {
       _autoAdvanceSec = int.tryParse(prefs['auto_advance_sec']!) ?? 0;
     }
 
-
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
       final Directory appDocDir = await getApplicationDocumentsDirectory();
       _galleryPath = '${appDocDir.path}/jkd_gallery';
     }
+  }
 
-    await _initGalleryDirectories();
-    await loadGlossary();
-    await loadSeries();
-    await loadAllPrograms();
-    await loadActiveProgram();
+  /// Reloads all user settings from the database into memory.
+  /// Call this after a full restore to keep in-memory state consistent.
+  Future<void> reloadSettings() async {
+    final prefs = await _dbService.getSettings();
+    await _loadSettings(prefs);
+    notifyListeners();
   }
 
   Future<void> _initGalleryDirectories() async {
