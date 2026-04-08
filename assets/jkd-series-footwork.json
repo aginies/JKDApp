@@ -1,7 +1,7 @@
 [
   {
     "title": "Step and Slide",
-    "category": "JKD Moves",
+    "category": "Moves",
     "notes": "Basic JKD footwork: step with the lead foot, then slide the rear foot.",
     "moves": [
       {
@@ -68,7 +68,7 @@
   },
   {
     "title": "Slide and Step",
-    "category": "JKD Moves",
+    "category": "Moves",
     "notes": "Slide the rear foot first, then step with the lead foot.",
     "moves": [
       {
@@ -135,7 +135,7 @@
   },
   {
     "title": "Push Shuffle",
-    "category": "JKD Moves",
+    "category": "Moves",
     "notes": "Bursting movement by pushing off the rear foot.",
     "moves": [
       {
@@ -202,7 +202,7 @@
   },
   {
     "title": "Rock Shuffle",
-    "category": "JKD Moves",
+    "category": "Moves",
     "notes": "Rhythmical weight shifting footwork.",
     "moves": [
       {
@@ -269,7 +269,7 @@
   },
   {
     "title": "Pendulum",
-    "category": "JKD Moves",
+    "category": "Moves",
     "notes": "Springy footwork for rapid entry and exit.",
     "moves": [
       {

@@ -1148,7 +1148,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Column(
       children: [
-        if (category == 'JKD Moves') RandomReaderWidget(language: lang),
+        if (category == 'Moves') RandomReaderWidget(language: lang),
         Expanded(
           child: ListView.builder(
             itemCount: filtered.length,
@@ -1229,7 +1229,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                   asset = 'assets/icon/jfkb.png';
                                 } else if (cat == 'Kali') {
                                   asset = 'assets/icon/kali.png';
-                                } else if (cat == 'JKD Moves') {
+                                } else if (cat == 'Moves') {
                                   asset = 'assets/icon/JKD.png';
                                 }
                                 return Image.asset(
