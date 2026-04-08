@@ -61,8 +61,8 @@ module JKDSeries {
             ]),
             new Series("7 déplacements Kali", [
                 "Step In Step Back L + Step In Step Back R",
-                "Retirada Illustrissimo + Step Forward Front Leg -> Slide Back Foot",
-                "Retirada Cabaleiro + Step Forward Back Leg -> Slide Back Foot",
+                "Retirada Illustrissimo + Step Forward Front Leg -> Slide Back Foot + Step Backward Back Leg -> Slide Front Foot",
+                "Retirada Cabaleiro + Step Forward Back Leg -> Slide Back Foot + Step Backward Front Leg -> Slide Front Foot",
                 "Tadsoulok + Tadsoulok + Silat + Tadsoulok + Escrima",
                 "Iliag UPO + Position Squat",
                 "Iliag Iliag + Tadsoulok -> Bob and Wave",

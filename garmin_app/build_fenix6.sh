@@ -28,6 +28,7 @@ mkdir -p "$SCRIPT_DIR/bin"
     -f "$PROJECT_DIR/monkey.jungle" \
     -y "$PROJECT_DIR/developer_key" \
     -d "$DEVICE" \
+    --optimization p \
     -r
 
 if [ $? -eq 0 ]; then
