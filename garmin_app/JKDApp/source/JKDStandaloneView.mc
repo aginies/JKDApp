@@ -111,6 +111,10 @@ class JKDStandaloneView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function isShowingDetail() {
+        return _showDetail;
+    }
+
     function toggleMirrorMode() {
         JKDSettings.mirrorMode = !JKDSettings.mirrorMode;
         JKDSettings.saveSettings();
@@ -481,20 +485,13 @@ class JKDStandaloneView extends WatchUi.View {
         dc.drawText(centerX + 80, labelY - 20, Graphics.FONT_XTINY, "max", Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(centerX + 80, labelY + 5, Graphics.FONT_XTINY, _sessionMaxHR.toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        var combos = _series.combos;
-        var nextIdx = (_comboIndex + 1) % combos.size();
-        var fullNextText = combos[nextIdx];
-        var nextText = fullNextText;
-        var pIdx = fullNextText.find(" + ");
-        if (pIdx != null) {
-            var secondPart = fullNextText.substring(pIdx + 3, fullNextText.length());
-            var pIdx2 = secondPart.find(" + ");
-            if (pIdx2 != null) { nextText = fullNextText.substring(0, pIdx + 3 + pIdx2) + "..."; }
-        }
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, screenHeight - 75, Graphics.FONT_XTINY, "UP NEXT:", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, screenHeight - 55, Graphics.FONT_XTINY, nextText, Graphics.TEXT_JUSTIFY_CENTER);
+        // Mirror mode toggle
+        var mirrorColor = JKDSettings.mirrorMode ? Graphics.COLOR_ORANGE : Graphics.COLOR_LT_GRAY;
+        var mirrorLabel = JKDSettings.mirrorMode ? "MIRROR: ON" : "MIRROR: OFF";
+        dc.setColor(mirrorColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(centerX, screenHeight - 70, Graphics.FONT_SMALL, mirrorLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(centerX, screenHeight - 45, Graphics.FONT_XTINY, "^ On  v Off", Graphics.TEXT_JUSTIFY_CENTER);
     }
 }
 

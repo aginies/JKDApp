@@ -111,26 +111,44 @@ class JKDStandaloneDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
     function onNextPage() {
-        _view.nextCombo();
+        if (_view.isShowingDetail()) {
+            JKDSettings.mirrorMode = false;
+            JKDSettings.saveSettings();
+            WatchUi.requestUpdate();
+        } else {
+            _view.nextCombo();
+        }
         return true;
     }
     function onPreviousPage() {
-        _view.prevCombo();
+        if (_view.isShowingDetail()) {
+            JKDSettings.mirrorMode = true;
+            JKDSettings.saveSettings();
+            WatchUi.requestUpdate();
+        } else {
+            _view.prevCombo();
+        }
         return true;
     }
     function onKey(evt) {
         var key = evt.getKey();
-        var type = evt.getType();
-        // Long press SELECT (top-right) → toggle mirror mode
-        if (key == WatchUi.KEY_ENTER && type == WatchUi.KEY_TYPE_HOLD) {
-            _view.toggleMirrorMode();
-            return true;
-        }
         if (key == WatchUi.KEY_DOWN) {
-            _view.nextCombo();
+            if (_view.isShowingDetail()) {
+                JKDSettings.mirrorMode = false;
+                JKDSettings.saveSettings();
+                WatchUi.requestUpdate();
+            } else {
+                _view.nextCombo();
+            }
             return true;
         } else if (key == WatchUi.KEY_UP) {
-            _view.prevCombo();
+            if (_view.isShowingDetail()) {
+                JKDSettings.mirrorMode = true;
+                JKDSettings.saveSettings();
+                WatchUi.requestUpdate();
+            } else {
+                _view.prevCombo();
+            }
             return true;
         }
         return false;
