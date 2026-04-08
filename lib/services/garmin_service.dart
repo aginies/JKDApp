@@ -52,6 +52,7 @@ class GarminService {
   bool get isConnected => _isConnected;
   bool get watchCoachingVoiceActive => _watchCoachingVoiceActive;
 
+  bool _enabled = true;
   StreamSubscription? _eventSubscription;
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _beepPlayer = AudioPlayer();
@@ -65,7 +66,10 @@ class GarminService {
     required double speechRate,
     String language = 'en',
   }) {
-    if (!_isMobile) return;
+    if (!_isMobile) {
+      _enabled = false;
+      return;
+    }
 
     _ttsEnabled = ttsEnabled;
     _speechRate = speechRate;
@@ -73,17 +77,27 @@ class GarminService {
     _tts.setSpeechRate(_speechRate);
 
     _eventSubscription?.cancel();
-    _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
-      _handleEvent,
-      onError: _handleError,
-    );
+    try {
+      _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
+        _handleEvent,
+        onError: _handleError,
+      );
 
-    _methodChannel.invokeMethod<void>('initialize').catchError((e) {
-      LoggingService.log('Garmin initialize error: $e');
-    });
+      _methodChannel.invokeMethod<void>('initialize').catchError((e) {
+        if (e is MissingPluginException) {
+          _enabled = false;
+        }
+        LoggingService.log('Garmin initialize error: $e');
+      });
+    } catch (e) {
+      if (e is MissingPluginException) {
+        _enabled = false;
+      }
+      LoggingService.log('Garmin stream error: $e');
+    }
 
     LoggingService.log(
-      'GarminService initialized (ttsEnabled=$ttsEnabled, lang=$_language)',
+      'GarminService initialized (ttsEnabled=$ttsEnabled, lang=$_language, enabled=$_enabled)',
     );
   }
 
@@ -210,7 +224,7 @@ class GarminService {
   }
 
   void sendMessage(Map<String, dynamic> data) {
-    if (!_isMobile) return;
+    if (!_isMobile || !_enabled) return;
     _methodChannel.invokeMethod<void>('sendMessage', data).catchError((e) {
       LoggingService.log('Garmin sendMessage error: $e');
     });
@@ -310,7 +324,7 @@ class GarminService {
   }
 
   Future<bool> isWatchConnected() async {
-    if (!_isMobile) return false;
+    if (!_isMobile || !_enabled) return false;
     try {
       final result = await _methodChannel.invokeMethod<bool>(
         'isWatchConnected',
