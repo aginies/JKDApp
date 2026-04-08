@@ -285,10 +285,15 @@ class JKDStandaloneView extends WatchUi.View {
                 dc.drawText(8, pillY, pFont, repStr, Graphics.TEXT_JUSTIFY_LEFT);
             }
 
-            // Mirror mode indicator (below BT)
+            // Mirror mode indicator (center bottom)
             if (JKDSettings.mirrorMode) {
+                var mirW = dc.getTextWidthInPixels("MIR", pFont);
+                var mirH = textH;
+                var mirY = screenHeight - mirH - 6;
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+                dc.fillRoundedRectangle(centerX - (mirW / 2) - 4, mirY, mirW + 8, mirH, 4);
                 dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(screenWidth - 30, pillY + textH + 2, Graphics.FONT_XTINY, "MIR", Graphics.TEXT_JUSTIFY_RIGHT);
+                dc.drawText(centerX, mirY, pFont, "MIR", Graphics.TEXT_JUSTIFY_CENTER);
             }
 
             if (JKDSettings.autoAdvanceSec > 0) {
