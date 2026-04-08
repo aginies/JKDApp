@@ -9,7 +9,7 @@ import 'package:jkd_app/models/move.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => SeriesProvider(),
@@ -81,8 +81,9 @@ class WatchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isRound = MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
-    
+    final isRound =
+        MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -215,7 +216,11 @@ class WatchScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.settings, size: 14, color: Colors.white70),
+                      const Icon(
+                        Icons.settings,
+                        size: 14,
+                        color: Colors.white70,
+                      ),
                       const SizedBox(width: 6),
                       const Text(
                         'SETTINGS',
@@ -245,7 +250,7 @@ class WearSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SeriesProvider>();
     final isRound = MediaQuery.of(context).viewPadding.top > 0;
-    
+
     // Expanded options as requested
     final options = [0, 2, 3, 4, 5, 6, 7, 10, 15, 30];
 
@@ -285,7 +290,9 @@ class WearSettingsScreen extends StatelessWidget {
                         width: isSelected ? 60 : 45,
                         height: isSelected ? 40 : 35,
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.blueAccent : Colors.white.withValues(alpha: 0.1),
+                          color: isSelected
+                              ? Colors.blueAccent
+                              : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected ? Colors.white38 : Colors.white10,
@@ -298,7 +305,9 @@ class WearSettingsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: isSelected ? 12 : 10,
                               color: isSelected ? Colors.white : Colors.white70,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -321,11 +330,21 @@ class WearSeriesList extends StatelessWidget {
 
   Color _getCategoryColor(String category) {
     final cat = category.toLowerCase();
-    if (cat.contains('jun fan') || cat.contains('gung fu')) return Colors.blueAccent;
-    if (cat.contains('kali') || cat.contains('escrima')) return Colors.redAccent;
-    if (cat.contains('jeet kune do') || cat.contains('jkd')) return Colors.orangeAccent;
-    if (cat.contains('trapping')) return Colors.greenAccent;
-    if (cat.contains('kick')) return Colors.purpleAccent;
+    if (cat.contains('jun fan') || cat.contains('gung fu')) {
+      return Colors.blueAccent;
+    }
+    if (cat.contains('kali') || cat.contains('escrima')) {
+      return Colors.redAccent;
+    }
+    if (cat.contains('jeet kune do') || cat.contains('jkd')) {
+      return Colors.orangeAccent;
+    }
+    if (cat.contains('trapping')) {
+      return Colors.greenAccent;
+    }
+    if (cat.contains('kick')) {
+      return Colors.purpleAccent;
+    }
     return Colors.blueGrey;
   }
 
@@ -353,7 +372,7 @@ class WearSeriesList extends StatelessWidget {
           builder: (context, index) {
             final s = series[index];
             final accentColor = _getCategoryColor(s.category);
-            
+
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: InkWell(
@@ -458,14 +477,15 @@ class _WearTrainingViewState extends State<WearTrainingView>
   void _initAnimation() {
     final provider = context.read<SeriesProvider>();
     if (provider.autoAdvanceSec > 0) {
-      _progressController = AnimationController(
-        vsync: this,
-        duration: Duration(seconds: provider.autoAdvanceSec),
-      )..addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            _next();
-          }
-        });
+      _progressController =
+          AnimationController(
+            vsync: this,
+            duration: Duration(seconds: provider.autoAdvanceSec),
+          )..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              _next();
+            }
+          });
       _progressController!.forward();
     }
   }
@@ -491,7 +511,9 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
       // Scroll a bit further (half bubble size ~20px) to ensure bottom readability
       final targetScroll = maxExtent + 20;
-      final duration = Duration(milliseconds: (targetScroll * 25).toInt() + 500);
+      final duration = Duration(
+        milliseconds: (targetScroll * 25).toInt() + 500,
+      );
 
       // 1. Scroll Down
       await _scrollController.animateTo(
@@ -550,13 +572,13 @@ class _WearTrainingViewState extends State<WearTrainingView>
   Widget _buildActionBubble(String text, double fontSize, int totalActions) {
     // 1 column if 1-2 actions, 2 columns if 3+
     final isSingleColumn = totalActions <= 2;
-    
+
     return Container(
-      width: isSingleColumn ? 150 : 88, 
+      width: isSingleColumn ? 150 : 88,
       margin: const EdgeInsets.all(3),
       padding: EdgeInsets.symmetric(
-        vertical: isSingleColumn ? 10 : 6, 
-        horizontal: isSingleColumn ? 16 : 6
+        vertical: isSingleColumn ? 10 : 6,
+        horizontal: isSingleColumn ? 16 : 6,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
@@ -578,18 +600,33 @@ class _WearTrainingViewState extends State<WearTrainingView>
     );
   }
 
-  TextSpan _buildRichText(String text,
-      {required double fontSize,
-      required bool isBold,
-      required Color defaultColor}) {
+  TextSpan _buildRichText(
+    String text, {
+    required double fontSize,
+    required bool isBold,
+    required Color defaultColor,
+  }) {
     final List<TextSpan> spans = [];
-    
+
     // Character-by-character tokenization to ensure NO spaces are lost
     final List<String> parts = [];
     String currentPart = '';
-    
-    final symbols = {'↳', '➜', '+', '.', ':', '/', '(', ')', '↵', '↑', '—', '↓'};
-    
+
+    final symbols = {
+      '↳',
+      '➜',
+      '+',
+      '.',
+      ':',
+      '/',
+      '(',
+      ')',
+      '↵',
+      '↑',
+      '—',
+      '↓',
+    };
+
     for (int i = 0; i < text.length; i++) {
       final char = text[i];
       if (symbols.contains(char) || char == ' ') {
@@ -628,19 +665,21 @@ class _WearTrainingViewState extends State<WearTrainingView>
         finalFontSize = fontSize * 1.1;
       }
 
-      spans.add(TextSpan(
-        text: part,
-        style: TextStyle(
-          color: color,
-          fontSize: finalFontSize,
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          fontStyle: symbols.contains(trimmed)
-              ? FontStyle.normal
-              : (isBold ? FontStyle.normal : FontStyle.italic),
+      spans.add(
+        TextSpan(
+          text: part,
+          style: TextStyle(
+            color: color,
+            fontSize: finalFontSize,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            fontStyle: symbols.contains(trimmed)
+                ? FontStyle.normal
+                : (isBold ? FontStyle.normal : FontStyle.italic),
+          ),
         ),
-      ));
+      );
     }
-    
+
     return TextSpan(
       children: spans,
       style: TextStyle(color: defaultColor, fontSize: fontSize),
@@ -660,7 +699,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
       res += '${m.side} '; // Removed the dot for a cleaner "L Jab" look
     }
     res += m.name;
-    
+
     if (m.level.isNotEmpty) {
       final lv = m.level.toLowerCase();
       if (lv.contains('high') || lv == 'h') {
@@ -696,8 +735,12 @@ class _WearTrainingViewState extends State<WearTrainingView>
     String displayName = _getFullMoveText(move);
 
     // Initial cleanup
-    if (displayName.startsWith('Combo: ')) displayName = displayName.substring(7);
-    if (displayName.startsWith('Chain: ')) displayName = displayName.substring(7);
+    if (displayName.startsWith('Combo: ')) {
+      displayName = displayName.substring(7);
+    }
+    if (displayName.startsWith('Chain: ')) {
+      displayName = displayName.substring(7);
+    }
 
     // Standardize separators and force newlines for Wear OS
     displayName = displayName
@@ -756,9 +799,11 @@ class _WearTrainingViewState extends State<WearTrainingView>
                   ),
                   if (provider.autoAdvanceSec > 0) ...[
                     const SizedBox(width: 4),
-                    Icon(Icons.timer, 
-                         size: 10, 
-                         color: Colors.blueAccent.withValues(alpha: 0.8)),
+                    Icon(
+                      Icons.timer,
+                      size: 10,
+                      color: Colors.blueAccent.withValues(alpha: 0.8),
+                    ),
                   ],
                 ],
               ),
@@ -783,10 +828,16 @@ class _WearTrainingViewState extends State<WearTrainingView>
                         child: Wrap(
                           alignment: WrapAlignment.center,
                           crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 4, 
+                          spacing: 4,
                           runSpacing: 4,
                           children: actions
-                              .map((a) => _buildActionBubble(a, baseFontSize, actions.length))
+                              .map(
+                                (a) => _buildActionBubble(
+                                  a,
+                                  baseFontSize,
+                                  actions.length,
+                                ),
+                              )
                               .toList(),
                         ),
                       ),
