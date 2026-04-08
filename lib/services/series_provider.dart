@@ -306,8 +306,8 @@ class SeriesProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     LoggingService.log('Loading series from database...');
-    _filteredCache.clear();
     _series = await _dbService.getAllSeries();
+    _filteredCache.clear(); // Clear cache AFTER updating _series
     await _usageService.refresh(_series);
     _isLoading = false;
     notifyListeners();
