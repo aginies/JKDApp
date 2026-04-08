@@ -15,8 +15,6 @@ class CategoryUtils {
         return Icons.sports_kabaddi;
       case 'move':
         return Icons.directions_walk;
-      case 'jkd_moves':
-        return Icons.directions_run;
       case 'kali':
         return Icons.change_history;
       case 'text':
@@ -45,8 +43,6 @@ class CategoryUtils {
         return Colors.blue;
       case 'move':
         return Colors.pink;
-      case 'jkd_moves':
-        return Colors.blue;
       case 'kali':
         return Colors.brown;
       case 'text':

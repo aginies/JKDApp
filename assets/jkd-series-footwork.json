@@ -7,62 +7,62 @@
       {
         "name": "1: Move forward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CCW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "1: Move forward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CCW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       }
     ]
   },
@@ -74,62 +74,62 @@
       {
         "name": "1: Move forward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CCW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "1: Move forward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CCW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       }
     ]
   },
@@ -141,62 +141,62 @@
       {
         "name": "1: Move forward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CCW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "1: Move forward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CCW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       }
     ]
   },
@@ -208,62 +208,62 @@
       {
         "name": "1: Move forward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CCW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "1: Move forward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CCW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       }
     ]
   },
@@ -275,62 +275,62 @@
       {
         "name": "1: Move forward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CCW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CW",
         "side": "L",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "1: Move forward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "2: Move backward",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "3: Move front leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "4: Move rear leg side",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "6: Rotation CCW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       },
       {
         "name": "5: Rotation CW",
         "side": "R",
-        "category": "jkd_moves"
+        "category": "move"
       }
     ],
     "Author": "Antoine Giniès",

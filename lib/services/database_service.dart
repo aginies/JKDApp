@@ -52,7 +52,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 4, // Increment version for granular progress
+      version: 15, // Increment version for category migration and stats cleanup
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -65,23 +65,40 @@ class DatabaseService {
 
   /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    LoggingService.log(
-      'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
-    );
+    if (oldVersion < 15) {
+      LoggingService.log('Migrating categories: jkd_moves -> move');
+      await db.execute(
+        "UPDATE glossary SET category = 'move' WHERE category = 'jkd_moves'",
+      );
+      await db.execute(
+        "UPDATE series_moves SET category = 'move' WHERE category = 'jkd_moves'",
+      );
+      await db.execute(
+        "UPDATE series_moves SET counter_category = 'move' WHERE counter_category = 'jkd_moves'",
+      );
+      
+      // Clean up potentially inconsistent stats after category merge
+      await db.execute('DELETE FROM day_completions');
+      LoggingService.log('Cleared stats for category migration consistency.');
+    } else {
+      LoggingService.log(
+        'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
+      );
 
-    // Drop all tables
-    await db.execute('DROP TABLE IF EXISTS day_completions');
-    await db.execute('DROP TABLE IF EXISTS user_program_progress');
-    await db.execute('DROP TABLE IF EXISTS program_days');
-    await db.execute('DROP TABLE IF EXISTS training_programs');
-    await db.execute('DROP TABLE IF EXISTS voice_records');
-    await db.execute('DROP TABLE IF EXISTS settings');
-    await db.execute('DROP TABLE IF EXISTS series_moves');
-    await db.execute('DROP TABLE IF EXISTS series');
-    await db.execute('DROP TABLE IF EXISTS glossary');
+      // Drop all tables
+      await db.execute('DROP TABLE IF EXISTS day_completions');
+      await db.execute('DROP TABLE IF EXISTS user_program_progress');
+      await db.execute('DROP TABLE IF EXISTS program_days');
+      await db.execute('DROP TABLE IF EXISTS training_programs');
+      await db.execute('DROP TABLE IF EXISTS voice_records');
+      await db.execute('DROP TABLE IF EXISTS settings');
+      await db.execute('DROP TABLE IF EXISTS series_moves');
+      await db.execute('DROP TABLE IF EXISTS series');
+      await db.execute('DROP TABLE IF EXISTS glossary');
 
-    // Recreate everything
-    await _onCreate(db, newVersion);
+      // Recreate everything
+      await _onCreate(db, newVersion);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -248,6 +265,7 @@ class DatabaseService {
 
     int globalPosition = 0;
     for (var category in glossaryData.keys) {
+      if (category == 'metadata') continue;
       final items = glossaryData[category];
       if (items is List) {
         for (var item in items) {

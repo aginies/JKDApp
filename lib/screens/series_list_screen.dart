@@ -40,7 +40,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Rebuild to show/hide FAB based on tab
     });
@@ -262,7 +262,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                 ),
               ),
               child: DefaultTabController(
-                length: 9,
+                length: 8,
                 child: Column(
                   children: [
                     // Handle bar for the bottom sheet
@@ -406,13 +406,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                               ),
                               Tab(
                                 text: LocalizationService.translate(
-                                  'jkd_moves',
-                                  lang,
-                                ),
-                                icon: Icon(_getCategoryIcon('jkd_moves')),
-                              ),
-                              Tab(
-                                text: LocalizationService.translate(
                                   'kali',
                                   lang,
                                 ),
@@ -445,7 +438,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 _buildGlossaryList('packs', lang),
                                 _buildGlossaryList('trapping', lang),
                                 _buildGlossaryList('move', lang),
-                                _buildGlossaryList('jkd_moves', lang),
                                 _buildGlossaryList('kali', lang),
                                 _buildGlossaryList('general', lang),
                                 _buildGlossaryList('other', lang),
@@ -1026,20 +1018,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.asset(
-                            'assets/icon/JKD.png',
-                            width: 28,
-                            height: 28,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('JKD Moves'),
-                        ],
-                      ),
-                    ),
-                    Tab(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
                           const Icon(Icons.play_circle_fill, size: 28),
                           const SizedBox(width: 8),
                           Text(
@@ -1079,13 +1057,12 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           _buildSeriesList('Jun Fan Gung Fu', lang),
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('Kali', lang),
-          _buildSeriesList('JKD Moves', lang),
           _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
       ),
       floatingActionButton:
-          _tabController.index == 4 || _tabController.index == 5
+          _tabController.index == 3 || _tabController.index == 4
           ? null // Hide FAB on Active Training and Training Programs tab
           : Padding(
               padding: const EdgeInsets.only(right: 120.0),

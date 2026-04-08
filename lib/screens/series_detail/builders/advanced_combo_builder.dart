@@ -2087,17 +2087,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                       ),
                                 },
                                 {
-                                  'id': 'jkd_move',
-                                  'label':
-                                      '${LocalizationService.translate('jkd_moves', lang)} / ${LocalizationService.translate('move', lang)}',
-                                  'cats': ['jkd_moves', 'move'],
+                                  'id': 'move',
+                                  'label': LocalizationService.translate(
+                                    'move',
+                                    lang,
+                                  ),
+                                  'cats': ['move'],
                                   'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab(
-                                        'jkd_moves',
-                                        'move',
-                                        sc,
-                                      ),
+                                      _buildDualGlossaryTab('move', null, sc),
                                 },
+
                                 {
                                   'id': 'kali',
                                   'label': LocalizationService.translate(

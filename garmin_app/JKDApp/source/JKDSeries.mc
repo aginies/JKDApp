@@ -41,6 +41,24 @@ module JKDSeries {
                 "Nan Tek L + Cross R + Hou Nan Tek R + Lateral step R + Hook L",
                 "Nan Tek L + Cross R + Hou Nan Tek R + Toy Ma + Jab L"
             ]),
+            new Series("5 counts", [
+                "Nan Tek L + Cross R + Hook L + Cross R + Nan Tek L",
+                "Nan Tek L + Cross R + Body Hook L + Cross R + Nan Tek L",
+                "Nan Tek L + Cross R + Uppercut L + Cross R + Nan Tek L",
+                "Nan Tek L + Overhead R + Uppercut L + Overhead R + Nan Tek L",
+                "Nan Tek L + Cross R + Jab L + Cross R + Nan Tek L",
+                "Jab L + Cross R + Nan Tek L + Cross R + Hook L",
+                "Jab L + Cross R + Body Hook L + Cross R + Nan Tek L",
+                "Jab L + Cross R + Uppercut L + Cross R + Nan Tek L",
+                "Jab L + Overhead R + Overhead L + Uppercut R + Nan Tek L",
+                "Jab L + Cross R + Jab L + Cross R + Nan Tek L"
+            ]),
+            new Series("6 counts", [
+                "Nan Tek L + Cross R + Da L + Jang R + Sut Da R + Hou Nan Tek R",
+                "Nan Tek L + Cross R + Jang L + Jang R + Sut Da R + Hou Nan Tek R",
+                "Nan Tek L + Cross R + Jang R + Sut Da R + Hou Nan Tek R + Nan Tek L",
+                "Nan Tek L + Cross R + Jang R + Sut Da R + Nan Tek L + Hou Nan Tek R"
+            ]),
             new Series("ABC", [
                 "Nan Tek L + Cross R + Hook L + Cross R + Nan Tek L",
                 "Nan Tek L + Cross R + Body Hook L + Cross R + Nan Tek L",
@@ -98,6 +116,28 @@ module JKDSeries {
                 "Jab L -> Pak Sao R + Hook L -> Woang Pack Sao, Biu Sao, Biu Jee R",
                 "Jab L -> Pak Sao R + Hook L -> Woang Pack Sao, Biu Jee, Pak Sao, Biu Jee R"
             ]),
+            new Series("Step and Slide", [
+                "1: Move forward L",
+                "2: Move backward L",
+                "3: Move front leg side L",
+                "4: Move rear leg side L",
+                "5: Rotation CCW L",
+                "6: Rotation CW L",
+                "1: Move forward R",
+                "2: Move backward R",
+                "3: Move front leg side R",
+                "4: Move rear leg side R",
+                "6: Rotation CCW R",
+                "5: Rotation CW R"
+            ]),
+            new Series("Hou ou tek", [
+                "Hou Nan Tek R + Jeet Tek L + Nan Tek L",
+                "Hou Nan Tek R + Juk Tek L + Nan Tek L",
+                "Hou Nan Tek R + Gwa Tek L + Nan Tek L",
+                "Hou Nan Tek R + Jun Juk Tek R + Nan Tek L",
+                "Hou Nan Tek R + Jun Gwa Tek R + Nan Tek L",
+                "Hou Nan Tek R + Jun So Tek R + Nan Tek L"
+            ]),
             new Series("18 Kicks", [
                 "Jeet Tek L",
                 "Hou Jeet Tek R",
@@ -117,6 +157,9 @@ module JKDSeries {
                 "Hou Jun Gwa Tek L",
                 "Jun So Tek R",
                 "Hou Jun So Tek L"
+            ]),
+            new Series("Loyda JFK", [
+                "Jab L"
             ]),
             new Series("Ping Chui Laop Sao Gwa Chui series", [
                 "Low line Hit L -> Vertical Locking L + Pak Sao R + Jab L -> Through Locking R + Bong Sao L + Lop Sao R + Gwa Chuie L",
@@ -148,6 +191,15 @@ module JKDSeries {
                 "Frappes Marteau L",
                 "overhead poing avant R",
                 "overhead poing arrière L"
+            ]),
+            new Series("Sinawali series", [
+                "Cob Cob + Pay Pay + Ikis + H L H + Dos Ikis + H L (Through) + Even Six Heaven + Even Six Standard + Even Six Earth + Umbrella Heaven + Umbrella Standard + Umbrella Earth + Backend Six Heaven + Backend Six Standard + Backend Six Earth + Upword Six count + Ordabis Motion + Sang Kite"
+            ]),
+            new Series("Trapping 9 entrées de base", [
+                "Pak Sao R + Jab L",
+                "Pak Sao R + Jab L -> Vertical Locking L + Pak Sao R + Jab L",
+                "Pak Sao R + Jab L -> Catch Arm L + Jab R + Pak Sao R + Jab L",
+                "Pak Sao R + Jab L -> Vertical Locking L + Tan Sao L + Pak Sao R + Jab L"
             ])
         ];
     }

@@ -616,6 +616,10 @@ class _WearTrainingViewState extends State<WearTrainingView>
         color = Colors.blue;
       } else if (normalized == 'R') {
         color = Colors.red;
+      } else if (normalized == 'F') {
+        color = Colors.teal;
+      } else if (normalized == 'B') {
+        color = Colors.brown;
       } else if (['↳', '➜', '+', '↵', '/'].contains(trimmed)) {
         color = Colors.orangeAccent;
         finalFontSize = fontSize * 1.2;

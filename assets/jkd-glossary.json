@@ -903,7 +903,7 @@
       "removal": {}
     }
   ],
-  "jkd_moves": [
+  "move": [
     {
       "name": "Move forward",
       "translations": {
@@ -917,6 +917,15 @@
       "name": "Move backward",
       "translations": {
         "en": "Move backward",
+        "fr": "Reculer"
+      },
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Toy Ma",
+      "translations": {
+        "en": "Move back",
         "fr": "Reculer"
       },
       "possible_level": "",
@@ -957,9 +966,7 @@
       },
       "possible_level": "",
       "removal": {}
-    }
-  ],
-  "move": [
+    },
     {
       "name": "Change guard",
       "translations": {
@@ -974,15 +981,6 @@
       "translations": {
         "en": "Step forward",
         "fr": "Avancer"
-      },
-      "possible_level": "",
-      "removal": {}
-    },
-    {
-      "name": "Toy Ma",
-      "translations": {
-        "en": "Move back",
-        "fr": "Reculer"
       },
       "possible_level": "",
       "removal": {}
@@ -1013,6 +1011,16 @@
         "fr": "Les 3 voies"
       },
       "possible_direction": "L,M,R",
+      "possible_level": "",
+      "removal": {}
+    },
+    {
+      "name": "Slide Foot",
+      "translations": {
+        "en": "Slide foot",
+        "fr": "Glisser le pieds"
+      },
+      "possible_direction": "F,B,L,R",
       "possible_level": "",
       "removal": {}
     }
