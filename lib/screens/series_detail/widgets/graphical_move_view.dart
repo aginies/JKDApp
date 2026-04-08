@@ -481,7 +481,12 @@ class GraphicalMoveView {
               ),
               if (move.counterName != null || move.hasStructuredCounter) ...[
                 const SizedBox(height: 4),
-                _buildCounterBox(move, lang, isActive: isActiveAnswer),
+                _buildCounterBox(
+                  move,
+                  lang,
+                  isActive: isActiveAnswer,
+                  showTranslation: showTranslation,
+                ),
               ],
             ],
           ),
