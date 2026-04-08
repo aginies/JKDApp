@@ -37,7 +37,7 @@ mixin SeriesDetailDialogsMixin {
               subtitle: const Text('Visual cards, mirrors the app interface'),
               onTap: () {
                 Navigator.pop(context);
-                PdfService.exportSeriesToPdf(series!, lang, isGraphical: true);
+                PdfService.exportSeriesToPdf(series!, lang, layout: PdfLayout.graphical);
               },
             ),
             ListTile(
@@ -46,7 +46,7 @@ mixin SeriesDetailDialogsMixin {
               subtitle: const Text('Text-focused, space-efficient list'),
               onTap: () {
                 Navigator.pop(context);
-                PdfService.exportSeriesToPdf(series!, lang, isGraphical: false);
+                PdfService.exportSeriesToPdf(series!, lang, layout: PdfLayout.list);
               },
             ),
             const SizedBox(height: 10),

@@ -8,45 +8,55 @@ import '../models/move.dart';
 import 'localization_service.dart';
 import 'logging_service.dart';
 
+/// Controls whether the PDF uses graphical cards or a compact list.
+enum PdfLayout { graphical, list }
+
 class PdfService {
+  // ---------------------------------------------------------------------------
+  // Font / icon caching — futures are reused across export calls.
+  // ---------------------------------------------------------------------------
+
+  static Future<(pw.Font, pw.Font, pw.Font)>? _fontsFuture;
+  static Future<List<pw.MemoryImage>>? _iconsFuture;
+
+  static Future<(pw.Font, pw.Font, pw.Font)> _getFonts() {
+    return _fontsFuture ??= Future.wait([
+      PdfGoogleFonts.robotoRegular(),
+      PdfGoogleFonts.robotoBold(),
+      PdfGoogleFonts.robotoItalic(),
+    ]).then((r) => (r[0], r[1], r[2]));
+  }
+
+  static Future<List<pw.MemoryImage>> _getIcons() {
+    return _iconsFuture ??= Future.wait([
+      _loadIcon('assets/icon/jfgf.png'),
+      _loadIcon('assets/icon/jfkb.png'),
+      _loadIcon('assets/icon/kali.png'),
+      _loadIcon('assets/icon/JKD.png'),
+    ]);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------------
+
   static Future<void> exportSeriesToPdf(
     JkdSeries series,
     String lang, {
-    bool isGraphical = true,
+    PdfLayout layout = PdfLayout.graphical,
   }) async {
+    final (font, boldFont, italicFont) = await _getFonts();
+    final icons = await _getIcons();
+
+    final (categoryIcon, headerColor) = switch (series.category) {
+      'Jun Fan Gung Fu' => (icons[0] as pw.ImageProvider?, PdfColors.blue900),
+      'Jun Fan Kick Boxing' => (icons[1] as pw.ImageProvider?, PdfColors.purple900),
+      'Kali' => (icons[2] as pw.ImageProvider?, PdfColors.brown900),
+      'Moves' => (icons[3] as pw.ImageProvider?, PdfColors.grey900),
+      _ => (null, PdfColors.blue900),
+    };
+
     final pdf = pw.Document();
-
-    final font = await PdfGoogleFonts.robotoRegular();
-    final boldFont = await PdfGoogleFonts.robotoBold();
-    final italicFont = await PdfGoogleFonts.robotoItalic();
-
-    // Load icons
-    final jfgfIcon = await _loadIcon('assets/icon/jfgf.png');
-    final jfkbIcon = await _loadIcon('assets/icon/jfkb.png');
-    final kaliIcon = await _loadIcon('assets/icon/kali.png');
-    final jkdIcon = await _loadIcon('assets/icon/JKD.png');
-
-    pw.ImageProvider? categoryIcon;
-    PdfColor headerColor = PdfColors.blue900;
-
-    switch (series.category) {
-      case 'Jun Fan Gung Fu':
-        categoryIcon = jfgfIcon;
-        headerColor = PdfColors.blue900;
-        break;
-      case 'Jun Fan Kick Boxing':
-        categoryIcon = jfkbIcon;
-        headerColor = PdfColors.purple900;
-        break;
-      case 'Kali':
-        categoryIcon = kaliIcon;
-        headerColor = PdfColors.brown900;
-        break;
-      case 'Moves':
-        categoryIcon = jkdIcon;
-        headerColor = PdfColors.grey900;
-        break;
-    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -59,126 +69,20 @@ class PdfService {
             italic: italicFont,
           ),
         ),
-        header: (pw.Context context) {
-          return pw.Column(
-            children: [
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(
-                    'JKD Training Library',
-                    style: pw.TextStyle(
-                      fontSize: 10,
-                      color: PdfColors.grey600,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.Text(
-                    DateTime.now().toString().substring(0, 10),
-                    style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 4),
-              pw.Divider(thickness: 0.5, color: PdfColors.grey400),
-            ],
-          );
-        },
-        footer: (pw.Context context) {
-          return pw.Container(
-            margin: const pw.EdgeInsets.only(top: 10),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text(
-                  'JKDApp ${LoggingService.appVersion} ginies.org',
-                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
-                ),
-                pw.Text(
-                  'Page ${context.pageNumber} of ${context.pagesCount}',
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
-                ),
-              ],
+        header: (_) => _buildPageHeader(),
+        footer: (ctx) => _buildPageFooter(ctx),
+        build: (ctx) => [
+          pw.SizedBox(height: 10),
+          ..._buildCoverSection(series, categoryIcon, headerColor, lang),
+          if (layout == PdfLayout.graphical)
+            ...series.moves.asMap().entries.map(
+              (e) => _buildGraphicalCard(e.value, e.key + 1, lang),
+            )
+          else
+            ...series.moves.asMap().entries.map(
+              (e) => _buildListRow(e.value, e.key + 1, lang),
             ),
-          );
-        },
-        build: (pw.Context context) {
-          return [
-            pw.SizedBox(height: 10),
-            pw.Row(
-              children: [
-                if (categoryIcon != null)
-                  pw.Image(categoryIcon, width: 40, height: 40),
-                pw.SizedBox(width: 15),
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        series.title,
-                        style: pw.TextStyle(
-                          fontSize: 24,
-                          fontWeight: pw.FontWeight.bold,
-                          color: headerColor,
-                        ),
-                      ),
-                      pw.Text(
-                        '${series.category} - ${series.type}${series.attackMethod != null ? " ($series.attackMethod)" : ""}',
-                        style: pw.TextStyle(
-                          fontSize: 12,
-                          color: PdfColors.grey700,
-                          fontStyle: pw.FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 20),
-            if (series.notes.isNotEmpty) ...[
-              pw.Container(
-                padding: const pw.EdgeInsets.all(10),
-                decoration: const pw.BoxDecoration(
-                  color: PdfColors.grey100,
-                  borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
-                ),
-                width: double.infinity,
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      LocalizationService.translate('notes', lang),
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
-                    pw.SizedBox(height: 4),
-                    pw.Text(
-                      series.notes,
-                      style: const pw.TextStyle(fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-              pw.SizedBox(height: 20),
-            ],
-
-            if (isGraphical)
-              ...series.moves.asMap().entries.map((entry) {
-                final i = entry.key;
-                final move = entry.value;
-                return _buildGraphicalCard(move, i + 1, lang);
-              })
-            else
-              ...series.moves.asMap().entries.map((entry) {
-                final i = entry.key;
-                final move = entry.value;
-                return _buildListRow(move, i + 1, lang);
-              }),
-          ];
-        },
+        ],
       ),
     );
 
@@ -188,12 +92,125 @@ class PdfService {
     );
   }
 
-  static Future<pw.MemoryImage> _loadIcon(String path) async {
-    final data = await rootBundle.load(path);
-    return pw.MemoryImage(data.buffer.asUint8List());
+  // ---------------------------------------------------------------------------
+  // Page chrome
+  // ---------------------------------------------------------------------------
+
+  static pw.Widget _buildPageHeader() {
+    return pw.Column(
+      children: [
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text(
+              'JKD Training Library',
+              style: pw.TextStyle(
+                fontSize: 10,
+                color: PdfColors.grey600,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            pw.Text(
+              DateTime.now().toString().substring(0, 10),
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 4),
+        pw.Divider(thickness: 0.5, color: PdfColors.grey400),
+      ],
+    );
   }
 
-  // --- Graphical Layout Widgets ---
+  static pw.Widget _buildPageFooter(pw.Context context) {
+    return pw.Container(
+      margin: const pw.EdgeInsets.only(top: 10),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            'JKDApp ${LoggingService.appVersion} ginies.org',
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
+          pw.Text(
+            'Page ${context.pageNumber} of ${context.pagesCount}',
+            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static List<pw.Widget> _buildCoverSection(
+    JkdSeries series,
+    pw.ImageProvider? categoryIcon,
+    PdfColor headerColor,
+    String lang,
+  ) {
+    return [
+      pw.Row(
+        children: [
+          if (categoryIcon != null)
+            pw.Image(categoryIcon, width: 40, height: 40),
+          pw.SizedBox(width: 15),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  series.title,
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    color: headerColor,
+                  ),
+                ),
+                pw.Text(
+                  '${series.category} - ${series.type}'
+                  '${series.attackMethod != null ? " (${series.attackMethod})" : ""}',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    color: PdfColors.grey700,
+                    fontStyle: pw.FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+      if (series.notes.isNotEmpty) ...[
+        pw.Container(
+          padding: const pw.EdgeInsets.all(10),
+          decoration: const pw.BoxDecoration(
+            color: PdfColors.grey100,
+            borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
+          ),
+          width: double.infinity,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                LocalizationService.translate('notes', lang),
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(series.notes, style: const pw.TextStyle(fontSize: 10)),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 20),
+      ],
+    ];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Graphical layout
+  // ---------------------------------------------------------------------------
 
   static pw.Widget _buildGraphicalCard(Move move, int index, String lang) {
     return pw.Container(
@@ -213,16 +230,13 @@ class PdfService {
               _buildCardHeader(move, lang),
               pw.SizedBox(height: 4),
               _buildMoveBody(move, lang),
-              // Top-level counter (if any and not already handled by body)
-              if (move.counterName != null &&
-                  !move.isChain &&
-                  !move.isCombo &&
-                  !move.hasStructuredCounter) ...[
+              // Show counter for any move that has one (simple or structured).
+              // Chain/combo containers handle sub-item counters inside _buildMoveBody.
+              if (move.hasCounter && !move.isChain && !move.isCombo) ...[
                 pw.SizedBox(height: 6),
                 _buildPdfCounterBox(move, lang),
               ],
-              // Handle top-level structured counters
-              if (move.hasStructuredCounter) ...[
+              if (move.hasStructuredCounter && (move.isChain || move.isCombo)) ...[
                 pw.SizedBox(height: 6),
                 _buildPdfCounterBox(move, lang),
               ],
@@ -238,7 +252,9 @@ class PdfService {
                 shape: pw.BoxShape.circle,
               ),
               child: pw.Text(
-                '${move.subLetter != null ? "$index${move.subLetter}" : index}',
+                move.subLetter != null
+                    ? '$index${move.subLetter}'
+                    : '$index',
                 style: pw.TextStyle(
                   color: PdfColors.white,
                   fontSize: 8,
@@ -253,10 +269,12 @@ class PdfService {
   }
 
   static pw.Widget _buildCardHeader(Move move, String lang) {
-    String tag = '';
-    if (move.category == 'chain' || move.isChain) tag = 'CHAIN';
-    if (move.category == 'simultaneous') tag = 'SIMULTANEOUS';
-    if (move.category == 'combo') tag = 'COMBO';
+    final tag = switch (move.category) {
+      'chain' => 'CHAIN',
+      'simultaneous' => 'SIMULTANEOUS',
+      'combo' => 'COMBO',
+      _ => move.isChain ? 'CHAIN' : '',
+    };
 
     if (tag.isEmpty) return pw.SizedBox.shrink();
 
@@ -271,7 +289,7 @@ class PdfService {
   }
 
   static pw.Widget _buildMoveBody(Move move, String lang) {
-    if (move.category == 'chain' || move.isChain) {
+    if (move.isChain) {
       return pw.Container(
         padding: const pw.EdgeInsets.all(4),
         decoration: pw.BoxDecoration(
@@ -386,7 +404,7 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         _buildLeafItem(move, lang, mini: mini),
-        if (move.counterName != null || move.hasStructuredCounter)
+        if (move.hasCounter)
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 2),
             child: _buildPdfCounterBox(move, lang, mini: true),
@@ -397,15 +415,14 @@ class PdfService {
 
   static pw.Widget _buildLeafItem(Move move, String lang, {bool mini = false}) {
     final category = move.displayCategory;
-    final color = _getCategoryPdfColor(category);
-    final bgColor = _getCategoryPdfBgColor(category);
+    final colors = _getCategoryPdfColors(category);
 
     return pw.Container(
       padding: pw.EdgeInsets.all(mini ? 3 : 4),
       decoration: pw.BoxDecoration(
-        color: bgColor,
+        color: colors.bg,
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
-        border: pw.Border.all(color: color, width: 0.5),
+        border: pw.Border.all(color: colors.border, width: 0.5),
       ),
       child: pw.Column(
         mainAxisSize: pw.MainAxisSize.min,
@@ -425,11 +442,11 @@ class PdfService {
                 if (move.side.isNotEmpty)
                   _pdfTag(
                     move.side,
-                    move.side == 'L'
-                        ? PdfColors.blue700
-                        : (move.side == 'R'
-                              ? PdfColors.red700
-                              : PdfColors.green700),
+                    switch (move.side) {
+                      'L' => PdfColors.blue700,
+                      'R' => PdfColors.red700,
+                      _ => PdfColors.green700,
+                    },
                   ),
                 if (move.level.isNotEmpty)
                   _pdfLevelTag(move.level, PdfColors.grey700),
@@ -500,11 +517,11 @@ class PdfService {
                 if ((move.counterSide ?? '').isNotEmpty)
                   _pdfTag(
                     move.counterSide!,
-                    move.counterSide == 'L'
-                        ? PdfColors.blue700
-                        : (move.counterSide == 'R'
-                              ? PdfColors.red700
-                              : PdfColors.green700),
+                    switch (move.counterSide!) {
+                      'L' => PdfColors.blue700,
+                      'R' => PdfColors.red700,
+                      _ => PdfColors.green700,
+                    },
                   ),
                 if ((move.counterLevel ?? '').isNotEmpty)
                   _pdfLevelTag(move.counterLevel!, PdfColors.grey700),
@@ -541,7 +558,9 @@ class PdfService {
     );
   }
 
-  // --- List Layout Widgets ---
+  // ---------------------------------------------------------------------------
+  // List layout
+  // ---------------------------------------------------------------------------
 
   static pw.Widget _buildListRow(Move move, int index, String lang) {
     return pw.Container(
@@ -549,7 +568,6 @@ class PdfService {
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          // Number circle
           pw.Container(
             width: 22,
             height: 22,
@@ -574,7 +592,8 @@ class PdfService {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 _buildListMoveContent(move, lang),
-                if (move.counterName != null && !move.isCombo && !move.isChain)
+                // Bug fix #2: also handle structured counters in list mode.
+                if (move.hasCounter && !move.isCombo && !move.isChain)
                   pw.Padding(
                     padding: const pw.EdgeInsets.only(top: 4),
                     child: _buildListCounterRow(move, lang),
@@ -613,7 +632,7 @@ class PdfService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       _buildListSingleMoveLine(sub, lang),
-                      if (sub.counterName != null)
+                      if (sub.hasCounter)
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(top: 2, left: 10),
                           child: _buildListCounterRow(sub, lang),
@@ -642,7 +661,7 @@ class PdfService {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   _buildListSingleMoveLine(m, lang),
-                  if (m.counterName != null)
+                  if (m.hasCounter)
                     pw.Padding(
                       padding: const pw.EdgeInsets.only(top: 2, left: 10),
                       child: _buildListCounterRow(m, lang),
@@ -704,11 +723,27 @@ class PdfService {
   }
 
   static pw.Widget _buildListCounterRow(Move move, String lang) {
-    final counterSide = move.counterSide != null ? '(${move.counterSide})' : '';
-    final counterLevel = move.counterLevel != null
+    // Resolve display name for any counter type (simple, simultaneous, chain).
+    final String displayName;
+    if (move.hasCounterCombo) {
+      displayName = move.counterSubMoves.map((m) => m.name).join(' + ');
+    } else if (move.hasCounterChain) {
+      displayName = move.counterChain.map((m) => m.name).join(' -> ');
+    } else {
+      displayName = move.counterName!;
+    }
+
+    // Side/level only meaningful for simple counters.
+    final counterSide =
+        (!move.hasStructuredCounter && (move.counterSide ?? '').isNotEmpty)
+        ? '(${move.counterSide})'
+        : '';
+    final counterLevel =
+        (!move.hasStructuredCounter && (move.counterLevel ?? '').isNotEmpty)
         ? LocalizationService.translate(move.counterLevel!.toLowerCase(), lang)
         : '';
-    final counterTranslation = move.counterTranslations[lang] ?? '';
+    final counterTranslation =
+        move.hasStructuredCounter ? '' : (move.counterTranslations[lang] ?? '');
 
     return pw.Row(
       mainAxisSize: pw.MainAxisSize.min,
@@ -718,7 +753,7 @@ class PdfService {
           style: pw.TextStyle(fontSize: 10, color: PdfColors.orange900),
         ),
         pw.Text(
-          move.counterName!,
+          displayName,
           style: pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             fontSize: 10,
@@ -743,73 +778,38 @@ class PdfService {
     );
   }
 
-  // --- Common Helpers ---
+  // ---------------------------------------------------------------------------
+  // Common helpers
+  // ---------------------------------------------------------------------------
 
-  static PdfColor _getCategoryPdfColor(String category) {
-    switch (category) {
-      case 'punch':
-        return PdfColors.blue200;
-      case 'kick':
-        return PdfColors.red200;
-      case 'packs':
-        return PdfColors.green200;
-      case 'trapping':
-        return PdfColors.orange200;
-      case 'move':
-        return PdfColors.teal200;
-      case 'kali':
-        return PdfColors.brown200;
-      case 'text':
-        return PdfColors.teal200;
-      default:
-        return PdfColors.grey200;
-    }
+  static Future<pw.MemoryImage> _loadIcon(String path) async {
+    final data = await rootBundle.load(path);
+    return pw.MemoryImage(data.buffer.asUint8List());
   }
 
-  static PdfColor _getCategoryPdfBgColor(String category) {
-    switch (category) {
-      case 'punch':
-        return PdfColors.blue50;
-      case 'kick':
-        return PdfColors.red50;
-      case 'packs':
-        return PdfColors.green50;
-      case 'trapping':
-        return PdfColors.orange50;
-      case 'move':
-        return PdfColors.teal50;
-      case 'kali':
-        return PdfColors.brown50;
-      case 'text':
-        return PdfColors.teal50;
-      default:
-        return PdfColors.grey50;
-    }
+  /// Returns border and background PDF colors for a move category.
+  static ({PdfColor border, PdfColor bg}) _getCategoryPdfColors(
+    String category,
+  ) {
+    return switch (category) {
+      'punch' => (border: PdfColors.blue200, bg: PdfColors.blue50),
+      'kick' => (border: PdfColors.red200, bg: PdfColors.red50),
+      'packs' => (border: PdfColors.green200, bg: PdfColors.green50),
+      'trapping' => (border: PdfColors.orange200, bg: PdfColors.orange50),
+      'move' || 'text' => (border: PdfColors.teal200, bg: PdfColors.teal50),
+      'kali' => (border: PdfColors.brown200, bg: PdfColors.brown50),
+      _ => (border: PdfColors.grey200, bg: PdfColors.grey50),
+    };
   }
 
   static pw.Widget _pdfLevelTag(String level, PdfColor color) {
-    String symbol = level.substring(0, 1);
-    final lowLevel = level.toLowerCase();
-    if (lowLevel == 'high') symbol = '^';
-    if (lowLevel == 'mid') symbol = '>';
-    if (lowLevel == 'low') symbol = 'v';
-
-    return pw.Container(
-      margin: const pw.EdgeInsets.only(right: 2, top: 2),
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-      decoration: pw.BoxDecoration(
-        color: color,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
-      ),
-      child: pw.Text(
-        symbol,
-        style: pw.TextStyle(
-          color: PdfColors.white,
-          fontSize: 8,
-          fontWeight: pw.FontWeight.bold,
-        ),
-      ),
-    );
+    final symbol = switch (level.toLowerCase()) {
+      'high' => '^',
+      'mid' => '>',
+      'low' => 'v',
+      _ => level.substring(0, 1),
+    };
+    return _pdfTag(symbol, color);
   }
 
   static pw.Widget _pdfTag(String text, PdfColor color) {
