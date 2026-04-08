@@ -120,6 +120,12 @@ class JKDStandaloneDelegate extends WatchUi.BehaviorDelegate {
     }
     function onKey(evt) {
         var key = evt.getKey();
+        var type = evt.getType();
+        // Long press SELECT (top-right) → toggle mirror mode
+        if (key == WatchUi.KEY_ENTER && type == WatchUi.KEY_TYPE_HOLD) {
+            _view.toggleMirrorMode();
+            return true;
+        }
         if (key == WatchUi.KEY_DOWN) {
             _view.nextCombo();
             return true;

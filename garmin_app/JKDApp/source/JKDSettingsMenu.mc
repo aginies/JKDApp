@@ -24,6 +24,9 @@ class JKDSettingsMenu extends WatchUi.Menu2 {
         var textLabel = JKDSettings.forceLargeText ? "Large" : "Dynamic";
         addItem(new WatchUi.MenuItem("Text Size", textLabel, :text, null));
 
+        var mirrorLabel = JKDSettings.mirrorMode ? "On" : "Off";
+        addItem(new WatchUi.MenuItem("Mirror Mode", mirrorLabel, :mirror, null));
+
         addItem(new WatchUi.MenuItem("Developed by", "ginies.org", :credit, null));
     }
 }
@@ -84,6 +87,10 @@ class JKDSettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :text) {
             JKDSettings.forceLargeText = !JKDSettings.forceLargeText;
             item.setSubLabel(JKDSettings.forceLargeText ? "Large" : "Dynamic");
+            JKDSettings.saveSettings();
+        } else if (id == :mirror) {
+            JKDSettings.mirrorMode = !JKDSettings.mirrorMode;
+            item.setSubLabel(JKDSettings.mirrorMode ? "On" : "Off");
             JKDSettings.saveSettings();
         }
     }

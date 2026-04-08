@@ -889,32 +889,69 @@ class _WearTrainingViewState extends State<WearTrainingView>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${_currentIndex + 1}/${widget.series.moves.length}',
-                    style: TextStyle(
-                      color: Colors.blueAccent.withValues(alpha: 0.8),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Colors.blueAccent.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${_currentIndex + 1}/${widget.series.moves.length}',
+                          style: TextStyle(
+                            color: Colors.blueAccent.withValues(alpha: 0.9),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (provider.autoAdvanceSec > 0) ...[
+                          const SizedBox(width: 3),
+                          Icon(
+                            Icons.timer,
+                            size: 10,
+                            color: Colors.blueAccent.withValues(alpha: 0.9),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  if (provider.autoAdvanceSec > 0) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.timer,
-                      size: 12,
-                      color: Colors.blueAccent.withValues(alpha: 0.8),
-                    ),
-                  ],
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
                   GestureDetector(
                     onTap: () => setState(() => _mirrorMode = !_mirrorMode),
-                    child: Text(
-                      '⇄',
-                      style: TextStyle(
-                        fontSize: 14,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
                         color: _mirrorMode
-                            ? Colors.orangeAccent
-                            : Colors.white24,
+                            ? Colors.orangeAccent.withValues(alpha: 0.25)
+                            : Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: _mirrorMode
+                              ? Colors.orangeAccent.withValues(alpha: 0.6)
+                              : Colors.white12,
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '⇄',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _mirrorMode
+                                ? Colors.orangeAccent
+                                : Colors.white38,
+                          ),
+                        ),
                       ),
                     ),
                   ),

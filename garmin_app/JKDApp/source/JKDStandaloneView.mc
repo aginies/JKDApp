@@ -27,6 +27,7 @@ class JKDStandaloneView extends WatchUi.View {
     private var _autoAdvanceTicks = 0;
     private var _tickCount = 0;
     private var _isWaitingForTts = false;
+    private var _repCount = 0;
 
     function initialize(series as JKDSeries.Series) {
         View.initialize();
@@ -110,12 +111,24 @@ class JKDStandaloneView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function toggleMirrorMode() {
+        JKDSettings.mirrorMode = !JKDSettings.mirrorMode;
+        JKDSettings.saveSettings();
+        vibrate();
+        WatchUi.requestUpdate();
+    }
+
     function nextCombo() {
         var combos = _series.combos;
         if (JKDSettings.trainingMode == JKDSettings.MODE_RANDOM) {
             _comboIndex = Math.rand() % combos.size();
         } else {
-            _comboIndex = (_comboIndex + 1) % combos.size();
+            var nextIndex = _comboIndex + 1;
+            if (nextIndex >= combos.size()) {
+                _repCount++;
+                nextIndex = 0;
+            }
+            _comboIndex = nextIndex;
         }
         _autoAdvanceTicks = 0;
         resetScroll();
@@ -252,11 +265,26 @@ class JKDStandaloneView extends WatchUi.View {
             var settings = System.getDeviceSettings();
             if (settings.phoneConnected) {
                 dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-                // Draw small dot or 'BT'
                 dc.drawText(screenWidth - 30, pillY, Graphics.FONT_XTINY, "BT", Graphics.TEXT_JUSTIFY_RIGHT);
             } else {
                 dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(screenWidth - 30, pillY, Graphics.FONT_XTINY, "BT", Graphics.TEXT_JUSTIFY_RIGHT);
+            }
+
+            // Rep count (top-left, only when > 0)
+            if (_repCount > 0) {
+                var repStr = "x" + _repCount.toString();
+                var repW = dc.getTextWidthInPixels(repStr, pFont);
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+                dc.fillRoundedRectangle(4, pillY, repW + 8, textH, 4);
+                dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(8, pillY, pFont, repStr, Graphics.TEXT_JUSTIFY_LEFT);
+            }
+
+            // Mirror mode indicator (below BT)
+            if (JKDSettings.mirrorMode) {
+                dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(screenWidth - 30, pillY + textH + 2, Graphics.FONT_XTINY, "MIR", Graphics.TEXT_JUSTIFY_RIGHT);
             }
 
             if (JKDSettings.autoAdvanceSec > 0) {
@@ -354,8 +382,12 @@ class JKDStandaloneView extends WatchUi.View {
             var currentX = centerX - (totalW / 2);
             for (var j = 0; j < words.size(); j++) {
                 var word = words[j];
+                if (JKDSettings.mirrorMode) {
+                    if (word.equals("L")) { word = "R"; }
+                    else if (word.equals("R")) { word = "L"; }
+                }
                 var color = Graphics.COLOR_WHITE;
-                
+
                 if (word.equals("L")) { color = Graphics.COLOR_BLUE; }
                 else if (word.equals("R")) { color = Graphics.COLOR_RED; }
                 else if (word.equals("->")) { 
