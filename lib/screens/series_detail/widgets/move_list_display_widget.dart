@@ -161,8 +161,9 @@ class MoveListDisplayWidget {
     Move move,
     String language,
     Function(String category, String moveName) onShowMediaGallery,
-    VoidCallback? onEdit,
-  ) {
+    VoidCallback? onEdit, {
+    bool showTranslation = false,
+  }) {
     if (move.hasCounterCombo) {
       // SIMULTANEOUS counter — items displayed with "+" between them
       return Wrap(
@@ -197,6 +198,7 @@ class MoveListDisplayWidget {
                 iconSize: 18,
                 fontSize: 13,
                 onEdit: onEdit,
+                showTranslation: showTranslation,
               ),
             ];
           }),
@@ -233,6 +235,7 @@ class MoveListDisplayWidget {
                 iconSize: 18,
                 fontSize: 13,
                 onEdit: onEdit,
+                showTranslation: showTranslation,
               ),
             ];
           }),
@@ -250,6 +253,7 @@ class MoveListDisplayWidget {
     double iconSize = 24,
     double fontSize = 14,
     VoidCallback? onEdit,
+    bool showTranslation = false,
   }) {
     if (sub.isChain || sub.isCombo) {
       // RECURSIVE rendering for nested groups
@@ -278,6 +282,7 @@ class MoveListDisplayWidget {
                         iconSize: iconSize * 0.8,
                         fontSize: fontSize * 0.9,
                         onEdit: onEdit,
+                        showTranslation: showTranslation,
                       ),
                       if (sub.isChain && idx < sub.chain.length - 1)
                         const Padding(
@@ -309,67 +314,89 @@ class MoveListDisplayWidget {
       );
     }
 
-    return InkWell(
-      onDoubleTap: onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
-      child: _attackerBox(
-        DiagonalCross(
-          show: sub.isFeint,
-          color: Colors.purple,
-          child: Wrap(
-            spacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Icon(
-                MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
-                size: iconSize,
-                color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
-              ),
-              const SizedBox(width: 4),
-              Builder(
-                builder: (context) {
-                  final provider = context.read<SeriesProvider>();
-                  final String effectiveName = _getEffectiveTranslation(
-                    sub,
-                    language,
-                    provider.glossary,
-                  );
-                  return Text(
-                    effectiveName.isNotEmpty ? effectiveName : sub.name,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onDoubleTap: onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
+          child: _attackerBox(
+            DiagonalCross(
+              show: sub.isFeint,
+              color: Colors.purple,
+              child: Wrap(
+                spacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Icon(
+                    MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
+                    size: iconSize,
+                    color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    sub.name,
                     style: TextStyle(
                       fontSize: fontSize,
                       fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
-              ),
-              if (sub.side.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: MoveDisplayWidgets.sideCircle(
-                    LocalizationService.translate(
-                      sub.side == 'L'
-                          ? 'left'
-                          : (sub.side == 'R'
-                                ? 'right'
-                                : (sub.side == 'F'
-                                      ? 'front'
-                                      : (sub.side == 'B' ? 'back' : 'mid'))),
-                      language,
-                    ).substring(0, 1),
-                    sub.side,
-                    mini: true,
                   ),
-                ),
-              if (sub.level.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: MoveDisplayWidgets.levelIcon(sub.level, mini: true),
-                ),
-            ],
+                  if (sub.side.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.sideCircle(
+                        LocalizationService.translate(
+                          sub.side == 'L'
+                              ? 'left'
+                              : (sub.side == 'R'
+                                    ? 'right'
+                                    : (sub.side == 'F'
+                                          ? 'front'
+                                          : (sub.side == 'B' ? 'back' : 'mid'))),
+                          language,
+                        ).substring(0, 1),
+                        sub.side,
+                        mini: true,
+                      ),
+                    ),
+                  if (sub.level.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.levelIcon(sub.level, mini: true),
+                    ),
+                ],
+              ),
+            ),
+            mini: iconSize < 28,
           ),
         ),
-        mini: iconSize < 28,
-      ),
+        if (showTranslation)
+          Builder(
+            builder: (context) {
+              final provider = context.read<SeriesProvider>();
+              final String effectiveName = _getEffectiveTranslation(
+                sub,
+                language,
+                provider.glossary,
+              );
+              if (effectiveName.isEmpty ||
+                  effectiveName.toLowerCase() == sub.name.toLowerCase()) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: 2.0, left: 4.0),
+                child: Text(
+                  effectiveName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 
@@ -382,6 +409,7 @@ class MoveListDisplayWidget {
     double fontSize = 14,
     int? subDisplayNumber,
     VoidCallback? onEdit,
+    bool showTranslation = false,
   }) {
     return Wrap(
       spacing: 4,
@@ -410,6 +438,7 @@ class MoveListDisplayWidget {
                 iconSize: iconSize,
                 fontSize: fontSize,
                 onEdit: onEdit,
+                showTranslation: showTranslation,
               ),
               if (idx < move.subMoves.length - 1)
                 const Padding(
@@ -433,6 +462,7 @@ class MoveListDisplayWidget {
     double fontSize = 14,
     int? subDisplayNumber,
     VoidCallback? onEdit,
+    bool showTranslation = false,
   }) {
     return Wrap(
       spacing: 4,
@@ -469,6 +499,7 @@ class MoveListDisplayWidget {
                     iconSize: iconSize,
                     fontSize: fontSize,
                     onEdit: onEdit,
+                    showTranslation: showTranslation,
                   ),
                   if (m.counterName != null || m.hasStructuredCounter)
                     Padding(
@@ -481,6 +512,7 @@ class MoveListDisplayWidget {
                                 language,
                                 onShowMediaGallery,
                                 onEdit,
+                                showTranslation: showTranslation,
                               )
                             : DiagonalCross(
                                 show: m.counterIsFeint,
@@ -496,14 +528,16 @@ class MoveListDisplayWidget {
                                     const SizedBox(width: 4),
                                     Builder(
                                       builder: (context) {
-                                        final provider = context
-                                            .read<SeriesProvider>();
+                                        final provider =
+                                            context.read<SeriesProvider>();
                                         final String effectiveCounter =
-                                            _getEffectiveCounterTranslation(
-                                              m,
-                                              language,
-                                              provider.glossary,
-                                            );
+                                            showTranslation
+                                                ? _getEffectiveCounterTranslation(
+                                                  m,
+                                                  language,
+                                                  provider.glossary,
+                                                )
+                                                : '';
                                         return Text(
                                           effectiveCounter.isNotEmpty
                                               ? effectiveCounter
@@ -675,6 +709,7 @@ class MoveListDisplayWidget {
                                   iconSize: 28,
                                   fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
+                                  showTranslation: showTranslation,
                                 )
                               else if (moves[i].category == 'chain' ||
                                   moves[i].isChain)
@@ -686,6 +721,7 @@ class MoveListDisplayWidget {
                                   iconSize: 28,
                                   fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
+                                  showTranslation: showTranslation,
                                 )
                               else if (!moves[i].isCombo) ...[
                                 _buildMoveContent(
@@ -695,6 +731,7 @@ class MoveListDisplayWidget {
                                   iconSize: 28,
                                   fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
+                                  showTranslation: showTranslation,
                                 ),
                               ],
                             ],
@@ -770,6 +807,7 @@ class MoveListDisplayWidget {
                                             onEdit: isEditing
                                                 ? onEdit(i)
                                                 : null,
+                                            showTranslation: showTranslation,
                                           )
                                         else if (isChain)
                                           _buildChainContent(
@@ -781,6 +819,7 @@ class MoveListDisplayWidget {
                                             onEdit: isEditing
                                                 ? onEdit(i)
                                                 : null,
+                                            showTranslation: showTranslation,
                                           )
                                         else
                                           Row(
@@ -807,6 +846,7 @@ class MoveListDisplayWidget {
                                                 onEdit: isEditing
                                                     ? onEdit(i)
                                                     : null,
+                                                showTranslation: showTranslation,
                                               ),
                                             ],
                                           ),
