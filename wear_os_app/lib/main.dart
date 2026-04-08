@@ -253,6 +253,16 @@ class WearSettingsScreen extends StatelessWidget {
 class WearSeriesList extends StatelessWidget {
   const WearSeriesList({super.key});
 
+  Color _getCategoryColor(String category) {
+    final cat = category.toLowerCase();
+    if (cat.contains('jun fan') || cat.contains('gung fu')) return Colors.blueAccent;
+    if (cat.contains('kali') || cat.contains('escrima')) return Colors.redAccent;
+    if (cat.contains('jeet kune do') || cat.contains('jkd')) return Colors.orangeAccent;
+    if (cat.contains('trapping')) return Colors.greenAccent;
+    if (cat.contains('kick')) return Colors.purpleAccent;
+    return Colors.blueGrey;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SeriesProvider>();
@@ -268,57 +278,74 @@ class WearSeriesList extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       body: ListWheelScrollView.useDelegate(
-            itemExtent: 60,
-            perspective: 0.005,
-            diameterRatio: 1.5,
-            physics: const FixedExtentScrollPhysics(),
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: series.length,
-              builder: (context, index) {
-                final s = series[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: InkWell(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WearTrainingView(series: s),
-                      ),
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[900],
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.blueAccent.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          s.title,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
+        itemExtent: 70, // Slightly taller for category label
+        perspective: 0.005,
+        diameterRatio: 1.5,
+        physics: const FixedExtentScrollPhysics(),
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: series.length,
+          builder: (context, index) {
+            final s = series[index];
+            final accentColor = _getCategoryColor(s.category);
+            
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WearTrainingView(series: s),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(15),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border(
+                      left: BorderSide(color: accentColor, width: 4),
+                      top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                      right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        s.title,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        s.category.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: accentColor.withValues(alpha: 0.8),
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -417,12 +444,13 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
   Widget _buildActionBubble(String text, double fontSize) {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 3),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      // Dynamic width for 2 columns: roughly half the screen width minus padding
+      width: 80, 
+      margin: const EdgeInsets.all(2),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
           width: 1,
@@ -590,59 +618,52 @@ class _WearTrainingViewState extends State<WearTrainingView>
                   },
                 ),
               ),
+            // Discreet Progress Overlay at the very top
+            Positioned(
+              top: isRound ? 22 : 8,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${_currentIndex + 1}/${widget.series.moves.length}',
+                    style: TextStyle(
+                      color: Colors.blueAccent.withValues(alpha: 0.8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (provider.autoAdvanceSec > 0) ...[
+                    const SizedBox(width: 4),
+                    Icon(Icons.timer, 
+                         size: 10, 
+                         color: Colors.blueAccent.withValues(alpha: 0.8)),
+                  ],
+                ],
+              ),
+            ),
             Container(
               width: double.infinity,
               height: double.infinity,
               padding: EdgeInsets.only(
-                top: isRound ? 35 : 16,
+                top: isRound ? 38 : 24, // Adjusted to clear the overlay
                 bottom: isRound ? 35 : 16,
                 left: 12,
                 right: 12,
               ),
               child: Column(
                 children: [
-                  // Progress Bubble on Top
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.blueAccent.withValues(alpha: 0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          '${_currentIndex + 1}/${widget.series.moves.length}',
-                          style: const TextStyle(
-                            color: Colors.blueAccent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (provider.autoAdvanceSec > 0) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.timer,
-                            size: 12, color: Colors.blueAccent),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // List of Action Bubbles
+                  // Action bubbles now occupy all available vertical space
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 4, 
+                          runSpacing: 4,
                           children: actions
                               .map((a) => _buildActionBubble(a, baseFontSize))
                               .toList(),
