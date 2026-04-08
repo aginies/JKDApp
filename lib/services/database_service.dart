@@ -16,6 +16,23 @@ class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static Database? _database;
 
+  // List of training program JSON files to load from assets
+  static const List<String> _programFiles = [
+    'assets/training_programs/30-day-jkd-fundamentals.json',
+    'assets/training_programs/2-week-trapping-intensive.json',
+    'assets/training_programs/footwork-beginner-2-weeks.json',
+    'assets/training_programs/footwork-advanced-2-weeks.json',
+    'assets/training_programs/footwork-expert-2-weeks.json',
+    'assets/training_programs/basic-hits-2-weeks.json',
+    'assets/training_programs/counters-beginner-2-weeks.json',
+    'assets/training_programs/counters-advanced-2-weeks.json',
+    'assets/training_programs/counters-expert-2-weeks.json',
+    'assets/training_programs/3-4-counts-beginner-2-weeks.json',
+    'assets/training_programs/3-4-counts-advanced-2-weeks.json',
+    'assets/training_programs/3-4-counts-expert-2-weeks.json',
+    'assets/training_programs/advanced-combos-45-days.json',
+  ];
+
   // List of series JSON files to load from assets (all are trusted system series)
   static const List<String> _seriesFiles = [
     'assets/jkd-series-punches.json',
@@ -376,26 +393,10 @@ class DatabaseService {
   Future<void> _seedTrainingPrograms(dynamic db) async {
     LoggingService.log('Seeding training programs from assets...');
 
-    final List<String> programFiles = [
-      'assets/training_programs/30-day-jkd-fundamentals.json',
-      'assets/training_programs/2-week-trapping-intensive.json',
-      'assets/training_programs/footwork-beginner-2-weeks.json',
-      'assets/training_programs/footwork-advanced-2-weeks.json',
-      'assets/training_programs/footwork-expert-2-weeks.json',
-      'assets/training_programs/basic-hits-2-weeks.json',
-      'assets/training_programs/counters-beginner-2-weeks.json',
-      'assets/training_programs/counters-advanced-2-weeks.json',
-      'assets/training_programs/counters-expert-2-weeks.json',
-      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
-      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
-      'assets/training_programs/3-4-counts-expert-2-weeks.json',
-      'assets/training_programs/advanced-combos-45-days.json',
-    ];
-
     // Build a map of series titles to IDs for resolving references
     final seriesTitleMap = await _buildSeriesTitleMap(db);
 
-    for (final programFile in programFiles) {
+    for (final programFile in _programFiles) {
       try {
         final String programResponse = await rootBundle.loadString(programFile);
         final List<dynamic> programsData = json.decode(programResponse);
@@ -992,13 +993,6 @@ class DatabaseService {
       'notes': notes,
     });
 
-    // Reset today's series completion counts for the new day
-    await db.update(
-      'user_program_progress',
-      {'todays_completed_series_ids': json.encode({})},
-      where: 'id = ?',
-      whereArgs: [progressId],
-    );
   }
 
   /// Record a series completion and auto-mark day complete if all series done
@@ -1382,25 +1376,9 @@ class DatabaseService {
     }
 
     // 3. Check Training Programs
-    final List<String> programFiles = [
-      'assets/training_programs/30-day-jkd-fundamentals.json',
-      'assets/training_programs/2-week-trapping-intensive.json',
-      'assets/training_programs/footwork-beginner-2-weeks.json',
-      'assets/training_programs/footwork-advanced-2-weeks.json',
-      'assets/training_programs/footwork-expert-2-weeks.json',
-      'assets/training_programs/basic-hits-2-weeks.json',
-      'assets/training_programs/counters-beginner-2-weeks.json',
-      'assets/training_programs/counters-advanced-2-weeks.json',
-      'assets/training_programs/counters-expert-2-weeks.json',
-      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
-      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
-      'assets/training_programs/3-4-counts-expert-2-weeks.json',
-      'assets/training_programs/advanced-combos-45-days.json',
-    ];
-
     bool programsChanged = false;
     final List<String> programHashes = [];
-    for (final file in programFiles) {
+    for (final file in _programFiles) {
       final currentHash = await _calculateAssetHash(file);
       programHashes.add(currentHash);
       final storedHash = await _getStoredHash(db, 'hash_$file');
@@ -1416,8 +1394,8 @@ class DatabaseService {
       await _seedTrainingPrograms(
         db,
       ); // This method already handles updates internally
-      for (int i = 0; i < programFiles.length; i++) {
-        await _saveStoredHash(db, 'hash_${programFiles[i]}', programHashes[i]);
+      for (int i = 0; i < _programFiles.length; i++) {
+        await _saveStoredHash(db, 'hash_${_programFiles[i]}', programHashes[i]);
       }
     }
   }

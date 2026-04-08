@@ -7,41 +7,50 @@ def format_move(m):
     name = m.get("name", "Unknown")
     side = m.get("side", "")
     counter = m.get("counter_name", "")
-    
-    if side and side in ["L", "R"]:
+
+    if side and side in ["L", "R", "mid"]:
         name = f"{name} {side}"
-        
+
     if counter:
         c_side = m.get("counter_side", "")
-        if c_side and c_side in ["L", "R"]:
+        if c_side and c_side in ["L", "R", "mid"]:
             counter = f"{counter} {c_side}"
         return f"{name} -> {counter}"
-    
+
     return name
+
+def parse_series(series_data):
+    title = series_data.get("title", "Unknown Series")
+    moves_list = series_data.get("moves", [])
+
+    combos = []
+    for m in moves_list:
+        sub_moves_json = m.get("sub_moves_json")
+        chain_json = m.get("chain_json")
+        if sub_moves_json:
+            try:
+                sub_moves = json.loads(sub_moves_json)
+                combos.append(" + ".join([format_move(sm) for sm in sub_moves]))
+            except:
+                combos.append(format_move(m))
+        elif chain_json:
+            try:
+                chain_moves = json.loads(chain_json)
+                combos.append(" -> ".join([format_move(cm) for cm in chain_moves]))
+            except:
+                combos.append(format_move(m))
+        else:
+            combos.append(format_move(m))
+
+    return {"title": title, "combos": combos}
 
 def parse_series_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         data = json.load(f)
         if not isinstance(data, list) or len(data) == 0:
-            return None
-        
-        series_data = data[0]
-        title = series_data.get("title", "Unknown Series")
-        moves_list = series_data.get("moves", [])
-        
-        combos = []
-        for m in moves_list:
-            sub_json = m.get("sub_moves_json") or m.get("chain_json")
-            if sub_json:
-                try:
-                    sub_moves = json.loads(sub_json)
-                    combos.append(" + ".join([format_move(sm) for sm in sub_moves]))
-                except:
-                    combos.append(format_move(m))
-            else:
-                combos.append(format_move(m))
-                
-        return {"title": title, "combos": combos}
+            return []
+
+        return [parse_series(s) for s in data if isinstance(s, dict)]
 
 def main():
     # Assets are now located in the root assets/ directory
@@ -55,8 +64,7 @@ def main():
     print(f"Found {len(json_files)} series files.")
     for f in sorted(json_files):
         print(f"Parsing {f}...")
-        s = parse_series_file(f)
-        if s:
+        for s in parse_series_file(f):
             all_series.append(s)
 
     mc_content = """module JKDSeries {
