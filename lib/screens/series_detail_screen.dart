@@ -511,18 +511,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       );
                     },
                   ),
-                IconButton(
-                  icon: Icon(
-                    _localShowTranslation ? Icons.translate : Icons.g_translate,
-                    color: _localShowTranslation ? Colors.teal : Colors.grey,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _localShowTranslation = !_localShowTranslation;
-                    });
-                  },
-                  tooltip: lang == 'fr' ? 'Traductions' : 'Translations',
-                ),
                 if (_isEditing)
                   IconButton(
                     icon: const Icon(Icons.check),
@@ -812,7 +800,29 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ),
                       const Spacer(),
                       IconButton(
+                        icon: Icon(
+                          _localShowTranslation
+                              ? Icons.translate
+                              : Icons.g_translate,
+                          size: 22,
+                          color:
+                              _localShowTranslation ? Colors.teal : Colors.grey,
+                        ),
+                        tooltip: lang == 'fr' ? 'Traductions' : 'Translations',
+                        onPressed: () {
+                          setState(() {
+                            _localShowTranslation = !_localShowTranslation;
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.fullscreen, size: 24),
+
                         tooltip: LocalizationService.translate(
                           'fullscreen',
                           lang,
