@@ -638,9 +638,9 @@ class _WearTrainingViewState extends State<WearTrainingView>
                   },
                 ),
               ),
-            // Discreet Progress Overlay at the very top
+            // Discreet Progress Overlay at the very top - Moved higher
             Positioned(
-              top: isRound ? 22 : 8,
+              top: isRound ? 14 : 4,
               left: 0,
               right: 0,
               child: Row(
@@ -667,14 +667,14 @@ class _WearTrainingViewState extends State<WearTrainingView>
               width: double.infinity,
               height: double.infinity,
               padding: EdgeInsets.only(
-                top: isRound ? 38 : 24, // Adjusted to clear the overlay
-                bottom: isRound ? 35 : 16,
-                left: 12,
-                right: 12,
+                top: isRound ? 30 : 18, // Reduced top padding
+                bottom: isRound ? 20 : 8, // Reduced bottom padding
+                left: 8,
+                right: 8,
               ),
               child: Column(
                 children: [
-                  // Dynamic Column Grid of Action Bubbles
+                  // Dynamic Column Grid of Action Bubbles - Now uses all space
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
@@ -691,13 +691,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
                         ),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 16,
-                    color: Colors.grey.withValues(alpha: 0.3),
                   ),
                 ],
               ),
