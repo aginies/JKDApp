@@ -805,8 +805,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                               ? Icons.translate
                               : Icons.g_translate,
                           size: 22,
-                          color:
-                              _localShowTranslation ? Colors.teal : Colors.grey,
+                          color: _localShowTranslation
+                              ? Colors.teal
+                              : Colors.grey,
                         ),
                         tooltip: lang == 'fr' ? 'Traductions' : 'Translations',
                         onPressed: () {
@@ -935,7 +936,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                                 trainingController: _trainingController,
                                 showTranslation: _localShowTranslation,
                               ),
-
                             ),
                           ),
                         )

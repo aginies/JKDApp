@@ -325,17 +325,23 @@ class MoveListDisplayWidget {
                 color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
               ),
               const SizedBox(width: 4),
-              Builder(builder: (context) {
-                final provider = context.read<SeriesProvider>();
-                final String effectiveName = _getEffectiveTranslation(sub, language, provider.glossary);
-                return Text(
-                  effectiveName.isNotEmpty ? effectiveName : sub.name,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              }),
+              Builder(
+                builder: (context) {
+                  final provider = context.read<SeriesProvider>();
+                  final String effectiveName = _getEffectiveTranslation(
+                    sub,
+                    language,
+                    provider.glossary,
+                  );
+                  return Text(
+                    effectiveName.isNotEmpty ? effectiveName : sub.name,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
+              ),
               if (sub.side.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(left: 4.0),
@@ -488,20 +494,30 @@ class MoveListDisplayWidget {
                                       color: Colors.orange,
                                     ),
                                     const SizedBox(width: 4),
-                                    Builder(builder: (context) {
-                                      final provider = context.read<SeriesProvider>();
-                                      final String effectiveCounter = _getEffectiveCounterTranslation(m, language, provider.glossary);
-                                      return Text(
-                                        effectiveCounter.isNotEmpty ? effectiveCounter : m.counterName!,
-                                        style: TextStyle(
-                                          fontSize: fontSize - 1,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      );
-                                    }),
+                                    Builder(
+                                      builder: (context) {
+                                        final provider = context
+                                            .read<SeriesProvider>();
+                                        final String effectiveCounter =
+                                            _getEffectiveCounterTranslation(
+                                              m,
+                                              language,
+                                              provider.glossary,
+                                            );
+                                        return Text(
+                                          effectiveCounter.isNotEmpty
+                                              ? effectiveCounter
+                                              : m.counterName!,
+                                          style: TextStyle(
+                                            fontSize: fontSize - 1,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                     const SizedBox(width: 4),
                                     if (m.counterSide?.isNotEmpty ?? false)
                                       MoveDisplayWidgets.sideCircle(
@@ -884,21 +900,37 @@ class MoveListDisplayWidget {
                                                                         '',
                                                                   ),
                                                                 ),
-                                                                Builder(builder: (context) {
-                                                                  final provider = context.read<SeriesProvider>();
-                                                                  final String effectiveCounter = _getEffectiveCounterTranslation(sub, language, provider.glossary);
-                                                                  return Text(
-                                                                    effectiveCounter.isNotEmpty ? effectiveCounter : sub.counterName!,
-                                                                    style: TextStyle(
-                                                                      fontSize: 13,
-                                                                      color: Theme.of(
-                                                                        context,
-                                                                      ).colorScheme.secondary,
-                                                                      fontWeight:
-                                                                          FontWeight.bold,
-                                                                    ),
-                                                                  );
-                                                                }),
+                                                                Builder(
+                                                                  builder: (context) {
+                                                                    final provider =
+                                                                        context
+                                                                            .read<
+                                                                              SeriesProvider
+                                                                            >();
+                                                                    final String
+                                                                    effectiveCounter = _getEffectiveCounterTranslation(
+                                                                      sub,
+                                                                      language,
+                                                                      provider
+                                                                          .glossary,
+                                                                    );
+                                                                    return Text(
+                                                                      effectiveCounter
+                                                                              .isNotEmpty
+                                                                          ? effectiveCounter
+                                                                          : sub.counterName!,
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            13,
+                                                                        color: Theme.of(
+                                                                          context,
+                                                                        ).colorScheme.secondary,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                ),
                                                                 if (sub
                                                                         .counterSide
                                                                         ?.isNotEmpty ??
@@ -1045,22 +1077,41 @@ class MoveListDisplayWidget {
                                                         ),
                                                       ),
                                                       const SizedBox(width: 4),
-                                                      Builder(builder: (context) {
-                                                        final provider = context.read<SeriesProvider>();
-                                                        final String effectiveCounter = _getEffectiveCounterTranslation(moves[i], language, provider.glossary);
+                                                      Builder(
+                                                        builder: (context) {
+                                                          final provider = context
+                                                              .read<
+                                                                SeriesProvider
+                                                              >();
+                                                          final String
+                                                          effectiveCounter =
+                                                              _getEffectiveCounterTranslation(
+                                                                moves[i],
+                                                                language,
+                                                                provider
+                                                                    .glossary,
+                                                              );
 
-                                                        return Text(
-                                                          effectiveCounter.isNotEmpty ? effectiveCounter : moves[i].counterName!,
-                                                          style: TextStyle(
-                                                            color:
-                                                                Theme.of(context)
-                                                                    .colorScheme
-                                                                    .secondary,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        );
-                                                      }),
+                                                          return Text(
+                                                            effectiveCounter
+                                                                    .isNotEmpty
+                                                                ? effectiveCounter
+                                                                : moves[i]
+                                                                      .counterName!,
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .secondary,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
 
                                                       if (moves[i]
                                                               .counterSide

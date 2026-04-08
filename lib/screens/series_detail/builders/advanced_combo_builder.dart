@@ -441,13 +441,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               children: [
                 _toolbarButton('', Icons.add, Colors.blue, _onAddClick),
                 _toolbarButton('', Icons.remove, Colors.red, _onDeleteSelected),
-                
+
                 // History Box (Undo/Redo)
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isDark ? Colors.white10 : Colors.black12,

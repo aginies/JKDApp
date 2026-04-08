@@ -291,7 +291,13 @@ class GraphicalMoveView {
                 spacing: 4,
                 runSpacing: 4,
                 children: move.subMoves.map((sm) {
-                  return _buildMoveCard(sm, lang, context, onShowMediaGallery, showTranslation: showTranslation);
+                  return _buildMoveCard(
+                    sm,
+                    lang,
+                    context,
+                    onShowMediaGallery,
+                    showTranslation: showTranslation,
+                  );
                 }).toList(),
               ),
             ),
@@ -408,28 +414,30 @@ class GraphicalMoveView {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      Builder(builder: (context) {
-                        if (!showTranslation) return const SizedBox.shrink();
-                        final provider = context.read<SeriesProvider>();
-                        final trans = _getEffectiveTranslation(
-                          move,
-                          lang,
-                          provider.glossary,
-                        );
-                        if (trans.isEmpty) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 2.0),
-                          child: Text(
-                            trans,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic,
+                      Builder(
+                        builder: (context) {
+                          if (!showTranslation) return const SizedBox.shrink();
+                          final provider = context.read<SeriesProvider>();
+                          final trans = _getEffectiveTranslation(
+                            move,
+                            lang,
+                            provider.glossary,
+                          );
+                          if (trans.isEmpty) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Text(
+                              trans,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        );
-                      }),
+                          );
+                        },
+                      ),
                       if (move.specialAction != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 2.0),
@@ -619,7 +627,11 @@ class GraphicalMoveView {
                         ),
                       ),
                     ),
-                  _buildMiniMoveCard(sm, lang, showTranslation: showTranslation),
+                  _buildMiniMoveCard(
+                    sm,
+                    lang,
+                    showTranslation: showTranslation,
+                  ),
                 ];
               }).toList(),
             ),
@@ -681,28 +693,30 @@ class GraphicalMoveView {
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          Builder(builder: (context) {
-            if (!showTranslation) return const SizedBox.shrink();
-            final provider = context.read<SeriesProvider>();
-            final ct = _getEffectiveCounterTranslation(
-              move,
-              lang,
-              provider.glossary,
-            );
-            if (ct.isEmpty) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 2.0),
-              child: Text(
-                ct,
-                style: const TextStyle(
-                  fontSize: 9,
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
+          Builder(
+            builder: (context) {
+              if (!showTranslation) return const SizedBox.shrink();
+              final provider = context.read<SeriesProvider>();
+              final ct = _getEffectiveCounterTranslation(
+                move,
+                lang,
+                provider.glossary,
+              );
+              if (ct.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Text(
+                  ct,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            );
-          }),
+              );
+            },
+          ),
           if ((move.counterSide ?? '').isNotEmpty ||
               (move.counterLevel ?? '').isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -743,7 +757,11 @@ class GraphicalMoveView {
   }
 
   /// Small card for rendering a single move (or nested group) inside a structured counter box.
-  static Widget _buildMiniMoveCard(Move move, String lang, {bool showTranslation = true}) {
+  static Widget _buildMiniMoveCard(
+    Move move,
+    String lang, {
+    bool showTranslation = true,
+  }) {
     if (move.isChain || move.isCombo) {
       // RECURSIVE rendering for nested groups inside an answer
       final color = MoveDisplayWidgets.getCategoryColor(move.category);
@@ -780,7 +798,11 @@ class GraphicalMoveView {
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildMiniMoveCard(item, lang, showTranslation: showTranslation),
+                        _buildMiniMoveCard(
+                          item,
+                          lang,
+                          showTranslation: showTranslation,
+                        ),
                         if (move.isChain && idx < move.chain.length - 1)
                           const Icon(
                             Icons.arrow_forward,
@@ -830,28 +852,30 @@ class GraphicalMoveView {
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
-            Builder(builder: (context) {
-              if (!showTranslation) return const SizedBox.shrink();
-              final provider = context.read<SeriesProvider>();
-              final trans = _getEffectiveTranslation(
-                move,
-                lang,
-                provider.glossary,
-              );
-              if (trans.isEmpty) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(top: 1.0),
-                child: Text(
-                  trans,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
+            Builder(
+              builder: (context) {
+                if (!showTranslation) return const SizedBox.shrink();
+                final provider = context.read<SeriesProvider>();
+                final trans = _getEffectiveTranslation(
+                  move,
+                  lang,
+                  provider.glossary,
+                );
+                if (trans.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 1.0),
+                  child: Text(
+                    trans,
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              );
-            }),
+                );
+              },
+            ),
             if (move.side.isNotEmpty || move.level.isNotEmpty)
               Wrap(
                 spacing: 2,
