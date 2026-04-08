@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 // Import existing business logic from parent project using package dependency
@@ -51,7 +52,7 @@ class _WearSplashScreenState extends State<WearSplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -251,7 +252,6 @@ class WearSettingsScreen extends StatelessWidget {
     final provider = context.watch<SeriesProvider>();
     final isRound = MediaQuery.of(context).viewPadding.top > 0;
 
-    // Expanded options as requested
     final options = [0, 2, 3, 4, 5, 6, 7, 10, 15, 30];
 
     return Scaffold(
@@ -360,88 +360,115 @@ class WearSeriesList extends StatelessWidget {
       );
     }
 
+    final controller = FixedExtentScrollController();
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: ListWheelScrollView.useDelegate(
-        itemExtent: 70, // Slightly taller for category label
+        controller: controller,
+        itemExtent: 70,
         perspective: 0.005,
         diameterRatio: 1.5,
         physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: (_) {
+          HapticFeedback.selectionClick();
+        },
         childDelegate: ListWheelChildBuilderDelegate(
           childCount: series.length,
           builder: (context, index) {
             final s = series[index];
             final accentColor = _getCategoryColor(s.category);
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: InkWell(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WearTrainingView(series: s),
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(15),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
+            return ListenableBuilder(
+              listenable: controller,
+              builder: (context, _) {
+                final selectedIndex = controller.hasClients
+                    ? controller.selectedItem
+                    : 0;
+                final isSelected = index == selectedIndex;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WearTrainingView(series: s),
+                      ),
+                    ),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withValues(alpha: 0.2)
+                            : accentColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: isSelected
+                              ? accentColor.withValues(alpha: 0.6)
+                              : Colors.white.withValues(alpha: 0.1),
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Category color indicator strip
+                          Container(
+                            width: 4,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    s.title,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white70,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    s.category.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 12, // was 9px
+                                      color: accentColor.withValues(
+                                        alpha: isSelected ? 1.0 : 0.7,
+                                      ),
+                                      letterSpacing: 0.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      // Category color indicator strip
-                      Container(
-                        width: 4,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: accentColor,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 12,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                s.title,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                s.category.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: accentColor.withValues(alpha: 0.8),
-                                  letterSpacing: 0.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),
@@ -505,35 +532,29 @@ class _WearTrainingViewState extends State<WearTrainingView>
       final maxExtent = _scrollController.position.maxScrollExtent;
       if (maxExtent <= 0) break;
 
-      // Initial delay of 1 second before starting to scroll down
       await Future.delayed(const Duration(milliseconds: 1000));
       if (!mounted || !_isAutoScrolling) break;
 
-      // Scroll a bit further (half bubble size ~20px) to ensure bottom readability
       final targetScroll = maxExtent + 20;
       final duration = Duration(
         milliseconds: (targetScroll * 25).toInt() + 500,
       );
 
-      // 1. Scroll Down
       await _scrollController.animateTo(
         targetScroll,
         duration: duration,
         curve: Curves.linear,
       );
 
-      // Pause at bottom
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted || !_isAutoScrolling) break;
 
-      // 2. Scroll back Up (smoothly)
       await _scrollController.animateTo(
         0,
         duration: duration,
         curve: Curves.linear,
       );
 
-      // Pause at top
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }
@@ -548,10 +569,11 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
   void _next() {
     if (!mounted) return;
+    HapticFeedback.lightImpact();
     if (_currentIndex < widget.series.moves.length - 1) {
       setState(() {
         _currentIndex++;
-        _isAutoScrolling = false; // Stop current loop
+        _isAutoScrolling = false;
         if (_scrollController.hasClients) {
           _scrollController.jumpTo(0);
         }
@@ -559,7 +581,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
           _progressController!.reset();
           _progressController!.forward();
         }
-        // Restart loop for next item after layout
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _startAutoScroll();
         });
@@ -570,7 +591,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
   }
 
   Widget _buildActionBubble(String text, double fontSize, int totalActions) {
-    // 1 column if 1-2 actions, 2 columns if 3+
     final isSingleColumn = totalActions <= 2;
 
     return Container(
@@ -608,7 +628,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
   }) {
     final List<TextSpan> spans = [];
 
-    // Character-by-character tokenization to ensure NO spaces are lost
     final List<String> parts = [];
     String currentPart = '';
 
@@ -731,10 +750,8 @@ class _WearTrainingViewState extends State<WearTrainingView>
     final isRound =
         MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
 
-    // Build the descriptive text using original names only for Wear OS
     String displayName = _getFullMoveText(move);
 
-    // Initial cleanup
     if (displayName.startsWith('Combo: ')) {
       displayName = displayName.substring(7);
     }
@@ -742,7 +759,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
       displayName = displayName.substring(7);
     }
 
-    // Standardize separators and force newlines for Wear OS
     displayName = displayName
         .replaceAll(RegExp(r'\s*/\s*'), '\n↳ ')
         .replaceAll(RegExp(r'\s*Counter:\s*', caseSensitive: false), '\n↳ ')
@@ -755,7 +771,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
         .where((s) => s.trim().isNotEmpty)
         .toList();
 
-    // Dynamic scaling based on total content
     double baseFontSize = 18.0;
     if (actions.length > 3) baseFontSize = 15.0;
     if (displayName.length > 60) baseFontSize = 14.0;
@@ -781,7 +796,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
                   },
                 ),
               ),
-            // Discreet Progress Overlay at the very top - Moved higher
+            // Progress indicator
             Positioned(
               top: isRound ? 14 : 4,
               left: 0,
@@ -793,7 +808,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
                     '${_currentIndex + 1}/${widget.series.moves.length}',
                     style: TextStyle(
                       color: Colors.blueAccent.withValues(alpha: 0.8),
-                      fontSize: 10,
+                      fontSize: 12, // was 10px
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -801,7 +816,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
                     const SizedBox(width: 4),
                     Icon(
                       Icons.timer,
-                      size: 10,
+                      size: 12, // was 10px
                       color: Colors.blueAccent.withValues(alpha: 0.8),
                     ),
                   ],
@@ -812,14 +827,13 @@ class _WearTrainingViewState extends State<WearTrainingView>
               width: double.infinity,
               height: double.infinity,
               padding: EdgeInsets.only(
-                top: isRound ? 30 : 18, // Reduced top padding
-                bottom: isRound ? 20 : 8, // Reduced bottom padding
+                top: isRound ? 30 : 18,
+                bottom: isRound ? 20 : 8,
                 left: 8,
                 right: 8,
               ),
               child: Column(
                 children: [
-                  // Dynamic Column Grid of Action Bubbles - Now uses all space
                   Expanded(
                     child: Center(
                       child: SingleChildScrollView(
@@ -876,7 +890,6 @@ class ProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Start from top (-pi/2)
     canvas.drawArc(
       rect,
       -1.5708, // -pi/2

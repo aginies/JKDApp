@@ -175,6 +175,7 @@ class SeriesProvider with ChangeNotifier {
       _autoAdvanceSec = int.tryParse(prefs['auto_advance_sec']!) ?? 0;
     }
 
+
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
