@@ -488,6 +488,8 @@ class WearTrainingView extends StatefulWidget {
 class _WearTrainingViewState extends State<WearTrainingView>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  int _repCount = 0;
+  bool _showRepScreen = false;
   AnimationController? _progressController;
   final ScrollController _scrollController = ScrollController();
   bool _isAutoScrolling = false;
@@ -586,8 +588,29 @@ class _WearTrainingViewState extends State<WearTrainingView>
         });
       });
     } else {
-      Navigator.pop(context);
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _repCount++;
+        _showRepScreen = true;
+        _isAutoScrolling = false;
+        _progressController?.stop();
+      });
     }
+  }
+
+  void _repeat() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _currentIndex = 0;
+      _showRepScreen = false;
+      _isAutoScrolling = false;
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      if (_progressController != null) {
+        _progressController!.reset();
+        _progressController!.forward();
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
   }
 
   Widget _buildActionBubble(String text, double fontSize, int totalActions) {
@@ -745,6 +768,64 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
   @override
   Widget build(BuildContext context) {
+    if (_showRepScreen) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: GestureDetector(
+          onTap: _repeat,
+          behavior: HitTestBehavior.opaque,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$_repCount×',
+                  style: const TextStyle(
+                    fontSize: 52,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'TAP TO REPEAT',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white38,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                InkWell(
+                  onTap: () => Navigator.pop(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: const Text(
+                      'DONE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white54,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final move = widget.series.moves[_currentIndex];
     final provider = context.watch<SeriesProvider>();
     final isRound =
