@@ -29,7 +29,6 @@ function show_help() {
     echo "  quality_checks    - Run format check, analyze and tests"
     echo "  update_version    - Update app version in all files (usage: ./build_and_verify.sh update_version 1.5.1+3)"
     echo "  build_apk         - Build release APK"
-    echo "  build_wearos      - Build Wear OS APK"
     echo "  build_macos       - Build release macOS (macOS only)"
     echo "  build_windows     - Build release Windows (Windows only)"
     echo "  build_linux       - Build release Linux (standard bundle)"
@@ -117,11 +116,6 @@ function update_version() {
 function build_apk() {
     echo "[INFO] Building Release APK..."
     $FLUTTER_PATH build apk --release
-}
-
-function build_wearos() {
-    echo "[INFO] Building Wear OS APK..."
-    cd wear_os_app && $FLUTTER_PATH build apk --release --split-per-abi && cd ..
 }
 
 function build_macos() {

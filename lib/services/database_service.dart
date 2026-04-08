@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
@@ -49,12 +50,17 @@ class DatabaseService {
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
     LoggingService.log('Initializing database at $path');
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: 4, // Increment version for granular progress
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+
+    // Check for updates in system assets
+    await checkAndUpdateSystemData(db);
+
+    return db;
   }
 
   /// In development, we simply reset the database on schema changes
@@ -1268,5 +1274,136 @@ class DatabaseService {
     final String path = join(await getDatabasesPath(), 'jkd_notes.db');
     await deleteDatabase(path);
     _database = await _initDatabase();
+  }
+
+  /// Calculates a hash of the asset contents to detect changes
+  Future<String> _calculateAssetHash(String assetPath) async {
+    try {
+      final String content = await rootBundle.loadString(assetPath);
+      final bytes = utf8.encode(content);
+      return md5.convert(bytes).toString();
+    } catch (e) {
+      debugPrint('Error hashing asset $assetPath: $e');
+      return '';
+    }
+  }
+
+  /// Automatically updates system data if asset files have changed
+  Future<void> checkAndUpdateSystemData(Database db) async {
+    LoggingService.log('Checking for system asset updates...');
+
+    // 1. Check Glossary
+    const glossaryAsset = 'assets/jkd-glossary.json';
+    final currentGlossaryHash = await _calculateAssetHash(glossaryAsset);
+    final storedGlossaryHash = await _getStoredHash(db, 'hash_glossary');
+
+    if (currentGlossaryHash != storedGlossaryHash) {
+      LoggingService.log('Glossary asset changed. Updating...');
+      await db.transaction((txn) async {
+        await txn.delete('glossary');
+        await _seedGlossary(txn);
+        await _saveStoredHash(txn, 'hash_glossary', currentGlossaryHash);
+      });
+    }
+
+    // 2. Check Series
+    bool seriesChanged = false;
+    final List<String> seriesHashes = [];
+    for (final file in _seriesFiles) {
+      final currentHash = await _calculateAssetHash(file);
+      seriesHashes.add(currentHash);
+      final storedHash = await _getStoredHash(db, 'hash_$file');
+      if (currentHash != storedHash) {
+        seriesChanged = true;
+      }
+    }
+
+    if (seriesChanged) {
+      LoggingService.log('Series assets changed. Updating system series...');
+      await db.transaction((txn) async {
+        // Delete only system series
+        final systemSeries = await txn.query(
+          'series',
+          columns: ['id'],
+          where: 'is_system = 1',
+        );
+        final List<int> systemIds =
+            systemSeries.map((s) => s['id'] as int).toList();
+
+        if (systemIds.isNotEmpty) {
+          final idList = systemIds.join(',');
+          await txn.delete('series_moves', where: 'series_id IN ($idList)');
+          await txn.delete('series', where: 'id IN ($idList)');
+        }
+
+        // Re-seed all series and update hashes
+        await _seedSeries(txn);
+        for (int i = 0; i < _seriesFiles.length; i++) {
+          await _saveStoredHash(txn, 'hash_${_seriesFiles[i]}', seriesHashes[i]);
+        }
+      });
+    }
+
+    // 3. Check Training Programs
+    final List<String> programFiles = [
+      'assets/training_programs/30-day-jkd-fundamentals.json',
+      'assets/training_programs/2-week-trapping-intensive.json',
+      'assets/training_programs/footwork-beginner-2-weeks.json',
+      'assets/training_programs/footwork-advanced-2-weeks.json',
+      'assets/training_programs/footwork-expert-2-weeks.json',
+      'assets/training_programs/basic-hits-2-weeks.json',
+      'assets/training_programs/counters-beginner-2-weeks.json',
+      'assets/training_programs/counters-advanced-2-weeks.json',
+      'assets/training_programs/counters-expert-2-weeks.json',
+      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
+      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
+      'assets/training_programs/3-4-counts-expert-2-weeks.json',
+      'assets/training_programs/advanced-combos-45-days.json',
+    ];
+
+    bool programsChanged = false;
+    final List<String> programHashes = [];
+    for (final file in programFiles) {
+      final currentHash = await _calculateAssetHash(file);
+      programHashes.add(currentHash);
+      final storedHash = await _getStoredHash(db, 'hash_$file');
+      if (currentHash != storedHash) {
+        programsChanged = true;
+      }
+    }
+
+    if (programsChanged || seriesChanged) {
+      LoggingService.log('Program or Series assets changed. Updating programs...');
+      await _seedTrainingPrograms(db); // This method already handles updates internally
+      for (int i = 0; i < programFiles.length; i++) {
+        await _saveStoredHash(db, 'hash_${programFiles[i]}', programHashes[i]);
+      }
+    }
+  }
+
+  Future<String?> _getStoredHash(DatabaseExecutor db, String key) async {
+    try {
+      final results = await db.query(
+        'settings',
+        where: 'key = ?',
+        whereArgs: [key],
+      );
+      if (results.isEmpty) return null;
+      return results.first['value'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveStoredHash(
+    DatabaseExecutor db,
+    String key,
+    String value,
+  ) async {
+    await db.insert(
+      'settings',
+      {'key': key, 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

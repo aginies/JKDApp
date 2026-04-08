@@ -98,6 +98,17 @@ class _BackupModalState extends State<BackupModal> {
                 onTap: () => _showSeriesExportDialog(provider),
               ),
               _buildBackupTile(
+                title: lang == 'fr'
+                    ? 'Exporter Séries Personnelles'
+                    : 'Export Personal Series',
+                subtitle: lang == 'fr'
+                    ? 'Sauvegarder uniquement vos propres séries (non-système)'
+                    : 'Backup only your own series (non-system)',
+                icon: Icons.person_pin,
+                color: Colors.indigo,
+                onTap: () => _handlePersonalSeriesBackup(provider),
+              ),
+              _buildBackupTile(
                 title: LocalizationService.translate('import_series', lang),
                 subtitle: LocalizationService.translate('import_desc', lang),
                 icon: Icons.file_upload,
@@ -509,6 +520,21 @@ class _BackupModalState extends State<BackupModal> {
       }
     }
     _setLoading(false);
+  }
+
+  Future<void> _handlePersonalSeriesBackup(SeriesProvider provider) async {
+    final personalSeries = provider.series.where((s) => !s.isSystem).toList();
+
+    if (personalSeries.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No personal series found to backup')),
+        );
+      }
+      return;
+    }
+
+    await _handleSeriesExport(provider, personalSeries, 'jkd-personal-series');
   }
 
   Future<void> _handleSeriesImport(SeriesProvider provider) async {
