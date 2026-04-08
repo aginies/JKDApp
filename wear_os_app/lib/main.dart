@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import 'package:jkd_app/models/move.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  
   runApp(
     ChangeNotifierProvider(
       create: (context) => SeriesProvider(),
@@ -91,25 +93,25 @@ class WatchScreen extends StatelessWidget {
             horizontal: 10,
           ),
           children: [
-            // Larger, glowing JKD logo
+            // Larger, glowing JKD logo on a white circle
             Center(
               child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      blurRadius: 20,
+                      color: Colors.white24,
+                      blurRadius: 15,
                       spreadRadius: 2,
                     ),
                   ],
                 ),
                 child: Image.asset(
                   'assets/icon/JKD.png',
-                  width: 120,
-                  height: 120,
+                  width: 80,
+                  height: 80,
                 ),
               ),
             ),
@@ -124,57 +126,107 @@ class WatchScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // Start Button
+            // Start Button with 3D Effect
             Center(
-              child: SizedBox(
-                width: 100,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WearSeriesList(),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                  width: 110,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF448AFF), Color(0xFF2979FF)],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blueAccent.withValues(alpha: 0.5),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
                     ),
                   ),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WearSeriesList(),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 13),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.fitness_center, size: 16, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'START',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            // Settings Button
+            const SizedBox(height: 12),
+            // Settings Button with 3D Effect
             Center(
-              child: SizedBox(
-                width: 100,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[900],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WearSettingsScreen(),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                  width: 110,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.grey[800]!, Colors.grey[900]!],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black54,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
                     ),
                   ),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WearSettingsScreen(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.settings, size: 14),
-                  label: const Text(
-                    'Settings',
-                    style: TextStyle(fontSize: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.settings, size: 14, color: Colors.white70),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'SETTINGS',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -193,59 +245,73 @@ class WearSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<SeriesProvider>();
     final isRound = MediaQuery.of(context).viewPadding.top > 0;
-    final options = [0, 3, 5, 10, 15, 30];
+    
+    // Expanded options as requested
+    final options = [0, 2, 3, 4, 5, 6, 7, 10, 15, 30];
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: ListView(
-            padding: EdgeInsets.symmetric(
-              vertical: isRound ? 40 : 20,
-              horizontal: 10,
-            ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Auto-Advance',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.blueAccent,
+              Padding(
+                padding: EdgeInsets.only(top: isRound ? 30 : 10, bottom: 8),
+                child: const Text(
+                  'Auto-Advance',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.blueAccent,
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              ...options.map((sec) {
-                final isSelected = provider.autoAdvanceSec == sec;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2.0),
-                  child: InkWell(
-                    onTap: () {
-                      provider.setAutoAdvanceSec(sec);
-                      Navigator.pop(context);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.blueAccent : Colors.grey[900],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        sec == 0 ? 'Manual' : '$sec seconds',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: options.map((sec) {
+                    final isSelected = provider.autoAdvanceSec == sec;
+                    return InkWell(
+                      onTap: () {
+                        provider.setAutoAdvanceSec(sec);
+                      },
+                      borderRadius: BorderRadius.circular(isSelected ? 25 : 20),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: isSelected ? 60 : 45,
+                        height: isSelected ? 40 : 35,
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blueAccent : Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? Colors.white38 : Colors.white10,
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            sec == 0 ? 'Off' : '${sec}s',
+                            style: TextStyle(
+                              fontSize: isSelected ? 12 : 10,
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              }),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
+        ),
+      ),
     );
   }
 }
@@ -384,7 +450,9 @@ class _WearTrainingViewState extends State<WearTrainingView>
   void initState() {
     super.initState();
     _initAnimation();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAutoScroll();
+    });
   }
 
   void _initAnimation() {
@@ -416,6 +484,10 @@ class _WearTrainingViewState extends State<WearTrainingView>
     while (mounted && _isAutoScrolling) {
       final maxExtent = _scrollController.position.maxScrollExtent;
       if (maxExtent <= 0) break;
+
+      // Initial delay of 1 second before starting to scroll down
+      await Future.delayed(const Duration(milliseconds: 1000));
+      if (!mounted || !_isAutoScrolling) break;
 
       // Scroll a bit further (half bubble size ~20px) to ensure bottom readability
       final targetScroll = maxExtent + 20;
@@ -466,7 +538,9 @@ class _WearTrainingViewState extends State<WearTrainingView>
           _progressController!.forward();
         }
         // Restart loop for next item after layout
-        WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _startAutoScroll();
+        });
       });
     } else {
       Navigator.pop(context);
@@ -478,28 +552,28 @@ class _WearTrainingViewState extends State<WearTrainingView>
     final isSingleColumn = totalActions <= 2;
     
     return Container(
-      width: isSingleColumn ? 140 : 80, 
-      margin: const EdgeInsets.all(2),
+      width: isSingleColumn ? 150 : 88, 
+      margin: const EdgeInsets.all(3),
       padding: EdgeInsets.symmetric(
         vertical: isSingleColumn ? 10 : 6, 
-        horizontal: isSingleColumn ? 16 : 4
+        horizontal: isSingleColumn ? 16 : 6
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
-      child: RichText(
-        textAlign: TextAlign.center,
-        text: _buildRichText(
+      child: Text.rich(
+        _buildRichText(
           text,
           fontSize: isSingleColumn ? fontSize + 2 : fontSize,
           isBold: true,
           defaultColor: Colors.white,
         ),
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -510,21 +584,32 @@ class _WearTrainingViewState extends State<WearTrainingView>
       required Color defaultColor}) {
     final List<TextSpan> spans = [];
     
-    // Pattern that matches words, symbols, or whitespace as individual tokens.
-    // This ensures NOTHING is lost during processing.
-    final pattern = RegExp(r'(↳|➜|\+|\.|:|\/|\(|\)|↵|↑|—|↓|\s+|[^\s↳➜\+\.:\/\(\)↵↑—↓]+)');
-    final matches = pattern.allMatches(text);
+    // Character-by-character tokenization to ensure NO spaces are lost
+    final List<String> parts = [];
+    String currentPart = '';
+    
+    final symbols = {'↳', '➜', '+', '.', ':', '/', '(', ')', '↵', '↑', '—', '↓'};
+    
+    for (int i = 0; i < text.length; i++) {
+      final char = text[i];
+      if (symbols.contains(char) || char == ' ') {
+        if (currentPart.isNotEmpty) {
+          parts.add(currentPart);
+          currentPart = '';
+        }
+        parts.add(char);
+      } else {
+        currentPart += char;
+      }
+    }
+    if (currentPart.isNotEmpty) parts.add(currentPart);
 
-    for (final match in matches) {
-      final part = match.group(0)!;
-      if (part.isEmpty) continue;
-
+    for (final part in parts) {
       Color color = defaultColor;
       double finalFontSize = fontSize;
       final trimmed = part.trim();
       final normalized = trimmed.toUpperCase();
 
-      // Keyword and Symbol identification
       if (['CROSS', 'HOOK', 'JAB'].contains(normalized)) {
         color = Colors.green;
       } else if (normalized == 'L') {
@@ -537,13 +622,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
       } else if (['↑', '—', '↓'].contains(trimmed)) {
         color = Colors.cyanAccent;
         finalFontSize = fontSize * 1.1;
-      } else if (part.contains(RegExp(r'\s+'))) {
-        // Pure whitespace tokens
-        spans.add(TextSpan(
-          text: part,
-          style: TextStyle(color: defaultColor, fontSize: fontSize),
-        ));
-        continue;
       }
 
       spans.add(TextSpan(
@@ -552,7 +630,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
           color: color,
           fontSize: finalFontSize,
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          fontStyle: ['↳', '➜', '+', '↵', '↑', '—', '↓'].contains(trimmed)
+          fontStyle: symbols.contains(trimmed)
               ? FontStyle.normal
               : (isBold ? FontStyle.normal : FontStyle.italic),
         ),
@@ -610,12 +688,14 @@ class _WearTrainingViewState extends State<WearTrainingView>
     final isRound =
         MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
 
+    // Build the descriptive text
     String displayName = _getFullMoveText(move);
 
+    // Initial cleanup
     if (displayName.startsWith('Combo: ')) displayName = displayName.substring(7);
     if (displayName.startsWith('Chain: ')) displayName = displayName.substring(7);
 
-    // Apply semantic delimiters and split into vertical chunks
+    // Standardize separators and force newlines for Wear OS
     displayName = displayName
         .replaceAll(RegExp(r'\s*/\s*'), '\n↳ ')
         .replaceAll(RegExp(r'\s*Counter:\s*', caseSensitive: false), '\n↳ ')
