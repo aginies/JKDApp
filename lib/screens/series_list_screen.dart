@@ -1019,9 +1019,11 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(MoveDisplayWidgets.getCategoryIcon('move'),
-                              size: 28,
-                              color: MoveDisplayWidgets.getCategoryColor('move')),
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon('move'),
+                            size: 28,
+                            color: MoveDisplayWidgets.getCategoryColor('move'),
+                          ),
                           const SizedBox(width: 8),
                           Text(LocalizationService.translate('move', lang)),
                         ],

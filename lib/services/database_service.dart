@@ -67,18 +67,20 @@ class DatabaseService {
   /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 16) {
-      LoggingService.log('Migrating categories: jkd_moves -> move and JKD Moves -> Moves');
-      
+      LoggingService.log(
+        'Migrating categories: jkd_moves -> move and JKD Moves -> Moves',
+      );
+
       // Update glossary categories
       await db.execute(
         "UPDATE glossary SET category = 'move' WHERE category = 'jkd_moves'",
       );
-      
+
       // Update series categories (for the top-level grouping)
       await db.execute(
         "UPDATE series SET category = 'Moves' WHERE category = 'JKD Moves'",
       );
-      
+
       // Update individual moves within series
       await db.execute(
         "UPDATE series_moves SET category = 'move' WHERE category = 'jkd_moves'",
@@ -86,7 +88,7 @@ class DatabaseService {
       await db.execute(
         "UPDATE series_moves SET counter_category = 'move' WHERE counter_category = 'jkd_moves'",
       );
-      
+
       if (oldVersion < 15) {
         // Clean up potentially inconsistent stats after category merge
         await db.execute('DELETE FROM day_completions');
@@ -1357,8 +1359,9 @@ class DatabaseService {
           columns: ['id'],
           where: 'is_system = 1',
         );
-        final List<int> systemIds =
-            systemSeries.map((s) => s['id'] as int).toList();
+        final List<int> systemIds = systemSeries
+            .map((s) => s['id'] as int)
+            .toList();
 
         if (systemIds.isNotEmpty) {
           final idList = systemIds.join(',');
@@ -1369,7 +1372,11 @@ class DatabaseService {
         // Re-seed all series and update hashes
         await _seedSeries(txn);
         for (int i = 0; i < _seriesFiles.length; i++) {
-          await _saveStoredHash(txn, 'hash_${_seriesFiles[i]}', seriesHashes[i]);
+          await _saveStoredHash(
+            txn,
+            'hash_${_seriesFiles[i]}',
+            seriesHashes[i],
+          );
         }
       });
     }
@@ -1403,8 +1410,12 @@ class DatabaseService {
     }
 
     if (programsChanged || seriesChanged) {
-      LoggingService.log('Program or Series assets changed. Updating programs...');
-      await _seedTrainingPrograms(db); // This method already handles updates internally
+      LoggingService.log(
+        'Program or Series assets changed. Updating programs...',
+      );
+      await _seedTrainingPrograms(
+        db,
+      ); // This method already handles updates internally
       for (int i = 0; i < programFiles.length; i++) {
         await _saveStoredHash(db, 'hash_${programFiles[i]}', programHashes[i]);
       }
@@ -1430,10 +1441,9 @@ class DatabaseService {
     String key,
     String value,
   ) async {
-    await db.insert(
-      'settings',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

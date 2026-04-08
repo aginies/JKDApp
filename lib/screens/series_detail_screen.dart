@@ -473,7 +473,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                         } else if (cat == 'Kali') {
                           asset = 'assets/icon/kali.png';
                         } else if (cat == 'Moves') {
-
                           asset = 'assets/icon/JKD.png';
                         }
                       }
@@ -730,7 +729,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (_selectedCategory != 'Moves' && _selectedCategory != 'Kali') ...[
+                  if (_selectedCategory != 'Moves' &&
+                      _selectedCategory != 'Kali') ...[
                     Wrap(
                       alignment: WrapAlignment.start,
                       spacing: 8,

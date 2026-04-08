@@ -340,10 +340,10 @@ class MoveListDisplayWidget {
                       sub.side == 'L'
                           ? 'left'
                           : (sub.side == 'R'
-                              ? 'right'
-                              : (sub.side == 'F'
-                                  ? 'front'
-                                  : (sub.side == 'B' ? 'back' : 'mid'))),
+                                ? 'right'
+                                : (sub.side == 'F'
+                                      ? 'front'
+                                      : (sub.side == 'B' ? 'back' : 'mid'))),
                       language,
                     ).substring(0, 1),
                     sub.side,
@@ -501,12 +501,13 @@ class MoveListDisplayWidget {
                                           m.counterSide == 'L'
                                               ? 'left'
                                               : (m.counterSide == 'R'
-                                                  ? 'right'
-                                                  : (m.counterSide == 'F'
-                                                      ? 'front'
-                                                      : (m.counterSide == 'B'
-                                                          ? 'back'
-                                                          : 'mid'))),
+                                                    ? 'right'
+                                                    : (m.counterSide == 'F'
+                                                          ? 'front'
+                                                          : (m.counterSide ==
+                                                                    'B'
+                                                                ? 'back'
+                                                                : 'mid'))),
                                           language,
                                         ).substring(0, 1),
 
@@ -900,11 +901,13 @@ class MoveListDisplayWidget {
                                                                           : (sub.counterSide ==
                                                                                     'R'
                                                                                 ? 'right'
-                                                                                : (sub.counterSide == 'F'
-                                                                                    ? 'front'
-                                                                                    : (sub.counterSide == 'B'
-                                                                                        ? 'back'
-                                                                                        : 'mid'))),
+                                                                                : (sub.counterSide ==
+                                                                                          'F'
+                                                                                      ? 'front'
+                                                                                      : (sub.counterSide ==
+                                                                                                'B'
+                                                                                            ? 'back'
+                                                                                            : 'mid'))),
                                                                       language,
                                                                     ).substring(
                                                                       0,
@@ -1060,11 +1063,13 @@ class MoveListDisplayWidget {
                                                                   : (moves[i].counterSide ==
                                                                             'R'
                                                                         ? 'right'
-                                                                        : (moves[i].counterSide == 'F'
-                                                                            ? 'front'
-                                                                            : (moves[i].counterSide == 'B'
-                                                                                ? 'back'
-                                                                                : 'mid'))),
+                                                                        : (moves[i].counterSide ==
+                                                                                  'F'
+                                                                              ? 'front'
+                                                                              : (moves[i].counterSide ==
+                                                                                        'B'
+                                                                                    ? 'back'
+                                                                                    : 'mid'))),
                                                               language,
                                                             ).substring(0, 1),
                                                             moves[i].counterSide ??
