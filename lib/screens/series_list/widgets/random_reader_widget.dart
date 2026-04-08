@@ -53,7 +53,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     if (widget.forcedSeriesId != null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<SeriesProvider>(context, listen: false);
-      final jkdSeries = provider.getFilteredSeries('JKD Moves');
+      final jkdSeries = provider.getFilteredSeries('Moves');
       if (jkdSeries.isNotEmpty && _selectedSeriesId == null) {
         setState(() {
           _selectedSeriesId = jkdSeries.first.id.toString();
@@ -254,7 +254,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SeriesProvider>(context);
-    final jkdSeries = provider.getFilteredSeries('JKD Moves');
+    final jkdSeries = provider.getFilteredSeries('Moves');
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(

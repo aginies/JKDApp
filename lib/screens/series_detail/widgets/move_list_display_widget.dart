@@ -16,76 +16,41 @@ class MoveListDisplayWidget {
     List<Map<String, dynamic>> glossary,
   ) {
     final t = move.getTranslation(language);
-    if (t.isNotEmpty) return t;
-
-    // Fallback to glossary search if move translations are empty
-    if (move.isCombo) {
-      return move.subMoves
-          .map((m) => _getEffectiveTranslation(m, language, glossary))
-          .where((s) => s.isNotEmpty)
-          .join(' + ');
+    if (t.isNotEmpty) {
+      // If it's a join of sub-translations (combo/chain), return it
+      if (move.isCombo || move.isChain) return t;
+      // If it's a leaf item and translation != name, return it
+      if (t.toLowerCase() != move.name.toLowerCase()) return t;
     }
 
-    if (move.isChain) {
-      return move.chain
-          .map((m) => _getEffectiveTranslation(m, language, glossary))
-          .where((s) => s.isNotEmpty)
-          .join(' -> ');
-    }
-
+    // Fallback to glossary search by name
     final entry = glossary.firstWhere(
-      (e) => e['name'].toString().toLowerCase() == move.name.toLowerCase(),
+      (e) =>
+          e['name'].toString().trim().toLowerCase() ==
+          move.name.trim().toLowerCase(),
       orElse: () => {},
     );
 
     if (entry.isNotEmpty && entry['translations'] != null) {
       try {
-        final Map<String, dynamic> trans = json.decode(entry['translations']);
-        return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
-      } catch (_) {
-        return '';
-      }
+        final dynamic tData = entry['translations'];
+        final Map<String, dynamic> trans = (tData is String)
+            ? json.decode(tData)
+            : tData;
+        final res = trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+        if (res.toLowerCase() != move.name.toLowerCase()) return res;
+      } catch (_) {}
     }
     return '';
   }
 
   /// Helper to find counter translation in glossary
-  /// First tries counterGlossaryId, then falls back to counterName lookup
   static String _getEffectiveCounterTranslation(
     Move move,
     String language,
     List<Map<String, dynamic>> glossary,
   ) {
-    if (move.counterName == null) return '';
-
-    // Handle simultaneous counters (separated by " + ")
-    if (move.counterName!.contains(' + ')) {
-      final counterNames = move.counterName!.split(' + ');
-      return counterNames
-          .map((name) {
-            final entry = glossary.firstWhere(
-              (e) =>
-                  e['name'].toString().toLowerCase() ==
-                  name.trim().toLowerCase(),
-              orElse: () => {},
-            );
-            if (entry.isNotEmpty && entry['translations'] != null) {
-              try {
-                final Map<String, dynamic> trans = json.decode(
-                  entry['translations'],
-                );
-                return trans[language] ??
-                    trans['en'] ??
-                    trans['fr'] ??
-                    name.trim();
-              } catch (_) {
-                return name.trim();
-              }
-            }
-            return name.trim();
-          })
-          .join(' + ');
-    }
+    if (move.counterName == null || move.counterName!.isEmpty) return '';
 
     // First try to find by counterGlossaryId
     if (move.counterGlossaryId != null) {
@@ -95,28 +60,31 @@ class MoveListDisplayWidget {
       );
       if (entry.isNotEmpty && entry['translations'] != null) {
         try {
-          final Map<String, dynamic> trans = json.decode(entry['translations']);
+          final dynamic tData = entry['translations'];
+          final Map<String, dynamic> trans = (tData is String)
+              ? json.decode(tData)
+              : tData;
           return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
-        } catch (_) {
-          // Fall through to name-based lookup
-        }
+        } catch (_) {}
       }
     }
 
     // Fallback to glossary search by counterName
     final entry = glossary.firstWhere(
       (e) =>
-          e['name'].toString().toLowerCase() == move.counterName!.toLowerCase(),
+          e['name'].toString().trim().toLowerCase() ==
+          move.counterName!.trim().toLowerCase(),
       orElse: () => {},
     );
 
     if (entry.isNotEmpty && entry['translations'] != null) {
       try {
-        final Map<String, dynamic> trans = json.decode(entry['translations']);
+        final dynamic tData = entry['translations'];
+        final Map<String, dynamic> trans = (tData is String)
+            ? json.decode(tData)
+            : tData;
         return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
-      } catch (_) {
-        return '';
-      }
+      } catch (_) {}
     }
     return '';
   }
@@ -160,13 +128,16 @@ class MoveListDisplayWidget {
   static Widget _buildStructuredCounterContent(
     Move move,
     String language,
+    List<Map<String, dynamic>> glossary,
     Function(String category, String moveName) onShowMediaGallery,
-    VoidCallback? onEdit,
-  ) {
+    VoidCallback? onEdit, {
+    bool showTranslation = false,
+  }) {
     if (move.hasCounterCombo) {
-      // SIMULTANEOUS counter — items displayed with "+" between them
+      // SIMULTANEOUS counter
       return Wrap(
         spacing: 6,
+        runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           const Icon(
@@ -193,19 +164,22 @@ class MoveListDisplayWidget {
               _buildMoveContent(
                 cm,
                 language,
+                glossary,
                 onShowMediaGallery,
                 iconSize: 18,
                 fontSize: 13,
                 onEdit: onEdit,
+                showTranslation: showTranslation,
               ),
             ];
           }),
         ],
       );
     } else if (move.hasCounterChain) {
-      // CHAIN counter — items displayed with "->" between them
+      // CHAIN counter
       return Wrap(
         spacing: 6,
+        runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           const Icon(
@@ -229,10 +203,12 @@ class MoveListDisplayWidget {
               _buildMoveContent(
                 cm,
                 language,
+                glossary,
                 onShowMediaGallery,
                 iconSize: 18,
                 fontSize: 13,
                 onEdit: onEdit,
+                showTranslation: showTranslation,
               ),
             ];
           }),
@@ -246,289 +222,152 @@ class MoveListDisplayWidget {
   static Widget _buildMoveContent(
     Move sub,
     String language,
+    List<Map<String, dynamic>> glossary,
     Function(String category, String moveName) onShowMediaGallery, {
     double iconSize = 24,
     double fontSize = 14,
     VoidCallback? onEdit,
+    bool showTranslation = false,
   }) {
     if (sub.isChain || sub.isCombo) {
       // RECURSIVE rendering for nested groups
       return Wrap(
         spacing: 4,
-        runSpacing: 4,
+        runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: (sub.isChain ? sub.chain : sub.subMoves)
-                .asMap()
-                .entries
-                .map((e) {
-                  final idx = e.key;
-                  final item = e.value;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildMoveContent(
-                        item,
-                        language,
-                        onShowMediaGallery,
-                        iconSize: iconSize * 0.8,
-                        fontSize: fontSize * 0.9,
-                        onEdit: onEdit,
+          ...(sub.isChain ? sub.chain : sub.subMoves).asMap().entries.map((e) {
+            final idx = e.key;
+            final item = e.value;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildMoveContent(
+                  item,
+                  language,
+                  glossary,
+                  onShowMediaGallery,
+                  iconSize: iconSize * 0.85,
+                  fontSize: fontSize * 0.95,
+                  onEdit: onEdit,
+                  showTranslation: showTranslation,
+                ),
+                if (sub.isChain && idx < sub.chain.length - 1)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 24,
+                      color: Colors.grey,
+                    ),
+                  ),
+                if (sub.isCombo && idx < sub.subMoves.length - 1)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6.0),
+                    child: Text(
+                      '+',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
                       ),
-                      if (sub.isChain && idx < sub.chain.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Icon(
-                            Icons.arrow_forward,
-                            size: 28, // Standardized large size
-                            color: Colors.grey,
-                          ),
-                        ),
-                      if (sub.isCombo && idx < sub.subMoves.length - 1)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6.0),
-                          child: Text(
-                            '+',
-                            style: TextStyle(
-                              fontSize: 24, // Increased size
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                })
-                .toList(),
-          ),
+                    ),
+                  ),
+              ],
+            );
+          }),
         ],
       );
     }
 
-    return InkWell(
-      onDoubleTap: onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
-      child: _attackerBox(
-        DiagonalCross(
-          show: sub.isFeint,
-          color: Colors.purple,
-          child: Wrap(
-            spacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Icon(
-                MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
-                size: iconSize,
-                color: MoveDisplayWidgets.getCategoryColor(sub.displayCategory),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                sub.name,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (sub.side.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: MoveDisplayWidgets.sideCircle(
-                    LocalizationService.translate(
-                      sub.side == 'L'
-                          ? 'left'
-                          : (sub.side == 'R' ? 'right' : 'mid'),
-                      language,
-                    ).substring(0, 1),
-                    sub.side,
-                    mini: true,
-                  ),
-                ),
-              if (sub.level.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: MoveDisplayWidgets.levelIcon(sub.level, mini: true),
-                ),
-            ],
-          ),
-        ),
-        mini: iconSize < 28,
-      ),
-    );
-  }
-
-  /// Builds the content for a simultaneous group of moves
-  static Widget _buildSimultaneousContent(
-    Move move,
-    String language,
-    Function(String category, String moveName) onShowMediaGallery, {
-    double iconSize = 24,
-    double fontSize = 14,
-    int? subDisplayNumber,
-    VoidCallback? onEdit,
-  }) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    // LEAF ITEM rendering
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (subDisplayNumber != null)
-          Text(
-            '$subDisplayNumber.',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-        ...move.subMoves.asMap().entries.map((e) {
-          final idx = e.key;
-          final m = e.value;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildMoveContent(
-                m,
-                language,
-                onShowMediaGallery,
-                iconSize: iconSize,
-                fontSize: fontSize,
-                onEdit: onEdit,
-              ),
-              if (idx < move.subMoves.length - 1)
-                const Padding(
-                  padding: EdgeInsets.only(left: 4.0),
-                  child: Icon(Icons.add, size: 14, color: Colors.grey),
-                ),
-            ],
-          );
-        }),
-      ],
-    );
-  }
-
-  /// Builds the content for a sequential chain of moves
-  static Widget _buildChainContent(
-    BuildContext context,
-    Move move,
-    String language,
-    Function(String category, String moveName) onShowMediaGallery, {
-    double iconSize = 24,
-    double fontSize = 14,
-    int? subDisplayNumber,
-    VoidCallback? onEdit,
-  }) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.start,
-      children: [
-        if (subDisplayNumber != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Text(
-              '$subDisplayNumber.',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        ...move.chain.asMap().entries.map((e) {
-          final idx = e.key;
-          final m = e.value;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+        InkWell(
+          onDoubleTap:
+              onEdit ?? () => onShowMediaGallery(sub.category, sub.name),
+          child: _attackerBox(
+            DiagonalCross(
+              show: sub.isFeint,
+              color: Colors.purple,
+              child: Wrap(
+                spacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  _buildMoveContent(
-                    m,
-                    language,
-                    onShowMediaGallery,
-                    iconSize: iconSize,
-                    fontSize: fontSize,
-                    onEdit: onEdit,
+                  Icon(
+                    MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
+                    size: iconSize,
+                    color: MoveDisplayWidgets.getCategoryColor(
+                      sub.displayCategory,
+                    ),
                   ),
-                  if (m.counterName != null || m.hasStructuredCounter)
+                  const SizedBox(width: 4),
+                  Text(
+                    sub.name,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (sub.side.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2.0, left: 12.0),
-                      child: _counterBox(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.sideCircle(
+                        LocalizationService.translate(
+                          sub.side == 'L'
+                              ? 'left'
+                              : (sub.side == 'R'
+                                    ? 'right'
+                                    : (sub.side == 'F'
+                                          ? 'front'
+                                          : (sub.side == 'B'
+                                                ? 'back'
+                                                : 'mid'))),
+                          language,
+                        ).substring(0, 1),
+                        sub.side,
                         mini: true,
-                        m.hasStructuredCounter
-                            ? _buildStructuredCounterContent(
-                                m,
-                                language,
-                                onShowMediaGallery,
-                                onEdit,
-                              )
-                            : DiagonalCross(
-                                show: m.counterIsFeint,
-                                color: Colors.purple,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.subdirectory_arrow_right,
-                                      size: 18,
-                                      color: Colors.orange,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      m.counterName!,
-                                      style: TextStyle(
-                                        fontSize: fontSize - 1,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.secondary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    if (m.counterSide?.isNotEmpty ?? false)
-                                      MoveDisplayWidgets.sideCircle(
-                                        LocalizationService.translate(
-                                          m.counterSide == 'L'
-                                              ? 'left'
-                                              : (m.counterSide == 'R'
-                                                    ? 'right'
-                                                    : 'mid'),
-                                          language,
-                                        ).substring(0, 1),
-                                        m.counterSide ?? '',
-                                        mini: true,
-                                      ),
-                                    if (m.counterLevel?.isNotEmpty ?? false)
-                                      MoveDisplayWidgets.levelIcon(
-                                        m.counterLevel ?? '',
-                                        size: 10,
-                                        mini: true,
-                                      ),
-                                  ],
-                                ),
-                              ),
+                      ),
+                    ),
+                  if (sub.level.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: MoveDisplayWidgets.levelIcon(
+                        sub.level,
+                        mini: true,
                       ),
                     ),
                 ],
               ),
-              if (idx < move.chain.length - 1)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: Colors.teal,
+            ),
+            mini: iconSize < 28,
+          ),
+        ),
+        if (showTranslation)
+          Builder(
+            builder: (context) {
+              final String effectiveName = _getEffectiveTranslation(
+                sub,
+                language,
+                glossary,
+              );
+              if (effectiveName.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 2.0, left: 4.0),
+                child: Text(
+                  effectiveName,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
-            ],
-          );
-        }),
+              );
+            },
+          ),
       ],
     );
   }
@@ -568,7 +407,7 @@ class MoveListDisplayWidget {
       }
     }
 
-    final bool hideNumbers = category == 'JKD Moves';
+    final bool hideNumbers = category == 'Moves';
 
     return [
       for (int i = 0; i < moves.length; i++)
@@ -608,7 +447,9 @@ class MoveListDisplayWidget {
                 child: Card(
                   margin: EdgeInsets.zero,
                   color:
-                      trainingController.currentIndex == (singleItemIndex ?? i)
+                      trainingController.isTraining &&
+                          trainingController.currentIndex ==
+                              (singleItemIndex ?? i)
                       ? Colors.grey.withValues(alpha: 0.2)
                       : null,
                   child: Padding(
@@ -621,6 +462,7 @@ class MoveListDisplayWidget {
                         children: [
                           Wrap(
                             spacing: 4,
+                            runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               if (moves[i].repetitions > 1)
@@ -634,122 +476,59 @@ class MoveListDisplayWidget {
                                   backgroundColor: Colors.blueGrey,
                                 ),
                               if (moves[i].category == 'simultaneous')
-                                _buildSimultaneousContent(
-                                  moves[i],
-                                  language,
-                                  onShowMediaGallery,
-                                  iconSize: 28,
-                                  fontSize: 14,
-                                  onEdit: isEditing ? onEdit(i) : null,
-                                )
-                              else if (moves[i].category == 'chain' ||
-                                  moves[i].isChain)
-                                _buildChainContent(
-                                  context,
-                                  moves[i],
-                                  language,
-                                  onShowMediaGallery,
-                                  iconSize: 28,
-                                  fontSize: 14,
-                                  onEdit: isEditing ? onEdit(i) : null,
-                                )
-                              else if (!moves[i].isCombo) ...[
                                 _buildMoveContent(
                                   moves[i],
                                   language,
+                                  glossary,
                                   onShowMediaGallery,
                                   iconSize: 28,
                                   fontSize: 14,
                                   onEdit: isEditing ? onEdit(i) : null,
-                                ),
-                              ],
-                            ],
-                          ),
-                          if (showTranslation &&
-                              !moves[i].isCombo &&
-                              moves[i].category != 'simultaneous' &&
-                              moves[i].category != 'chain')
-                            Builder(
-                              builder: (context) {
-                                final t = _getEffectiveTranslation(
+                                  showTranslation: showTranslation,
+                                )
+                              else if (moves[i].category == 'chain' ||
+                                  moves[i].isChain)
+                                _buildMoveContent(
                                   moves[i],
                                   language,
                                   glossary,
-                                );
-                                if (t.isEmpty) return const SizedBox.shrink();
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 2.0,
-                                    left: 36.0,
-                                  ),
-                                  child: Text(
-                                    t,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          if (moves[i].category == 'combo')
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 0.0,
-                                top: 4.0,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: moves[i].subMoves.asMap().entries.map((
-                                  entry,
-                                ) {
-                                  final subIdx = entry.key;
-                                  final sub = entry.value;
-                                  final bool isSingle =
-                                      moves[i].subMoves.length == 1;
+                                  onShowMediaGallery,
+                                  iconSize: 28,
+                                  fontSize: 14,
+                                  onEdit: isEditing ? onEdit(i) : null,
+                                  showTranslation: showTranslation,
+                                )
+                              else if (moves[i].category == 'combo')
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: moves[i].subMoves.asMap().entries.map((
+                                    entry,
+                                  ) {
+                                    final subIdx = entry.key;
+                                    final sub = entry.value;
+                                    final bool isSingle =
+                                        moves[i].subMoves.length == 1;
 
-                                  // Calculate display number for submoves (skip 'move' category)
-                                  int subDisplayNumber = 0;
-                                  for (int j = 0; j <= subIdx; j++) {
-                                    if (moves[i].subMoves[j].category !=
-                                        'move') {
-                                      subDisplayNumber++;
+                                    // Calculate display number for submoves (skip 'move' category)
+                                    int subDisplayNumber = 0;
+                                    for (int j = 0; j <= subIdx; j++) {
+                                      if (moves[i].subMoves[j].category !=
+                                          'move') {
+                                        subDisplayNumber++;
+                                      }
                                     }
-                                  }
-                                  final bool isSimultaneous =
-                                      sub.category == 'simultaneous';
-                                  final bool isChain = sub.category == 'chain';
 
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (isSimultaneous)
-                                          _buildSimultaneousContent(
-                                            sub,
-                                            language,
-                                            onShowMediaGallery,
-                                            subDisplayNumber: subDisplayNumber,
-                                            onEdit: isEditing
-                                                ? onEdit(i)
-                                                : null,
-                                          )
-                                        else if (isChain)
-                                          _buildChainContent(
-                                            context,
-                                            sub,
-                                            language,
-                                            onShowMediaGallery,
-                                            subDisplayNumber: subDisplayNumber,
-                                            onEdit: isEditing
-                                                ? onEdit(i)
-                                                : null,
-                                          )
-                                        else
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12.0,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
                                           Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               if (isSingle)
                                                 const Icon(
@@ -769,199 +548,195 @@ class MoveListDisplayWidget {
                                               _buildMoveContent(
                                                 sub,
                                                 language,
+                                                glossary,
                                                 onShowMediaGallery,
                                                 onEdit: isEditing
                                                     ? onEdit(i)
                                                     : null,
+                                                showTranslation:
+                                                    showTranslation,
                                               ),
                                             ],
                                           ),
-                                        if (showTranslation && !isChain)
-                                          Builder(
-                                            builder: (context) {
-                                              final t =
-                                                  _getEffectiveTranslation(
-                                                    sub,
-                                                    language,
-                                                    glossary,
-                                                  );
-                                              if (t.isEmpty) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 2.0,
-                                                  left: 24.0,
-                                                ),
-                                                child: Text(
-                                                  t,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        if (sub.counterName != null ||
-                                            sub.hasStructuredCounter)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 4.0,
-                                              left: 0.0,
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                InkWell(
-                                                  onDoubleTap: () {
-                                                    if (sub.counterName !=
-                                                        null) {
-                                                      onShowMediaGallery(
-                                                        sub.counterCategory ??
-                                                            '',
-                                                        sub.counterName!,
-                                                      );
-                                                    }
-                                                  },
-                                                  child: _counterBox(
-                                                    mini: true,
-                                                    sub.hasStructuredCounter
-                                                        ? _buildStructuredCounterContent(
-                                                            sub,
-                                                            language,
-                                                            onShowMediaGallery,
-                                                            isEditing
-                                                                ? onEdit(i)
-                                                                : null,
-                                                          )
-                                                        : DiagonalCross(
-                                                            show: sub
-                                                                .counterIsFeint,
-                                                            color:
-                                                                Colors.purple,
-                                                            child: Wrap(
-                                                              spacing: 6,
-                                                              crossAxisAlignment:
-                                                                  WrapCrossAlignment
-                                                                      .center,
-                                                              children: [
-                                                                const Icon(
-                                                                  Icons
-                                                                      .subdirectory_arrow_right,
-                                                                  size: 28,
-                                                                  color: Colors
-                                                                      .orange,
-                                                                ),
-                                                                Icon(
-                                                                  MoveDisplayWidgets.getCategoryIcon(
-                                                                    sub.counterCategory ??
-                                                                        '',
-                                                                  ),
-                                                                  size: 22,
-                                                                  color: MoveDisplayWidgets.getCategoryColor(
-                                                                    sub.counterCategory ??
-                                                                        '',
-                                                                  ),
-                                                                ),
-                                                                Text(
-                                                                  sub.counterName!,
-                                                                  style: TextStyle(
-                                                                    fontSize:
-                                                                        13,
-                                                                    color: Theme.of(
-                                                                      context,
-                                                                    ).colorScheme.secondary,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                  ),
-                                                                ),
-                                                                if (sub
-                                                                        .counterSide
-                                                                        ?.isNotEmpty ??
-                                                                    false)
-                                                                  MoveDisplayWidgets.sideCircle(
-                                                                    LocalizationService.translate(
-                                                                      sub.counterSide ==
-                                                                              'L'
-                                                                          ? 'left'
-                                                                          : (sub.counterSide ==
-                                                                                    'R'
-                                                                                ? 'right'
-                                                                                : 'mid'),
-                                                                      language,
-                                                                    ).substring(
-                                                                      0,
-                                                                      1,
-                                                                    ),
-                                                                    sub.counterSide ??
-                                                                        '',
-                                                                    mini: true,
-                                                                  ),
-                                                                if (sub
-                                                                        .counterLevel
-                                                                        ?.isNotEmpty ??
-                                                                    false)
-                                                                  MoveDisplayWidgets.levelIcon(
-                                                                    sub.counterLevel ??
-                                                                        '',
-                                                                    mini: true,
-                                                                  ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                  ),
-                                                ),
-                                                if (showTranslation)
-                                                  Builder(
-                                                    builder: (context) {
-                                                      final ct =
-                                                          _getEffectiveCounterTranslation(
-                                                            sub,
-                                                            language,
-                                                            glossary,
-                                                          );
-                                                      if (ct.isEmpty) {
-                                                        return const SizedBox.shrink();
+                                          if (sub.counterName != null ||
+                                              sub.hasStructuredCounter)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4.0,
+                                                left: 12.0,
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  InkWell(
+                                                    onDoubleTap: () {
+                                                      if (sub.counterName !=
+                                                          null) {
+                                                        onShowMediaGallery(
+                                                          sub.counterCategory ??
+                                                              '',
+                                                          sub.counterName!,
+                                                        );
                                                       }
-                                                      return Padding(
-                                                        padding:
-                                                            const EdgeInsets.only(
-                                                              top: 2.0,
-                                                              left: 28.0,
-                                                            ),
-                                                        child: Text(
-                                                          ct,
-                                                          style:
-                                                              const TextStyle(
-                                                                fontSize: 11,
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                        ),
-                                                      );
                                                     },
+                                                    child: _counterBox(
+                                                      sub.hasStructuredCounter
+                                                          ? _buildStructuredCounterContent(
+                                                              sub,
+                                                              language,
+                                                              glossary,
+                                                              onShowMediaGallery,
+                                                              isEditing
+                                                                  ? onEdit(i)
+                                                                  : null,
+                                                              showTranslation:
+                                                                  showTranslation,
+                                                            )
+                                                          : DiagonalCross(
+                                                              show: sub
+                                                                  .counterIsFeint,
+                                                              color:
+                                                                  Colors.purple,
+                                                              child: Wrap(
+                                                                spacing: 6,
+                                                                crossAxisAlignment:
+                                                                    WrapCrossAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  const Icon(
+                                                                    Icons
+                                                                        .subdirectory_arrow_right,
+                                                                    size: 28,
+                                                                    color: Colors
+                                                                        .orange,
+                                                                  ),
+                                                                  Icon(
+                                                                    MoveDisplayWidgets.getCategoryIcon(
+                                                                      sub.counterCategory ??
+                                                                          '',
+                                                                    ),
+                                                                    size: 22,
+                                                                    color: MoveDisplayWidgets.getCategoryColor(
+                                                                      sub.counterCategory ??
+                                                                          '',
+                                                                    ),
+                                                                  ),
+                                                                  Text(
+                                                                    sub.counterName!,
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                      color: Theme.of(
+                                                                        context,
+                                                                      ).colorScheme.secondary,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                    ),
+                                                                  ),
+                                                                  if (sub
+                                                                          .counterSide
+                                                                          ?.isNotEmpty ??
+                                                                      false)
+                                                                    MoveDisplayWidgets.sideCircle(
+                                                                      LocalizationService.translate(
+                                                                        sub.counterSide ==
+                                                                                'L'
+                                                                            ? 'left'
+                                                                            : (sub.counterSide ==
+                                                                                      'R'
+                                                                                  ? 'right'
+                                                                                  : (sub.counterSide ==
+                                                                                            'F'
+                                                                                        ? 'front'
+                                                                                        : (sub.counterSide ==
+                                                                                                  'B'
+                                                                                              ? 'back'
+                                                                                              : 'mid'))),
+                                                                        language,
+                                                                      ).substring(
+                                                                        0,
+                                                                        1,
+                                                                      ),
+                                                                      sub.counterSide ??
+                                                                          '',
+                                                                      mini:
+                                                                          true,
+                                                                    ),
+                                                                  if (sub
+                                                                          .counterLevel
+                                                                          ?.isNotEmpty ??
+                                                                      false)
+                                                                    MoveDisplayWidgets.levelIcon(
+                                                                      sub.counterLevel ??
+                                                                          '',
+                                                                      mini:
+                                                                          true,
+                                                                    ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                      mini: true,
+                                                    ),
                                                   ),
-                                              ],
+                                                  if (showTranslation &&
+                                                      !sub.hasStructuredCounter)
+                                                    Builder(
+                                                      builder: (context) {
+                                                        final ct =
+                                                            _getEffectiveCounterTranslation(
+                                                              sub,
+                                                              language,
+                                                              glossary,
+                                                            );
+                                                        if (ct.isEmpty) {
+                                                          return const SizedBox.shrink();
+                                                        }
+                                                        return Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                top: 2.0,
+                                                                left: 28.0,
+                                                              ),
+                                                          child: Text(
+                                                            ct,
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontSize: 11,
+                                                                  color: Colors
+                                                                      .grey,
+                                                                  fontStyle:
+                                                                      FontStyle
+                                                                          .italic,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                )
+                              else ...[
+                                _buildMoveContent(
+                                  moves[i],
+                                  language,
+                                  glossary,
+                                  onShowMediaGallery,
+                                  iconSize: 28,
+                                  fontSize: 14,
+                                  onEdit: isEditing ? onEdit(i) : null,
+                                  showTranslation: showTranslation,
+                                ),
+                              ],
+                            ],
+                          ),
                           if (moves[i].category != 'combo' &&
-                              moves[i].category != 'chain' &&
                               (moves[i].counterName != null ||
                                   moves[i].hasStructuredCounter))
                             Padding(
@@ -986,8 +761,10 @@ class MoveListDisplayWidget {
                                           ? _buildStructuredCounterContent(
                                               moves[i],
                                               language,
+                                              glossary,
                                               onShowMediaGallery,
                                               isEditing ? onEdit(i) : null,
+                                              showTranslation: showTranslation,
                                             )
                                           : Wrap(
                                               spacing: 4,
@@ -1030,6 +807,7 @@ class MoveListDisplayWidget {
                                                               FontWeight.bold,
                                                         ),
                                                       ),
+
                                                       if (moves[i]
                                                               .counterSide
                                                               ?.isNotEmpty ??
@@ -1047,7 +825,13 @@ class MoveListDisplayWidget {
                                                                   : (moves[i].counterSide ==
                                                                             'R'
                                                                         ? 'right'
-                                                                        : 'mid'),
+                                                                        : (moves[i].counterSide ==
+                                                                                  'F'
+                                                                              ? 'front'
+                                                                              : (moves[i].counterSide ==
+                                                                                        'B'
+                                                                                    ? 'back'
+                                                                                    : 'mid'))),
                                                               language,
                                                             ).substring(0, 1),
                                                             moves[i].counterSide ??
@@ -1096,7 +880,8 @@ class MoveListDisplayWidget {
                                             ),
                                     ),
                                   ),
-                                  if (showTranslation)
+                                  if (showTranslation &&
+                                      !moves[i].hasStructuredCounter)
                                     Builder(
                                       builder: (context) {
                                         final ct =
@@ -1119,7 +904,6 @@ class MoveListDisplayWidget {
                                               fontSize: 12,
                                               color: Colors.grey,
                                               fontStyle: FontStyle.italic,
-                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         );

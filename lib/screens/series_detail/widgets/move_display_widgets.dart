@@ -59,6 +59,10 @@ class MoveDisplayWidgets {
       bgColor = Colors.red;
     } else if (sideCode == 'M') {
       bgColor = Colors.green;
+    } else if (sideCode == 'F') {
+      bgColor = Colors.teal;
+    } else if (sideCode == 'B') {
+      bgColor = Colors.brown;
     }
 
     return Container(
@@ -95,14 +99,12 @@ class MoveDisplayWidgets {
           return 1;
         case 'move':
           return 2;
-        case 'jkd_moves':
-          return 3;
         case 'kali':
-          return 4;
+          return 3;
         case 'other':
-          return 5;
+          return 4;
         case 'text':
-          return 6;
+          return 5;
         default:
           return -1;
       }
@@ -119,14 +121,12 @@ class MoveDisplayWidgets {
         return 3;
       case 'move':
         return 4;
-      case 'jkd_moves':
-        return 5;
       case 'kali':
-        return 6;
+        return 5;
       case 'other':
-        return 7;
+        return 6;
       case 'text':
-        return 8;
+        return 7;
       default:
         return -1;
     }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/move.dart';
@@ -10,6 +11,69 @@ import 'separated_wrap.dart';
 /// Read-only graphical card view for moves — mirrors the visual style
 /// of the AdvancedComboBuilder cards but without any editing capabilities.
 class GraphicalMoveView {
+  /// Helper to find translation in glossary if move translations are empty
+  static String _getEffectiveTranslation(
+    Move move,
+    String language,
+    List<Map<String, dynamic>> glossary,
+  ) {
+    final t = move.getTranslation(language);
+    if (t.isNotEmpty) return t;
+
+    final entry = glossary.firstWhere(
+      (e) => e['name'].toString().toLowerCase() == move.name.toLowerCase(),
+      orElse: () => {},
+    );
+
+    if (entry.isNotEmpty && entry['translations'] != null) {
+      try {
+        final Map<String, dynamic> trans = json.decode(entry['translations']);
+        return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+      } catch (_) {
+        return '';
+      }
+    }
+    return '';
+  }
+
+  /// Helper to find counter translation in glossary
+  static String _getEffectiveCounterTranslation(
+    Move move,
+    String language,
+    List<Map<String, dynamic>> glossary,
+  ) {
+    if (move.counterName == null) return '';
+
+    // First try by counterGlossaryId
+    if (move.counterGlossaryId != null) {
+      final entry = glossary.firstWhere(
+        (e) => e['id'] == move.counterGlossaryId,
+        orElse: () => {},
+      );
+      if (entry.isNotEmpty && entry['translations'] != null) {
+        try {
+          final Map<String, dynamic> trans = json.decode(entry['translations']);
+          return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+        } catch (_) {}
+      }
+    }
+
+    // Fallback to glossary search by counterName
+    final entry = glossary.firstWhere(
+      (e) =>
+          e['name'].toString().toLowerCase() == move.counterName!.toLowerCase(),
+      orElse: () => {},
+    );
+
+    if (entry.isNotEmpty && entry['translations'] != null) {
+      try {
+        final Map<String, dynamic> trans = json.decode(entry['translations']);
+        return trans[language] ?? trans['en'] ?? trans['fr'] ?? '';
+      } catch (_) {}
+    }
+    return '';
+  }
+
   /// Builds a list of graphical card widgets from moves.
   /// Each top-level move is wrapped in a numbered card.
   /// When [trainingController] is provided, the currently-spoken move
@@ -21,6 +85,7 @@ class GraphicalMoveView {
     required Function(String category, String moveName) onShowMediaGallery,
     TrainingController? trainingController,
     int? singleItemIndex,
+    bool showTranslation = true,
   }) {
     // Compute display numbers (skip 'move' category items)
     int displayNumber = 0;
@@ -44,6 +109,7 @@ class GraphicalMoveView {
                 cardNumber: num > 0 ? num : null,
                 trainingController: trainingController,
                 moveIndex: effectiveIndex,
+                showTranslation: showTranslation,
               ),
             );
           },
@@ -107,6 +173,7 @@ class GraphicalMoveView {
     int? moveIndex,
     bool isActiveSubItem = false,
     bool isActiveAnswer = false,
+    bool showTranslation = true,
   }) {
     final theme = Theme.of(context);
     final provider = Provider.of<SeriesProvider>(context, listen: false);
@@ -171,6 +238,7 @@ class GraphicalMoveView {
                       onShowMediaGallery,
                       isActiveSubItem: subActive,
                       isActiveAnswer: answerActive,
+                      showTranslation: showTranslation,
                     ),
                     if (e.key < move.chain.length - 1)
                       const Padding(
@@ -187,7 +255,7 @@ class GraphicalMoveView {
             ),
             if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
-              _buildCounterBox(move, lang),
+              _buildCounterBox(move, lang, showTranslation: showTranslation),
             ],
           ],
         ),
@@ -223,13 +291,19 @@ class GraphicalMoveView {
                 spacing: 4,
                 runSpacing: 4,
                 children: move.subMoves.map((sm) {
-                  return _buildMoveCard(sm, lang, context, onShowMediaGallery);
+                  return _buildMoveCard(
+                    sm,
+                    lang,
+                    context,
+                    onShowMediaGallery,
+                    showTranslation: showTranslation,
+                  );
                 }).toList(),
               ),
             ),
             if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
-              _buildCounterBox(move, lang),
+              _buildCounterBox(move, lang, showTranslation: showTranslation),
             ],
           ],
         ),
@@ -278,13 +352,14 @@ class GraphicalMoveView {
                     onShowMediaGallery,
                     isActiveSubItem: subActive,
                     isActiveAnswer: answerActive,
+                    showTranslation: showTranslation,
                   ),
                 ];
               }).toList(),
             ),
             if (move.counterName != null || move.hasStructuredCounter) ...[
               const SizedBox(height: 4),
-              _buildCounterBox(move, lang),
+              _buildCounterBox(move, lang, showTranslation: showTranslation),
             ],
           ],
         ),
@@ -339,6 +414,30 @@ class GraphicalMoveView {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      Builder(
+                        builder: (context) {
+                          if (!showTranslation) return const SizedBox.shrink();
+                          final provider = context.read<SeriesProvider>();
+                          final trans = _getEffectiveTranslation(
+                            move,
+                            lang,
+                            provider.glossary,
+                          );
+                          if (trans.isEmpty) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Text(
+                              trans,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
                       if (move.specialAction != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 2.0),
@@ -382,7 +481,12 @@ class GraphicalMoveView {
               ),
               if (move.counterName != null || move.hasStructuredCounter) ...[
                 const SizedBox(height: 4),
-                _buildCounterBox(move, lang, isActive: isActiveAnswer),
+                _buildCounterBox(
+                  move,
+                  lang,
+                  isActive: isActiveAnswer,
+                  showTranslation: showTranslation,
+                ),
               ],
             ],
           ),
@@ -467,6 +571,7 @@ class GraphicalMoveView {
     Move move,
     String lang, {
     bool isActive = false,
+    bool showTranslation = true,
   }) {
     final borderColor = isActive
         ? Colors.amber.withValues(alpha: 0.8)
@@ -527,7 +632,11 @@ class GraphicalMoveView {
                         ),
                       ),
                     ),
-                  _buildMiniMoveCard(sm, lang),
+                  _buildMiniMoveCard(
+                    sm,
+                    lang,
+                    showTranslation: showTranslation,
+                  ),
                 ];
               }).toList(),
             ),
@@ -565,7 +674,7 @@ class GraphicalMoveView {
                       color: Colors.teal,
                     ),
                   ),
-                _buildMiniMoveCard(sm, lang),
+                _buildMiniMoveCard(sm, lang, showTranslation: showTranslation),
               ];
             }).toList(),
           ),
@@ -588,6 +697,30 @@ class GraphicalMoveView {
             move.counterName!,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
+          ),
+          Builder(
+            builder: (context) {
+              if (!showTranslation) return const SizedBox.shrink();
+              final provider = context.read<SeriesProvider>();
+              final ct = _getEffectiveCounterTranslation(
+                move,
+                lang,
+                provider.glossary,
+              );
+              if (ct.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Text(
+                  ct,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            },
           ),
           if ((move.counterSide ?? '').isNotEmpty ||
               (move.counterLevel ?? '').isNotEmpty) ...[
@@ -629,7 +762,11 @@ class GraphicalMoveView {
   }
 
   /// Small card for rendering a single move (or nested group) inside a structured counter box.
-  static Widget _buildMiniMoveCard(Move move, String lang) {
+  static Widget _buildMiniMoveCard(
+    Move move,
+    String lang, {
+    bool showTranslation = true,
+  }) {
     if (move.isChain || move.isCombo) {
       // RECURSIVE rendering for nested groups inside an answer
       final color = MoveDisplayWidgets.getCategoryColor(move.category);
@@ -666,7 +803,11 @@ class GraphicalMoveView {
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildMiniMoveCard(item, lang),
+                        _buildMiniMoveCard(
+                          item,
+                          lang,
+                          showTranslation: showTranslation,
+                        ),
                         if (move.isChain && idx < move.chain.length - 1)
                           const Icon(
                             Icons.arrow_forward,
@@ -715,6 +856,30 @@ class GraphicalMoveView {
               move.name,
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
+            ),
+            Builder(
+              builder: (context) {
+                if (!showTranslation) return const SizedBox.shrink();
+                final provider = context.read<SeriesProvider>();
+                final trans = _getEffectiveTranslation(
+                  move,
+                  lang,
+                  provider.glossary,
+                );
+                if (trans.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 1.0),
+                  child: Text(
+                    trans,
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              },
             ),
             if (move.side.isNotEmpty || move.level.isNotEmpty)
               Wrap(

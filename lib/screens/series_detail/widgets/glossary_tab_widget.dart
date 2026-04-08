@@ -116,7 +116,7 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
   void initState() {
     super.initState();
     _lastCounterMode = widget.pickerState.pendingAttackMove != null;
-    _tabController = TabController(length: 9, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
     widget.pickerState.addListener(_onPickerStateChanged);
     // Handle any initial tab index request
     _consumeRequestedTab();
@@ -132,7 +132,7 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
       _lastCounterMode = isCounterMode;
       // Recreate the tab controller when counter mode changes
       _tabController?.dispose();
-      _tabController = TabController(length: 9, vsync: this);
+      _tabController = TabController(length: 8, vsync: this);
     }
     if (oldWidget.pickerState != widget.pickerState) {
       oldWidget.pickerState.removeListener(_onPickerStateChanged);
@@ -178,7 +178,6 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
               _buildTabContent(context, 'packs', lang),
               _buildTabContent(context, 'trapping', lang),
               _buildTabContent(context, 'move', lang),
-              _buildTabContent(context, 'jkd_moves', lang),
               _buildTabContent(context, 'kali', lang),
               _buildTabContent(context, 'other', lang),
               _buildCustomTextTab(context, lang),
@@ -199,7 +198,6 @@ class _GlossaryTabWidgetState extends State<GlossaryTabWidget>
         _buildTab(lang, 'packs', 'packs'),
         _buildTab(lang, 'trapping', 'trapping'),
         _buildTab(lang, 'move', 'move'),
-        _buildTab(lang, 'jkd_moves', 'move', color: Colors.blue),
         _buildTab(lang, 'kali', 'kali'),
         _buildTab(lang, 'other', 'other'),
         const Tab(

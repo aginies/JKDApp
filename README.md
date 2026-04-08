@@ -13,6 +13,7 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Multi-language**: Full support for English and French.
 
 ### Advanced Features
+- **Wearable Support**: Dedicated companion apps for **Wear OS** and **Garmin** watches.
 - **Theme Personalization**: Choose your own **Theme Color** from a wide palette (Blue, Red, Green, etc.).
 - **Adaptive UI**: Interface elements automatically adjust colors for maximum readability in Light, Dark, and AMOLED modes.
 - **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
@@ -21,28 +22,33 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **PDF Export**: Generate printable training sheets.
 - **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
 
+## Wearable Extensions
+
+### Wear OS App
+A fully native companion app designed for hands-free training on watches like the Samsung Galaxy Watch 6 or Pixel Watch:
+- **Bubble Layout**: Each action step is displayed in its own clearly defined, color-coded bubble.
+- **Smart Formatting**: Automatically converts complex chains (e.g., "L Jab -> R Cross") into a vertical, easy-to-read flow.
+- **Auto-Advance**: Configurable timer (2s to 30s) allows you to train without touching the watch.
+- **Visual Countdown**: A circular border gradient (Red -> Yellow -> Green) provides a real-time progress cue.
+- **Dual-Column Mode**: Automatically switches between 1 and 2 columns based on move length to maximize screen space.
+- **Auto-Scrolling**: Seamlessly loops long descriptions up and down so you never miss a detail.
+
+### Garmin ConnectIQ
+Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
+- **Remote Sync**: Synchronizes current training series and progress to the watch face.
+- **Audio Feedback**: Works in tandem with the phone's TTS engine for a unified coaching experience.
+
 ## Project Structure
 
 ```
-lib/
-├── models/              # Data models (Move, JkdSeries)
-├── services/            # Business logic and APIs
-│   ├── database_service.dart   # SQLite management (Current Version: 13)
-│   ├── series_provider.dart     # State & Settings provider
-│   ├── logging_service.dart     # App event tracking
-│   ├── localization_service.dart
+.
+├── garmin_app/          # Garmin ConnectIQ source code (Monkey C)
+├── wear_os_app/         # Native Wear OS Flutter application
+├── lib/                 # Main Mobile/Desktop application source
+│   ├── models/          # Data models (Move, JkdSeries)
+│   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
+│   ├── screens/         # UI Screens
 │   └── ...
-├── screens/
-│   ├── series_list_screen.dart  # Main dashboard with Categories
-│   ├── settings_screen.dart     # App configuration & Theme chooser
-│   ├── series_list/
-│   │   └── widgets/
-│   │       └── random_reader_widget.dart  # Footwork training tool
-│   └── series_detail/
-│       ├── widgets/
-│       │   └── move_list_display_widget.dart # Hierarchical list with sub-letters
-│       └── ...
-└── utils/               # Utility classes (Category, Translation, etc.)
 ```
 
 ## JKD Footwork Training (Random Reader)
@@ -74,18 +80,20 @@ You can now group variations of a move using letters (a, b, c...):
 | Platform | Status | Notes |
 |----------|--------|-------|
 | Android  | ✅ Full | Primary mobile platform support |
+| Wear OS  | ✅ Full | Native app for Watch 4/5/6/7, Pixel Watch, etc. |
+| Garmin   | ✅ Full | ConnectIQ extension for compatible Garmin devices |
 | Windows  | ✅ Full | Fully supported desktop platform |
 | MacOS    | ✅ Full | Fully supported desktop platform |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
-| iOS      | ⚠️ Limited | Supported by code but not officially built (Apple Developer account) |
+| iOS      | ⚠️ Limited | Supported by code but not officially built |
 
 ## Recent Updates (v2.1.0+1)
 
+- **Wear OS Launch**: Complete standalone watch application with Bubble Layout.
+- **Garmin Extension**: Remote synchronization support for Garmin devices.
+- **Automated Updates**: System series and glossary now update automatically via asset hashing (no reset required).
+- **Personal Backups**: Added option to export only custom (non-system) series.
 - **Database v13**: Added `sub_letter` support and automatic system series re-seeding.
-- **Improved Logging**: Logs now include versioning and timestamps, saveable as `jkd_app-VERSION-DATE-HOUR.log`.
-- **Glossary Overhaul**: Improved readability in dark themes and fixed missing category icons.
-- **Default Theme**: Switched default app color to **Blue**.
-- **Refined Detail View**: Simplified labels and improved scrolling behavior for long series.
 
 ## Development
 

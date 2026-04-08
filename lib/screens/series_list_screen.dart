@@ -16,6 +16,7 @@ import '../widgets/active_program_card.dart';
 import '../utils/category_utils.dart';
 import '../widgets/global_search_delegate.dart';
 import '../widgets/empty_state_illustration.dart';
+import 'series_detail/widgets/move_display_widgets.dart';
 import 'package:flutter/services.dart';
 
 class SeriesListScreen extends StatefulWidget {
@@ -262,7 +263,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                 ),
               ),
               child: DefaultTabController(
-                length: 9,
+                length: 8,
                 child: Column(
                   children: [
                     // Handle bar for the bottom sheet
@@ -406,13 +407,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                               ),
                               Tab(
                                 text: LocalizationService.translate(
-                                  'jkd_moves',
-                                  lang,
-                                ),
-                                icon: Icon(_getCategoryIcon('jkd_moves')),
-                              ),
-                              Tab(
-                                text: LocalizationService.translate(
                                   'kali',
                                   lang,
                                 ),
@@ -445,7 +439,6 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 _buildGlossaryList('packs', lang),
                                 _buildGlossaryList('trapping', lang),
                                 _buildGlossaryList('move', lang),
-                                _buildGlossaryList('jkd_moves', lang),
                                 _buildGlossaryList('kali', lang),
                                 _buildGlossaryList('general', lang),
                                 _buildGlossaryList('other', lang),
@@ -1026,13 +1019,13 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.asset(
-                            'assets/icon/JKD.png',
-                            width: 28,
-                            height: 28,
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon('move'),
+                            size: 28,
+                            color: MoveDisplayWidgets.getCategoryColor('move'),
                           ),
                           const SizedBox(width: 8),
-                          const Text('JKD Moves'),
+                          Text(LocalizationService.translate('move', lang)),
                         ],
                       ),
                     ),
@@ -1079,7 +1072,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           _buildSeriesList('Jun Fan Gung Fu', lang),
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('Kali', lang),
-          _buildSeriesList('JKD Moves', lang),
+          _buildSeriesList('Moves', lang),
           _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
@@ -1129,7 +1122,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () =>
-                    _tabController.animateTo(4), // Go to Training Programs tab
+                    _tabController.animateTo(5), // Go to Training Programs tab
                 child: Text(
                   LocalizationService.translate('start_program', lang),
                 ),
@@ -1171,7 +1164,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
 
     return Column(
       children: [
-        if (category == 'JKD Moves') RandomReaderWidget(language: lang),
+        if (category == 'Moves') RandomReaderWidget(language: lang),
         Expanded(
           child: ListView.builder(
             itemCount: filtered.length,
@@ -1252,7 +1245,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                   asset = 'assets/icon/jfkb.png';
                                 } else if (cat == 'Kali') {
                                   asset = 'assets/icon/kali.png';
-                                } else if (cat == 'JKD Moves') {
+                                } else if (cat == 'Moves') {
                                   asset = 'assets/icon/JKD.png';
                                 }
                                 return Image.asset(

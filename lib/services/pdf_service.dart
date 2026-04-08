@@ -42,7 +42,7 @@ class PdfService {
         categoryIcon = kaliIcon;
         headerColor = PdfColors.brown900;
         break;
-      case 'JKD Moves':
+      case 'Moves':
         categoryIcon = jkdIcon;
         headerColor = PdfColors.grey900;
         break;
@@ -757,8 +757,6 @@ class PdfService {
         return PdfColors.orange200;
       case 'move':
         return PdfColors.teal200;
-      case 'jkd_moves':
-        return PdfColors.blue200;
       case 'kali':
         return PdfColors.brown200;
       case 'text':
@@ -780,8 +778,6 @@ class PdfService {
         return PdfColors.orange50;
       case 'move':
         return PdfColors.teal50;
-      case 'jkd_moves':
-        return PdfColors.blue50;
       case 'kali':
         return PdfColors.brown50;
       case 'text':

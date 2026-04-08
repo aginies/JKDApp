@@ -430,33 +430,55 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildTopToolbar(String lang) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         // LEFT group: action buttons
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.zero,
             child: Row(
               children: [
                 _toolbarButton('', Icons.add, Colors.blue, _onAddClick),
                 _toolbarButton('', Icons.remove, Colors.red, _onDeleteSelected),
-                const SizedBox(width: 8, child: VerticalDivider()),
-                _toolbarButton(
-                  '',
-                  Icons.undo,
-                  Colors.grey,
-                  _undo,
-                  isActive: _undoStack.isNotEmpty,
+
+                // History Box (Undo/Redo)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : Colors.black12,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _toolbarButton(
+                        '',
+                        Icons.undo,
+                        Colors.grey,
+                        _undo,
+                        isActive: _undoStack.isNotEmpty,
+                      ),
+                      _toolbarButton(
+                        '',
+                        Icons.redo,
+                        Colors.grey,
+                        _redo,
+                        isActive: _redoStack.isNotEmpty,
+                      ),
+                    ],
+                  ),
                 ),
-                _toolbarButton(
-                  '',
-                  Icons.redo,
-                  Colors.grey,
-                  _redo,
-                  isActive: _redoStack.isNotEmpty,
-                ),
-                const SizedBox(width: 8, child: VerticalDivider()),
+
                 _toolbarButton(
                   '',
                   null,
@@ -488,23 +510,23 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           Text(
                             'A',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: fg,
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 1),
                             child: Icon(
                               Icons.add_circle_outline,
-                              size: 16,
+                              size: 14,
                               color: fg,
                             ),
                           ),
                           Text(
                             'B',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: fg,
                             ),
@@ -544,7 +566,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           Text(
                             'A',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: fg,
                             ),
@@ -553,11 +575,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             padding: const EdgeInsets.symmetric(horizontal: 1),
                             child: Icon(
                               Icons.arrow_forward,
-                              size: 16,
+                              size: 14,
                               color: fg,
                             ),
                           ),
-                          Icon(Icons.add, size: 14, color: fg),
+                          Icon(Icons.add, size: 12, color: fg),
                         ],
                       );
                     },
@@ -587,29 +609,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
         ),
+        const SizedBox(width: 4),
         // RIGHT group: Finish & Cancel
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _toolbarButton(
-              (widget.finishButtonLabel == null ||
-                      widget.finishButtonLabel!.isEmpty)
-                  ? ''
-                  : widget.finishButtonLabel!,
-              Icons.check,
-              Colors.green,
-              _onFinishClick,
-              isActive: true,
-            ),
-
-            _toolbarButton(
-              '',
-              Icons.close,
-              Colors.red,
-              widget.onCancel,
-              isActive: true,
-            ),
-          ],
+        _toolbarButton(
+          (widget.finishButtonLabel == null ||
+                  widget.finishButtonLabel!.isEmpty)
+              ? ''
+              : widget.finishButtonLabel!,
+          Icons.check,
+          Colors.green,
+          _onFinishClick,
+          isActive: true,
+        ),
+        _toolbarButton(
+          '',
+          Icons.close,
+          Colors.red,
+          widget.onCancel,
+          isActive: true,
         ),
       ],
     );
@@ -2087,17 +2104,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                       ),
                                 },
                                 {
-                                  'id': 'jkd_move',
-                                  'label':
-                                      '${LocalizationService.translate('jkd_moves', lang)} / ${LocalizationService.translate('move', lang)}',
-                                  'cats': ['jkd_moves', 'move'],
+                                  'id': 'move',
+                                  'label': LocalizationService.translate(
+                                    'move',
+                                    lang,
+                                  ),
+                                  'cats': ['move'],
                                   'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab(
-                                        'jkd_moves',
-                                        'move',
-                                        sc,
-                                      ),
+                                      _buildDualGlossaryTab('move', null, sc),
                                 },
+
                                 {
                                   'id': 'kali',
                                   'label': LocalizationService.translate(
@@ -2589,6 +2605,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               subMoves: [target, newItem],
             );
           });
+          // Auto-select the newly added sub-item in the combo
+          final target = _getDataAtPath(_selectedPath!);
+          if (target != null && target.isCombo) {
+            _selectedPath = [..._selectedPath!, target.subMoves.length - 1];
+          }
         }
         _isSimultaneousMode = false;
       } else {
@@ -2596,8 +2617,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (_selectedPath != null && _selectedPath!.length == 1) {
           final insertIndex = _selectedPath![0] + 1;
           _workspaceCards.insert(insertIndex, newItem);
+          _selectedPath = [insertIndex]; // Auto-select newly inserted item
         } else {
           _workspaceCards.add(newItem);
+          // If it's the only item, auto-select it
+          if (_workspaceCards.length == 1) {
+            _selectedPath = [0];
+          } else {
+            _selectedPath = [_workspaceCards.length - 1]; // Select last added
+          }
         }
       }
     });

@@ -35,7 +35,7 @@ void main() {
 
     test('CategoryUtils.getCategoryDirName capitalizes correctly', () {
       expect(CategoryUtils.getCategoryDirName('punches'), 'Punches');
-      expect(CategoryUtils.getCategoryDirName('jkd_moves'), 'Jkd_moves');
+      expect(CategoryUtils.getCategoryDirName('packs'), 'Packs');
       expect(CategoryUtils.getCategoryDirName(''), 'Other');
     });
   });

@@ -33,6 +33,7 @@ class DatabaseService {
     'assets/jkd-series-ping-chui-lop-sao-gwa-chui.json',
     'assets/jkd-series-sinawali-series.json',
     'assets/jkd-series-hou-ou-tek.json',
+    'assets/jkd-series-7-d-placements-kali.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -52,7 +53,7 @@ class DatabaseService {
     LoggingService.log('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 4, // Increment version for granular progress
+      version: 16, // Increment version for series category migration
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -65,23 +66,53 @@ class DatabaseService {
 
   /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    LoggingService.log(
-      'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
-    );
+    if (oldVersion < 16) {
+      LoggingService.log(
+        'Migrating categories: jkd_moves -> move and JKD Moves -> Moves',
+      );
 
-    // Drop all tables
-    await db.execute('DROP TABLE IF EXISTS day_completions');
-    await db.execute('DROP TABLE IF EXISTS user_program_progress');
-    await db.execute('DROP TABLE IF EXISTS program_days');
-    await db.execute('DROP TABLE IF EXISTS training_programs');
-    await db.execute('DROP TABLE IF EXISTS voice_records');
-    await db.execute('DROP TABLE IF EXISTS settings');
-    await db.execute('DROP TABLE IF EXISTS series_moves');
-    await db.execute('DROP TABLE IF EXISTS series');
-    await db.execute('DROP TABLE IF EXISTS glossary');
+      // Update glossary categories
+      await db.execute(
+        "UPDATE glossary SET category = 'move' WHERE category = 'jkd_moves'",
+      );
 
-    // Recreate everything
-    await _onCreate(db, newVersion);
+      // Update series categories (for the top-level grouping)
+      await db.execute(
+        "UPDATE series SET category = 'Moves' WHERE category = 'JKD Moves'",
+      );
+
+      // Update individual moves within series
+      await db.execute(
+        "UPDATE series_moves SET category = 'move' WHERE category = 'jkd_moves'",
+      );
+      await db.execute(
+        "UPDATE series_moves SET counter_category = 'move' WHERE counter_category = 'jkd_moves'",
+      );
+
+      if (oldVersion < 15) {
+        // Clean up potentially inconsistent stats after category merge
+        await db.execute('DELETE FROM day_completions');
+        LoggingService.log('Cleared stats for category migration consistency.');
+      }
+    } else {
+      LoggingService.log(
+        'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
+      );
+
+      // Drop all tables
+      await db.execute('DROP TABLE IF EXISTS day_completions');
+      await db.execute('DROP TABLE IF EXISTS user_program_progress');
+      await db.execute('DROP TABLE IF EXISTS program_days');
+      await db.execute('DROP TABLE IF EXISTS training_programs');
+      await db.execute('DROP TABLE IF EXISTS voice_records');
+      await db.execute('DROP TABLE IF EXISTS settings');
+      await db.execute('DROP TABLE IF EXISTS series_moves');
+      await db.execute('DROP TABLE IF EXISTS series');
+      await db.execute('DROP TABLE IF EXISTS glossary');
+
+      // Recreate everything
+      await _onCreate(db, newVersion);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -248,6 +279,7 @@ class DatabaseService {
 
     int globalPosition = 0;
     for (var category in glossaryData.keys) {
+      if (category == 'metadata') continue;
       final items = glossaryData[category];
       if (items is List) {
         for (var item in items) {
@@ -1327,8 +1359,9 @@ class DatabaseService {
           columns: ['id'],
           where: 'is_system = 1',
         );
-        final List<int> systemIds =
-            systemSeries.map((s) => s['id'] as int).toList();
+        final List<int> systemIds = systemSeries
+            .map((s) => s['id'] as int)
+            .toList();
 
         if (systemIds.isNotEmpty) {
           final idList = systemIds.join(',');
@@ -1339,7 +1372,11 @@ class DatabaseService {
         // Re-seed all series and update hashes
         await _seedSeries(txn);
         for (int i = 0; i < _seriesFiles.length; i++) {
-          await _saveStoredHash(txn, 'hash_${_seriesFiles[i]}', seriesHashes[i]);
+          await _saveStoredHash(
+            txn,
+            'hash_${_seriesFiles[i]}',
+            seriesHashes[i],
+          );
         }
       });
     }
@@ -1373,8 +1410,12 @@ class DatabaseService {
     }
 
     if (programsChanged || seriesChanged) {
-      LoggingService.log('Program or Series assets changed. Updating programs...');
-      await _seedTrainingPrograms(db); // This method already handles updates internally
+      LoggingService.log(
+        'Program or Series assets changed. Updating programs...',
+      );
+      await _seedTrainingPrograms(
+        db,
+      ); // This method already handles updates internally
       for (int i = 0; i < programFiles.length; i++) {
         await _saveStoredHash(db, 'hash_${programFiles[i]}', programHashes[i]);
       }
@@ -1400,10 +1441,9 @@ class DatabaseService {
     String key,
     String value,
   ) async {
-    await db.insert(
-      'settings',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
