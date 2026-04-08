@@ -490,6 +490,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
   int _currentIndex = 0;
   int _repCount = 0;
   bool _showRepScreen = false;
+  bool _mirrorMode = false;
   AnimationController? _progressController;
   final ScrollController _scrollController = ScrollController();
   bool _isAutoScrolling = false;
@@ -738,7 +739,10 @@ class _WearTrainingViewState extends State<WearTrainingView>
 
     String res = '';
     if (m.side.isNotEmpty) {
-      res += '${m.side} ';
+      final side = _mirrorMode
+          ? (m.side == 'L' ? 'R' : m.side == 'R' ? 'L' : m.side)
+          : m.side;
+      res += '$side ';
     }
     res += m.name;
 
@@ -889,7 +893,7 @@ class _WearTrainingViewState extends State<WearTrainingView>
                     '${_currentIndex + 1}/${widget.series.moves.length}',
                     style: TextStyle(
                       color: Colors.blueAccent.withValues(alpha: 0.8),
-                      fontSize: 12, // was 10px
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -897,10 +901,23 @@ class _WearTrainingViewState extends State<WearTrainingView>
                     const SizedBox(width: 4),
                     Icon(
                       Icons.timer,
-                      size: 12, // was 10px
+                      size: 12,
                       color: Colors.blueAccent.withValues(alpha: 0.8),
                     ),
                   ],
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => setState(() => _mirrorMode = !_mirrorMode),
+                    child: Text(
+                      '⇄',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _mirrorMode
+                            ? Colors.orangeAccent
+                            : Colors.white24,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
