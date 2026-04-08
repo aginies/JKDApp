@@ -41,6 +41,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   String _selectedCategory = 'Jun Fan Gung Fu';
   String _selectedType = 'Attack';
   String? _selectedMethod;
+  bool _localShowTranslation = true;
   List<Move> _moves = [];
   bool _isEditing = false;
   bool _isGraphicalView = false;
@@ -140,6 +141,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     );
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     _trainingController.initTts(speechRate: provider.speechRate);
+    _localShowTranslation = provider.showTranslation;
   }
 
   @override
@@ -323,7 +325,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   }
 
   List<Widget> _buildMoveListTiles(String lang) {
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
     return MoveListDisplayWidget.buildTiles(
       moves: _moves,
       language: lang,
@@ -331,7 +332,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
       trainingController: _trainingController,
       context: context,
       category: _selectedCategory,
-      showTranslation: provider.showTranslation,
+      showTranslation: _localShowTranslation,
       onEdit: (index) =>
           () => _openComboBuilder(editIndex: index),
       onClone: (index) => () {
@@ -379,6 +380,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         onShowMediaGallery: _showMediaGallery,
         trainingController: _trainingController,
         singleItemIndex: idx,
+        showTranslation: _localShowTranslation,
       );
       itemView = cards.isNotEmpty ? cards.first : const SizedBox.shrink();
     } else {
@@ -390,10 +392,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
         trainingController: _trainingController,
         context: context,
         category: _selectedCategory,
-        showTranslation: Provider.of<SeriesProvider>(
-          context,
-          listen: false,
-        ).showTranslation,
+        showTranslation: _localShowTranslation,
         onEdit: (_) => () {},
         onClone: (_) => () {},
         onDelete: (_) => () {},
@@ -512,6 +511,18 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       );
                     },
                   ),
+                IconButton(
+                  icon: Icon(
+                    _localShowTranslation ? Icons.translate : Icons.g_translate,
+                    color: _localShowTranslation ? Colors.teal : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _localShowTranslation = !_localShowTranslation;
+                    });
+                  },
+                  tooltip: lang == 'fr' ? 'Traductions' : 'Translations',
+                ),
                 if (_isEditing)
                   IconButton(
                     icon: const Icon(Icons.check),
@@ -912,7 +923,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                                 context: context,
                                 onShowMediaGallery: _showMediaGallery,
                                 trainingController: _trainingController,
+                                showTranslation: _localShowTranslation,
                               ),
+
                             ),
                           ),
                         )
