@@ -55,7 +55,7 @@ if (is_dir(UPLOAD_DIR)) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Bibliothèque Publique JKDApp</title>
+    <title>Bibliothèque Publique Beta JKDApp</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -74,16 +74,12 @@ if (is_dir(UPLOAD_DIR)) {
 </head>
 <body>
     <div class="container">
-        <div class="nav" style="margin-bottom: 20px;">
-            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <a href="downloads.php" style="color: var(--primary); text-decoration: none; font-weight: 600;">Releases (APK/PRG)</a>
-            </div>
-            <a href="https://guibo.com" style="color: var(--text-light); text-decoration: none;">guibo.com</a>
-        </div>
-
         <div class="public-header">
-            <h1>Bibliothèque JKDApp</h1>
+            <h1>Bibliothèque JKDApp <span style="font-size: 1rem; vertical-align: middle; background: #ff9800; color: white; padding: 2px 10px; border-radius: 4px; margin-left: 10px; font-weight: 800;">BETA</span></h1>
             <p>Explorez et téléchargez les séries partagées par la communauté.</p>
+            <div style="margin-top: 20px;">
+                <a href="downloads.php" style="color: white; text-decoration: underline; font-weight: 600;">Télécharger l'application pour votre smartphone et votre montre</a>
+            </div>
         </div>
 
         <div class="card">
