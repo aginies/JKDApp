@@ -119,9 +119,11 @@ if (is_dir(UPLOAD_DIR)) {
                             <td data-label="Taille" data-sort="<?php echo (int)$file['size']; ?>"><?php echo format_bytes($file['size']); ?></td>
                             <td data-label="Partagé le" data-sort="<?php echo (int)$file['mtime']; ?>" style="color: var(--text-light);">
                                 <?php
-                                    setlocale(LC_TIME, 'fr_FR.UTF-8');
                                     echo date('d/m/Y', $file['mtime']);
                                 ?>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">
+                                    <?php echo date('H:i:s', $file['mtime']); ?>
+                                </div>
                             </td>
                             <td data-label="Action" style="white-space: nowrap;">
                                 <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">

@@ -85,9 +85,23 @@ if (strpos($content_type, "application/json") !== false) {
     // Extract username and filename from headers (case-insensitive)
     $all_headers = array_change_key_case(getallheaders(), CASE_LOWER);
     
-    $username = isset($all_headers['x-username']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-username']), 0, 64) : 'anonymous';
-    $category = isset($all_headers['x-category']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-category']), 0, 64) : 'Uncategorized';
-    $filename = isset($all_headers['x-filename']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $all_headers['x-filename']), 0, 128) : 'series_' . date('Ymd_His') . '.json';
+    /**
+     * Decode and sanitize header values while allowing accented characters.
+     */
+    function sanitize_header($value, $default, $maxlen) {
+        if (!isset($value)) return $default;
+        // Decode URL component (matches Flutter Uri.encodeComponent)
+        // rawurldecode handles %20 correctly as space, matches encodeComponent
+        $decoded = rawurldecode($value);
+        // Remove truly dangerous filename characters but allow accents (\x7f-\xff)
+        $clean = preg_replace('/[<>:"\/\\\|?*]/', '', $decoded);
+        // Trim and limit length
+        return substr(trim($clean), 0, $maxlen);
+    }
+
+    $username = sanitize_header($all_headers['x-username'] ?? null, 'anonymous', 64);
+    $category = sanitize_header($all_headers['x-category'] ?? null, 'Uncategorized', 64);
+    $filename = sanitize_header($all_headers['x-filename'] ?? null, 'series_' . date('Ymd_His') . '.json', 128);
     
     // Ensure filename ends with .json
     if (pathinfo($filename, PATHINFO_EXTENSION) !== 'json') {
