@@ -168,25 +168,44 @@ function render_move(array $m, string $num_label = ''): string {
     $html .= '<div class="move-body">';
 
     // ── Main content ──
-    $html .= '<div class="move-main">';
-    if ($is_combo) {
+    if ($is_combo || $is_chain) {
+        $items = $is_combo ? $sub_moves : $chain;
+        $sep   = $is_combo ? '+' : '→';
+
+        // Header: icon + move name (the overall defence/combo label) + top-level badges
+        $html .= '<div class="move-main">';
         $html .= '<span class="move-cat-icon" style="background:' . cat_color($cat) . '">' . cat_icon($cat) . '</span>';
-        foreach ($sub_moves as $i => $sub) {
-            if ($i > 0) $html .= '<span class="move-sep">+</span>';
-            $html .= render_simple_move($sub, true);
-        }
+        $html .= '<span class="move-name">' . htmlspecialchars($m['name'] ?? '') . '</span>';
         $html .= render_badges($m);
-    } elseif ($is_chain) {
-        $html .= '<span class="move-cat-icon" style="background:' . cat_color($cat) . '">' . cat_icon($cat) . '</span>';
-        foreach ($chain as $i => $link) {
-            if ($i > 0) $html .= '<span class="move-sep chain-sep">→</span>';
-            $html .= render_simple_move($link, true);
+        $html .= '</div>';
+
+        // Each item: attack row + its counter row (if present)
+        $html .= '<div class="combo-moves">';
+        foreach ($items as $i => $item) {
+            if ($i > 0) $html .= '<div class="combo-sep">' . $sep . '</div>';
+            $html .= '<div class="combo-item">';
+            $html .= '<div class="move-main">' . render_simple_move($item) . '</div>';
+
+            $sc_name = $item['counter_name'] ?? '';
+            if (!empty($sc_name)) {
+                $sc_cat   = $item['counter_category'] ?? '';
+                $sc_color = $sc_cat ? cat_color($sc_cat) : '#e74c3c';
+                $sc_icon  = $sc_cat ? cat_icon($sc_cat)  : '🛡';
+                $html .= '<div class="sub-counter">';
+                $html .= '<span class="counter-arrow">↩</span>';
+                $html .= '<span class="move-cat-icon" style="background:' . $sc_color . '">' . $sc_icon . '</span>';
+                $html .= '<span class="move-name">' . htmlspecialchars($sc_name) . '</span>';
+                if (!empty($item['counter_side']))           $html .= '<span class="badge-side" style="background:' . side_color($item['counter_side']) . '">' . htmlspecialchars($item['counter_side']) . '</span>';
+                if (!empty($item['counter_level']))          $html .= '<span class="badge-level">' . level_symbol($item['counter_level']) . ' ' . htmlspecialchars($item['counter_level']) . '</span>';
+                if (!empty($item['counter_special_action'])) $html .= '<span class="badge-special">' . htmlspecialchars($item['counter_special_action']) . '</span>';
+                $html .= '</div>'; // sub-counter
+            }
+            $html .= '</div>'; // combo-item
         }
-        $html .= render_badges($m);
+        $html .= '</div>'; // combo-moves
     } else {
-        $html .= render_simple_move($m);
+        $html .= '<div class="move-main">' . render_simple_move($m) . '</div>';
     }
-    $html .= '</div>'; // move-main
 
     // ── Counter ──
     if ($has_counter) {
@@ -353,6 +372,12 @@ function render_move(array $m, string $num_label = ''): string {
             font-weight: 700;
         }
 
+        /* Combo/chain attack-defence pairs */
+        .combo-moves    { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding-left: 12px; border-left: 2px solid #ddd; }
+        .combo-item     { display: flex; flex-direction: column; gap: 3px; }
+        .combo-sep      { font-weight: 700; color: var(--text-light); font-size: 0.85rem; padding: 1px 4px; }
+        .sub-counter    { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #fff5f5; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; margin-left: 8px; align-self: flex-start; }
+
         /* Counter section */
         .counter-section {
             display: flex;
@@ -363,6 +388,7 @@ function render_move(array $m, string $num_label = ''): string {
             border-radius: 6px;
             padding: 6px 10px;
             margin-top: 2px;
+            align-self: flex-start;
         }
         .counter-arrow  { font-size: 1.1rem; color: #e74c3c; flex-shrink: 0; margin-top: 2px; }
         .counter-content { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
