@@ -72,14 +72,7 @@ class WebStorageService {
         LoggingService.info(
           'WebStorageService: Successfully fetched ${data.length} items',
         );
-        // Decode filenames which might have special characters
-        return data.map((item) {
-          final map = Map<String, dynamic>.from(item as Map);
-          if (map.containsKey('filename')) {
-            map['filename'] = Uri.decodeComponent(map['filename']);
-          }
-          return map;
-        }).toList();
+        return data.cast<Map<String, dynamic>>();
       } else {
         LoggingService.error(
           'WebStorageService: Failed to fetch list. Status: ${response.statusCode}',
@@ -94,11 +87,13 @@ class WebStorageService {
 
   Future<String> downloadJson(String filename) async {
     try {
-      // Filename is already decoded in memory, but needs to be encoded for the URL
-      final encodedFilename = Uri.encodeComponent(filename);
+      // Create a proper URI by resolving the filename against the base URL.
+      // This correctly handles special characters in the filename.
+      final uri = Uri.parse(downloadBaseUrl).resolve(Uri.encodeComponent(filename));
+      
       LoggingService.info('WebStorageService: Downloading $filename');
       final response = await _buildClient()
-          .get(Uri.parse('$downloadBaseUrl$encodedFilename'))
+          .get(uri)
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {

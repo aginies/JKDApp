@@ -33,6 +33,15 @@ class GarminPlugin(private val context: Context) :
                 override fun onSdkReady() {
                     pairedDevices = connectIQ?.knownDevices ?: emptyList()
                     sendEvent(mapOf("type" to "sdkReady", "deviceCount" to pairedDevices.size))
+                    // Push current status for every known device so the Flutter side
+                    // gets the real connection state without waiting for a change event.
+                    for (device in pairedDevices) {
+                        sendEvent(mapOf(
+                            "type" to "deviceStatus",
+                            "deviceId" to device.deviceIdentifier,
+                            "status" to device.status.name
+                        ))
+                    }
                     registerForMessages()
                 }
 

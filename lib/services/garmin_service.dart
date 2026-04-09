@@ -76,6 +76,9 @@ class GarminService {
     _language = language;
     _tts.setSpeechRate(_speechRate);
 
+    // Reset so the first deviceStatus event after (re-)init always propagates.
+    _isConnected = false;
+
     _eventSubscription?.cancel();
     try {
       _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
