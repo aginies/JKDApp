@@ -91,6 +91,7 @@ class WebStorageService {
               'X-API-KEY': apiKey,
               'X-USERNAME': username,
               'X-FILENAME': filename,
+              'X-CATEGORY': series.category,
             },
             body: jsonContent,
           )

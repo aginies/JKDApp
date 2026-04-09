@@ -1199,10 +1199,33 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                               item['title'],
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text(
-                              "@${item['user']} • $formattedDate",
-                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "@${item['user']} • $formattedDate",
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                                const SizedBox(height: 2),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                  ),
+                                  child: Text(
+                                    item['category'] ?? (lang == 'fr' ? 'Autre' : 'Other'),
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
+                            isThreeLine: true,
                             trailing: IconButton(
                               icon: const Icon(Icons.download, color: Colors.blueAccent),
                               onPressed: () => _downloadAndImportSeries(item['filename']),
