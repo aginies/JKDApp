@@ -5,15 +5,15 @@ import 'package:http/io_client.dart';
 import '../models/series.dart';
 
 class WebStorageService {
-  static const String _baseUrl        = 'https://ftp.guibo.com';
-  static const String serverUrl       = '$_baseUrl/api.php';
-  static const String listUrl         = '$_baseUrl/list.php';
+  static const String _baseUrl = 'https://ftp.guibo.com';
+  static const String serverUrl = '$_baseUrl/api.php';
+  static const String listUrl = '$_baseUrl/list.php';
   static const String downloadBaseUrl = '$_baseUrl/data/';
-  static const String _tokenUrl       = '$_baseUrl/token.php';
-  static const String _appSecret      = 'jkd_secure_upload_key_888';
+  static const String _tokenUrl = '$_baseUrl/token.php';
+  static const String _appSecret = 'jkd_secure_upload_key_888';
 
   // Token cache — static so it survives across service instances
-  static String?   _cachedToken;
+  static String? _cachedToken;
   static DateTime? _tokenExpiresAt;
 
   IOClient _buildClient() {
@@ -28,24 +28,23 @@ class WebStorageService {
     // Reuse cached token if it has more than 60 seconds left
     if (_cachedToken != null &&
         _tokenExpiresAt != null &&
-        _tokenExpiresAt!.isAfter(DateTime.now().add(const Duration(seconds: 60)))) {
+        _tokenExpiresAt!.isAfter(
+          DateTime.now().add(const Duration(seconds: 60)),
+        )) {
       return _cachedToken!;
     }
 
     debugPrint('WebStorageService: Fetching new token');
     final response = await _buildClient()
-        .post(
-          Uri.parse(_tokenUrl),
-          headers: {'X-App-Secret': _appSecret},
-        )
+        .post(Uri.parse(_tokenUrl), headers: {'X-App-Secret': _appSecret})
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to obtain upload token (${response.statusCode})');
     }
 
-    final data      = jsonDecode(response.body) as Map<String, dynamic>;
-    _cachedToken    = data['token'] as String;
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    _cachedToken = data['token'] as String;
     _tokenExpiresAt = DateTime.fromMillisecondsSinceEpoch(
       (data['expires_at'] as int) * 1000,
     );
@@ -88,7 +87,10 @@ class WebStorageService {
     }
   }
 
-  Future<Map<String, dynamic>> uploadSeries(JkdSeries series, String username) async {
+  Future<Map<String, dynamic>> uploadSeries(
+    JkdSeries series,
+    String username,
+  ) async {
     try {
       final Map<String, dynamic> seriesMap = series.toMap();
       seriesMap['moves'] = series.moves.map((m) => m.toMap()).toList();
@@ -101,21 +103,23 @@ class WebStorageService {
       }
 
       final String filename = '${series.title}.json';
-      final String token    = await _getToken();
+      final String token = await _getToken();
 
       debugPrint('WebStorageService: Starting upload to $serverUrl');
       debugPrint('WebStorageService: Filename: $filename, User: $username');
-      debugPrint('WebStorageService: Payload size: ${jsonContent.length} bytes');
+      debugPrint(
+        'WebStorageService: Payload size: ${jsonContent.length} bytes',
+      );
 
       final response = await _buildClient()
           .post(
             Uri.parse(serverUrl),
             headers: {
               'Content-Type': 'application/json',
-              'X-Token':      token,
-              'X-USERNAME':   username,
-              'X-FILENAME':   filename,
-              'X-CATEGORY':   series.category,
+              'X-Token': token,
+              'X-USERNAME': username,
+              'X-FILENAME': filename,
+              'X-CATEGORY': series.category,
             },
             body: jsonContent,
           )
@@ -128,10 +132,12 @@ class WebStorageService {
         return jsonDecode(response.body);
       } else {
         try {
-          if (response.headers['content-type']?.contains('application/json') ?? false) {
+          if (response.headers['content-type']?.contains('application/json') ??
+              false) {
             final errorBody = jsonDecode(response.body);
             throw Exception(
-              errorBody['error'] ?? 'Upload failed with status ${response.statusCode}',
+              errorBody['error'] ??
+                  'Upload failed with status ${response.statusCode}',
             );
           } else {
             throw Exception(

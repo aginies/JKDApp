@@ -51,7 +51,10 @@ class PdfService {
 
     final (categoryIcon, headerColor) = switch (series.category) {
       'Jun Fan Gung Fu' => (icons[0] as pw.ImageProvider?, PdfColors.blue900),
-      'Jun Fan Kick Boxing' => (icons[1] as pw.ImageProvider?, PdfColors.purple900),
+      'Jun Fan Kick Boxing' => (
+        icons[1] as pw.ImageProvider?,
+        PdfColors.purple900,
+      ),
       'Kali' => (icons[2] as pw.ImageProvider?, PdfColors.brown900),
       'Moves' => (icons[3] as pw.ImageProvider?, PdfColors.grey900),
       _ => (null, PdfColors.blue900),
@@ -247,7 +250,8 @@ class PdfService {
                 pw.SizedBox(height: 6),
                 _buildPdfCounterBox(move, lang, showTranslations),
               ],
-              if (move.hasStructuredCounter && (move.isChain || move.isCombo)) ...[
+              if (move.hasStructuredCounter &&
+                  (move.isChain || move.isCombo)) ...[
                 pw.SizedBox(height: 6),
                 _buildPdfCounterBox(move, lang, showTranslations),
               ],
@@ -263,9 +267,7 @@ class PdfService {
                 shape: pw.BoxShape.circle,
               ),
               child: pw.Text(
-                move.subLetter != null
-                    ? '$index${move.subLetter}'
-                    : '$index',
+                move.subLetter != null ? '$index${move.subLetter}' : '$index',
                 style: pw.TextStyle(
                   color: PdfColors.white,
                   fontSize: 8,
@@ -328,7 +330,12 @@ class PdfService {
                 mainAxisSize: pw.MainAxisSize.min,
                 crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
-                  _buildMoveItemWithCounter(m, lang, showTranslations, mini: true),
+                  _buildMoveItemWithCounter(
+                    m,
+                    lang,
+                    showTranslations,
+                    mini: true,
+                  ),
                   if (e.key < move.chain.length - 1)
                     pw.Padding(
                       padding: const pw.EdgeInsets.symmetric(horizontal: 2),
@@ -368,7 +375,12 @@ class PdfService {
                 ),
               ),
               padding: const pw.EdgeInsets.only(bottom: 2, right: 4),
-              child: _buildMoveItemWithCounter(sm, lang, showTranslations, mini: true),
+              child: _buildMoveItemWithCounter(
+                sm,
+                lang,
+                showTranslations,
+                mini: true,
+              ),
             );
           }).toList(),
         ),
@@ -425,7 +437,12 @@ class PdfService {
         if (move.hasCounter)
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 2),
-            child: _buildPdfCounterBox(move, lang, showTranslations, mini: true),
+            child: _buildPdfCounterBox(
+              move,
+              lang,
+              showTranslations,
+              mini: true,
+            ),
           ),
       ],
     );
@@ -473,14 +490,11 @@ class PdfService {
               mainAxisSize: pw.MainAxisSize.min,
               children: [
                 if (move.side.isNotEmpty)
-                  _pdfTag(
-                    move.side,
-                    switch (move.side) {
-                      'L' => PdfColors.blue700,
-                      'R' => PdfColors.red700,
-                      _ => PdfColors.green700,
-                    },
-                  ),
+                  _pdfTag(move.side, switch (move.side) {
+                    'L' => PdfColors.blue700,
+                    'R' => PdfColors.red700,
+                    _ => PdfColors.green700,
+                  }),
                 if (move.level.isNotEmpty)
                   _pdfLevelTag(move.level, PdfColors.grey700),
                 if (move.isFeint) _pdfTag('D', PdfColors.orange700),
@@ -510,7 +524,9 @@ class PdfService {
           spacing: 2,
           runSpacing: 2,
           children: move.counterSubMoves
-              .map((sm) => _buildLeafItem(sm, lang, showTranslations, mini: true))
+              .map(
+                (sm) => _buildLeafItem(sm, lang, showTranslations, mini: true),
+              )
               .toList(),
         ),
       );
@@ -561,14 +577,11 @@ class PdfService {
             pw.Row(
               children: [
                 if ((move.counterSide ?? '').isNotEmpty)
-                  _pdfTag(
-                    move.counterSide!,
-                    switch (move.counterSide!) {
-                      'L' => PdfColors.blue700,
-                      'R' => PdfColors.red700,
-                      _ => PdfColors.green700,
-                    },
-                  ),
+                  _pdfTag(move.counterSide!, switch (move.counterSide!) {
+                    'L' => PdfColors.blue700,
+                    'R' => PdfColors.red700,
+                    _ => PdfColors.green700,
+                  }),
                 if ((move.counterLevel ?? '').isNotEmpty)
                   _pdfLevelTag(move.counterLevel!, PdfColors.grey700),
               ],
@@ -686,7 +699,11 @@ class PdfService {
                       if (sub.hasCounter)
                         pw.Padding(
                           padding: const pw.EdgeInsets.only(top: 2, left: 10),
-                          child: _buildListCounterRow(sub, lang, showTranslations),
+                          child: _buildListCounterRow(
+                            sub,
+                            lang,
+                            showTranslations,
+                          ),
                         ),
                     ],
                   ),
@@ -748,8 +765,7 @@ class PdfService {
     final level = move.level.isNotEmpty
         ? LocalizationService.translate(move.level.toLowerCase(), lang)
         : '';
-    final translation =
-        showTranslations ? (move.translations[lang] ?? '') : '';
+    final translation = showTranslations ? (move.translations[lang] ?? '') : '';
     final reps = move.repetitions > 1 ? ' x${move.repetitions}' : '';
 
     return pw.Row(

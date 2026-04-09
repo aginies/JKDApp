@@ -432,7 +432,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   Widget _buildTopToolbar(String lang) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isSimulActive = _mode == _BuilderMode.simultaneous ||
+    final isSimulActive =
+        _mode == _BuilderMode.simultaneous ||
         _mode == _BuilderMode.counterSimultaneous;
     final isChainActive =
         _mode == _BuilderMode.chain || _mode == _BuilderMode.counterChain;
@@ -503,8 +504,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   isActive: isSimulActive,
                   customChild: Builder(
                     builder: (context) {
-                      final fg =
-                          isSimulActive ? Colors.white : Colors.blueAccent;
+                      final fg = isSimulActive
+                          ? Colors.white
+                          : Colors.blueAccent;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1410,8 +1412,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     setState(() {
       _selectedPath = List<int>.from(path);
       _isCounterSelected = isCounter;
-      _selectedCounterPath =
-          counterPath != null ? List<int>.from(counterPath) : null;
+      _selectedCounterPath = counterPath != null
+          ? List<int>.from(counterPath)
+          : null;
     });
   }
 
@@ -2011,7 +2014,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness ==
+                              color:
+                                  Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.grey[800]
                                   : Colors.grey[200],
@@ -2074,14 +2078,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                 TabBar(
                                   isScrollable: true,
                                   tabs: enabledTabs
-                                      .map((t) => Tab(text: t['label'] as String))
+                                      .map(
+                                        (t) => Tab(text: t['label'] as String),
+                                      )
                                       .toList(),
                                 ),
                                 Expanded(
                                   child: TabBarView(
                                     children: enabledTabs.map((tab) {
-                                      final builder = tab['view']
-                                          as Widget Function(ScrollController);
+                                      final builder =
+                                          tab['view']
+                                              as Widget Function(
+                                                ScrollController,
+                                              );
                                       return builder(scrollController);
                                     }).toList(),
                                   ),
@@ -2123,19 +2132,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         'id': 'move',
         'label': LocalizationService.translate('move', lang),
         'cats': ['move'],
-        'view': (ScrollController sc) => _buildDualGlossaryTab('move', null, sc),
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('move', null, sc),
       },
       {
         'id': 'kali',
         'label': LocalizationService.translate('kali', lang),
         'cats': ['kali'],
-        'view': (ScrollController sc) => _buildDualGlossaryTab('kali', null, sc),
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('kali', null, sc),
       },
       {
         'id': 'text',
         'label': LocalizationService.translate('text', lang),
         'cats': ['text'],
-        'view': (ScrollController sc) => _buildDualGlossaryTab('text', null, sc),
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('text', null, sc),
       },
     ];
   }
@@ -2158,8 +2170,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     // Performance: cache futures so switching tabs does not re-fetch.
     _glossaryCache[cat1] ??= GlossaryDataService.fetchGlossaryByCategory(cat1);
     if (cat2 != null) {
-      _glossaryCache[cat2] ??=
-          GlossaryDataService.fetchGlossaryByCategory(cat2);
+      _glossaryCache[cat2] ??= GlossaryDataService.fetchGlossaryByCategory(
+        cat2,
+      );
     }
 
     return FutureBuilder<List<List<Map<String, dynamic>>>>(
@@ -2356,8 +2369,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterSubMoves: newList,
             counterName: newList.map((m) => m.name).join(' + '),
           );
-        } else if (target.hasCounterChain &&
-            idx < target.counterChain.length) {
+        } else if (target.hasCounterChain && idx < target.counterChain.length) {
           final subItem = target.counterChain[idx];
           final simultaneous = BuilderCardData(
             name: '${subItem.name} + ${newItem.name}',

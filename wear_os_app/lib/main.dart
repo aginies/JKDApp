@@ -740,7 +740,11 @@ class _WearTrainingViewState extends State<WearTrainingView>
     String res = '';
     if (m.side.isNotEmpty) {
       final side = _mirrorMode
-          ? (m.side == 'L' ? 'R' : m.side == 'R' ? 'L' : m.side)
+          ? (m.side == 'L'
+                ? 'R'
+                : m.side == 'R'
+                ? 'L'
+                : m.side)
           : m.side;
       res += '$side ';
     }

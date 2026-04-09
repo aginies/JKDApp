@@ -21,8 +21,10 @@ mixin SeriesDetailDialogsMixin {
   void showPrintOptions(String lang) {
     if (series == null) return;
 
-    final showTranslations =
-        Provider.of<SeriesProvider>(context, listen: false).showTranslation;
+    final showTranslations = Provider.of<SeriesProvider>(
+      context,
+      listen: false,
+    ).showTranslation;
 
     showModalBottomSheet(
       context: context,
@@ -42,7 +44,12 @@ mixin SeriesDetailDialogsMixin {
               subtitle: const Text('Visual cards, mirrors the app interface'),
               onTap: () {
                 Navigator.pop(context);
-                PdfService.exportSeriesToPdf(series!, lang, layout: PdfLayout.graphical, showTranslations: showTranslations);
+                PdfService.exportSeriesToPdf(
+                  series!,
+                  lang,
+                  layout: PdfLayout.graphical,
+                  showTranslations: showTranslations,
+                );
               },
             ),
             ListTile(
@@ -51,7 +58,12 @@ mixin SeriesDetailDialogsMixin {
               subtitle: const Text('Text-focused, space-efficient list'),
               onTap: () {
                 Navigator.pop(context);
-                PdfService.exportSeriesToPdf(series!, lang, layout: PdfLayout.list, showTranslations: showTranslations);
+                PdfService.exportSeriesToPdf(
+                  series!,
+                  lang,
+                  layout: PdfLayout.list,
+                  showTranslations: showTranslations,
+                );
               },
             ),
             const SizedBox(height: 10),

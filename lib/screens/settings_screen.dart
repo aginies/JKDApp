@@ -476,7 +476,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.person_outline),
-                title: Text(lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name'),
+                title: Text(
+                  lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name',
+                ),
                 subtitle: Text(
                   provider.contributorName.isEmpty
                       ? (lang == 'fr' ? 'Non défini' : 'Not set')
@@ -488,11 +490,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 onTap: () {
-                  final controller = TextEditingController(text: provider.contributorName);
+                  final controller = TextEditingController(
+                    text: provider.contributorName,
+                  );
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: Text(lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name'),
+                      title: Text(
+                        lang == 'fr'
+                            ? 'Nom du contributeur'
+                            : 'Contributor Name',
+                      ),
                       content: TextField(
                         controller: controller,
                         autofocus: true,

@@ -82,9 +82,7 @@ class _BackupModalState extends State<BackupModal> {
                 onTap: () => _handleGlobalRestore(provider),
               ),
               const Divider(height: 32),
-              _buildSectionTitle(
-                lang == 'fr' ? 'Séries' : 'Series',
-              ),
+              _buildSectionTitle(lang == 'fr' ? 'Séries' : 'Series'),
               _buildBackupTile(
                 title: LocalizationService.translate(
                   'export_description',
@@ -659,7 +657,9 @@ class _BackupModalState extends State<BackupModal> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(lang == 'fr' ? 'Importer des Programmes' : 'Import Training Programs'),
+        title: Text(
+          lang == 'fr' ? 'Importer des Programmes' : 'Import Training Programs',
+        ),
         content: Text(
           lang == 'fr'
               ? 'Les programmes seront ajoutés à ceux existants. Continuer ?'

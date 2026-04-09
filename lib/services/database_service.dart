@@ -992,7 +992,6 @@ class DatabaseService {
       'duration_seconds': durationSeconds,
       'notes': notes,
     });
-
   }
 
   /// Record a series completion and auto-mark day complete if all series done

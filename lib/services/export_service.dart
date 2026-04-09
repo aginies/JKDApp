@@ -84,7 +84,9 @@ class ExportService {
   static Future<String?> exportGlossaryToJson({String? customDirectory}) async {
     try {
       final items = await DatabaseService().getGlossary();
-      final String jsonString = const JsonEncoder.withIndent('  ').convert(items);
+      final String jsonString = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(items);
       final String? targetDir =
           customDirectory ?? await FilePicker.platform.getDirectoryPath();
       if (targetDir == null) return null;
