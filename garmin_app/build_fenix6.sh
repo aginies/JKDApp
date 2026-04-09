@@ -4,9 +4,11 @@
 SDK_BIN="/home/aginies/.Garmin/ConnectIQ/Sdks/connectiq-sdk-lin-9.1.0-2026-03-09-6a872a80b/bin"
 # Use relative path from script location
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 PROJECT_DIR="$SCRIPT_DIR/JKDApp"
-OUTPUT_FILE="$SCRIPT_DIR/bin/JKDApp_fenix6spro.prg"
-DEVICE="fenix6spro"
+
+# Extract version from root pubspec.yaml (X.X.X part only)
+VERSION=$(grep "^version: " "$ROOT_DIR/pubspec.yaml" | cut -d ' ' -f 2 | cut -d '+' -f 1)
 
 # Cleanup option
 if [ "$1" == "clean" ] || [ "$1" == "--clean" ]; then
@@ -17,27 +19,59 @@ if [ "$1" == "clean" ] || [ "$1" == "--clean" ]; then
     exit 0
 fi
 
-echo "Building JKDApp for $DEVICE..."
+# Determine devices to build
+if [ "$1" == "all" ]; then
+    DEVICES=$(grep "<iq:product id=" "$PROJECT_DIR/manifest.xml" | sed 's/.*id="\([^"]*\)".*/\1/')
+    echo "Building JKDApp for ALL supported devices..."
+elif [ -n "$1" ]; then
+    DEVICES="$1"
+    echo "Building JKDApp for $DEVICES..."
+else
+    DEVICES="fenix6spro"
+    echo "Building JKDApp for default device: $DEVICES..."
+fi
 
 # Ensure output directory exists
 mkdir -p "$SCRIPT_DIR/bin"
 
-# Run the Monkey C compiler
-"$SDK_BIN/monkeyc" \
-    -o "$OUTPUT_FILE" \
-    -f "$PROJECT_DIR/monkey.jungle" \
-    -y "$PROJECT_DIR/developer_key" \
-    -d "$DEVICE" \
-    --optimization p \
-    -r
+# Build function
+build_device() {
+    local DEVICE=$1
+    local OUTPUT_FILE="$SCRIPT_DIR/bin/JKDApp-${VERSION}_${DEVICE}.prg"
+    
+    echo "--------------------------------------"
+    echo "Building for: $DEVICE"
+    
+    "$SDK_BIN/monkeyc" \
+        -o "$OUTPUT_FILE" \
+        -f "$PROJECT_DIR/monkey.jungle" \
+        -y "$PROJECT_DIR/developer_key" \
+        -d "$DEVICE" \
+        --optimization p \
+        -r
 
-if [ $? -eq 0 ]; then
+    if [ $? -eq 0 ]; then
+        echo "SUCCESS: $OUTPUT_FILE"
+    else
+        echo "FAILED: $DEVICE"
+        return 1
+    fi
+}
+
+# Loop through devices
+FAILED_DEVICES=""
+for DEV in $DEVICES; do
+    build_device "$DEV" || FAILED_DEVICES="$FAILED_DEVICES $DEV"
+done
+
+if [ -n "$FAILED_DEVICES" ]; then
     echo "--------------------------------------"
-    echo "BUILD SUCCESSFUL!"
-    echo "Output: $OUTPUT_FILE"
-    echo "--------------------------------------"
-    echo "To install: Copy the file to your watch's /GARMIN/APPS folder."
-else
-    echo "BUILD FAILED!"
+    echo "BUILD COMPLETED WITH ERRORS!"
+    echo "Failed devices:$FAILED_DEVICES"
     exit 1
+else
+    echo "--------------------------------------"
+    echo "ALL BUILDS SUCCESSFUL!"
+    echo "Output directory: $SCRIPT_DIR/bin/"
+    exit 0
 fi
