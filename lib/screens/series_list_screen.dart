@@ -338,7 +338,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           ),
           IconButton(
             icon: const Icon(Icons.mic_external_on, color: Colors.blueAccent),
-            onPressed: () => VoiceNotesDialog.show(context, _voiceNoteService, lang),
+            onPressed: () =>
+                VoiceNotesDialog.show(context, _voiceNoteService, lang),
             tooltip: LocalizationService.translate('voice_notes', lang),
           ),
           IconButton(

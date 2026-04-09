@@ -87,7 +87,10 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                             'search_hint',
                             widget.lang,
                           ),
-                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
                           suffixIcon: _glossarySearchQuery.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(
@@ -110,9 +113,8 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                           fontSize: 16,
                           color: Colors.black87,
                         ),
-                        onChanged: (val) => setState(
-                          () => _glossarySearchQuery = val,
-                        ),
+                        onChanged: (val) =>
+                            setState(() => _glossarySearchQuery = val),
                       ),
                     ),
                   ),
@@ -126,8 +128,8 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                     style: IconButton.styleFrom(
                       backgroundColor:
                           Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[800]
-                              : Colors.grey[200],
+                          ? Colors.grey[800]
+                          : Colors.grey[200],
                     ),
                   ),
                 ],
@@ -151,35 +153,59 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                     unselectedLabelColor: Colors.grey,
                     tabs: [
                       Tab(
-                        text: LocalizationService.translate('punches', widget.lang),
+                        text: LocalizationService.translate(
+                          'punches',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('punch')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('kicks', widget.lang),
+                        text: LocalizationService.translate(
+                          'kicks',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('kick')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('packs', widget.lang),
+                        text: LocalizationService.translate(
+                          'packs',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('packs')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('trapping', widget.lang),
+                        text: LocalizationService.translate(
+                          'trapping',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('trapping')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('move', widget.lang),
+                        text: LocalizationService.translate(
+                          'move',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('move')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('kali', widget.lang),
+                        text: LocalizationService.translate(
+                          'kali',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('kali')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('general', widget.lang),
+                        text: LocalizationService.translate(
+                          'general',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('general')),
                       ),
                       Tab(
-                        text: LocalizationService.translate('other', widget.lang),
+                        text: LocalizationService.translate(
+                          'other',
+                          widget.lang,
+                        ),
                         icon: Icon(CategoryUtils.getCategoryIcon('other')),
                       ),
                     ],

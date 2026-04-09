@@ -46,3 +46,11 @@ app.*.map.json
 
 # Web secrets — never commit
 web/secrets.php
+
+
+garmin_app/JKDApp/bin/
+garmin_app/bin/
+wear_os_app/.metadata
+wear_os_app/PRIVACY_POLICY.md
+wear_os_app/android/
+wear_os_app/assets

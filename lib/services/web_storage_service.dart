@@ -5,7 +5,7 @@ import 'package:http/io_client.dart';
 import '../models/series.dart';
 
 class WebStorageService {
-  static const String _baseUrl = 'https://ftp.guibo.com';
+  static const String _baseUrl = 'https://jkd.guibo.com';
   static const String serverUrl = '$_baseUrl/api.php';
   static const String listUrl = '$_baseUrl/list.php';
   static const String downloadBaseUrl = '$_baseUrl/data/';

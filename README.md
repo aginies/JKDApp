@@ -21,6 +21,15 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Integrated Logging**: View and save application logs directly from settings for troubleshooting.
 - **PDF Export**: Generate printable training sheets.
 - **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
+- **Cloud Library**: Upload and share your custom series with the community via the central web storage.
+
+## Web Cloud Storage
+
+The project includes a full PHP-based web backend and interface located in the `/web` directory:
+- **Central Repository**: A cloud-based library for discovering and sharing JKD training series.
+- **Web Interface**: Browse, search, and preview series content directly in any web browser.
+- **REST API**: Seamless integration with the mobile app for automated uploads and downloads.
+- **Admin Tools**: Built-in moderation and content management tools.
 
 ## Wearable Extensions
 
@@ -44,6 +53,7 @@ Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
 .
 ├── garmin_app/          # Garmin ConnectIQ source code (Monkey C)
 ├── wear_os_app/         # Native Wear OS Flutter application
+├── web/                 # PHP Backend and Web Interface for Cloud Storage
 ├── lib/                 # Main Mobile/Desktop application source
 │   ├── models/          # Data models (Move, JkdSeries)
 │   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
