@@ -177,6 +177,7 @@ class GarminService {
   }
 
   bool _isSpeaking = false;
+  Timer? _speakingWatchdog;
 
   /// Speaks each fragment with a short beep between them, then acks the watch.
   Future<void> _speakCombo(String raw) async {
@@ -185,6 +186,17 @@ class GarminService {
       return;
     }
     _isSpeaking = true;
+
+    // Safety watchdog: force-reset if somehow stuck (e.g. audioplayer hang).
+    // 45 s is well above the 10 s/fragment timeout × worst-case fragment count.
+    _speakingWatchdog?.cancel();
+    _speakingWatchdog = Timer(const Duration(seconds: 45), () {
+      if (_isSpeaking) {
+        LoggingService.log('Garmin TTS watchdog: force-reset after 45 s');
+        _isSpeaking = false;
+        _sendTtsComplete();
+      }
+    });
 
     try {
       final fragments = _prepareFragments(raw);
@@ -204,6 +216,8 @@ class GarminService {
       // Still notify watch on error to avoid getting stuck
       _sendTtsComplete();
     } finally {
+      _speakingWatchdog?.cancel();
+      _speakingWatchdog = null;
       _isSpeaking = false;
     }
   }
@@ -253,7 +267,11 @@ class GarminService {
 
   Future<void> _playBeep() async {
     try {
-      await _beepPlayer.play(BytesSource(_beepWav));
+      await _beepPlayer
+          .play(BytesSource(_beepWav))
+          .timeout(const Duration(seconds: 3), onTimeout: () {
+        LoggingService.log('Garmin _playBeep timeout');
+      });
       await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       LoggingService.log('Garmin _playBeep error: $e');
@@ -338,6 +356,7 @@ class GarminService {
   }
 
   void dispose() {
+    _speakingWatchdog?.cancel();
     _eventSubscription?.cancel();
     _connectionController.close();
     _coachingVoiceController.close();
