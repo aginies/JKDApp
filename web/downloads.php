@@ -149,7 +149,10 @@ function format_wearos_compatibility($filename) {
     <div class="container">
         <header>
             <div class="nav">
-                <a href="index.php" style="color: var(--text-light); text-decoration: none;">← Bibliothèque</a>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <a href="index.php" style="color: var(--text-light); text-decoration: none;">← Bibliothèque</a>
+                    <a href="privacy.php" style="color: var(--text-light); text-decoration: none; font-size: 0.9rem;">Confidentialité</a>
+                </div>
                 <h1 style="margin: 0;">Releases JKDApp <span style="font-size: 1rem; vertical-align: middle; background: #ff9800; color: white; padding: 2px 10px; border-radius: 4px; margin-left: 10px; font-weight: 800;">BETA</span></h1>
             </div>
             <p>Téléchargez les dernières versions pour vos appareils.</p>

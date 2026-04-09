@@ -80,6 +80,9 @@ if (is_dir(UPLOAD_DIR)) {
             <div style="margin-top: 20px;">
                 <a href="downloads.php" style="color: white; text-decoration: underline; font-weight: 600;">Télécharger l'application pour votre smartphone et votre montre</a>
             </div>
+            <div style="margin-top: 10px;">
+                <a href="privacy.php" style="color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.9rem;">Confidentialité</a>
+            </div>
         </div>
 
         <div class="card">
