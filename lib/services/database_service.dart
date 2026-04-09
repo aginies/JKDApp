@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -67,7 +66,7 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
-    LoggingService.log('Initializing database at $path');
+    LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
       version: 16, // Increment version for series category migration
@@ -84,7 +83,7 @@ class DatabaseService {
   /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 16) {
-      LoggingService.log(
+      LoggingService.info(
         'Migrating categories: jkd_moves -> move and JKD Moves -> Moves',
       );
 
@@ -109,10 +108,10 @@ class DatabaseService {
       if (oldVersion < 15) {
         // Clean up potentially inconsistent stats after category merge
         await db.execute('DELETE FROM day_completions');
-        LoggingService.log('Cleared stats for category migration consistency.');
+        LoggingService.info('Cleared stats for category migration consistency.');
       }
     } else {
-      LoggingService.log(
+      LoggingService.warn(
         'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
       );
 
@@ -385,13 +384,13 @@ class DatabaseService {
           }
         }
       } catch (e) {
-        debugPrint('Error seeding series from $seriesFile: $e');
+        LoggingService.error('Error seeding series from $seriesFile', e);
       }
     }
   }
 
   Future<void> _seedTrainingPrograms(dynamic db) async {
-    LoggingService.log('Seeding training programs from assets...');
+    LoggingService.info('Seeding training programs from assets...');
 
     // Build a map of series titles to IDs for resolving references
     final seriesTitleMap = await _buildSeriesTitleMap(db);
@@ -503,11 +502,11 @@ class DatabaseService {
           }
         }
       } catch (e) {
-        debugPrint('Error seeding training programs from $programFile: $e');
+        LoggingService.error('Error seeding training programs from $programFile', e);
       }
     }
 
-    LoggingService.log('Training programs seeding complete');
+    LoggingService.info('Training programs seeding complete');
   }
 
   Future<Map<String, int>> _buildSeriesTitleMap(DatabaseExecutor db) async {
@@ -641,7 +640,7 @@ class DatabaseService {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
     } catch (e) {
-      debugPrint('Error parsing sub_moves_json: $e');
+      LoggingService.error('Error parsing sub_moves_json', e);
       return [];
     }
   }
@@ -654,7 +653,7 @@ class DatabaseService {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
     } catch (e) {
-      debugPrint('Error parsing chain_json: $e');
+      LoggingService.error('Error parsing chain_json', e);
       return [];
     }
   }
@@ -1038,7 +1037,7 @@ class DatabaseService {
     }
 
     if (targetDay == null) {
-      LoggingService.log(
+      LoggingService.warn(
         'Series $seriesId is not part of the active program "${program.title}". Progress not recorded.',
       );
       return null;
@@ -1190,7 +1189,7 @@ class DatabaseService {
     final db = await database;
 
     await db.transaction((txn) async {
-      LoggingService.log('Resetting technical library (Glossary & Series)...');
+      LoggingService.info('Resetting technical library (Glossary & Series)...');
 
       // 1. Clear glossary
       await txn.delete('glossary');
@@ -1221,13 +1220,13 @@ class DatabaseService {
       await _remapProgramReferences(txn);
     });
 
-    LoggingService.log('Technical library reset complete.');
+    LoggingService.info('Technical library reset complete.');
   }
 
   Future<void> resetTrainingProgress() async {
     final db = await database;
     await db.transaction((txn) async {
-      LoggingService.log('Resetting ALL training progress...');
+      LoggingService.info('Resetting ALL training progress...');
       await txn.delete('day_completions');
       await txn.delete('user_program_progress');
     });
@@ -1235,7 +1234,7 @@ class DatabaseService {
 
   Future<void> resetActiveProgram() async {
     final db = await database;
-    LoggingService.log('Resetting currently active program...');
+    LoggingService.info('Resetting currently active program...');
     await db.delete(
       'user_program_progress',
       where: 'status = ?',
@@ -1246,7 +1245,7 @@ class DatabaseService {
   Future<void> resetTrainingPrograms() async {
     final db = await database;
     await db.transaction((txn) async {
-      LoggingService.log('Resetting all training programs...');
+      LoggingService.info('Resetting all training programs...');
       // 1. Delete all custom programs (is_system = 0)
       // program_days and progress will be deleted via CASCADE or manually
       await txn.delete('training_programs', where: 'is_system = 0');
@@ -1308,14 +1307,14 @@ class DatabaseService {
       final bytes = utf8.encode(content);
       return md5.convert(bytes).toString();
     } catch (e) {
-      debugPrint('Error hashing asset $assetPath: $e');
+      LoggingService.error('Error hashing asset $assetPath', e);
       return '';
     }
   }
 
   /// Automatically updates system data if asset files have changed
   Future<void> checkAndUpdateSystemData(Database db) async {
-    LoggingService.log('Checking for system asset updates...');
+    LoggingService.info('Checking for system asset updates...');
 
     // 1. Check Glossary
     const glossaryAsset = 'assets/jkd-glossary.json';
@@ -1323,7 +1322,7 @@ class DatabaseService {
     final storedGlossaryHash = await _getStoredHash(db, 'hash_glossary');
 
     if (currentGlossaryHash != storedGlossaryHash) {
-      LoggingService.log('Glossary asset changed. Updating...');
+      LoggingService.info('Glossary asset changed. Updating...');
       await db.transaction((txn) async {
         await txn.delete('glossary');
         await _seedGlossary(txn);
@@ -1344,7 +1343,7 @@ class DatabaseService {
     }
 
     if (seriesChanged) {
-      LoggingService.log('Series assets changed. Updating system series...');
+      LoggingService.info('Series assets changed. Updating system series...');
       await db.transaction((txn) async {
         // Delete only system series
         final systemSeries = await txn.query(
@@ -1387,7 +1386,7 @@ class DatabaseService {
     }
 
     if (programsChanged || seriesChanged) {
-      LoggingService.log(
+      LoggingService.info(
         'Program or Series assets changed. Updating programs...',
       );
       await _seedTrainingPrograms(

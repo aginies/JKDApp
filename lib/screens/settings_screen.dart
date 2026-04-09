@@ -335,34 +335,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(),
               Expanded(
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    LoggingService.allLogs.isEmpty
-                        ? 'No logs available.'
-                        : LoggingService.allLogs,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                    ),
-                  ),
+                child: ListView.builder(
+                  itemCount: LoggingService.logs.length,
+                  itemBuilder: (context, index) {
+                    final log = LoggingService.logs[index];
+                    Color color = Colors.black87;
+                    if (log.contains('[ERROR]')) color = Colors.red;
+                    if (log.contains('[WARN ]')) color = Colors.orange;
+                    if (log.contains('[INFO ]')) color = Colors.blue;
+                    if (log.contains('[DEBUG]')) color = Colors.grey;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: SelectableText(
+                        log,
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: color,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    String? path = await LoggingService.saveLogsToDevice();
-                    if (path == null || !context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${LocalizationService.translate('logs_saved', lang)}: $path',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.save),
+                  onPressed: () => LoggingService.shareLogs(),
+                  icon: const Icon(Icons.share),
                   label: Text(LocalizationService.translate('save_logs', lang)),
                 ),
               ),

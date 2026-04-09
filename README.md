@@ -18,10 +18,10 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Adaptive UI**: Interface elements automatically adjust colors for maximum readability in Light, Dark, and AMOLED modes.
 - **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
 - **Media Gallery**: Attach instructional photos to techniques with auto-compression and swipe navigation.
-- **Integrated Logging**: View and save application logs directly from settings for troubleshooting.
+- **Integrated Logging**: Multi-level logging system (INFO, WARN, ERROR) with in-app viewer and export/share capabilities for easier troubleshooting.
 - **PDF Export**: Generate printable training sheets.
 - **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
-- **Cloud Library**: Upload and share your custom series with the community via the central web storage.
+- **Cloud Library**: Share and download community-contributed training series via the integrated web service.
 
 ## Web Cloud Storage
 
@@ -30,6 +30,7 @@ The project includes a full PHP-based web backend and interface located in the `
 - **Web Interface**: Browse, search, and preview series content directly in any web browser.
 - **REST API**: Seamless integration with the mobile app for automated uploads and downloads.
 - **Admin Tools**: Built-in moderation and content management tools.
+- **Logging & Debugging**: Centralized logging of all API requests, uploads, and administrative actions in `web/logs/app.log`.
 
 ## Wearable Extensions
 

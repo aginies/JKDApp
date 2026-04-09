@@ -103,7 +103,7 @@ class SeriesProvider with ChangeNotifier {
   Future<void> _init() async {
     _isLoading = true;
     notifyListeners();
-    LoggingService.log('Initializing SeriesProvider...');
+    LoggingService.info('Initializing SeriesProvider...');
     final prefs = await _dbService.getSettings();
     await _loadSettings(prefs);
 
@@ -225,7 +225,7 @@ class SeriesProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error creating gallery directories: $e');
+      LoggingService.error('Error creating gallery directories', e);
     }
   }
 
@@ -332,13 +332,13 @@ class SeriesProvider with ChangeNotifier {
   Future<void> loadSeries() async {
     _isLoading = true;
     notifyListeners();
-    LoggingService.log('Loading series from database...');
+    LoggingService.info('Loading series from database...');
     _series = await _dbService.getAllSeries();
     _filteredCache.clear(); // Clear cache AFTER updating _series
     await _usageService.refresh(_series);
     _isLoading = false;
     notifyListeners();
-    LoggingService.log('Loaded ${_series.length} series.');
+    LoggingService.info('Loaded ${_series.length} series.');
   }
 
   Future<void> loadAllPrograms() async {
@@ -446,11 +446,11 @@ class SeriesProvider with ChangeNotifier {
 
   Future<void> _exportToProjectJson(JkdSeries series) async {
     if (_projectPath == null) {
-      debugPrint('Sync aborted: Project path not set.');
+      LoggingService.warn('Sync aborted: Project path not set.');
       return;
     }
 
-    debugPrint('Starting project sync for series: "${series.title}"');
+    LoggingService.info('Starting project sync for series: "${series.title}"');
 
     for (final relPath in _seriesFiles) {
       final fullPath = _getProjectFilePath(relPath);
@@ -467,12 +467,12 @@ class SeriesProvider with ChangeNotifier {
                 .trim();
             final String appTitle = series.title.toLowerCase().trim();
 
-            debugPrint(
+            LoggingService.debug(
               '  - Comparing "[$jsonTitle]" with "[$appTitle]" in $relPath',
             );
 
             if (jsonTitle == appTitle) {
-              debugPrint('    MATCH FOUND! Updating series in $relPath');
+              LoggingService.info('    MATCH FOUND! Updating series in $relPath');
 
               // Use EXACT SAME logic as ExportService.exportToJson
               final Map<String, dynamic> seriesMap = series.toMap();
@@ -492,16 +492,16 @@ class SeriesProvider with ChangeNotifier {
 
             if (_isValidJson(jsonString)) {
               await file.writeAsString(jsonString);
-              debugPrint('SUCCESS: Project file $fullPath updated.');
+              LoggingService.info('SUCCESS: Project file $fullPath updated.');
               return; // Exit after first match
             }
           }
         } catch (e) {
-          debugPrint('ERROR processing $fullPath: $e');
+          LoggingService.error('ERROR processing $fullPath', e);
         }
       }
     }
-    debugPrint(
+    LoggingService.warn(
       'FAILURE: Series "${series.title}" not found in any project JSON file.',
     );
   }
@@ -580,23 +580,23 @@ class SeriesProvider with ChangeNotifier {
 
   /// Load the currently active training program (if any)
   Future<void> loadActiveProgram() async {
-    LoggingService.log('Loading active training program...');
+    LoggingService.info('Loading active training program...');
     try {
       _activeProgram = await _programService.getActiveProgress();
       if (_activeProgram != null) {
         _activeProgramDetails = await _programService.getProgramById(
           _activeProgram!.programId,
         );
-        LoggingService.log(
+        LoggingService.info(
           'Active program loaded: ${_activeProgramDetails?.title ?? "Unknown"}',
         );
       } else {
         _activeProgramDetails = null;
-        LoggingService.log('No active program found');
+        LoggingService.info('No active program found');
       }
       notifyListeners();
     } catch (e) {
-      LoggingService.log('Error loading active program: $e');
+      LoggingService.error('Error loading active program', e);
       _activeProgram = null;
       _activeProgramDetails = null;
     }
