@@ -98,7 +98,7 @@ You can now group variations of a move using letters (a, b, c...):
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
 | iOS      | ⚠️ Limited | Supported by code but not officially built |
 
-## Recent Updates (v2.1.0+1)
+## Recent Updates (v2.2.0+1)
 
 - **Wear OS Launch**: Complete standalone watch application with Bubble Layout.
 - **Garmin Extension**: Remote synchronization support for Garmin devices.
