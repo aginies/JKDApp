@@ -42,10 +42,10 @@ class LoggingService {
     final timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
     final levelStr = level.toString().split('.').last.toUpperCase().padRight(5);
     final logEntry = '[$timestamp] [$levelStr] $message';
-    
+
     _logs.add(logEntry);
     debugPrint(logEntry);
-    
+
     // Keep only last 2000 logs to avoid memory issues (increased from 1000)
     if (_logs.length > 2000) {
       _logs.removeAt(0);
@@ -62,19 +62,18 @@ class LoggingService {
       final dateStr = DateFormat('yyyyMMdd-HHmm').format(DateTime.now());
       final fileName = 'jkd_app_logs_$dateStr.txt';
       final file = File('${directory.path}/$fileName');
-      
+
       String content = "JKD App Logs - v$appVersion\n";
       content += "Exported: ${DateTime.now()}\n";
       content += "----------------------------------------\n\n";
       content += allLogs;
-      
+
       await file.writeAsString(content);
-      
+
       // ignore: deprecated_member_use
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'JKD App Logs - $dateStr',
-      );
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], subject: 'JKD App Logs - $dateStr');
     } catch (e) {
       error('Error sharing logs', e);
     }

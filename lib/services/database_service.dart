@@ -108,7 +108,9 @@ class DatabaseService {
       if (oldVersion < 15) {
         // Clean up potentially inconsistent stats after category merge
         await db.execute('DELETE FROM day_completions');
-        LoggingService.info('Cleared stats for category migration consistency.');
+        LoggingService.info(
+          'Cleared stats for category migration consistency.',
+        );
       }
     } else {
       LoggingService.warn(
@@ -502,7 +504,10 @@ class DatabaseService {
           }
         }
       } catch (e) {
-        LoggingService.error('Error seeding training programs from $programFile', e);
+        LoggingService.error(
+          'Error seeding training programs from $programFile',
+          e,
+        );
       }
     }
 

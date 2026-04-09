@@ -472,7 +472,9 @@ class SeriesProvider with ChangeNotifier {
             );
 
             if (jsonTitle == appTitle) {
-              LoggingService.info('    MATCH FOUND! Updating series in $relPath');
+              LoggingService.info(
+                '    MATCH FOUND! Updating series in $relPath',
+              );
 
               // Use EXACT SAME logic as ExportService.exportToJson
               final Map<String, dynamic> seriesMap = series.toMap();

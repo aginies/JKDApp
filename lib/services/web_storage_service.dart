@@ -10,7 +10,8 @@ class WebStorageService {
   static const String listUrl = '$_baseUrl/list.php';
   static const String downloadBaseUrl = '$_baseUrl/data/';
   static const String _tokenUrl = '$_baseUrl/token.php';
-  static const String _appSecret = 'iada9426bf7aa6e5aa52d00fda4f426f08eefe19cd9a0c3a6e7ca719f11eaffaf';
+  static const String _appSecret =
+      'iada9426bf7aa6e5aa52d00fda4f426f08eefe19cd9a0c3a6e7ca719f11eaffaf';
 
   // Token cache — static so it survives across service instances
   static String? _cachedToken;
@@ -40,7 +41,9 @@ class WebStorageService {
         .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
-      LoggingService.error('WebStorageService: Failed to obtain token. Status: ${response.statusCode}');
+      LoggingService.error(
+        'WebStorageService: Failed to obtain token. Status: ${response.statusCode}',
+      );
       throw Exception('Failed to obtain upload token (${response.statusCode})');
     }
 
@@ -49,23 +52,31 @@ class WebStorageService {
     _tokenExpiresAt = DateTime.fromMillisecondsSinceEpoch(
       (data['expires_at'] as int) * 1000,
     );
-    LoggingService.info('WebStorageService: Token valid until $_tokenExpiresAt');
+    LoggingService.info(
+      'WebStorageService: Token valid until $_tokenExpiresAt',
+    );
     return _cachedToken!;
   }
 
   Future<List<Map<String, dynamic>>> fetchAvailableSeries() async {
     try {
-      LoggingService.info('WebStorageService: Fetching series list from $listUrl');
+      LoggingService.info(
+        'WebStorageService: Fetching series list from $listUrl',
+      );
       final response = await _buildClient()
           .get(Uri.parse(listUrl))
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        LoggingService.info('WebStorageService: Successfully fetched ${data.length} items');
+        LoggingService.info(
+          'WebStorageService: Successfully fetched ${data.length} items',
+        );
         return data.cast<Map<String, dynamic>>();
       } else {
-        LoggingService.error('WebStorageService: Failed to fetch list. Status: ${response.statusCode}');
+        LoggingService.error(
+          'WebStorageService: Failed to fetch list. Status: ${response.statusCode}',
+        );
         throw Exception('Failed to fetch series list: ${response.statusCode}');
       }
     } catch (e) {
@@ -85,11 +96,16 @@ class WebStorageService {
         LoggingService.info('WebStorageService: Download success ($filename)');
         return response.body;
       } else {
-        LoggingService.error('WebStorageService: Download failed ($filename). Status: ${response.statusCode}');
+        LoggingService.error(
+          'WebStorageService: Download failed ($filename). Status: ${response.statusCode}',
+        );
         throw Exception('Failed to download file: ${response.statusCode}');
       }
     } catch (e) {
-      LoggingService.error('WebStorageService: ERROR downloading file ($filename)', e);
+      LoggingService.error(
+        'WebStorageService: ERROR downloading file ($filename)',
+        e,
+      );
       rethrow;
     }
   }
@@ -106,14 +122,18 @@ class WebStorageService {
 
       const int maxSize = 100 * 1024;
       if (jsonContent.length > maxSize) {
-        LoggingService.warn('WebStorageService: Payload too large (${jsonContent.length} bytes)');
+        LoggingService.warn(
+          'WebStorageService: Payload too large (${jsonContent.length} bytes)',
+        );
         throw Exception('Series is too large to upload (max 100KB)');
       }
 
       final String filename = '${series.title}.json';
       final String token = await _getToken();
 
-      LoggingService.info('WebStorageService: Starting upload: $filename by $username (${jsonContent.length} bytes)');
+      LoggingService.info(
+        'WebStorageService: Starting upload: $filename by $username (${jsonContent.length} bytes)',
+      );
 
       final response = await _buildClient()
           .post(
@@ -129,7 +149,9 @@ class WebStorageService {
           )
           .timeout(const Duration(seconds: 15));
 
-      LoggingService.info('WebStorageService: Response Status: ${response.statusCode}');
+      LoggingService.info(
+        'WebStorageService: Response Status: ${response.statusCode}',
+      );
 
       if (response.statusCode == 201) {
         LoggingService.info('WebStorageService: Upload success');
@@ -137,14 +159,17 @@ class WebStorageService {
       } else {
         String errMsg = 'Upload failed with status ${response.statusCode}';
         try {
-          if (response.headers['content-type']?.contains('application/json') ?? false) {
+          if (response.headers['content-type']?.contains('application/json') ??
+              false) {
             final errorBody = jsonDecode(response.body);
             errMsg = errorBody['error'] ?? errMsg;
           }
         } catch (_) {}
-        
+
         LoggingService.error('WebStorageService: $errMsg');
-        LoggingService.debug('WebStorageService: Response Body: ${response.body}');
+        LoggingService.debug(
+          'WebStorageService: Response Body: ${response.body}',
+        );
         throw Exception(errMsg);
       }
     } catch (e) {
