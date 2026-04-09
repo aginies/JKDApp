@@ -58,7 +58,7 @@ Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
 ├── lib/                 # Main Mobile/Desktop application source
 │   ├── models/          # Data models (Move, JkdSeries)
 │   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
-│   ├── screens/         # UI Screens
+│   ├── screens/         # UI Screens and platform-specific sub-folders
 │   └── ...
 ```
 
@@ -92,19 +92,27 @@ You can now group variations of a move using letters (a, b, c...):
 |----------|--------|-------|
 | Android  | ✅ Full | Primary mobile platform support |
 | Wear OS  | ✅ Full | Native app for Watch 4/5/6/7, Pixel Watch, etc. |
-| Garmin   | ✅ Full | ConnectIQ extension for compatible Garmin devices |
+| Garmin   | ✅ Full | ConnectIQ extension for over 80 Garmin devices |
 | Windows  | ✅ Full | Fully supported desktop platform |
 | MacOS    | ✅ Full | Fully supported desktop platform |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
 | iOS      | ⚠️ Limited | Supported by code but not officially built |
 
+## Development Guidelines
+
+To maintain code quality and manageability, the following organization principles are encouraged:
+- **File Size**: Individual Dart files should aim to stay under **2,000 lines**.
+- **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
+- **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
+
 ## Recent Updates (v2.2.0+1)
 
-- **Wear OS Launch**: Complete standalone watch application with Bubble Layout.
-- **Garmin Extension**: Remote synchronization support for Garmin devices.
-- **Automated Updates**: System series and glossary now update automatically via asset hashing (no reset required).
-- **Personal Backups**: Added option to export only custom (non-system) series.
-- **Database v13**: Added `sub_letter` support and automatic system series re-seeding.
+- **Beta Cloud Library**: Upload and share your custom series with the community.
+- **Enhanced Web View**: Fully responsive, mobile-optimized interface for browsing the library and downloading binaries.
+- **Multi-Level Logging**: Comprehensive logging system for both the Flutter app and PHP backend to simplify troubleshooting.
+- **Broad Garmin Support**: Dynamic build scripts supporting the entire modern Garmin product line (Fenix 8, Forerunner 965, etc.).
+- **Wear OS Precision**: Standalone watch application with architecture-specific compatibility (arm64-v8a/armeabi-v7a).
+- **Security**: Non-overwriting cloud uploads with automatic title incrementing.
 
 ## Development
 
