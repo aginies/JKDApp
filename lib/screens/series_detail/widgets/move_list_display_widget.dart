@@ -546,16 +546,18 @@ class MoveListDisplayWidget {
                                                     color: Colors.grey,
                                                   ),
                                                 ),
-                                              _buildMoveContent(
-                                                sub,
-                                                language,
-                                                glossary,
-                                                onShowMediaGallery,
-                                                onEdit: isEditing
-                                                    ? onEdit(i)
-                                                    : null,
-                                                showTranslation:
-                                                    showTranslation,
+                                              Flexible(
+                                                child: _buildMoveContent(
+                                                  sub,
+                                                  language,
+                                                  glossary,
+                                                  onShowMediaGallery,
+                                                  onEdit: isEditing
+                                                      ? onEdit(i)
+                                                      : null,
+                                                  showTranslation:
+                                                      showTranslation,
+                                                ),
                                               ),
                                             ],
                                           ),
