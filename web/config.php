@@ -1,6 +1,7 @@
 <?php
 // Configuration for JKDApp Web Storage
 define('UPLOAD_DIR', 'data/');
+define('RELEASES_DIR', 'releases/');
 define('ADMIN_USER', 'aginies');
 
 // Secrets are stored in secrets.php — never commit that file.

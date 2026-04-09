@@ -74,6 +74,13 @@ if (is_dir(UPLOAD_DIR)) {
 </head>
 <body>
     <div class="container">
+        <div class="nav" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <a href="downloads.php" style="color: var(--primary); text-decoration: none; font-weight: 600;">Releases (APK/PRG)</a>
+            </div>
+            <a href="https://guibo.com" style="color: var(--text-light); text-decoration: none;">guibo.com</a>
+        </div>
+
         <div class="public-header">
             <h1>Bibliothèque JKDApp</h1>
             <p>Explorez et téléchargez les séries partagées par la communauté.</p>
