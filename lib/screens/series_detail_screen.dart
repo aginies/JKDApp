@@ -482,11 +482,27 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: MarqueeWidget(
-                      child: Text(
-                        widget.series == null
-                            ? LocalizationService.translate('new_series', lang)
-                            : widget.series!.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.series == null
+                                ? LocalizationService.translate(
+                                    'new_series',
+                                    lang,
+                                  )
+                                : widget.series!.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (widget.series?.isFromCloud ?? false) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.cloud,
+                              size: 18,
+                              color: Colors.white70,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),

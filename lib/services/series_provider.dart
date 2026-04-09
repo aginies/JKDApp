@@ -52,6 +52,7 @@ class SeriesProvider with ChangeNotifier {
   bool _garminCoachingVoiceActive = false;
   final GarminService _garminService = GarminService();
   bool _developerMode = false;
+  bool _manageSeriesMode = false;
   bool _showTranslation = true;
   String? _projectPath;
   double _speechRate = 0.50;
@@ -81,6 +82,7 @@ class SeriesProvider with ChangeNotifier {
   bool get garminConnected => _garminConnected;
   bool get garminCoachingVoiceActive => _garminCoachingVoiceActive;
   bool get developerMode => _developerMode;
+  bool get manageSeriesMode => _manageSeriesMode;
   bool get showTranslation => _showTranslation;
   String? get projectPath => _projectPath;
   double get speechRate => _speechRate;
@@ -151,6 +153,7 @@ class SeriesProvider with ChangeNotifier {
 
     // Developer Mode
     _developerMode = (prefs['developer_mode'] ?? '0') == '1';
+    _manageSeriesMode = (prefs['manage_series_mode'] ?? '0') == '1';
     _projectPath = prefs['project_path'];
 
     // Translation (Enabled by default)
@@ -270,7 +273,12 @@ class SeriesProvider with ChangeNotifier {
   void setDeveloperMode(bool enabled) async {
     _developerMode = enabled;
     await _dbService.saveSetting('developer_mode', enabled ? '1' : '0');
-    await loadSeries();
+    notifyListeners();
+  }
+
+  void setManageSeriesMode(bool enabled) async {
+    _manageSeriesMode = enabled;
+    await _dbService.saveSetting('manage_series_mode', enabled ? '1' : '0');
     notifyListeners();
   }
 

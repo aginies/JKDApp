@@ -497,8 +497,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           : Stack(
               children: [
                 Positioned(
-                  bottom: 16,
-                  right: 16,
+                  bottom: 20,
+                  right: 100,
                   child: FloatingActionButton(
                     heroTag: 'add_series_fab',
                     onPressed: () {
@@ -513,8 +513,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                   ),
                 ),
                 Positioned(
-                  bottom: 80,
-                  right: 16,
+                  bottom: 84,
+                  right: 100,
                   child: FloatingActionButton(
                     heroTag: 'cloud_download_fab',
                     backgroundColor: Colors.blueAccent,
@@ -688,9 +688,11 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                                 );
                               },
                             )
-                          : const Icon(
-                              Icons.person,
-                              color: Colors.orangeAccent,
+                          : Icon(
+                              series.isFromCloud ? Icons.cloud : Icons.person,
+                              color: series.isFromCloud
+                                  ? Colors.blueAccent
+                                  : Colors.orangeAccent,
                               size: 38,
                             ),
                       title: Text(series.title),
@@ -701,7 +703,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                           fontSize: 12,
                         ),
                       ),
-                      trailing: context.read<SeriesProvider>().developerMode
+                      trailing: context.read<SeriesProvider>().manageSeriesMode
                           ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

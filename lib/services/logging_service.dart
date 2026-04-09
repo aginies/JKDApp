@@ -8,7 +8,7 @@ enum LogLevel { info, warn, error, debug }
 
 class LoggingService {
   static final List<String> _logs = [];
-  static const String appVersion = "2.2.0+1";
+  static const String appVersion = "2.3.0";
 
   /// Standard log (defaults to INFO)
   static void log(String message) {

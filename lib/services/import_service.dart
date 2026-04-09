@@ -51,6 +51,7 @@ class ImportService {
             type: series.type,
             attackMethod: series.attackMethod,
             notes: series.notes,
+            isFromCloud: series.isFromCloud,
             moves: movesData != null
                 ? movesData
                       .map((m) => Move.fromMap(Map<String, dynamic>.from(m)))

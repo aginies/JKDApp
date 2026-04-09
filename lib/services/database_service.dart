@@ -69,7 +69,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 16, // Increment version for series category migration
+      version: 17, // Increment version for is_from_cloud column
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -112,7 +112,20 @@ class DatabaseService {
           'Cleared stats for category migration consistency.',
         );
       }
-    } else {
+    }
+
+    if (oldVersion < 17) {
+      LoggingService.info('Adding is_from_cloud column to series table');
+      try {
+        await db.execute(
+          'ALTER TABLE series ADD COLUMN is_from_cloud INTEGER DEFAULT 0',
+        );
+      } catch (e) {
+        LoggingService.error('Error adding is_from_cloud column', e);
+      }
+    }
+
+    if (oldVersion >= 17) {
       LoggingService.warn(
         'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
       );
@@ -157,7 +170,8 @@ class DatabaseService {
         type TEXT, 
         attack_method TEXT, 
         notes TEXT, 
-        is_system INTEGER DEFAULT 0
+        is_system INTEGER DEFAULT 0,
+        is_from_cloud INTEGER DEFAULT 0
       )
     ''');
 
@@ -575,7 +589,7 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery('''
       SELECT 
-        s.id as s_id, s.title, s.category as s_category, s.type, s.attack_method, s.notes, s.is_system,
+        s.id as s_id, s.title, s.category as s_category, s.type, s.attack_method, s.notes, s.is_system, s.is_from_cloud,
         m.id as m_id, m.series_id, m.glossary_id, m.counter_glossary_id, m.name, m.category as m_category, 
         m.side, m.level, m.sub_letter, m.is_feint, m.special_action, m.translations, m.repetitions, 
         m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
@@ -598,6 +612,7 @@ class DatabaseService {
           attackMethod: row['attack_method'] as String?,
           notes: row['notes'] as String? ?? '',
           isSystem: (row['is_system'] as int? ?? 0) == 1,
+          isFromCloud: (row['is_from_cloud'] as int? ?? 0) == 1,
           moves: [],
         );
       }

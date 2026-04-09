@@ -89,8 +89,10 @@ class WebStorageService {
     try {
       // Create a proper URI by resolving the filename against the base URL.
       // This correctly handles special characters in the filename.
-      final uri = Uri.parse(downloadBaseUrl).resolve(Uri.encodeComponent(filename));
-      
+      final uri = Uri.parse(
+        downloadBaseUrl,
+      ).resolve(Uri.encodeComponent(filename));
+
       LoggingService.info('WebStorageService: Downloading $filename');
       final response = await _buildClient()
           .get(uri)

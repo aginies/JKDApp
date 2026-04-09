@@ -115,9 +115,10 @@ class LocalizationService {
       'processing': 'Processing image...',
       'clone': 'Clone',
       'cloned': 'cloned',
-      'manage_series': 'Manage Series Developer',
-      'manage_series_desc':
-          'Enable cloning, deleting and advanced synchronization',
+      'manage_series': 'Manage Series',
+      'manage_series_desc': 'Enable cloning and deleting series in categories',
+      'developer_mode': 'Developer Mode',
+      'developer_mode_desc': 'Advanced synchronization and reset tools',
       'expert_mode': 'Expert Mode',
       'media_backup': 'Media Backup (ZIP)',
       'backup_images': 'Backup All Images',
@@ -343,9 +344,12 @@ class LocalizationService {
       'processing': 'Traitement de l\'image...',
       'clone': 'Cloner',
       'cloned': 'copie',
-      'manage_series': 'Gérer les séries Developer',
+      'manage_series': 'Gérer les séries',
       'manage_series_desc':
-          'Activer le clonage, la suppression et la synchronisation avancée',
+          'Activer le clonage et la suppression dans les catégories',
+      'developer_mode': 'Mode Développeur',
+      'developer_mode_desc':
+          'Outils de synchronisation et de réinitialisation avancés',
       'expert_mode': 'Mode Expert',
       'media_backup': 'Sauvegarde Médias (ZIP)',
       'backup_images': 'Sauvegarder toutes les images',

@@ -275,9 +275,12 @@ class GarminService {
     try {
       await _beepPlayer
           .play(BytesSource(_beepWav))
-          .timeout(const Duration(seconds: 3), onTimeout: () {
-        LoggingService.log('Garmin _playBeep timeout');
-      });
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () {
+              LoggingService.log('Garmin _playBeep timeout');
+            },
+          );
       await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       LoggingService.log('Garmin _playBeep error: $e');
