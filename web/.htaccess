@@ -1,0 +1,29 @@
+# Protect the configuration file
+<Files "config.php">
+    Require all denied
+</Files>
+
+# Protect the API from direct browser access (GET)
+# While still allowing the Flutter app to POST to it
+<Files "api.php">
+    <Limit GET>
+        Require all denied
+    </Limit>
+    <Limit POST>
+        Require all granted
+    </Limit>
+</Files>
+
+# Ensure public access to the main pages
+<Files "index.php">
+    Require all granted
+</Files>
+
+<Files "admin.php">
+    Require all granted
+</Files>
+
+# Explicitly deny access to hidden files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
