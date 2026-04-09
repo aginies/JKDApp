@@ -11,6 +11,7 @@ import 'settings_screen.dart';
 import 'programs_list_screen.dart';
 import 'series_list/widgets/random_reader_widget.dart';
 import '../models/series.dart';
+import '../models/move.dart';
 import '../utils/translation_utils.dart';
 import '../widgets/active_program_card.dart';
 import '../utils/category_utils.dart';
@@ -18,6 +19,8 @@ import '../widgets/global_search_delegate.dart';
 import '../widgets/empty_state_illustration.dart';
 import 'series_detail/widgets/move_display_widgets.dart';
 import 'package:flutter/services.dart';
+import '../services/web_storage_service.dart';
+import 'dart:convert';
 
 class SeriesListScreen extends StatefulWidget {
   const SeriesListScreen({super.key});
@@ -1077,24 +1080,206 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           const ProgramsListScreen(),
         ],
       ),
-      floatingActionButton:
-          _tabController.index == 4 || _tabController.index == 5
+      floatingActionButton: _tabController.index == 4 || _tabController.index == 5
           ? null // Hide FAB on Active Training and Training Programs tab
-          : Padding(
-              padding: const EdgeInsets.only(right: 120.0),
-              child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SeriesDetailScreen(),
-                    ),
-                  );
-                },
-                child: const Icon(Icons.add),
-              ),
+          : Stack(
+              children: [
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'add_series_fab',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SeriesDetailScreen(),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.add),
+                  ),
+                ),
+                Positioned(
+                  bottom: 80,
+                  right: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'cloud_download_fab',
+                    backgroundColor: Colors.blueAccent,
+                    onPressed: _showCloudDownloadModal,
+                    child: const Icon(Icons.cloud_download, color: Colors.white),
+                  ),
+                ),
+              ],
             ),
     );
+  }
+
+  void _showCloudDownloadModal() {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+    final webService = WebStorageService();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        lang == 'fr' ? 'Bibliothèque Cloud' : 'Cloud Library',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: webService.fetchAvailableSeries(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            lang == 'fr' ? 'Erreur: ${snapshot.error}' : 'Error: ${snapshot.error}',
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+                      final items = snapshot.data ?? [];
+                      if (items.isEmpty) {
+                        return Center(
+                          child: Text(
+                            lang == 'fr' ? 'Aucune série disponible' : 'No series available',
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final date = DateTime.parse(item['date']);
+                          final formattedDate = "${date.day}/${date.month}/${date.year}";
+
+                          return ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Colors.blueAccent,
+                              child: Icon(Icons.cloud, color: Colors.white),
+                            ),
+                            title: Text(
+                              item['title'],
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              "@${item['user']} • $formattedDate",
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.download, color: Colors.blueAccent),
+                              onPressed: () => _downloadAndImportSeries(item['filename']),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _downloadAndImportSeries(String filename) async {
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+    final webService = WebStorageService();
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final jsonContent = await webService.downloadJson(filename);
+      final Map<String, dynamic> data = jsonDecode(jsonContent);
+
+      // Convert JSON to JkdSeries
+      // The JSON structure from upload matches JkdSeries.toMap() 
+      // with a 'moves' list of Move.toMap()
+      final List<dynamic> movesData = data['moves'] ?? [];
+      final List<Move> moves = movesData.map((m) => Move.fromMap(m as Map<String, dynamic>)).toList();
+      
+      final newSeries = JkdSeries(
+        title: data['title'],
+        category: data['category'] ?? 'JKD',
+        type: data['type'] ?? 'Attack',
+        attackMethod: data['attack_method'],
+        notes: data['notes'] ?? '',
+        moves: moves,
+        isSystem: false, // Imported series are never system series
+      );
+
+      // Import into provider
+      await provider.addSeries(newSeries);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              lang == 'fr' ? 'Série importée avec succès !' : 'Series imported successfully!',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              lang == 'fr' ? 'Échec du téléchargement: $e' : 'Download failed: $e',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildActiveTrainingTab(String lang) {

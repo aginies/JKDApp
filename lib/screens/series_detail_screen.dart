@@ -6,6 +6,7 @@ import '../models/series.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/export_service.dart';
+import '../services/web_storage_service.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
 import 'series_detail/dialogs/congratulations_animation.dart';
@@ -142,6 +143,96 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     _trainingController.initTts(speechRate: provider.speechRate);
     _localShowTranslation = provider.showTranslation;
+  }
+
+  void _showCloudUploadDialog() {
+    final usernameController = TextEditingController();
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(lang == 'fr' ? 'Upload Cloud' : 'Cloud Upload'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              lang == 'fr'
+                  ? 'Entrez votre nom pour identifier l\'upload :'
+                  : 'Enter your name to identify the upload:',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: usernameController,
+              decoration: InputDecoration(
+                hintText: lang == 'fr' ? 'Nom d\'utilisateur' : 'Username',
+                border: const OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final username = usernameController.text.trim();
+              if (username.isEmpty) return;
+
+              Navigator.pop(context); // Close prompt
+              _performCloudUpload(username);
+            },
+            child: Text(lang == 'fr' ? 'Envoyer' : 'Upload'),
+          ),
+        ],
+      ),
+    );
+  }
+  Future<void> _performCloudUpload(String username) async {
+    if (widget.series == null) return;
+
+    final provider = Provider.of<SeriesProvider>(context, listen: false);
+    final lang = provider.language;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final webService = WebStorageService();
+      await webService.uploadSeries(widget.series!, username);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            lang == 'fr'
+                ? 'Série uploadée avec succès !'
+                : 'Series uploaded successfully!',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            lang == 'fr' ? 'Erreur: $e' : 'Error: $e',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -532,6 +623,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           fileName:
                               'jkd-series-${widget.series!.title.replaceAll(' ', '-').toLowerCase()}.json',
                         );
+                      } else if (value == 'cloud_upload') {
+                        _showCloudUploadDialog();
                       }
                     },
                     itemBuilder: (context) {
@@ -571,6 +664,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                             leading: const Icon(Icons.share),
                             title: Text(
                               LocalizationService.translate('share_json', lang),
+                            ),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'cloud_upload',
+                          child: ListTile(
+                            leading: const Icon(Icons.cloud_upload),
+                            title: Text(
+                              lang == 'fr' ? 'Upload Cloud' : 'Cloud Upload',
                             ),
                             dense: true,
                             contentPadding: EdgeInsets.zero,
