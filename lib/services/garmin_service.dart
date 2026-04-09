@@ -137,10 +137,13 @@ class GarminService {
       case 'deviceStatus':
         final status = event['status'] as String?;
         final connected = status == 'CONNECTED';
+        LoggingService.log(
+          'Garmin deviceStatus event: status=$status connected=$connected _isConnected=$_isConnected',
+        );
         if (connected != _isConnected) {
           _isConnected = connected;
           _connectionController.add(_isConnected);
-          LoggingService.log('Garmin device status: $status');
+          LoggingService.log('Garmin connection changed → $connected');
         }
         break;
 
