@@ -5,20 +5,57 @@ import 'package:http/io_client.dart';
 import '../models/series.dart';
 
 class WebStorageService {
-  // TODO: Replace with your actual server URL in production
-  static const String serverUrl = 'https://ftp.guibo.com/api.php';
-  static const String listUrl = 'https://ftp.guibo.com/list.php';
-  static const String downloadBaseUrl = 'https://ftp.guibo.com/data/';
-  static const String apiKey = 'jkd_secure_upload_key_888';
+  static const String _baseUrl        = 'https://ftp.guibo.com';
+  static const String serverUrl       = '$_baseUrl/api.php';
+  static const String listUrl         = '$_baseUrl/list.php';
+  static const String downloadBaseUrl = '$_baseUrl/data/';
+  static const String _tokenUrl       = '$_baseUrl/token.php';
+  static const String _appSecret      = 'jkd_secure_upload_key_888';
+
+  // Token cache — static so it survives across service instances
+  static String?   _cachedToken;
+  static DateTime? _tokenExpiresAt;
+
+  IOClient _buildClient() {
+    final httpClient = HttpClient()
+      ..badCertificateCallback =
+          ((X509Certificate cert, String host, int port) => true);
+    return IOClient(httpClient);
+  }
+
+  /// Returns a valid token, fetching a new one from token.php if needed.
+  Future<String> _getToken() async {
+    // Reuse cached token if it has more than 60 seconds left
+    if (_cachedToken != null &&
+        _tokenExpiresAt != null &&
+        _tokenExpiresAt!.isAfter(DateTime.now().add(const Duration(seconds: 60)))) {
+      return _cachedToken!;
+    }
+
+    debugPrint('WebStorageService: Fetching new token');
+    final response = await _buildClient()
+        .post(
+          Uri.parse(_tokenUrl),
+          headers: {'X-App-Secret': _appSecret},
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to obtain upload token (${response.statusCode})');
+    }
+
+    final data      = jsonDecode(response.body) as Map<String, dynamic>;
+    _cachedToken    = data['token'] as String;
+    _tokenExpiresAt = DateTime.fromMillisecondsSinceEpoch(
+      (data['expires_at'] as int) * 1000,
+    );
+    debugPrint('WebStorageService: Token valid until $_tokenExpiresAt');
+    return _cachedToken!;
+  }
 
   Future<List<Map<String, dynamic>>> fetchAvailableSeries() async {
     try {
-      final HttpClient httpClient = HttpClient()
-        ..badCertificateCallback =
-            ((X509Certificate cert, String host, int port) => true);
-      final IOClient ioClient = IOClient(httpClient);
-
-      final response = await ioClient
+      final response = await _buildClient()
           .get(Uri.parse(listUrl))
           .timeout(const Duration(seconds: 15));
 
@@ -36,12 +73,7 @@ class WebStorageService {
 
   Future<String> downloadJson(String filename) async {
     try {
-      final HttpClient httpClient = HttpClient()
-        ..badCertificateCallback =
-            ((X509Certificate cert, String host, int port) => true);
-      final IOClient ioClient = IOClient(httpClient);
-
-      final response = await ioClient
+      final response = await _buildClient()
           .get(Uri.parse('$downloadBaseUrl$filename'))
           .timeout(const Duration(seconds: 15));
 
@@ -59,39 +91,31 @@ class WebStorageService {
   Future<Map<String, dynamic>> uploadSeries(JkdSeries series, String username) async {
     try {
       final Map<String, dynamic> seriesMap = series.toMap();
-      // Ensure moves are included in the map for backup
       seriesMap['moves'] = series.moves.map((m) => m.toMap()).toList();
 
       final String jsonContent = jsonEncode(seriesMap);
-      
-      // Limit upload to 100 KB (100,000 bytes)
+
       const int maxSize = 100 * 1024;
       if (jsonContent.length > maxSize) {
         throw Exception('Series is too large to upload (max 100KB)');
       }
 
-      // Use the original title as the filename (sanitized only for filesystem safety)
       final String filename = '${series.title}.json';
+      final String token    = await _getToken();
 
       debugPrint('WebStorageService: Starting upload to $serverUrl');
       debugPrint('WebStorageService: Filename: $filename, User: $username');
       debugPrint('WebStorageService: Payload size: ${jsonContent.length} bytes');
 
-      // Create a client that ignores SSL certificate errors
-      final HttpClient httpClient = HttpClient()
-        ..badCertificateCallback =
-            ((X509Certificate cert, String host, int port) => true);
-      final IOClient ioClient = IOClient(httpClient);
-
-      final response = await ioClient
+      final response = await _buildClient()
           .post(
             Uri.parse(serverUrl),
             headers: {
               'Content-Type': 'application/json',
-              'X-API-KEY': apiKey,
-              'X-USERNAME': username,
-              'X-FILENAME': filename,
-              'X-CATEGORY': series.category,
+              'X-Token':      token,
+              'X-USERNAME':   username,
+              'X-FILENAME':   filename,
+              'X-CATEGORY':   series.category,
             },
             body: jsonContent,
           )
@@ -103,13 +127,16 @@ class WebStorageService {
       if (response.statusCode == 201) {
         return jsonDecode(response.body);
       } else {
-        // Safely try to parse JSON error, otherwise return raw body
         try {
           if (response.headers['content-type']?.contains('application/json') ?? false) {
             final errorBody = jsonDecode(response.body);
-            throw Exception(errorBody['error'] ?? 'Upload failed with status ${response.statusCode}');
+            throw Exception(
+              errorBody['error'] ?? 'Upload failed with status ${response.statusCode}',
+            );
           } else {
-            throw Exception('Server returned status ${response.statusCode}. (Non-JSON response)');
+            throw Exception(
+              'Server returned status ${response.statusCode}. (Non-JSON response)',
+            );
           }
         } catch (e) {
           if (e is Exception) rethrow;

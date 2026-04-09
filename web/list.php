@@ -42,7 +42,7 @@ if (is_dir(UPLOAD_DIR)) {
                 'title' => str_ireplace('.json', '', $display_name),
                 'size' => filesize($file_path),
                 'date' => date('c', filemtime($file_path)),
-                'url' => UPLOAD_DIR . $file
+                'url' => 'data/' . rawurlencode($file)
             ];
         }
     }

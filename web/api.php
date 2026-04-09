@@ -11,8 +11,41 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Verify the API Key in headers
-verify_api_key();
+// Verify the short-lived HMAC token
+verify_token();
+
+// Rate limiting: max 30 uploads per IP per hour (locked read+write to avoid race)
+$rate_limit_max    = 30;
+$rate_limit_window = 3600; // seconds
+$client_ip         = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$rate_file         = sys_get_temp_dir() . '/jkdapp_rl_' . md5($client_ip) . '.json';
+$now               = time();
+$state             = ['count' => 0, 'window_start' => $now];
+
+$fh = fopen($rate_file, 'c+');
+if ($fh && flock($fh, LOCK_EX)) {
+    $raw = stream_get_contents($fh);
+    if ($raw) {
+        $state = json_decode($raw, true) ?? $state;
+    }
+    if ($now - $state['window_start'] > $rate_limit_window) {
+        $state = ['count' => 0, 'window_start' => $now];
+    }
+    $state['count']++;
+    ftruncate($fh, 0);
+    rewind($fh);
+    fwrite($fh, json_encode($state));
+    flock($fh, LOCK_UN);
+    fclose($fh);
+}
+
+if ($state['count'] > $rate_limit_max) {
+    $retry_after = $rate_limit_window - ($now - $state['window_start']);
+    http_response_code(429);
+    header('Retry-After: ' . $retry_after);
+    echo json_encode(['error' => 'Too many requests. Please try again later.']);
+    exit;
+}
 
 // Handle JSON upload
 $content_type = isset($_SERVER["CONTENT_TYPE"]) ? $_SERVER["CONTENT_TYPE"] : '';
@@ -45,9 +78,9 @@ if (strpos($content_type, "application/json") !== false) {
     // Extract username and filename from headers (case-insensitive)
     $all_headers = array_change_key_case(getallheaders(), CASE_LOWER);
     
-    $username = isset($all_headers['x-username']) ? preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-username']) : 'anonymous';
-    $category = isset($all_headers['x-category']) ? preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-category']) : 'Uncategorized';
-    $filename = isset($all_headers['x-filename']) ? preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $all_headers['x-filename']) : 'series_' . date('Ymd_His') . '.json';
+    $username = isset($all_headers['x-username']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-username']), 0, 64) : 'anonymous';
+    $category = isset($all_headers['x-category']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $all_headers['x-category']), 0, 64) : 'Uncategorized';
+    $filename = isset($all_headers['x-filename']) ? substr(preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '', $all_headers['x-filename']), 0, 128) : 'series_' . date('Ymd_His') . '.json';
     
     // Ensure filename ends with .json
     if (pathinfo($filename, PATHINFO_EXTENSION) !== 'json') {

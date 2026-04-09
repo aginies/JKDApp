@@ -1,5 +1,12 @@
 <?php
 require_once 'config.php';
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'secure'   => true,
+    'httponly' => true,
+    'samesite' => 'Strict',
+]);
 session_start();
 
 // Ensure a CSRF token exists for this session
@@ -9,6 +16,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 // Logout logic
 if (isset($_GET['logout'])) {
+    session_unset();
     session_destroy();
     header('Location: admin.php');
     exit;
@@ -28,16 +36,51 @@ if (isset($_POST['delete_file']) && isset($_SESSION['loggedin'])) {
     }
 }
 
-// Login logic
+// Login logic — brute-force protection: max 5 attempts per 15 minutes per IP
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
-    $user = $_POST['username'];
-    $pass = $_POST['password'];
+    $user      = $_POST['username'];
+    $pass      = $_POST['password'];
+    $now       = time();
+    $bf_max    = 5;
+    $bf_window = 900; // 15 minutes
+    $bf_file   = sys_get_temp_dir() . '/jkdapp_bf_' . md5($_SERVER['REMOTE_ADDR'] ?? '') . '.json';
+    $bf_state  = ['count' => 0, 'window_start' => $now];
+    $locked    = false;
 
-    if ($user === ADMIN_USER && password_verify($pass, ADMIN_PASS_HASH)) {
-        $_SESSION['loggedin'] = true;
-    } else {
-        $error = "Nom d'utilisateur ou mot de passe incorrect.";
+    $fh = fopen($bf_file, 'c+');
+    if ($fh && flock($fh, LOCK_EX)) {
+        $raw = stream_get_contents($fh);
+        if ($raw) {
+            $bf_state = json_decode($raw, true) ?? $bf_state;
+        }
+        if ($now - $bf_state['window_start'] > $bf_window) {
+            $bf_state = ['count' => 0, 'window_start' => $now];
+        }
+        if ($bf_state['count'] >= $bf_max) {
+            $remaining = $bf_window - ($now - $bf_state['window_start']);
+            $error  = "Trop de tentatives. Réessayez dans " . ceil($remaining / 60) . " minute(s).";
+            $locked = true;
+        }
+    }
+
+    if (!$locked) {
+        if ($user === ADMIN_USER && password_verify($pass, ADMIN_PASS_HASH)) {
+            $bf_state = ['count' => 0, 'window_start' => $now];
+            session_regenerate_id(true);
+            $_SESSION['loggedin'] = true;
+        } else {
+            $bf_state['count']++;
+            $error = "Nom d'utilisateur ou mot de passe incorrect.";
+        }
+    }
+
+    if ($fh) {
+        ftruncate($fh, 0);
+        rewind($fh);
+        fwrite($fh, json_encode($bf_state));
+        flock($fh, LOCK_UN);
+        fclose($fh);
     }
 }
 

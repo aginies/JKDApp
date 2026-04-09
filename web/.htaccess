@@ -1,6 +1,29 @@
-# Protect the configuration file
-<Files "config.php">
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'"
+</IfModule>
+
+# Protect server-side only files
+<FilesMatch "^(config|secrets)\.php$">
     Require all denied
+</FilesMatch>
+
+# token.php: POST only (app fetches tokens), block browser GET
+<Files "token.php">
+    <Limit GET>
+        Require all denied
+    </Limit>
+    <Limit POST>
+        Require all granted
+    </Limit>
 </Files>
 
 # Protect the API from direct browser access (GET)
