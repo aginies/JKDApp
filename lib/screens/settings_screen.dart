@@ -475,6 +475,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: Text(lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name'),
+                subtitle: Text(
+                  provider.contributorName.isEmpty
+                      ? (lang == 'fr' ? 'Non défini' : 'Not set')
+                      : provider.contributorName,
+                  style: TextStyle(
+                    color: provider.contributorName.isEmpty
+                        ? Theme.of(context).hintColor
+                        : null,
+                  ),
+                ),
+                onTap: () {
+                  final controller = TextEditingController(text: provider.contributorName);
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name'),
+                      content: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: lang == 'fr' ? 'Votre nom' : 'Your name',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(lang == 'fr' ? 'Annuler' : 'Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            provider.setContributorName(controller.text.trim());
+                            Navigator.pop(ctx);
+                          },
+                          child: Text(lang == 'fr' ? 'Enregistrer' : 'Save'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.brightness_medium),
                 title: Text(LocalizationService.translate('theme', lang)),
                 trailing: DropdownButton<JkdThemeMode>(

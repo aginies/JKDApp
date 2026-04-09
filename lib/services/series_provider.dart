@@ -60,6 +60,7 @@ class SeriesProvider with ChangeNotifier {
   String? _galleryPath;
   bool _isLoading = false;
   int _autoAdvanceSec = 0; // 0 = manual, >0 = seconds
+  String _contributorName = '';
   UserProgramProgress? _activeProgram;
   TrainingProgram? _activeProgramDetails;
 
@@ -88,6 +89,7 @@ class SeriesProvider with ChangeNotifier {
   String? get galleryPath => _galleryPath;
   bool get isLoading => _isLoading;
   int get autoAdvanceSec => _autoAdvanceSec;
+  String get contributorName => _contributorName;
 
   SeriesProvider() {
     // Run initialization in a microtask to allow the constructor to return immediately
@@ -185,6 +187,9 @@ class SeriesProvider with ChangeNotifier {
       _autoAdvanceSec = int.tryParse(prefs['auto_advance_sec']!) ?? 0;
     }
 
+    // Contributor Name
+    _contributorName = prefs['contributor_name'] ?? '';
+
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
@@ -222,6 +227,12 @@ class SeriesProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Error creating gallery directories: $e');
     }
+  }
+
+  void setContributorName(String name) async {
+    _contributorName = name;
+    await _dbService.saveSetting('contributor_name', name);
+    notifyListeners();
   }
 
   void setLanguage(String lang) async {

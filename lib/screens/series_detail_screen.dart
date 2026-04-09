@@ -146,9 +146,9 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   }
 
   void _showCloudUploadDialog() {
-    final usernameController = TextEditingController();
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
+    final usernameController = TextEditingController(text: provider.contributorName);
 
     showDialog(
       context: context,
@@ -169,7 +169,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                 hintText: lang == 'fr' ? 'Nom d\'utilisateur' : 'Username',
                 border: const OutlineInputBorder(),
               ),
-              autofocus: true,
+              autofocus: provider.contributorName.isEmpty,
             ),
           ],
         ),
@@ -183,7 +183,12 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
               final username = usernameController.text.trim();
               if (username.isEmpty) return;
 
-              Navigator.pop(context); // Close prompt
+              // Persist the name to settings if new or changed
+              if (username != provider.contributorName) {
+                provider.setContributorName(username);
+              }
+
+              Navigator.pop(context);
               _performCloudUpload(username);
             },
             child: Text(lang == 'fr' ? 'Envoyer' : 'Upload'),
