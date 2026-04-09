@@ -16,6 +16,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 // Logout logic
 if (isset($_GET['logout'])) {
+    write_log("Admin Logout");
     session_unset();
     session_destroy();
     header('Location: admin.php');
@@ -25,6 +26,7 @@ if (isset($_GET['logout'])) {
 // Delete logic
 if (isset($_POST['delete_file']) && isset($_SESSION['loggedin'])) {
     if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        write_log("CSRF Failure on delete", 'ERROR');
         http_response_code(403);
         die('Invalid CSRF token.');
     }
@@ -32,6 +34,7 @@ if (isset($_POST['delete_file']) && isset($_SESSION['loggedin'])) {
     $file_path = UPLOAD_DIR . $file_to_delete;
     if (file_exists($file_path) && is_file($file_path)) {
         unlink($file_path);
+        write_log("Admin deleted file: $file_to_delete");
         $message = "Le fichier '$file_to_delete' a été supprimé avec succès.";
     }
 }
@@ -61,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $remaining = $bf_window - ($now - $bf_state['window_start']);
             $error  = "Trop de tentatives. Réessayez dans " . ceil($remaining / 60) . " minute(s).";
             $locked = true;
+            write_log("Admin login locked (brute force)", 'WARN');
         }
     }
 
@@ -69,9 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $bf_state = ['count' => 0, 'window_start' => $now];
             session_regenerate_id(true);
             $_SESSION['loggedin'] = true;
+            write_log("Admin Login Success");
         } else {
             $bf_state['count']++;
             $error = "Nom d'utilisateur ou mot de passe incorrect.";
+            write_log("Admin Login Failed for user: $user", 'WARN');
         }
     }
 
@@ -192,64 +198,66 @@ if (is_dir(UPLOAD_DIR)) {
         <?php endif; ?>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0;">Fichiers JSON Stockés</h3>
                 <span class="badge badge-json"><?php echo count($files); ?> Fichiers</span>
             </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>Catégorie</th>
-                        <th>Utilisateur</th>
-                        <th>Nom du Fichier</th>
-                        <th>Taille</th>
-                        <th>Date d'Upload</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($files)): ?>
+            <div class="table-responsive">
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-light);">Aucun fichier n'a été uploadé.</td>
+                            <th>Catégorie</th>
+                            <th>Utilisateur</th>
+                            <th>Nom du Fichier</th>
+                            <th>Taille</th>
+                            <th>Date d'Upload</th>
+                            <th>Actions</th>
                         </tr>
-                    <?php endif; ?>
-                    <?php foreach ($files as $file): ?>
-                    <tr>
-                        <td>
-                            <span class="badge" style="background: #fff3e0; color: #e65100; font-weight: 600;"><?php echo htmlspecialchars($file['category']); ?></span>
-                        </td>
-                        <td>
-                            <span class="badge" style="background: #e8f5e9; color: #2e7d32;"><?php echo htmlspecialchars($file['user']); ?></span>
-                        </td>
-                        <td style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
-                        <td><?php echo format_bytes($file['size']); ?></td>
-                        <td style="color: var(--text-light);">
-                            <?php echo date('d/m/Y H:i', $file['mtime']); ?>
-                        </td>
-                        <td class="actions">
-                            <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
-                                <button type="button" class="btn-icon" style="background: var(--success);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                            </a>
-                            <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
-                                <button type="button" class="btn-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                </button>
-                            </a>
-                            <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?');" style="display: inline;">
-                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <input type="hidden" name="delete_file" value="<?php echo htmlspecialchars($file['name']); ?>">
-                                <button type="submit" class="btn-icon btn-danger" title="Supprimer">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($files)): ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-light); padding: 40px;">Aucun fichier n'a été uploadé.</td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php foreach ($files as $file): ?>
+                        <tr>
+                            <td data-label="Catégorie">
+                                <span class="badge" style="background: #fff3e0; color: #e65100; font-weight: 600;"><?php echo htmlspecialchars($file['category']); ?></span>
+                            </td>
+                            <td data-label="Utilisateur">
+                                <span class="badge" style="background: #e8f5e9; color: #2e7d32;"><?php echo htmlspecialchars($file['user']); ?></span>
+                            </td>
+                            <td data-label="Nom" style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
+                            <td data-label="Taille"><?php echo format_bytes($file['size']); ?></td>
+                            <td data-label="Date" style="color: var(--text-light);">
+                                <?php echo date('d/m/Y H:i', $file['mtime']); ?>
+                            </td>
+                            <td data-label="Actions" class="actions">
+                                <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
+                                    <button type="button" class="btn-icon" style="background: var(--success);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </a>
+                                <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
+                                    <button type="button" class="btn-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </button>
+                                </a>
+                                <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?');" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <input type="hidden" name="delete_file" value="<?php echo htmlspecialchars($file['name']); ?>">
+                                    <button type="submit" class="btn-icon btn-danger" title="Supprimer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <footer style="text-align: center; margin-top: 40px;">

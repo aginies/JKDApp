@@ -3,6 +3,8 @@ require_once 'config.php';
 
 header('Content-Type: application/json');
 
+write_log("API: Fetching series list");
+
 $files = [];
 if (is_dir(UPLOAD_DIR)) {
     $dir_files = scandir(UPLOAD_DIR);

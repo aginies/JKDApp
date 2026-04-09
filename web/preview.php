@@ -282,33 +282,59 @@ function render_move(array $m, string $num_label = ''): string {
         }
 
         /* ── Move list ── */
-        .move-list   { display: flex; flex-direction: column; gap: 8px; }
+        .move-list   { display: flex; flex-direction: column; gap: 12px; }
 
         .move-card {
             background: #f8f9fa;
             border-radius: 8px;
-            padding: 10px 14px;
-            border-left: 3px solid var(--primary);
+            padding: 12px;
+            border-left: 4px solid var(--primary);
         }
-        .move-row    { display: flex; align-items: flex-start; gap: 12px; }
-        .move-body   { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        
+        @media (min-width: 768px) {
+            .move-card {
+                padding: 10px 14px;
+            }
+        }
+        
+        .move-row    { display: flex; align-items: flex-start; gap: 10px; }
+        
+        @media (min-width: 768px) {
+            .move-row {
+                gap: 12px;
+            }
+        }
+        
+        .move-body   { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
         /* Number circle */
         .move-num {
-            min-width: 32px;
-            height: 32px;
+            min-width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             margin-top: 2px;
         }
-        .move-num-empty { min-width: 32px; flex-shrink: 0; }
+        
+        @media (min-width: 768px) {
+            .move-num {
+                min-width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        .move-num-empty { min-width: 28px; flex-shrink: 0; }
+        @media (min-width: 768px) {
+            .move-num-empty { min-width: 32px; }
+        }
 
         /* Main move row */
         .move-main {
@@ -319,70 +345,83 @@ function render_move(array $m, string $num_label = ''): string {
         }
 
         .move-cat-icon {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 12px;
             flex-shrink: 0;
         }
-        .move-name  { font-weight: 600; font-size: 0.95rem; }
+        
+        @media (min-width: 768px) {
+            .move-cat-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+        }
+        
+        .move-name  { font-weight: 600; font-size: 0.9rem; }
+        @media (min-width: 768px) {
+            .move-name { font-size: 0.95rem; }
+        }
+        
         .move-sep   { font-weight: 700; color: var(--text-light); font-size: 1rem; padding: 0 2px; }
         .chain-sep  { color: #2c3e50; }
 
         /* Badges */
         .badge-side {
             color: white;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
         }
         .badge-level {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-light);
             background: #eee;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
         }
         .badge-special {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: #ede7f6;
             color: #6a1b9a;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
             font-weight: 600;
         }
         .badge-feint {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             background: #fff3e0;
             color: #e65100;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
             font-style: italic;
         }
         .badge-rep {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: #e8f5e9;
             color: #2e7d32;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 12px;
             font-weight: 700;
         }
 
         /* Combo/chain attack-defence pairs */
-        .combo-moves    { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding-left: 12px; border-left: 2px solid #ddd; }
-        .combo-item     { display: flex; flex-direction: column; gap: 3px; }
-        .combo-sep      { font-weight: 700; color: var(--text-light); font-size: 0.85rem; padding: 1px 4px; }
-        .sub-counter    { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #fff5f5; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; margin-left: 8px; align-self: flex-start; }
+        .combo-moves    { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-left: 10px; border-left: 2px solid #ddd; }
+        .combo-item     { display: flex; flex-direction: column; gap: 4px; }
+        .combo-sep      { font-weight: 700; color: var(--text-light); font-size: 0.8rem; padding: 1px 4px; }
+        .sub-counter    { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #fff5f5; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; align-self: flex-start; }
 
         /* Counter section */
         .counter-section {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
+            gap: 6px;
             background: #fff5f5;
             border: 1px solid #fca5a5;
             border-radius: 6px;
@@ -390,7 +429,7 @@ function render_move(array $m, string $num_label = ''): string {
             margin-top: 2px;
             align-self: flex-start;
         }
-        .counter-arrow  { font-size: 1.1rem; color: #e74c3c; flex-shrink: 0; margin-top: 2px; }
+        .counter-arrow  { font-size: 1rem; color: #e74c3c; flex-shrink: 0; margin-top: 2px; }
         .counter-content { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 
         /* Series separator */

@@ -15,10 +15,27 @@ define('MAX_FILE_SIZE', 100 * 1024);
 // Allowed file extensions
 define('ALLOWED_EXTENSIONS', ['json']);
 
+// Logging configuration
+define('LOG_FILE', __DIR__ . '/logs/app.log');
+
+/**
+ * Log a message to the application log file.
+ */
+function write_log($message, $level = 'INFO') {
+    if (!is_dir(__DIR__ . '/logs')) {
+        mkdir(__DIR__ . '/logs', 0755, true);
+    }
+    $date = date('Y-m-d H:i:s');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $log_entry = "[$date] [$level] [$ip] $message" . PHP_EOL;
+    file_put_contents(LOG_FILE, $log_entry, FILE_APPEND);
+}
+
 /**
  * Reject a request with 401 and exit.
  */
 function reject(string $message = 'Unauthorized') {
+    write_log("REJECT: $message", 'WARN');
     http_response_code(401);
     echo json_encode(['error' => $message]);
     exit;

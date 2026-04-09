@@ -80,64 +80,66 @@ if (is_dir(UPLOAD_DIR)) {
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0;">Séries Partagées</h3>
                 <span class="badge badge-json"><?php echo count($files); ?> Séries au total</span>
             </div>
             
-            <table id="series-table">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-col="0">Catégorie <span class="sort-icon"></span></th>
-                        <th class="sortable" data-col="1">Contributeur <span class="sort-icon"></span></th>
-                        <th class="sortable" data-col="2">Nom de la Série <span class="sort-icon"></span></th>
-                        <th class="sortable" data-col="3">Taille <span class="sort-icon"></span></th>
-                        <th class="sortable" data-col="4">Partagé le <span class="sort-icon"></span></th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($files)): ?>
+            <div class="table-responsive">
+                <table id="series-table">
+                    <thead>
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-light); padding: 40px;">Aucune série partagée pour le moment. Soyez le premier !</td>
+                            <th class="sortable" data-col="0">Catégorie <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="1">Contributeur <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="2">Nom de la Série <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="3">Taille <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="4">Partagé le <span class="sort-icon"></span></th>
+                            <th>Action</th>
                         </tr>
-                    <?php endif; ?>
-                    <?php foreach ($files as $file): ?>
-                    <tr>
-                        <td data-sort="<?php echo htmlspecialchars($file['category']); ?>">
-                            <span class="badge" style="background: #fff3e0; color: #e65100; font-weight: 600;">
-                                <?php echo htmlspecialchars($file['category']); ?>
-                            </span>
-                        </td>
-                        <td data-sort="<?php echo htmlspecialchars($file['user']); ?>">
-                            <span class="badge" style="background: #e3f2fd; color: #1976d2; font-weight: 600;">
-                                @<?php echo htmlspecialchars($file['user']); ?>
-                            </span>
-                        </td>
-                        <td data-sort="<?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?>" style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
-                        <td data-sort="<?php echo (int)$file['size']; ?>"><?php echo format_bytes($file['size']); ?></td>
-                        <td data-sort="<?php echo (int)$file['mtime']; ?>" style="color: var(--text-light);">
-                            <?php
-                                setlocale(LC_TIME, 'fr_FR.UTF-8');
-                                echo date('d/m/Y', $file['mtime']);
-                            ?>
-                        </td>
-                        <td style="white-space: nowrap;">
-                            <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
-                                <button type="button" class="btn-icon" style="background: var(--success);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                            </a>
-                            <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
-                                <button type="button" class="btn-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                </button>
-                            </a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($files)): ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-light); padding: 40px;">Aucune série partagée pour le moment. Soyez le premier !</td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php foreach ($files as $file): ?>
+                        <tr>
+                            <td data-label="Catégorie" data-sort="<?php echo htmlspecialchars($file['category']); ?>">
+                                <span class="badge" style="background: #fff3e0; color: #e65100; font-weight: 600;">
+                                    <?php echo htmlspecialchars($file['category']); ?>
+                                </span>
+                            </td>
+                            <td data-label="Contributeur" data-sort="<?php echo htmlspecialchars($file['user']); ?>">
+                                <span class="badge" style="background: #e3f2fd; color: #1976d2; font-weight: 600;">
+                                    @<?php echo htmlspecialchars($file['user']); ?>
+                                </span>
+                            </td>
+                            <td data-label="Nom" data-sort="<?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?>" style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
+                            <td data-label="Taille" data-sort="<?php echo (int)$file['size']; ?>"><?php echo format_bytes($file['size']); ?></td>
+                            <td data-label="Partagé le" data-sort="<?php echo (int)$file['mtime']; ?>" style="color: var(--text-light);">
+                                <?php
+                                    setlocale(LC_TIME, 'fr_FR.UTF-8');
+                                    echo date('d/m/Y', $file['mtime']);
+                                ?>
+                            </td>
+                            <td data-label="Action" style="white-space: nowrap;">
+                                <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
+                                    <button type="button" class="btn-icon" style="background: var(--success);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </a>
+                                <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
+                                    <button type="button" class="btn-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </button>
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <footer style="text-align: center; margin-top: 40px; color: var(--text-light); font-size: 14px;">
