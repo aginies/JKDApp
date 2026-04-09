@@ -85,14 +85,14 @@ if (is_dir(UPLOAD_DIR)) {
                 <span class="badge badge-json"><?php echo count($files); ?> Séries au total</span>
             </div>
             
-            <table>
+            <table id="series-table">
                 <thead>
                     <tr>
-                        <th>Catégorie</th>
-                        <th>Contributeur</th>
-                        <th>Nom de la Série</th>
-                        <th>Taille</th>
-                        <th>Partagé le</th>
+                        <th class="sortable" data-col="0">Catégorie <span class="sort-icon"></span></th>
+                        <th class="sortable" data-col="1">Contributeur <span class="sort-icon"></span></th>
+                        <th class="sortable" data-col="2">Nom de la Série <span class="sort-icon"></span></th>
+                        <th class="sortable" data-col="3">Taille <span class="sort-icon"></span></th>
+                        <th class="sortable" data-col="4">Partagé le <span class="sort-icon"></span></th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -104,27 +104,34 @@ if (is_dir(UPLOAD_DIR)) {
                     <?php endif; ?>
                     <?php foreach ($files as $file): ?>
                     <tr>
-                        <td>
+                        <td data-sort="<?php echo htmlspecialchars($file['category']); ?>">
                             <span class="badge" style="background: #fff3e0; color: #e65100; font-weight: 600;">
                                 <?php echo htmlspecialchars($file['category']); ?>
                             </span>
                         </td>
-                        <td>
+                        <td data-sort="<?php echo htmlspecialchars($file['user']); ?>">
                             <span class="badge" style="background: #e3f2fd; color: #1976d2; font-weight: 600;">
                                 @<?php echo htmlspecialchars($file['user']); ?>
                             </span>
                         </td>
-                        <td style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
-                        <td><?php echo format_bytes($file['size']); ?></td>
-                        <td style="color: var(--text-light);">
-                            <?php 
+                        <td data-sort="<?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?>" style="font-weight: 500;"><?php echo htmlspecialchars(str_ireplace('.json', '', $file['display'])); ?></td>
+                        <td data-sort="<?php echo (int)$file['size']; ?>"><?php echo format_bytes($file['size']); ?></td>
+                        <td data-sort="<?php echo (int)$file['mtime']; ?>" style="color: var(--text-light);">
+                            <?php
                                 setlocale(LC_TIME, 'fr_FR.UTF-8');
-                                echo date('d/m/Y', $file['mtime']); 
+                                echo date('d/m/Y', $file['mtime']);
                             ?>
                         </td>
-                        <td>
-                            <a href="<?php echo htmlspecialchars($file['path']); ?>" download>
-                                <button type="button" style="padding: 8px 16px; font-size: 14px;">Télécharger</button>
+                        <td style="white-space: nowrap;">
+                            <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
+                                <button type="button" class="btn-icon" style="background: var(--success);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </a>
+                            <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
+                                <button type="button" class="btn-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                </button>
                             </a>
                         </td>
                     </tr>
@@ -137,5 +144,39 @@ if (is_dir(UPLOAD_DIR)) {
             <p>&copy; 2026 Communauté JKDApp. <a href="admin.php" style="color: var(--text-light); text-decoration: none;">Accès Admin</a></p>
         </footer>
     </div>
+    <style>
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { background: #edf2f7; }
+        th.sortable[data-sort-dir] { color: var(--primary); }
+        .sort-icon { font-size: 0.75em; opacity: 0.6; }
+    </style>
+    <script>
+        document.querySelectorAll('#series-table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const col  = parseInt(th.dataset.col);
+                const tbody = document.querySelector('#series-table tbody');
+                const rows  = Array.from(tbody.querySelectorAll('tr')).filter(r => r.cells.length > 1);
+                const asc   = th.dataset.sortDir !== 'asc';
+
+                document.querySelectorAll('#series-table th.sortable').forEach(h => {
+                    delete h.dataset.sortDir;
+                    h.querySelector('.sort-icon').textContent = '';
+                });
+
+                th.dataset.sortDir = asc ? 'asc' : 'desc';
+                th.querySelector('.sort-icon').textContent = asc ? '▲' : '▼';
+
+                rows.sort((a, b) => {
+                    const av = a.cells[col].dataset.sort ?? a.cells[col].textContent.trim();
+                    const bv = b.cells[col].dataset.sort ?? b.cells[col].textContent.trim();
+                    const an = parseFloat(av), bn = parseFloat(bv);
+                    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+                    return asc ? av.localeCompare(bv, 'fr') : bv.localeCompare(av, 'fr');
+                });
+
+                rows.forEach(r => tbody.appendChild(r));
+            });
+        });
+    </script>
 </body>
 </html>

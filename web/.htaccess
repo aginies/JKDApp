@@ -38,13 +38,9 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </Files>
 
 # Ensure public access to the main pages
-<Files "index.php">
+<FilesMatch "^(index|admin|preview)\.php$">
     Require all granted
-</Files>
-
-<Files "admin.php">
-    Require all granted
-</Files>
+</FilesMatch>
 
 # Explicitly deny access to hidden files
 <FilesMatch "^\.">

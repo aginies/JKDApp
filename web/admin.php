@@ -228,13 +228,22 @@ if (is_dir(UPLOAD_DIR)) {
                             <?php echo date('d/m/Y H:i', $file['mtime']); ?>
                         </td>
                         <td class="actions">
-                            <a href="<?php echo htmlspecialchars($file['path']); ?>" download>
-                                <button type="button">Télécharger</button>
+                            <a href="preview.php?file=<?php echo urlencode($file['name']); ?>" title="Prévisualiser">
+                                <button type="button" class="btn-icon" style="background: var(--success);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </a>
+                            <a href="<?php echo htmlspecialchars('data/' . rawurlencode($file['name'])); ?>" download title="Télécharger">
+                                <button type="button" class="btn-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                </button>
                             </a>
                             <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?');" style="display: inline;">
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                                 <input type="hidden" name="delete_file" value="<?php echo htmlspecialchars($file['name']); ?>">
-                                <button type="submit" class="btn-danger">Supprimer</button>
+                                <button type="submit" class="btn-icon btn-danger" title="Supprimer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                </button>
                             </form>
                         </td>
                     </tr>
