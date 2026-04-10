@@ -267,14 +267,6 @@ class _KaliAnglePainter extends CustomPainter {
     // Draw background arc
     canvas.drawArc(rect, startRad, sweepRad, false, pathPaint);
 
-    // Arrow at the end of the arc
-    final pEnd = Offset(center.dx + radius * 0.85 * math.cos(endRad),
-        center.dy + radius * 0.85 * math.sin(endRad));
-    final tangentAngle = endRad + (sweepRad > 0 ? math.pi / 2 : -math.pi / 2);
-    final pPrev = Offset(
-        pEnd.dx - math.cos(tangentAngle), pEnd.dy - math.sin(tangentAngle));
-    _drawArrowHead(canvas, pPrev, pEnd, pathPaint);
-
     // Calculate looping progress (0 -> 1 -> 0)
     final loopProgress = 1.0 - (progress * 2 - 1).abs();
 
