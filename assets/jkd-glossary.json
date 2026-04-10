@@ -666,8 +666,8 @@
     {
       "name": "Angle 11",
       "translations": {
-        "en": "Thrust High Left",
-        "fr": "Estoc Haut Gauche"
+        "en": "Thrust Low Left",
+        "fr": "Estoc Bas Gauche"
       },
       "possible_level": "H",
       "removal": {}
@@ -675,8 +675,8 @@
     {
       "name": "Angle 12",
       "translations": {
-        "en": "Thrust High Right",
-        "fr": "Estoc Haut Droite"
+        "en": "Thrust Low Right",
+        "fr": "Estoc Low Droite"
       },
       "possible_level": "H",
       "removal": {}

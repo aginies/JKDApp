@@ -156,7 +156,7 @@ class _KaliAnglePainter extends CustomPainter {
         _drawAnimatedLine(canvas, center, radius, 330, 150, paint, dotPaint);
         break;
       case 13: // Abanico (Fan strike) - 180 degree arc
-        _drawAnimatedArc(canvas, center, radius, 180, 0, paint, dotPaint);
+        _drawAnimatedArc(canvas, center, radius, 180, 360, paint, dotPaint);
         break;
       case 14: // Pugno hit - Vertical line + CCW circle
         _drawAnimatedPugno(canvas, center, radius, paint, dotPaint);
@@ -259,48 +259,55 @@ class _KaliAnglePainter extends CustomPainter {
 
   void _drawAnimatedArc(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
     final startRad = startAngleDeg * math.pi / 180;
-    final sweepRad = (endAngleDeg - startAngleDeg) * math.pi / 180;
-    
+    final endRad = endAngleDeg * math.pi / 180;
+    final sweepRad = endRad - startRad;
+
     final rect = Rect.fromCircle(center: center, radius: radius * 0.85);
-    
+
     // Draw background arc
     canvas.drawArc(rect, startRad, sweepRad, false, pathPaint);
-    
+
+    // Arrow at the end of the arc
+    final pEnd = Offset(center.dx + radius * 0.85 * math.cos(endRad),
+        center.dy + radius * 0.85 * math.sin(endRad));
+    final tangentAngle = endRad + (sweepRad > 0 ? math.pi / 2 : -math.pi / 2);
+    final pPrev = Offset(
+        pEnd.dx - math.cos(tangentAngle), pEnd.dy - math.sin(tangentAngle));
+    _drawArrowHead(canvas, pPrev, pEnd, pathPaint);
+
     // Calculate looping progress (0 -> 1 -> 0)
     final loopProgress = 1.0 - (progress * 2 - 1).abs();
 
     // Draw tracking dot
     final currentRad = startRad + (sweepRad * loopProgress);
-    final currentPos = Offset(
-      center.dx + radius * 0.85 * math.cos(currentRad),
-      center.dy + radius * 0.85 * math.sin(currentRad)
-    );
+    final currentPos = Offset(center.dx + radius * 0.85 * math.cos(currentRad),
+        center.dy + radius * 0.85 * math.sin(currentRad));
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawAnimatedLine(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
     final startRad = startAngleDeg * math.pi / 180;
     final endRad = endAngleDeg * math.pi / 180;
-    
-    final p1 = Offset(center.dx + radius * 0.95 * math.cos(startRad), center.dy + radius * 0.95 * math.sin(startRad));
-    final p2 = Offset(center.dx + radius * 0.95 * math.cos(endRad), center.dy + radius * 0.95 * math.sin(endRad));
-    
+
+    final p1 = Offset(center.dx + radius * 0.95 * math.cos(startRad),
+        center.dy + radius * 0.95 * math.sin(startRad));
+    final p2 = Offset(center.dx + radius * 0.95 * math.cos(endRad),
+        center.dy + radius * 0.95 * math.sin(endRad));
+
     // Draw background line
     canvas.drawLine(p1, p2, pathPaint);
-    
+
     // Draw arrow head at end
     _drawArrowHead(canvas, p1, p2, pathPaint);
 
     // Draw tracking dot
-    final currentPos = Offset(
-      lerpDouble(p1.dx, p2.dx, progress)!,
-      lerpDouble(p1.dy, p2.dy, progress)!
-    );
+    final currentPos = Offset(lerpDouble(p1.dx, p2.dx, progress)!,
+        lerpDouble(p1.dy, p2.dy, progress)!);
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawAnimatedCurve(Canvas canvas, Offset center, double radius, bool isRight, Paint pathPaint, Paint dotPaint) {
-    final p1 = isRight 
+    final p1 = isRight
         ? Offset(center.dx - radius * 0.8, center.dy + radius * 0.2)
         : Offset(center.dx + radius * 0.8, center.dy + radius * 0.2);
     final ctrl = Offset(center.dx - radius * 0.2, center.dy + radius * 1.0);
@@ -315,16 +322,18 @@ class _KaliAnglePainter extends CustomPainter {
 
     // Arrowhead
     final tangentSource = Offset(
-      lerpDouble(ctrl.dx, p2.dx, 0.8)!,
-      lerpDouble(ctrl.dy, p2.dy, 0.8)!
-    );
+        lerpDouble(ctrl.dx, p2.dx, 0.8)!, lerpDouble(ctrl.dy, p2.dy, 0.8)!);
     _drawArrowHead(canvas, tangentSource, p2, pathPaint);
 
     // Calculate dot position on quadratic bezier: (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
     final t = progress;
-    final dotX = math.pow(1 - t, 2) * p1.dx + 2 * (1 - t) * t * ctrl.dx + math.pow(t, 2) * p2.dx;
-    final dotY = math.pow(1 - t, 2) * p1.dy + 2 * (1 - t) * t * ctrl.dy + math.pow(t, 2) * p2.dy;
-    
+    final dotX = math.pow(1 - t, 2) * p1.dx +
+        2 * (1 - t) * t * ctrl.dx +
+        math.pow(t, 2) * p2.dx;
+    final dotY = math.pow(1 - t, 2) * p1.dy +
+        2 * (1 - t) * t * ctrl.dy +
+        math.pow(t, 2) * p2.dy;
+
     canvas.drawCircle(Offset(dotX, dotY), pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
@@ -340,14 +349,15 @@ class _KaliAnglePainter extends CustomPainter {
         : Offset(center.dx - radius * 0.6, center.dy - radius * 0.6);
 
     // Using a more identifiable point for the "loading" part of the thrust
-    final midPoint = Offset(center.dx + (isLeftHand ? -radius * 0.2 : radius * 0.2), center.dy + radius * 0.1);
+    final midPoint = Offset(center.dx + (isLeftHand ? -radius * 0.2 : radius * 0.2),
+        center.dy + radius * 0.1);
 
     final path = Path();
     path.moveTo(start.dx, start.dy);
     path.quadraticBezierTo(mid.dx, mid.dy, midPoint.dx, midPoint.dy);
     path.lineTo(end.dx, end.dy);
     canvas.drawPath(path, pathPaint);
-    
+
     _drawArrowHead(canvas, midPoint, end, pathPaint);
 
     // Animate dot through the two segments
@@ -355,35 +365,45 @@ class _KaliAnglePainter extends CustomPainter {
     if (progress < 0.3) {
       // First part: Curve (normalized progress 0.0 to 1.0)
       final t = progress / 0.3;
-      final x = math.pow(1 - t, 2) * start.dx + 2 * (1 - t) * t * mid.dx + math.pow(t, 2) * midPoint.dx;
-      final y = math.pow(1 - t, 2) * start.dy + 2 * (1 - t) * t * mid.dy + math.pow(t, 2) * midPoint.dy;
+      final x = math.pow(1 - t, 2) * start.dx +
+          2 * (1 - t) * t * mid.dx +
+          math.pow(t, 2) * midPoint.dx;
+      final y = math.pow(1 - t, 2) * start.dy +
+          2 * (1 - t) * t * mid.dy +
+          math.pow(t, 2) * midPoint.dy;
       currentPos = Offset(x, y);
     } else {
       // Second part: Straight line (normalized progress 0.0 to 1.0)
       final t = (progress - 0.3) / 0.7;
-      currentPos = Offset(
-        lerpDouble(midPoint.dx, end.dx, t)!,
-        lerpDouble(midPoint.dy, end.dy, t)!
-      );
+      currentPos = Offset(lerpDouble(midPoint.dx, end.dx, t)!,
+          lerpDouble(midPoint.dy, end.dy, t)!);
     }
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawArrowHead(Canvas canvas, Offset from, Offset to, Paint paint) {
     final angle = math.atan2(to.dy - from.dy, to.dx - from.dx);
-    const arrowSize = 8.0;
+    final strokeWidth = paint.strokeWidth;
+
+    // Offset tip to the end of the rounded stroke cap to "touch the end"
+    final tip = Offset(
+      to.dx + math.cos(angle) * (strokeWidth / 2),
+      to.dy + math.sin(angle) * (strokeWidth / 2),
+    );
+
+    final arrowSize = strokeWidth * 3.5;
     final path = Path()
-      ..moveTo(to.dx, to.dy)
-      ..lineTo(to.dx - arrowSize * math.cos(angle - math.pi / 6), to.dy - arrowSize * math.sin(angle - math.pi / 6))
-      ..moveTo(to.dx, to.dy)
-      ..lineTo(to.dx - arrowSize * math.cos(angle + math.pi / 6), to.dy - arrowSize * math.sin(angle + math.pi / 6));
-    
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(tip.dx - arrowSize * math.cos(angle - 0.6),
+          tip.dy - arrowSize * math.sin(angle - 0.6))
+      ..lineTo(tip.dx - arrowSize * math.cos(angle + 0.6),
+          tip.dy - arrowSize * math.sin(angle + 0.6))
+      ..close();
+
     final headPaint = Paint()
-      ..color = paint.color.withValues(alpha: 0.8)
-      ..strokeWidth = paint.strokeWidth * 0.8
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-      
+      ..color = paint.color.withValues(alpha: 0.9)
+      ..style = PaintingStyle.fill;
+
     canvas.drawPath(path, headPaint);
   }
 
