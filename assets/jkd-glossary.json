@@ -698,6 +698,15 @@
       },
       "possible_level": "H,M",
       "removal": {}
+    },
+    {
+      "name": "Angle 15",
+      "translations": {
+        "en": "Backend strike",
+        "fr": "Frappe Backend"
+      },
+      "possible_level": "H,M",
+      "removal": {}
     }
   ],
   "packs": [

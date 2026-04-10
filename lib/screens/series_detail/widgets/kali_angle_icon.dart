@@ -161,7 +161,57 @@ class _KaliAnglePainter extends CustomPainter {
       case 14: // Pugno hit - Vertical line + CCW circle
         _drawAnimatedPugno(canvas, center, radius, paint, dotPaint);
         break;
+      case 15: // Backend - Curve behind head + 45 deg strike
+        _drawAnimatedBackend(canvas, center, radius, paint, dotPaint);
+        break;
     }
+  }
+
+  void _drawAnimatedBackend(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
+    // Starting behind head (top left for a right hand backend)
+    final start = Offset(center.dx - radius * 0.4, center.dy - radius * 0.2);
+    final curveControl = Offset(center.dx - radius * 0.9, center.dy - radius * 0.8);
+    final topOfHead = Offset(center.dx, center.dy - radius * 0.9);
+    final strikeStart = Offset(center.dx + radius * 0.2, center.dy - radius * 0.4);
+    
+    // Diagonal down-right (45 deg)
+    final strikeEnd = Offset(center.dx + radius * 0.9, center.dy + radius * 0.3);
+
+    // Draw background path
+    final path = Path();
+    path.moveTo(start.dx, start.dy);
+    path.quadraticBezierTo(curveControl.dx, curveControl.dy, topOfHead.dx, topOfHead.dy);
+    path.quadraticBezierTo(center.dx + radius * 0.4, center.dy - radius * 0.8, strikeStart.dx, strikeStart.dy);
+    path.lineTo(strikeEnd.dx, strikeEnd.dy);
+    canvas.drawPath(path, pathPaint);
+
+    // Arrow at end of strike
+    _drawArrowHead(canvas, strikeStart, strikeEnd, pathPaint);
+
+    // Animate dot
+    Offset currentPos;
+    if (progress < 0.3) {
+      // First curve segment
+      final t = progress / 0.3;
+      final x = math.pow(1 - t, 2) * start.dx + 2 * (1 - t) * t * curveControl.dx + math.pow(t, 2) * topOfHead.dx;
+      final y = math.pow(1 - t, 2) * start.dy + 2 * (1 - t) * t * curveControl.dy + math.pow(t, 2) * topOfHead.dy;
+      currentPos = Offset(x, y);
+    } else if (progress < 0.6) {
+      // Second curve segment (back of head to strike start)
+      final t = (progress - 0.3) / 0.3;
+      final ctrl = Offset(center.dx + radius * 0.4, center.dy - radius * 0.8);
+      final x = math.pow(1 - t, 2) * topOfHead.dx + 2 * (1 - t) * t * ctrl.dx + math.pow(t, 2) * strikeStart.dx;
+      final y = math.pow(1 - t, 2) * topOfHead.dy + 2 * (1 - t) * t * ctrl.dy + math.pow(t, 2) * strikeStart.dy;
+      currentPos = Offset(x, y);
+    } else {
+      // Straight strike
+      final t = (progress - 0.6) / 0.4;
+      currentPos = Offset(
+        lerpDouble(strikeStart.dx, strikeEnd.dx, t)!,
+        lerpDouble(strikeStart.dy, strikeEnd.dy, t)!
+      );
+    }
+    canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawAnimatedPugno(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
