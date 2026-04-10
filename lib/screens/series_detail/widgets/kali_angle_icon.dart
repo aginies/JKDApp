@@ -158,7 +158,52 @@ class _KaliAnglePainter extends CustomPainter {
       case 13: // Abanico (Fan strike) - 180 degree arc
         _drawAnimatedArc(canvas, center, radius, 180, 0, paint, dotPaint);
         break;
+      case 14: // Pugno hit - Vertical line + CCW circle
+        _drawAnimatedPugno(canvas, center, radius, paint, dotPaint);
+        break;
     }
+  }
+
+  void _drawAnimatedPugno(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
+    final start = Offset(center.dx, center.dy - radius * 0.7);
+    final endLine = Offset(center.dx, center.dy + radius * 0.1);
+    
+    // Circle at the bottom of the line
+    final circleRadius = radius * 0.25;
+    final circleCenter = Offset(center.dx + circleRadius, center.dy + radius * 0.1);
+    final rect = Rect.fromCircle(center: circleCenter, radius: circleRadius);
+    
+    // Draw background path
+    final path = Path();
+    path.moveTo(start.dx, start.dy);
+    path.lineTo(endLine.dx, endLine.dy);
+    path.addArc(rect, math.pi, 2 * math.pi); // CCW circle
+    canvas.drawPath(path, pathPaint);
+    
+    // Arrow on top of the line pointing down
+    final p1 = Offset(start.dx, start.dy);
+    final p2 = Offset(start.dx, start.dy + 1);
+    _drawArrowHead(canvas, p1, p2, pathPaint);
+
+    // Animate dot through the two segments
+    Offset currentPos;
+    if (progress < 0.5) {
+      // First part: Vertical line (0.0 to 1.0)
+      final t = progress / 0.5;
+      currentPos = Offset(
+        lerpDouble(start.dx, endLine.dx, t)!,
+        lerpDouble(start.dy, endLine.dy, t)!
+      );
+    } else {
+      // Second part: CCW Circle (0.0 to 1.0)
+      final t = (progress - 0.5) / 0.5;
+      final angle = math.pi + (2 * math.pi * t);
+      currentPos = Offset(
+        circleCenter.dx + circleRadius * math.cos(angle),
+        circleCenter.dy + circleRadius * math.sin(angle)
+      );
+    }
+    canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawAnimatedArc(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {

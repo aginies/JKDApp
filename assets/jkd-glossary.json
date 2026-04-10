@@ -689,6 +689,15 @@
       },
       "possible_level": "H",
       "removal": {}
+    },
+    {
+      "name": "Angle 14",
+      "translations": {
+        "en": "Pugno hit",
+        "fr": "Frappe Pugno"
+      },
+      "possible_level": "H,M",
+      "removal": {}
     }
   ],
   "packs": [
