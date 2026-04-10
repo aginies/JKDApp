@@ -180,9 +180,9 @@ class _KaliAnglePainter extends CustomPainter {
     path.addArc(rect, math.pi, 2 * math.pi); // CCW circle
     canvas.drawPath(path, pathPaint);
     
-    // Arrow on top of the line pointing down
-    final p1 = Offset(start.dx, start.dy);
-    final p2 = Offset(start.dx, start.dy + 1);
+    // Arrow on top of the line pointing up
+    final p1 = Offset(start.dx, start.dy + 1);
+    final p2 = Offset(start.dx, start.dy);
     _drawArrowHead(canvas, p1, p2, pathPaint);
 
     // Animate dot through the two segments
