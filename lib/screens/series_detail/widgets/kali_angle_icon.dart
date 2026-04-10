@@ -168,20 +168,20 @@ class _KaliAnglePainter extends CustomPainter {
   }
 
   void _drawAnimatedBackend(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
-    // Starting behind head (top left for a right hand backend)
-    final start = Offset(center.dx - radius * 0.4, center.dy - radius * 0.2);
-    final curveControl = Offset(center.dx - radius * 0.9, center.dy - radius * 0.8);
+    // Starting behind head (top right for a right hand backend) - Mirrored from previous
+    final start = Offset(center.dx + radius * 0.4, center.dy - radius * 0.2);
+    final curveControl = Offset(center.dx + radius * 0.9, center.dy - radius * 0.8);
     final topOfHead = Offset(center.dx, center.dy - radius * 0.9);
-    final strikeStart = Offset(center.dx + radius * 0.2, center.dy - radius * 0.4);
+    final strikeStart = Offset(center.dx - radius * 0.2, center.dy - radius * 0.4);
     
-    // Diagonal down-right (45 deg)
-    final strikeEnd = Offset(center.dx + radius * 0.9, center.dy + radius * 0.3);
+    // Diagonal down-left (45 deg)
+    final strikeEnd = Offset(center.dx - radius * 0.9, center.dy + radius * 0.3);
 
     // Draw background path
     final path = Path();
     path.moveTo(start.dx, start.dy);
     path.quadraticBezierTo(curveControl.dx, curveControl.dy, topOfHead.dx, topOfHead.dy);
-    path.quadraticBezierTo(center.dx + radius * 0.4, center.dy - radius * 0.8, strikeStart.dx, strikeStart.dy);
+    path.quadraticBezierTo(center.dx - radius * 0.4, center.dy - radius * 0.8, strikeStart.dx, strikeStart.dy);
     path.lineTo(strikeEnd.dx, strikeEnd.dy);
     canvas.drawPath(path, pathPaint);
 
@@ -199,7 +199,7 @@ class _KaliAnglePainter extends CustomPainter {
     } else if (progress < 0.6) {
       // Second curve segment (back of head to strike start)
       final t = (progress - 0.3) / 0.3;
-      final ctrl = Offset(center.dx + radius * 0.4, center.dy - radius * 0.8);
+      final ctrl = Offset(center.dx - radius * 0.4, center.dy - radius * 0.8);
       final x = math.pow(1 - t, 2) * topOfHead.dx + 2 * (1 - t) * t * ctrl.dx + math.pow(t, 2) * strikeStart.dx;
       final y = math.pow(1 - t, 2) * topOfHead.dy + 2 * (1 - t) * t * ctrl.dy + math.pow(t, 2) * strikeStart.dy;
       currentPos = Offset(x, y);
