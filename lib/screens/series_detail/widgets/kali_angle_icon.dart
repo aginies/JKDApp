@@ -177,7 +177,7 @@ class _KaliAnglePainter extends CustomPainter {
     final path = Path();
     path.moveTo(start.dx, start.dy);
     path.lineTo(endLine.dx, endLine.dy);
-    path.addArc(rect, math.pi, 2 * math.pi); // CCW circle
+    path.addArc(rect, math.pi, -2 * math.pi); // CCW circle
     canvas.drawPath(path, pathPaint);
     
     // Arrow on top of the line pointing up
@@ -197,7 +197,7 @@ class _KaliAnglePainter extends CustomPainter {
     } else {
       // Second part: CCW Circle (0.0 to 1.0)
       final t = (progress - 0.5) / 0.5;
-      final angle = math.pi + (2 * math.pi * t);
+      final angle = math.pi - (2 * math.pi * t);
       currentPos = Offset(
         circleCenter.dx + circleRadius * math.cos(angle),
         circleCenter.dy + circleRadius * math.sin(angle)
