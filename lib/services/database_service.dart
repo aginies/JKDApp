@@ -70,7 +70,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 22, // Increment version to force glossary refresh
+      version: 23, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -140,8 +140,8 @@ class DatabaseService {
       }
     }
 
-    if (oldVersion < 22) {
-      LoggingService.info('Refreshing glossary for version 22');
+    if (oldVersion < 23) {
+      LoggingService.info('Refreshing glossary for version 23');
       try {
         await db.execute('DELETE FROM glossary');
         await _seedGlossary(db);
@@ -152,7 +152,7 @@ class DatabaseService {
       }
     }
 
-    if (oldVersion >= 22) {
+    if (oldVersion >= 23) {
       LoggingService.warn(
         'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
       );

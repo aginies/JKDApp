@@ -349,7 +349,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                           if (angle != null) {
                             return KaliAngleIcon(
                               angle: angle,
-                              size: 24,
+                              size: 32, // Increased from 24
                               color: CategoryUtils.getCategoryColor(category),
                               showCircle: false,
                             );
@@ -357,14 +357,14 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                           return Icon(
                             CategoryUtils.getCategoryIcon(category),
                             color: CategoryUtils.getCategoryColor(category),
-                            size: 24,
+                            size: 32, // Increased from 24
                           );
                         },
                       )
                     : Icon(
                         CategoryUtils.getCategoryIcon(category),
                         color: CategoryUtils.getCategoryColor(category),
-                        size: 24,
+                        size: 32, // Increased from 24
                       ),
               ),
               const SizedBox(width: 16),

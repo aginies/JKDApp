@@ -657,10 +657,10 @@
     {
       "name": "Angle 10",
       "translations": {
-        "en": "Thrust High Right",
-        "fr": "Estoc Haut Droite"
+        "en": "Uppercut Right",
+        "fr": "Uppercut Droit"
       },
-      "possible_level": "H",
+      "possible_level": "H,M",
       "removal": {}
     },
     {
@@ -675,10 +675,10 @@
     {
       "name": "Angle 12",
       "translations": {
-        "en": "Uppercut Right",
-        "fr": "Uppercut Droit"
+        "en": "Thrust High Right",
+        "fr": "Estoc Haut Droite"
       },
-      "possible_level": "H,M",
+      "possible_level": "H",
       "removal": {}
     }
   ],

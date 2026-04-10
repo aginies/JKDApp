@@ -304,7 +304,7 @@ class MoveListDisplayWidget {
                       padding: const EdgeInsets.only(right: 4.0),
                       child: KaliAngleIcon(
                         angle: sub.kaliAngle!,
-                        size: iconSize * 1.5, // Increased from 1.25
+                        size: iconSize * 1.8, // Increased from 1.5
                         color: MoveDisplayWidgets.getCategoryColor('kali'),
                       ),
                     )
@@ -628,7 +628,7 @@ class MoveListDisplayWidget {
                                                                   if ((sub.counterCategory == 'kali' || sub.counterCategory == 'angles') && sub.kaliAngle != null)
                                                                     KaliAngleIcon(
                                                                       angle: sub.kaliAngle!,
-                                                                      size: 36, // Increased from 28
+                                                                      size: 44, // Increased from 36
                                                                       color: MoveDisplayWidgets.getCategoryColor('kali'),
                                                                     )
                                                                   else
@@ -801,7 +801,7 @@ class MoveListDisplayWidget {
                                                 if ((moves[i].counterCategory == 'kali' || moves[i].counterCategory == 'angles') && moves[i].kaliAngle != null)
                                                   KaliAngleIcon(
                                                     angle: moves[i].kaliAngle!,
-                                                    size: 44, // Increased from 34
+                                                    size: 52, // Increased from 44
                                                     color: MoveDisplayWidgets.getCategoryColor('kali'),
                                                   )
                                                 else

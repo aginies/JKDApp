@@ -2372,7 +2372,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     if (angle != null) {
                       return KaliAngleIcon(
                         angle: angle,
-                        size: 22,
+                        size: 28, // Increased from 22
                         color: MoveDisplayWidgets.getCategoryColor(category),
                         showCircle: false,
                       );
@@ -2380,14 +2380,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     return Icon(
                       MoveDisplayWidgets.getCategoryIcon(category),
                       color: MoveDisplayWidgets.getCategoryColor(category),
-                      size: 22,
+                      size: 28, // Increased from 22
                     );
                   },
                 )
               : Icon(
                   MoveDisplayWidgets.getCategoryIcon(category),
                   color: MoveDisplayWidgets.getCategoryColor(category),
-                  size: 22,
+                  size: 28, // Increased from 22
                 ),
         ),
         title: Text(
