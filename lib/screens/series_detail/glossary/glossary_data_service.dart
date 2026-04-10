@@ -108,6 +108,7 @@ class GlossaryDataService {
   // Check if item should be expanded/highlighted
   static bool shouldExpandItem(
     int id,
+    String name,
     String category,
     PickerState pickerState,
     bool isCounterMode,
@@ -122,10 +123,10 @@ class GlossaryDataService {
       final editingMove = currentCombo[pickerState.editingComboItemIndex!];
 
       if (pickerState.isEditingCounter) {
-        return editingMove.counterName == category &&
+        return editingMove.counterName == name &&
             editingMove.counterCategory == category;
       } else {
-        return editingMove.name == category && editingMove.category == category;
+        return editingMove.name == name && editingMove.category == category;
       }
     }
 

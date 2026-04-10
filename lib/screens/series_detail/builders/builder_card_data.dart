@@ -7,6 +7,8 @@ class BuilderCardData {
   final String level;
   final bool isFeint;
   final String? specialAction;
+  final int? kaliAngle;
+  final String? strikeType;
   final List<BuilderCardData> subMoves; // For simultaneous moves (+)
   final List<BuilderCardData> chain; // For sequential moves (->)
 
@@ -31,6 +33,8 @@ class BuilderCardData {
     this.level = '',
     this.isFeint = false,
     this.specialAction,
+    this.kaliAngle,
+    this.strikeType,
     this.subMoves = const [],
     this.chain = const [],
     this.counterName,
@@ -61,6 +65,8 @@ class BuilderCardData {
     String? level,
     bool? isFeint,
     String? specialAction,
+    int? kaliAngle,
+    String? strikeType,
     List<BuilderCardData>? subMoves,
     List<BuilderCardData>? chain,
     Object? counterName = _sentinel,
@@ -80,6 +86,8 @@ class BuilderCardData {
       level: level ?? this.level,
       isFeint: isFeint ?? this.isFeint,
       specialAction: specialAction ?? this.specialAction,
+      kaliAngle: kaliAngle ?? this.kaliAngle,
+      strikeType: strikeType ?? this.strikeType,
       subMoves: subMoves ?? this.subMoves,
       chain: chain ?? this.chain,
       counterName: counterName == _sentinel

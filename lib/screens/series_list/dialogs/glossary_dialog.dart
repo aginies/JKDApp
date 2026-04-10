@@ -9,6 +9,7 @@ import '../../../services/media_service.dart';
 import '../../../utils/category_utils.dart';
 import '../../../utils/translation_utils.dart';
 import '../../../widgets/empty_state_illustration.dart';
+import '../../series_detail/widgets/kali_angle_icon.dart';
 
 class GlossaryDialog extends StatefulWidget {
   final String lang;
@@ -58,7 +59,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: DefaultTabController(
-        length: 8,
+        length: 9,
         child: Column(
           children: [
             Container(
@@ -196,6 +197,13 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                       ),
                       Tab(
                         text: LocalizationService.translate(
+                          'angles',
+                          widget.lang,
+                        ),
+                        icon: Icon(CategoryUtils.getCategoryIcon('angles')),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate(
                           'general',
                           widget.lang,
                         ),
@@ -222,6 +230,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         _buildGlossaryList('trapping'),
                         _buildGlossaryList('move'),
                         _buildGlossaryList('kali'),
+                        _buildGlossaryList('angles'),
                         _buildGlossaryList('general'),
                         _buildGlossaryList('other'),
                       ],
@@ -327,11 +336,36 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                     width: 0.5,
                   ),
                 ),
-                child: Icon(
-                  CategoryUtils.getCategoryIcon(category),
-                  color: CategoryUtils.getCategoryColor(category),
-                  size: 24,
-                ),
+                child: (category == 'angles')
+                    ? Builder(
+                        builder: (context) {
+                          final name = item['name'].toString();
+                          final match =
+                              RegExp(r'Angle\s+(\d+)').firstMatch(name);
+                          final angle =
+                              match != null
+                                  ? int.tryParse(match.group(1) ?? '')
+                                  : null;
+                          if (angle != null) {
+                            return KaliAngleIcon(
+                              angle: angle,
+                              size: 24,
+                              color: CategoryUtils.getCategoryColor(category),
+                              showCircle: false,
+                            );
+                          }
+                          return Icon(
+                            CategoryUtils.getCategoryIcon(category),
+                            color: CategoryUtils.getCategoryColor(category),
+                            size: 24,
+                          );
+                        },
+                      )
+                    : Icon(
+                        CategoryUtils.getCategoryIcon(category),
+                        color: CategoryUtils.getCategoryColor(category),
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(

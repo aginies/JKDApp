@@ -17,6 +17,8 @@ class CategoryUtils {
         return Icons.directions_run;
       case 'kali':
         return Icons.change_history;
+      case 'angles':
+        return Icons.straighten;
       case 'text':
         return Icons.text_fields;
       case 'other':
@@ -44,6 +46,8 @@ class CategoryUtils {
       case 'move':
         return Colors.pink;
       case 'kali':
+        return Colors.brown;
+      case 'angles':
         return Colors.brown;
       case 'text':
         return Colors.teal;

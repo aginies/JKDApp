@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
@@ -272,7 +273,16 @@ class GlossaryUIBuilder {
     final side = pickerState?.selectedSides[id] ?? '';
     final isFeint = pickerState?.selectedFeints[id] ?? false;
     final specialAction = pickerState?.selectedSpecials[id];
-    final isExpanded = pickerState?.pendingActionItemId == id;
+    
+    final isExpanded = GlossaryDataService.shouldExpandItem(
+      id,
+      item['name'],
+      category,
+      pickerState!,
+      isCounterMode,
+      (currentCombo ?? []).cast<Move>(),
+      attackMove: attackMove,
+    );
 
     // Parse translations
     final translations = GlossaryDataService.parseTranslations(
@@ -301,11 +311,11 @@ class GlossaryUIBuilder {
           InkWell(
             onTap: () {
               setState(() {
-                if (pickerState?.pendingActionItemId == id) {
-                  pickerState?.setPendingActionItem(null);
+                if (pickerState.pendingActionItemId == id) {
+                  pickerState.setPendingActionItem(null);
                 } else {
-                  pickerState?.setPendingActionItem(id);
-                  pickerState?.setPendingLevel('');
+                  pickerState.setPendingActionItem(id);
+                  pickerState.setPendingLevel('');
                 }
                 onActivateGlossaryItem?.call();
               });
@@ -388,8 +398,8 @@ class GlossaryUIBuilder {
               ),
               child: GlossaryPickerWidgets.workflowButtons(
                 context,
-                (pickerState?.editingComboItemIndex != null &&
-                        !(pickerState?.isEditingCounter ?? false))
+                (pickerState.editingComboItemIndex != null &&
+                        !pickerState.isEditingCounter)
                     ? LocalizationService.translate('update_item', lang)
                     : (isCounterMode
                           ? LocalizationService.translate('add', lang)
@@ -397,15 +407,15 @@ class GlossaryUIBuilder {
                 isCounterMode,
                 // isEditing: hide +/→ only when editing the attack side,
                 // not when editing a counter (counter mode still needs +/→)
-                pickerState?.editingComboItemIndex != null &&
-                    !(pickerState?.isEditingCounter ?? false),
+                pickerState.editingComboItemIndex != null &&
+                    !pickerState.isEditingCounter,
                 lang: lang,
                 onNext: () {
                   debugPrint('GlossaryUIBuilder: onNext clicked');
-                  final currentLevel = pickerState?.pendingLevel ?? '';
-                  final currentSide = pickerState?.selectedSides[id] ?? '';
-                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
-                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  final currentLevel = pickerState.pendingLevel ?? '';
+                  final currentSide = pickerState.selectedSides[id] ?? '';
+                  final currentFeint = pickerState.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState.selectedSpecials[id];
                   onNext?.call(
                     item,
                     category,
@@ -418,10 +428,10 @@ class GlossaryUIBuilder {
                 },
                 onSimultaneous: () {
                   debugPrint('GlossaryUIBuilder: onSimultaneous (+) clicked');
-                  final currentLevel = pickerState?.pendingLevel ?? '';
-                  final currentSide = pickerState?.selectedSides[id] ?? '';
-                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
-                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  final currentLevel = pickerState.pendingLevel ?? '';
+                  final currentSide = pickerState.selectedSides[id] ?? '';
+                  final currentFeint = pickerState.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState.selectedSpecials[id];
                   onSimultaneous?.call(
                     item,
                     category,
@@ -434,10 +444,10 @@ class GlossaryUIBuilder {
                 },
                 onChain: () {
                   debugPrint('GlossaryUIBuilder: onChain clicked');
-                  final currentLevel = pickerState?.pendingLevel ?? '';
-                  final currentSide = pickerState?.selectedSides[id] ?? '';
-                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
-                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  final currentLevel = pickerState.pendingLevel ?? '';
+                  final currentSide = pickerState.selectedSides[id] ?? '';
+                  final currentFeint = pickerState.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState.selectedSpecials[id];
                   onChain?.call(
                     item,
                     category,
@@ -450,10 +460,10 @@ class GlossaryUIBuilder {
                 },
                 onAnswer: () {
                   debugPrint('GlossaryUIBuilder: onAnswer clicked');
-                  final currentLevel = pickerState?.pendingLevel ?? '';
-                  final currentSide = pickerState?.selectedSides[id] ?? '';
-                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
-                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  final currentLevel = pickerState.pendingLevel ?? '';
+                  final currentSide = pickerState.selectedSides[id] ?? '';
+                  final currentFeint = pickerState.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState.selectedSpecials[id];
                   onAnswer?.call(
                     item,
                     category,
@@ -466,10 +476,10 @@ class GlossaryUIBuilder {
                 },
                 onFinish: () {
                   debugPrint('GlossaryUIBuilder: onFinish clicked');
-                  final currentLevel = pickerState?.pendingLevel ?? '';
-                  final currentSide = pickerState?.selectedSides[id] ?? '';
-                  final currentFeint = pickerState?.selectedFeints[id] ?? false;
-                  final currentSpecial = pickerState?.selectedSpecials[id];
+                  final currentLevel = pickerState.pendingLevel ?? '';
+                  final currentSide = pickerState.selectedSides[id] ?? '';
+                  final currentFeint = pickerState.selectedFeints[id] ?? false;
+                  final currentSpecial = pickerState.selectedSpecials[id];
                   onFinish?.call(
                     item,
                     category,
@@ -719,8 +729,8 @@ class GlossaryUIBuilder {
         ),
       );
 
-      // Feint filter and special action for punches/kicks
-      if (category == 'punch' || category == 'kick') {
+      // Feint filter and special action for punches/kicks/angles
+      if (category == 'punch' || category == 'kick' || category == 'angles') {
         controls.add(
           FilterChip(
             label: Text(

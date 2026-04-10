@@ -13,6 +13,7 @@ import '../../../services/usage_statistics_service.dart';
 import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
 import 'builder_card_data.dart';
+import '../widgets/kali_angle_icon.dart';
 
 // Improvement #1: single enum replaces 5 booleans — enforces mutual exclusivity.
 enum _BuilderMode {
@@ -290,6 +291,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       level: m.level,
       isFeint: m.isFeint,
       specialAction: m.specialAction,
+      kaliAngle: m.kaliAngle,
+      strikeType: m.strikeType,
       glossaryId: m.glossaryId,
       counterName: m.counterName,
       counterCategory: m.counterCategory,
@@ -629,10 +632,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildBottomToolbar(String lang) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
           _toolbarButton(
             LocalizationService.translate('left', lang),
             Icons.arrow_back,
@@ -676,8 +682,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  ],
+);
+}
 
   Widget _toolbarButton(
     String label,
@@ -712,8 +720,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          minimumSize: const Size(0, 32),
           backgroundColor: bgColor,
           side: isDark
               ? BorderSide(color: color.withValues(alpha: 0.4), width: 1)
@@ -724,13 +732,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (icon != null) Icon(icon, size: 20, color: fgColor),
-                if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
+                if (icon != null) Icon(icon, size: 16, color: fgColor),
+                if (icon != null && label.isNotEmpty) const SizedBox(width: 2),
                 if (label.isNotEmpty)
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: fgColor,
                     ),
@@ -924,11 +932,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          MoveDisplayWidgets.getCategoryIcon(data.category),
-                          size: 20,
-                          color: color,
-                        ),
+                        if ((data.category == 'kali' || data.category == 'angles') && data.kaliAngle != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: KaliAngleIcon(
+                              angle: data.kaliAngle!,
+                              size: 24,
+                              color: MoveDisplayWidgets.getCategoryColor('kali'),
+                            ),
+                          )
+                        else
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(data.category),
+                            size: 20,
+                            color: color,
+                          ),
                         const SizedBox(height: 4),
                         Text(
                           data.name,
@@ -1140,14 +1158,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                MoveDisplayWidgets.getCategoryIcon(sm.category),
-                size: 18,
-                color: color,
-              ),
+              if ((sm.category == 'kali' || sm.category == 'angles') && sm.kaliAngle != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2.0),
+                  child: KaliAngleIcon(
+                    angle: sm.kaliAngle!,
+                    size: 20,
+                    color: MoveDisplayWidgets.getCategoryColor('kali'),
+                  ),
+                )              else
+                Icon(
+                  MoveDisplayWidgets.getCategoryIcon(sm.category),
+                  size: 18,
+                  color: color,
+                ),
               Text(
-                sm.name,
-                style: TextStyle(
+                sm.name,                style: TextStyle(
                   fontSize: 14,
                   fontWeight: theme.brightness == Brightness.dark
                       ? FontWeight.w600
@@ -1318,6 +1344,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
           const SizedBox(height: 2),
+          if ((data.counterCategory == 'kali' || data.counterCategory == 'angles') && data.kaliAngle != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: KaliAngleIcon(
+                angle: data.kaliAngle!,
+                size: 20,
+                color: MoveDisplayWidgets.getCategoryColor('kali'),
+              ),
+            ),
           Text(
             data.counterName!,
             style: TextStyle(
@@ -1726,6 +1761,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       level: data.level,
       isFeint: data.isFeint,
       specialAction: data.specialAction,
+      kaliAngle: data.kaliAngle,
+      strikeType: data.strikeType,
       glossaryId: data.glossaryId,
       counterName: data.counterName,
       counterCategory: data.counterCategory,
@@ -1837,6 +1874,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? side,
     String? level,
     bool toggleFeint,
+    int? kaliAngle,
+    String? strikeType,
   ) {
     if (counterPath.isEmpty) {
       // BASE CASE: We reached the target sub-item. Toggle its properties.
@@ -1852,6 +1891,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side: finalSide,
         level: finalLevel,
         isFeint: toggleFeint ? !root.isFeint : root.isFeint,
+        kaliAngle: kaliAngle ?? root.kaliAngle,
+        strikeType: strikeType ?? root.strikeType,
       );
     }
 
@@ -1867,6 +1908,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(chain: newList);
     } else if (root.isCombo && idx < root.subMoves.length) {
@@ -1877,6 +1920,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(subMoves: newList);
     } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
@@ -1887,6 +1932,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(counterSubMoves: newList);
     } else if (root.hasCounterChain && idx < root.counterChain.length) {
@@ -1897,6 +1944,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(counterChain: newList);
     }
@@ -1909,6 +1958,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? level,
     bool toggleFeint = false,
     String? specialAction,
+    int? kaliAngle,
+    String? strikeType,
   }) {
     if (_selectedPath == null) return;
     _saveHistory();
@@ -1923,6 +1974,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             side,
             level,
             toggleFeint,
+            kaliAngle,
+            strikeType,
           );
         } else if (_isCounterSelected) {
           // Simple single counter toggle logic
@@ -1940,6 +1993,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterIsFeint: toggleFeint
                 ? !item.counterIsFeint
                 : item.counterIsFeint,
+            kaliAngle: kaliAngle ?? item.kaliAngle,
+            strikeType: strikeType ?? item.strikeType,
           );
         } else {
           // Top-level attacker toggle logic
@@ -1956,6 +2011,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             level: finalLevel,
             isFeint: toggleFeint ? !item.isFeint : item.isFeint,
             specialAction: specialAction ?? item.specialAction,
+            kaliAngle: kaliAngle ?? item.kaliAngle,
+            strikeType: strikeType ?? item.strikeType,
           );
         }
       });
@@ -2143,6 +2200,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             _buildDualGlossaryTab('kali', null, sc),
       },
       {
+        'id': 'angles',
+        'label': LocalizationService.translate('angles', lang),
+        'cats': ['angles'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('angles', null, sc),
+      },
+      {
         'id': 'text',
         'label': LocalizationService.translate('text', lang),
         'cats': ['text'],
@@ -2297,11 +2361,34 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               width: 0.5,
             ),
           ),
-          child: Icon(
-            MoveDisplayWidgets.getCategoryIcon(category),
-            color: MoveDisplayWidgets.getCategoryColor(category),
-            size: 22,
-          ),
+          child: (category == 'angles')
+              ? Builder(
+                  builder: (context) {
+                    final name = item['name'].toString();
+                    final match = RegExp(r'Angle\s+(\d+)').firstMatch(name);
+                    final angle = match != null
+                        ? int.tryParse(match.group(1) ?? '')
+                        : null;
+                    if (angle != null) {
+                      return KaliAngleIcon(
+                        angle: angle,
+                        size: 22,
+                        color: MoveDisplayWidgets.getCategoryColor(category),
+                        showCircle: false,
+                      );
+                    }
+                    return Icon(
+                      MoveDisplayWidgets.getCategoryIcon(category),
+                      color: MoveDisplayWidgets.getCategoryColor(category),
+                      size: 22,
+                    );
+                  },
+                )
+              : Icon(
+                  MoveDisplayWidgets.getCategoryIcon(category),
+                  color: MoveDisplayWidgets.getCategoryColor(category),
+                  size: 22,
+                ),
         ),
         title: Text(
           item['name'],
@@ -2321,10 +2408,20 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               )
             : null,
         onTap: () {
+          int? angle;
+          if (category == 'kali' || category == 'angles') {
+            final name = item['name'].toString();
+            final match = RegExp(r'Angle\s+(\d+)').firstMatch(name);
+            if (match != null) {
+              angle = int.tryParse(match.group(1) ?? '');
+            }
+          }
+
           final newItem = BuilderCardData(
             name: item['name'],
             category: category,
             glossaryId: item['id'],
+            kaliAngle: angle,
           );
           _onAddItem(newItem);
           Navigator.pop(context);

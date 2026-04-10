@@ -9,6 +9,7 @@ import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
 import '../utils/translation_utils.dart';
+import '../screens/series_detail/glossary/glossary_data_service.dart';
 import 'logging_service.dart';
 
 class DatabaseService {
@@ -69,7 +70,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 17, // Increment version for is_from_cloud column
+      version: 22, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -125,7 +126,33 @@ class DatabaseService {
       }
     }
 
-    if (oldVersion >= 17) {
+    if (oldVersion < 18) {
+      LoggingService.info('Adding Kali fields to series_moves table');
+      try {
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN kali_angle INTEGER',
+        );
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN strike_type TEXT',
+        );
+      } catch (e) {
+        LoggingService.error('Error adding Kali columns', e);
+      }
+    }
+
+    if (oldVersion < 22) {
+      LoggingService.info('Refreshing glossary for version 22');
+      try {
+        await db.execute('DELETE FROM glossary');
+        await _seedGlossary(db);
+        // Clear runtime cache to ensure UI picks up new data
+        GlossaryDataService.clearAllCache();
+      } catch (e) {
+        LoggingService.error('Error refreshing glossary', e);
+      }
+    }
+
+    if (oldVersion >= 22) {
       LoggingService.warn(
         'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
       );
@@ -202,6 +229,8 @@ class DatabaseService {
         sub_moves_json TEXT, 
         chain_json TEXT, 
         position INTEGER, 
+        kali_angle INTEGER,
+        strike_type TEXT,
         FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
@@ -594,7 +623,7 @@ class DatabaseService {
         m.side, m.level, m.sub_letter, m.is_feint, m.special_action, m.translations, m.repetitions, 
         m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
         m.counter_translations, m.counter_sub_moves_json, m.counter_chain_json,
-        m.sub_moves_json, m.chain_json, m.position
+        m.sub_moves_json, m.chain_json, m.position, m.kali_angle, m.strike_type
       FROM series s
       LEFT JOIN series_moves m ON s.id = m.series_id
       ORDER BY s.id, m.position
@@ -643,6 +672,8 @@ class DatabaseService {
             ),
             counterSubMoves: _parseSubMoves(row['counter_sub_moves_json']),
             counterChain: _parseChain(row['counter_chain_json']),
+            kaliAngle: row['kali_angle'] as int?,
+            strikeType: row['strike_type'] as String?,
             subMoves: _parseSubMoves(row['sub_moves_json']),
             chain: _parseChain(row['chain_json']),
           ),
