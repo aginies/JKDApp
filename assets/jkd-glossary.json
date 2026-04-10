@@ -680,6 +680,15 @@
       },
       "possible_level": "H",
       "removal": {}
+    },
+    {
+      "name": "Angle 13",
+      "translations": {
+        "en": "Abanico",
+        "fr": "Abanico"
+      },
+      "possible_level": "H",
+      "removal": {}
     }
   ],
   "packs": [
@@ -1850,12 +1859,21 @@
       },
       "possible_level": "H,M,L",
       "removal": {}
+    },
+    {
+      "name": "Abanico",
+      "translations": {
+        "en": "Fan strike (over head)",
+        "fr": "Frappe en éventail (dessus tête)"
+      },
+      "possible_level": "H",
+      "removal": {}
     }
   ],
   "metadata": {
     "Author": "Antoine Giniès",
-    "Version": "1.9.1+1",
+    "Version": "2.3.0",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-10"
   }
 }

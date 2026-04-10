@@ -155,7 +155,31 @@ class _KaliAnglePainter extends CustomPainter {
       case 12: // Was Uppercut R, now Thrust High Right
         _drawAnimatedLine(canvas, center, radius, 330, 150, paint, dotPaint);
         break;
+      case 13: // Abanico (Fan strike) - 180 degree arc
+        _drawAnimatedArc(canvas, center, radius, 180, 0, paint, dotPaint);
+        break;
     }
+  }
+
+  void _drawAnimatedArc(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
+    final startRad = startAngleDeg * math.pi / 180;
+    final sweepRad = (endAngleDeg - startAngleDeg) * math.pi / 180;
+    
+    final rect = Rect.fromCircle(center: center, radius: radius * 0.85);
+    
+    // Draw background arc
+    canvas.drawArc(rect, startRad, sweepRad, false, pathPaint);
+    
+    // Calculate looping progress (0 -> 1 -> 0)
+    final loopProgress = 1.0 - (progress * 2 - 1).abs();
+
+    // Draw tracking dot
+    final currentRad = startRad + (sweepRad * loopProgress);
+    final currentPos = Offset(
+      center.dx + radius * 0.85 * math.cos(currentRad),
+      center.dy + radius * 0.85 * math.sin(currentRad)
+    );
+    canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
   void _drawAnimatedLine(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
