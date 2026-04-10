@@ -165,12 +165,12 @@ class _KaliAnglePainter extends CustomPainter {
   }
 
   void _drawAnimatedPugno(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
-    final start = Offset(center.dx, center.dy - radius * 0.7);
-    final endLine = Offset(center.dx, center.dy + radius * 0.1);
+    final start = Offset(center.dx, center.dy - radius * 0.85);
+    final endLine = Offset(center.dx, center.dy + radius * 0.25);
     
     // Circle at the bottom of the line
     final circleRadius = radius * 0.25;
-    final circleCenter = Offset(center.dx + circleRadius, center.dy + radius * 0.1);
+    final circleCenter = Offset(center.dx + circleRadius, center.dy + radius * 0.25);
     final rect = Rect.fromCircle(center: circleCenter, radius: circleRadius);
     
     // Draw background path
