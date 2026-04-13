@@ -3,6 +3,7 @@ package org.ginies.jkd.jkd_app
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.ConnectIQ.IQConnectType
 import com.garmin.android.connectiq.IQApp
@@ -32,7 +33,18 @@ class GarminPlugin(private val context: Context) :
             connectIQ?.initialize(context, false, object : ConnectIQ.ConnectIQListener {
                 override fun onSdkReady() {
                     pairedDevices = connectIQ?.knownDevices ?: emptyList()
+                    Log.d("GarminPlugin", "onSdkReady: ${pairedDevices.size} paired devices")
                     sendEvent(mapOf("type" to "sdkReady", "deviceCount" to pairedDevices.size))
+                    // Push current status for every known device so the Flutter side
+                    // gets the real connection state without waiting for a change event.
+                    for (device in pairedDevices) {
+                        Log.d("GarminPlugin", "Initial device status: ${device.friendlyName} → ${device.status.name}")
+                        sendEvent(mapOf(
+                            "type" to "deviceStatus",
+                            "deviceId" to device.deviceIdentifier,
+                            "status" to device.status.name
+                        ))
+                    }
                     registerForMessages()
                 }
 
@@ -54,8 +66,16 @@ class GarminPlugin(private val context: Context) :
         val watchApp = IQApp(WATCH_APP_UUID)
         for (device in pairedDevices) {
             try {
-                ciq.registerForAppEvents(device, watchApp) { _, _, messageData, status ->
+                ciq.registerForAppEvents(device, watchApp) { dev, _, messageData, status ->
                     if (status == ConnectIQ.IQMessageStatus.SUCCESS && messageData != null) {
+                        // Receiving a message is proof the device is connected.
+                        // The SDK often reports UNKNOWN in WIRELESS mode, so infer
+                        // connection status from actual message activity.
+                        sendEvent(mapOf(
+                            "type" to "deviceStatus",
+                            "deviceId" to dev.deviceIdentifier,
+                            "status" to "CONNECTED"
+                        ))
                         for (item in messageData) {
                             if (item is Map<*, *>) {
                                 val data = item.entries.associate { it.key.toString() to it.value }
@@ -65,6 +85,7 @@ class GarminPlugin(private val context: Context) :
                     }
                 }
                 ciq.registerForDeviceEvents(device) { dev, status ->
+                    Log.d("GarminPlugin", "deviceStatus event: ${dev.friendlyName} → ${status.name}")
                     sendEvent(mapOf(
                         "type" to "deviceStatus",
                         "deviceId" to dev.deviceIdentifier,

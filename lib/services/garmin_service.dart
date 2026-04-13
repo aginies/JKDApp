@@ -76,6 +76,9 @@ class GarminService {
     _language = language;
     _tts.setSpeechRate(_speechRate);
 
+    // Reset so the first deviceStatus event after (re-)init always propagates.
+    _isConnected = false;
+
     _eventSubscription?.cancel();
     try {
       _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
@@ -134,10 +137,13 @@ class GarminService {
       case 'deviceStatus':
         final status = event['status'] as String?;
         final connected = status == 'CONNECTED';
+        LoggingService.log(
+          'Garmin deviceStatus event: status=$status connected=$connected _isConnected=$_isConnected',
+        );
         if (connected != _isConnected) {
           _isConnected = connected;
           _connectionController.add(_isConnected);
-          LoggingService.log('Garmin device status: $status');
+          LoggingService.log('Garmin connection changed → $connected');
         }
         break;
 
@@ -177,6 +183,7 @@ class GarminService {
   }
 
   bool _isSpeaking = false;
+  Timer? _speakingWatchdog;
 
   /// Speaks each fragment with a short beep between them, then acks the watch.
   Future<void> _speakCombo(String raw) async {
@@ -185,6 +192,17 @@ class GarminService {
       return;
     }
     _isSpeaking = true;
+
+    // Safety watchdog: force-reset if somehow stuck (e.g. audioplayer hang).
+    // 45 s is well above the 10 s/fragment timeout × worst-case fragment count.
+    _speakingWatchdog?.cancel();
+    _speakingWatchdog = Timer(const Duration(seconds: 45), () {
+      if (_isSpeaking) {
+        LoggingService.log('Garmin TTS watchdog: force-reset after 45 s');
+        _isSpeaking = false;
+        _sendTtsComplete();
+      }
+    });
 
     try {
       final fragments = _prepareFragments(raw);
@@ -204,6 +222,8 @@ class GarminService {
       // Still notify watch on error to avoid getting stuck
       _sendTtsComplete();
     } finally {
+      _speakingWatchdog?.cancel();
+      _speakingWatchdog = null;
       _isSpeaking = false;
     }
   }
@@ -253,7 +273,14 @@ class GarminService {
 
   Future<void> _playBeep() async {
     try {
-      await _beepPlayer.play(BytesSource(_beepWav));
+      await _beepPlayer
+          .play(BytesSource(_beepWav))
+          .timeout(
+            const Duration(seconds: 3),
+            onTimeout: () {
+              LoggingService.log('Garmin _playBeep timeout');
+            },
+          );
       await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       LoggingService.log('Garmin _playBeep error: $e');
@@ -338,6 +365,7 @@ class GarminService {
   }
 
   void dispose() {
+    _speakingWatchdog?.cancel();
     _eventSubscription?.cancel();
     _connectionController.close();
     _coachingVoiceController.close();

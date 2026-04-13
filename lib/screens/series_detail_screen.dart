@@ -18,6 +18,7 @@ import 'series_detail/services/training_management_service.dart'
     as training_service;
 import 'series_detail/mixins/series_detail_utils.dart';
 import 'series_detail/mixins/series_detail_dialogs_mixin.dart';
+import 'series_detail/mixins/series_detail_cloud_mixin.dart';
 import 'series_detail/controllers/training_controller.dart';
 import 'series_detail/widgets/marquee_widget.dart';
 import 'series_detail/widgets/move_list_display_widget.dart';
@@ -36,7 +37,7 @@ class SeriesDetailScreen extends StatefulWidget {
 }
 
 class _SeriesDetailScreenState extends State<SeriesDetailScreen>
-    with SeriesDetailUtils, SeriesDetailDialogsMixin {
+    with SeriesDetailUtils, SeriesDetailDialogsMixin, SeriesDetailCloudMixin {
   final _titleController = TextEditingController();
   String _selectedCategory = 'Jun Fan Gung Fu';
   String _selectedType = 'Attack';
@@ -481,11 +482,27 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: MarqueeWidget(
-                      child: Text(
-                        widget.series == null
-                            ? LocalizationService.translate('new_series', lang)
-                            : widget.series!.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.series == null
+                                ? LocalizationService.translate(
+                                    'new_series',
+                                    lang,
+                                  )
+                                : widget.series!.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (widget.series?.isFromCloud ?? false) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.cloud,
+                              size: 18,
+                              color: Colors.white70,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
@@ -532,6 +549,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                           fileName:
                               'jkd-series-${widget.series!.title.replaceAll(' ', '-').toLowerCase()}.json',
                         );
+                      } else if (value == 'cloud_upload') {
+                        showCloudUploadDialog();
                       }
                     },
                     itemBuilder: (context) {
@@ -571,6 +590,17 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                             leading: const Icon(Icons.share),
                             title: Text(
                               LocalizationService.translate('share_json', lang),
+                            ),
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'cloud_upload',
+                          child: ListTile(
+                            leading: const Icon(Icons.cloud_upload),
+                            title: Text(
+                              lang == 'fr' ? 'Upload Cloud' : 'Cloud Upload',
                             ),
                             dense: true,
                             contentPadding: EdgeInsets.zero,

@@ -123,10 +123,12 @@ class MoveDisplayWidgets {
         return 4;
       case 'kali':
         return 5;
-      case 'other':
+      case 'angles':
         return 6;
-      case 'text':
+      case 'other':
         return 7;
+      case 'text':
+        return 8;
       default:
         return -1;
     }

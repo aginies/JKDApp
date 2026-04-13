@@ -1,0 +1,17 @@
+# Secure the data directory
+# Prevent directory listing
+Options -Indexes
+
+# Allow access to JSON files for public download
+<Files "*.json">
+    Require all granted
+</Files>
+
+# Ensure PHP scripts cannot be executed if uploaded
+<Files "*.php">
+    Require all denied
+</Files>
+
+RemoveHandler .php .phtml .php3
+RemoveType .php .phtml .php3
+php_flag engine off

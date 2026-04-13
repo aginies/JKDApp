@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,12 +10,15 @@ import '../models/move.dart';
 import '../models/search_result.dart';
 import '../models/user_program_progress.dart';
 import '../models/training_program.dart';
+import '../models/custom_kali_angle.dart';
+import '../models/kali_angle_elements.dart';
 import '../services/database_service.dart';
 import '../services/garmin_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
 import '../services/training_program_service.dart';
 import '../services/usage_statistics_service.dart';
+import '../services/custom_angles_service.dart';
 import '../utils/translation_utils.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
@@ -52,6 +56,7 @@ class SeriesProvider with ChangeNotifier {
   bool _garminCoachingVoiceActive = false;
   final GarminService _garminService = GarminService();
   bool _developerMode = false;
+  bool _manageSeriesMode = false;
   bool _showTranslation = true;
   String? _projectPath;
   double _speechRate = 0.50;
@@ -60,18 +65,22 @@ class SeriesProvider with ChangeNotifier {
   String? _galleryPath;
   bool _isLoading = false;
   int _autoAdvanceSec = 0; // 0 = manual, >0 = seconds
+  String _contributorName = '';
   UserProgramProgress? _activeProgram;
   TrainingProgram? _activeProgramDetails;
+  List<CustomKaliAngle> _customAngles = [];
 
   final DatabaseService _dbService = DatabaseService();
   final TrainingProgramService _programService = TrainingProgramService();
   final UsageStatisticsService _usageService = UsageStatisticsService();
+  final CustomAnglesService _customAnglesService = CustomAnglesService();
 
   List<JkdSeries> get series => _series;
   List<TrainingProgram> get allPrograms => _allPrograms;
   UserProgramProgress? get activeProgram => _activeProgram;
   TrainingProgram? get activeProgramDetails => _activeProgramDetails;
   List<Map<String, dynamic>> get glossary => _glossary;
+  List<CustomKaliAngle> get customAngles => _customAngles;
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
   Color get themeColor => _themeColor;
@@ -80,6 +89,7 @@ class SeriesProvider with ChangeNotifier {
   bool get garminConnected => _garminConnected;
   bool get garminCoachingVoiceActive => _garminCoachingVoiceActive;
   bool get developerMode => _developerMode;
+  bool get manageSeriesMode => _manageSeriesMode;
   bool get showTranslation => _showTranslation;
   String? get projectPath => _projectPath;
   double get speechRate => _speechRate;
@@ -88,6 +98,7 @@ class SeriesProvider with ChangeNotifier {
   String? get galleryPath => _galleryPath;
   bool get isLoading => _isLoading;
   int get autoAdvanceSec => _autoAdvanceSec;
+  String get contributorName => _contributorName;
 
   SeriesProvider() {
     // Run initialization in a microtask to allow the constructor to return immediately
@@ -101,9 +112,108 @@ class SeriesProvider with ChangeNotifier {
   Future<void> _init() async {
     _isLoading = true;
     notifyListeners();
-    LoggingService.log('Initializing SeriesProvider...');
+    LoggingService.info('Initializing SeriesProvider...');
     final prefs = await _dbService.getSettings();
+    await _loadSettings(prefs);
 
+    _garminService.initialize(
+      ttsEnabled: _garminCoachingTtsEnabled,
+      speechRate: _speechRate,
+      language: _language,
+    );
+    _garminService.onConnectionChanged.listen((v) {
+      _garminConnected = v;
+      notifyListeners();
+    });
+    _garminService.onCoachingVoiceChanged.listen((v) {
+      _garminCoachingVoiceActive = v;
+      notifyListeners();
+    });
+
+    await _initGalleryDirectories();
+    await loadGlossary();
+    await loadSeries();
+    await loadAllPrograms();
+    await loadActiveProgram();
+    await loadCustomAngles();
+  }
+
+  Future<void> loadCustomAngles() async {
+    _customAngles = await _customAnglesService.loadCustomAngles(
+      projectPath: _projectPath,
+    );
+    notifyListeners();
+  }
+
+  Future<void> addCustomAngle(
+    String name,
+    List<DrawingElement> elements,
+  ) async {
+    int nextId = 100;
+    if (_customAngles.isNotEmpty) {
+      nextId = _customAngles.map((a) => a.id).reduce(math.max) + 1;
+    }
+
+    final newAngle = CustomKaliAngle(
+      id: nextId,
+      name: name,
+      elements: elements,
+    );
+
+    _customAngles.add(newAngle);
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
+    notifyListeners();
+  }
+
+  Future<void> deleteCustomAngle(int id) async {
+    _customAngles.removeWhere((a) => a.id == id);
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateCustomAngle(CustomKaliAngle angle) async {
+    final index = _customAngles.indexWhere((a) => a.id == angle.id);
+    if (index != -1) {
+      _customAngles[index] = angle;
+      await _customAnglesService.saveCustomAngles(
+        _customAngles,
+        projectPath: _projectPath,
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<void> importCustomAngles(List<CustomKaliAngle> importedAngles) async {
+    int maxId = 99;
+    if (_customAngles.isNotEmpty) {
+      maxId = _customAngles.map((a) => a.id).reduce(math.max);
+    }
+
+    for (final imported in importedAngles) {
+      // Ensure no ID conflicts by assigning new IDs
+      maxId++;
+      final newAngle = CustomKaliAngle(
+        id: maxId,
+        name: imported.name,
+        elements: imported.elements,
+      );
+      _customAngles.add(newAngle);
+    }
+
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
+    notifyListeners();
+  }
+
+  Future<void> _loadSettings(Map<String, String> prefs) async {
     // Language
     if (prefs.containsKey('language')) {
       _language = prefs['language']!;
@@ -123,22 +233,10 @@ class SeriesProvider with ChangeNotifier {
     _garminCoachingTtsEnabled =
         (Platform.isAndroid || Platform.isIOS) &&
         (prefs['garmin_coaching_tts_enabled'] ?? '0') == '1';
-    _garminService.initialize(
-      ttsEnabled: _garminCoachingTtsEnabled,
-      speechRate: _speechRate,
-      language: _language,
-    );
-    _garminService.onConnectionChanged.listen((v) {
-      _garminConnected = v;
-      notifyListeners();
-    });
-    _garminService.onCoachingVoiceChanged.listen((v) {
-      _garminCoachingVoiceActive = v;
-      notifyListeners();
-    });
 
     // Developer Mode
     _developerMode = (prefs['developer_mode'] ?? '0') == '1';
+    _manageSeriesMode = (prefs['manage_series_mode'] ?? '0') == '1';
     _projectPath = prefs['project_path'];
 
     // Translation (Enabled by default)
@@ -175,18 +273,23 @@ class SeriesProvider with ChangeNotifier {
       _autoAdvanceSec = int.tryParse(prefs['auto_advance_sec']!) ?? 0;
     }
 
+    // Contributor Name
+    _contributorName = prefs['contributor_name'] ?? '';
+
     // Gallery
     _galleryPath = prefs['gallery_path'];
     if (_galleryPath == null) {
       final Directory appDocDir = await getApplicationDocumentsDirectory();
       _galleryPath = '${appDocDir.path}/jkd_gallery';
     }
+  }
 
-    await _initGalleryDirectories();
-    await loadGlossary();
-    await loadSeries();
-    await loadAllPrograms();
-    await loadActiveProgram();
+  /// Reloads all user settings from the database into memory.
+  /// Call this after a full restore to keep in-memory state consistent.
+  Future<void> reloadSettings() async {
+    final prefs = await _dbService.getSettings();
+    await _loadSettings(prefs);
+    notifyListeners();
   }
 
   Future<void> _initGalleryDirectories() async {
@@ -208,8 +311,14 @@ class SeriesProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error creating gallery directories: $e');
+      LoggingService.error('Error creating gallery directories', e);
     }
+  }
+
+  void setContributorName(String name) async {
+    _contributorName = name;
+    await _dbService.saveSetting('contributor_name', name);
+    notifyListeners();
   }
 
   void setLanguage(String lang) async {
@@ -247,7 +356,12 @@ class SeriesProvider with ChangeNotifier {
   void setDeveloperMode(bool enabled) async {
     _developerMode = enabled;
     await _dbService.saveSetting('developer_mode', enabled ? '1' : '0');
-    await loadSeries();
+    notifyListeners();
+  }
+
+  void setManageSeriesMode(bool enabled) async {
+    _manageSeriesMode = enabled;
+    await _dbService.saveSetting('manage_series_mode', enabled ? '1' : '0');
     notifyListeners();
   }
 
@@ -309,13 +423,13 @@ class SeriesProvider with ChangeNotifier {
   Future<void> loadSeries() async {
     _isLoading = true;
     notifyListeners();
-    LoggingService.log('Loading series from database...');
+    LoggingService.info('Loading series from database...');
     _series = await _dbService.getAllSeries();
     _filteredCache.clear(); // Clear cache AFTER updating _series
     await _usageService.refresh(_series);
     _isLoading = false;
     notifyListeners();
-    LoggingService.log('Loaded ${_series.length} series.');
+    LoggingService.info('Loaded ${_series.length} series.');
   }
 
   Future<void> loadAllPrograms() async {
@@ -423,11 +537,11 @@ class SeriesProvider with ChangeNotifier {
 
   Future<void> _exportToProjectJson(JkdSeries series) async {
     if (_projectPath == null) {
-      debugPrint('Sync aborted: Project path not set.');
+      LoggingService.warn('Sync aborted: Project path not set.');
       return;
     }
 
-    debugPrint('Starting project sync for series: "${series.title}"');
+    LoggingService.info('Starting project sync for series: "${series.title}"');
 
     for (final relPath in _seriesFiles) {
       final fullPath = _getProjectFilePath(relPath);
@@ -444,12 +558,14 @@ class SeriesProvider with ChangeNotifier {
                 .trim();
             final String appTitle = series.title.toLowerCase().trim();
 
-            debugPrint(
+            LoggingService.debug(
               '  - Comparing "[$jsonTitle]" with "[$appTitle]" in $relPath',
             );
 
             if (jsonTitle == appTitle) {
-              debugPrint('    MATCH FOUND! Updating series in $relPath');
+              LoggingService.info(
+                '    MATCH FOUND! Updating series in $relPath',
+              );
 
               // Use EXACT SAME logic as ExportService.exportToJson
               final Map<String, dynamic> seriesMap = series.toMap();
@@ -469,16 +585,16 @@ class SeriesProvider with ChangeNotifier {
 
             if (_isValidJson(jsonString)) {
               await file.writeAsString(jsonString);
-              debugPrint('SUCCESS: Project file $fullPath updated.');
+              LoggingService.info('SUCCESS: Project file $fullPath updated.');
               return; // Exit after first match
             }
           }
         } catch (e) {
-          debugPrint('ERROR processing $fullPath: $e');
+          LoggingService.error('ERROR processing $fullPath', e);
         }
       }
     }
-    debugPrint(
+    LoggingService.warn(
       'FAILURE: Series "${series.title}" not found in any project JSON file.',
     );
   }
@@ -557,23 +673,23 @@ class SeriesProvider with ChangeNotifier {
 
   /// Load the currently active training program (if any)
   Future<void> loadActiveProgram() async {
-    LoggingService.log('Loading active training program...');
+    LoggingService.info('Loading active training program...');
     try {
       _activeProgram = await _programService.getActiveProgress();
       if (_activeProgram != null) {
         _activeProgramDetails = await _programService.getProgramById(
           _activeProgram!.programId,
         );
-        LoggingService.log(
+        LoggingService.info(
           'Active program loaded: ${_activeProgramDetails?.title ?? "Unknown"}',
         );
       } else {
         _activeProgramDetails = null;
-        LoggingService.log('No active program found');
+        LoggingService.info('No active program found');
       }
       notifyListeners();
     } catch (e) {
-      LoggingService.log('Error loading active program: $e');
+      LoggingService.error('Error loading active program', e);
       _activeProgram = null;
       _activeProgramDetails = null;
     }

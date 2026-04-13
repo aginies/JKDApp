@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -10,11 +9,29 @@ import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
 import '../utils/translation_utils.dart';
+import '../screens/series_detail/glossary/glossary_data_service.dart';
 import 'logging_service.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static Database? _database;
+
+  // List of training program JSON files to load from assets
+  static const List<String> _programFiles = [
+    'assets/training_programs/30-day-jkd-fundamentals.json',
+    'assets/training_programs/2-week-trapping-intensive.json',
+    'assets/training_programs/footwork-beginner-2-weeks.json',
+    'assets/training_programs/footwork-advanced-2-weeks.json',
+    'assets/training_programs/footwork-expert-2-weeks.json',
+    'assets/training_programs/basic-hits-2-weeks.json',
+    'assets/training_programs/counters-beginner-2-weeks.json',
+    'assets/training_programs/counters-advanced-2-weeks.json',
+    'assets/training_programs/counters-expert-2-weeks.json',
+    'assets/training_programs/3-4-counts-beginner-2-weeks.json',
+    'assets/training_programs/3-4-counts-advanced-2-weeks.json',
+    'assets/training_programs/3-4-counts-expert-2-weeks.json',
+    'assets/training_programs/advanced-combos-45-days.json',
+  ];
 
   // List of series JSON files to load from assets (all are trusted system series)
   static const List<String> _seriesFiles = [
@@ -34,6 +51,7 @@ class DatabaseService {
     'assets/jkd-series-sinawali-series.json',
     'assets/jkd-series-hou-ou-tek.json',
     'assets/jkd-series-7-d-placements-kali.json',
+    'assets/jkd-series-innosanto-angles.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -50,10 +68,10 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'jkd_notes.db');
-    LoggingService.log('Initializing database at $path');
+    LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 16, // Increment version for series category migration
+      version: 26, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -67,7 +85,7 @@ class DatabaseService {
   /// In development, we simply reset the database on schema changes
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 16) {
-      LoggingService.log(
+      LoggingService.info(
         'Migrating categories: jkd_moves -> move and JKD Moves -> Moves',
       );
 
@@ -92,10 +110,51 @@ class DatabaseService {
       if (oldVersion < 15) {
         // Clean up potentially inconsistent stats after category merge
         await db.execute('DELETE FROM day_completions');
-        LoggingService.log('Cleared stats for category migration consistency.');
+        LoggingService.info(
+          'Cleared stats for category migration consistency.',
+        );
       }
-    } else {
-      LoggingService.log(
+    }
+
+    if (oldVersion < 17) {
+      LoggingService.info('Adding is_from_cloud column to series table');
+      try {
+        await db.execute(
+          'ALTER TABLE series ADD COLUMN is_from_cloud INTEGER DEFAULT 0',
+        );
+      } catch (e) {
+        LoggingService.error('Error adding is_from_cloud column', e);
+      }
+    }
+
+    if (oldVersion < 18) {
+      LoggingService.info('Adding Kali fields to series_moves table');
+      try {
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN kali_angle INTEGER',
+        );
+        await db.execute(
+          'ALTER TABLE series_moves ADD COLUMN strike_type TEXT',
+        );
+      } catch (e) {
+        LoggingService.error('Error adding Kali columns', e);
+      }
+    }
+
+    if (oldVersion < 23) {
+      LoggingService.info('Refreshing glossary for version 23');
+      try {
+        await db.execute('DELETE FROM glossary');
+        await _seedGlossary(db);
+        // Clear runtime cache to ensure UI picks up new data
+        GlossaryDataService.clearAllCache();
+      } catch (e) {
+        LoggingService.error('Error refreshing glossary', e);
+      }
+    }
+
+    if (oldVersion >= 23) {
+      LoggingService.warn(
         'Development Mode: Resetting database for schema change ($oldVersion -> $newVersion)',
       );
 
@@ -139,7 +198,8 @@ class DatabaseService {
         type TEXT, 
         attack_method TEXT, 
         notes TEXT, 
-        is_system INTEGER DEFAULT 0
+        is_system INTEGER DEFAULT 0,
+        is_from_cloud INTEGER DEFAULT 0
       )
     ''');
 
@@ -170,6 +230,8 @@ class DatabaseService {
         sub_moves_json TEXT, 
         chain_json TEXT, 
         position INTEGER, 
+        kali_angle INTEGER,
+        strike_type TEXT,
         FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE CASCADE
       )
     ''');
@@ -364,38 +426,24 @@ class DatabaseService {
               'sub_moves_json': move['sub_moves_json'],
               'chain_json': move['chain_json'],
               'position': i,
+              'kali_angle': move['kali_angle'],
+              'strike_type': move['strike_type'],
             });
           }
         }
       } catch (e) {
-        debugPrint('Error seeding series from $seriesFile: $e');
+        LoggingService.error('Error seeding series from $seriesFile', e);
       }
     }
   }
 
   Future<void> _seedTrainingPrograms(dynamic db) async {
-    LoggingService.log('Seeding training programs from assets...');
-
-    final List<String> programFiles = [
-      'assets/training_programs/30-day-jkd-fundamentals.json',
-      'assets/training_programs/2-week-trapping-intensive.json',
-      'assets/training_programs/footwork-beginner-2-weeks.json',
-      'assets/training_programs/footwork-advanced-2-weeks.json',
-      'assets/training_programs/footwork-expert-2-weeks.json',
-      'assets/training_programs/basic-hits-2-weeks.json',
-      'assets/training_programs/counters-beginner-2-weeks.json',
-      'assets/training_programs/counters-advanced-2-weeks.json',
-      'assets/training_programs/counters-expert-2-weeks.json',
-      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
-      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
-      'assets/training_programs/3-4-counts-expert-2-weeks.json',
-      'assets/training_programs/advanced-combos-45-days.json',
-    ];
+    LoggingService.info('Seeding training programs from assets...');
 
     // Build a map of series titles to IDs for resolving references
     final seriesTitleMap = await _buildSeriesTitleMap(db);
 
-    for (final programFile in programFiles) {
+    for (final programFile in _programFiles) {
       try {
         final String programResponse = await rootBundle.loadString(programFile);
         final List<dynamic> programsData = json.decode(programResponse);
@@ -502,11 +550,14 @@ class DatabaseService {
           }
         }
       } catch (e) {
-        debugPrint('Error seeding training programs from $programFile: $e');
+        LoggingService.error(
+          'Error seeding training programs from $programFile',
+          e,
+        );
       }
     }
 
-    LoggingService.log('Training programs seeding complete');
+    LoggingService.info('Training programs seeding complete');
   }
 
   Future<Map<String, int>> _buildSeriesTitleMap(DatabaseExecutor db) async {
@@ -570,12 +621,12 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery('''
       SELECT 
-        s.id as s_id, s.title, s.category as s_category, s.type, s.attack_method, s.notes, s.is_system,
+        s.id as s_id, s.title, s.category as s_category, s.type, s.attack_method, s.notes, s.is_system, s.is_from_cloud,
         m.id as m_id, m.series_id, m.glossary_id, m.counter_glossary_id, m.name, m.category as m_category, 
         m.side, m.level, m.sub_letter, m.is_feint, m.special_action, m.translations, m.repetitions, 
         m.counter_name, m.counter_category, m.counter_side, m.counter_level, m.counter_special_action, 
         m.counter_translations, m.counter_sub_moves_json, m.counter_chain_json,
-        m.sub_moves_json, m.chain_json, m.position
+        m.sub_moves_json, m.chain_json, m.position, m.kali_angle, m.strike_type
       FROM series s
       LEFT JOIN series_moves m ON s.id = m.series_id
       ORDER BY s.id, m.position
@@ -593,6 +644,7 @@ class DatabaseService {
           attackMethod: row['attack_method'] as String?,
           notes: row['notes'] as String? ?? '',
           isSystem: (row['is_system'] as int? ?? 0) == 1,
+          isFromCloud: (row['is_from_cloud'] as int? ?? 0) == 1,
           moves: [],
         );
       }
@@ -623,6 +675,8 @@ class DatabaseService {
             ),
             counterSubMoves: _parseSubMoves(row['counter_sub_moves_json']),
             counterChain: _parseChain(row['counter_chain_json']),
+            kaliAngle: row['kali_angle'] as int?,
+            strikeType: row['strike_type'] as String?,
             subMoves: _parseSubMoves(row['sub_moves_json']),
             chain: _parseChain(row['chain_json']),
           ),
@@ -640,7 +694,7 @@ class DatabaseService {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
     } catch (e) {
-      debugPrint('Error parsing sub_moves_json: $e');
+      LoggingService.error('Error parsing sub_moves_json', e);
       return [];
     }
   }
@@ -653,7 +707,7 @@ class DatabaseService {
       final List<dynamic> decoded = json.decode(jsonStr.toString());
       return decoded.map((m) => Move.fromMap(m)).toList();
     } catch (e) {
-      debugPrint('Error parsing chain_json: $e');
+      LoggingService.error('Error parsing chain_json', e);
       return [];
     }
   }
@@ -991,14 +1045,6 @@ class DatabaseService {
       'duration_seconds': durationSeconds,
       'notes': notes,
     });
-
-    // Reset today's series completion counts for the new day
-    await db.update(
-      'user_program_progress',
-      {'todays_completed_series_ids': json.encode({})},
-      where: 'id = ?',
-      whereArgs: [progressId],
-    );
   }
 
   /// Record a series completion and auto-mark day complete if all series done
@@ -1045,7 +1091,7 @@ class DatabaseService {
     }
 
     if (targetDay == null) {
-      LoggingService.log(
+      LoggingService.warn(
         'Series $seriesId is not part of the active program "${program.title}". Progress not recorded.',
       );
       return null;
@@ -1197,7 +1243,7 @@ class DatabaseService {
     final db = await database;
 
     await db.transaction((txn) async {
-      LoggingService.log('Resetting technical library (Glossary & Series)...');
+      LoggingService.info('Resetting technical library (Glossary & Series)...');
 
       // 1. Clear glossary
       await txn.delete('glossary');
@@ -1228,13 +1274,13 @@ class DatabaseService {
       await _remapProgramReferences(txn);
     });
 
-    LoggingService.log('Technical library reset complete.');
+    LoggingService.info('Technical library reset complete.');
   }
 
   Future<void> resetTrainingProgress() async {
     final db = await database;
     await db.transaction((txn) async {
-      LoggingService.log('Resetting ALL training progress...');
+      LoggingService.info('Resetting ALL training progress...');
       await txn.delete('day_completions');
       await txn.delete('user_program_progress');
     });
@@ -1242,7 +1288,7 @@ class DatabaseService {
 
   Future<void> resetActiveProgram() async {
     final db = await database;
-    LoggingService.log('Resetting currently active program...');
+    LoggingService.info('Resetting currently active program...');
     await db.delete(
       'user_program_progress',
       where: 'status = ?',
@@ -1253,7 +1299,7 @@ class DatabaseService {
   Future<void> resetTrainingPrograms() async {
     final db = await database;
     await db.transaction((txn) async {
-      LoggingService.log('Resetting all training programs...');
+      LoggingService.info('Resetting all training programs...');
       // 1. Delete all custom programs (is_system = 0)
       // program_days and progress will be deleted via CASCADE or manually
       await txn.delete('training_programs', where: 'is_system = 0');
@@ -1315,14 +1361,14 @@ class DatabaseService {
       final bytes = utf8.encode(content);
       return md5.convert(bytes).toString();
     } catch (e) {
-      debugPrint('Error hashing asset $assetPath: $e');
+      LoggingService.error('Error hashing asset $assetPath', e);
       return '';
     }
   }
 
   /// Automatically updates system data if asset files have changed
   Future<void> checkAndUpdateSystemData(Database db) async {
-    LoggingService.log('Checking for system asset updates...');
+    LoggingService.info('Checking for system asset updates...');
 
     // 1. Check Glossary
     const glossaryAsset = 'assets/jkd-glossary.json';
@@ -1330,7 +1376,7 @@ class DatabaseService {
     final storedGlossaryHash = await _getStoredHash(db, 'hash_glossary');
 
     if (currentGlossaryHash != storedGlossaryHash) {
-      LoggingService.log('Glossary asset changed. Updating...');
+      LoggingService.info('Glossary asset changed. Updating...');
       await db.transaction((txn) async {
         await txn.delete('glossary');
         await _seedGlossary(txn);
@@ -1351,7 +1397,7 @@ class DatabaseService {
     }
 
     if (seriesChanged) {
-      LoggingService.log('Series assets changed. Updating system series...');
+      LoggingService.info('Series assets changed. Updating system series...');
       await db.transaction((txn) async {
         // Delete only system series
         final systemSeries = await txn.query(
@@ -1382,25 +1428,9 @@ class DatabaseService {
     }
 
     // 3. Check Training Programs
-    final List<String> programFiles = [
-      'assets/training_programs/30-day-jkd-fundamentals.json',
-      'assets/training_programs/2-week-trapping-intensive.json',
-      'assets/training_programs/footwork-beginner-2-weeks.json',
-      'assets/training_programs/footwork-advanced-2-weeks.json',
-      'assets/training_programs/footwork-expert-2-weeks.json',
-      'assets/training_programs/basic-hits-2-weeks.json',
-      'assets/training_programs/counters-beginner-2-weeks.json',
-      'assets/training_programs/counters-advanced-2-weeks.json',
-      'assets/training_programs/counters-expert-2-weeks.json',
-      'assets/training_programs/3-4-counts-beginner-2-weeks.json',
-      'assets/training_programs/3-4-counts-advanced-2-weeks.json',
-      'assets/training_programs/3-4-counts-expert-2-weeks.json',
-      'assets/training_programs/advanced-combos-45-days.json',
-    ];
-
     bool programsChanged = false;
     final List<String> programHashes = [];
-    for (final file in programFiles) {
+    for (final file in _programFiles) {
       final currentHash = await _calculateAssetHash(file);
       programHashes.add(currentHash);
       final storedHash = await _getStoredHash(db, 'hash_$file');
@@ -1410,14 +1440,14 @@ class DatabaseService {
     }
 
     if (programsChanged || seriesChanged) {
-      LoggingService.log(
+      LoggingService.info(
         'Program or Series assets changed. Updating programs...',
       );
       await _seedTrainingPrograms(
         db,
       ); // This method already handles updates internally
-      for (int i = 0; i < programFiles.length; i++) {
-        await _saveStoredHash(db, 'hash_${programFiles[i]}', programHashes[i]);
+      for (int i = 0; i < _programFiles.length; i++) {
+        await _saveStoredHash(db, 'hash_${_programFiles[i]}', programHashes[i]);
       }
     }
   }

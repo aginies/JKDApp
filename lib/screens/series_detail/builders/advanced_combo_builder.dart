@@ -6,11 +6,26 @@ import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../widgets/separated_wrap.dart';
+import '../widgets/diagonal_cross.dart';
 import '../glossary/glossary_data_service.dart';
 import '../training/combo_verification_service.dart';
 import '../../../services/usage_statistics_service.dart';
 import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
+import 'builder_card_data.dart';
+import 'kali_hit_selector.dart';
+import '../widgets/kali_angle_icon.dart';
+import '../widgets/kali_angle_designer.dart';
+
+// Improvement #1: single enum replaces 5 booleans — enforces mutual exclusivity.
+enum _BuilderMode {
+  none,
+  defense,
+  simultaneous,
+  chain,
+  counterSimultaneous,
+  counterChain,
+}
 
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
@@ -38,36 +53,38 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Current state of the workspace
   final List<BuilderCardData> _workspaceCards = [];
   final _customTextController = TextEditingController();
+  // Improvement #2: persistent controller — disposed in dispose(), not recreated per-frame.
+  final _searchController = TextEditingController();
   String _glossarySearchQuery = '';
+
+  // Performance: glossary futures cached so tab switches don't re-fetch.
+  final Map<String, Future<List<Map<String, dynamic>>>> _glossaryCache = {};
+  // Performance: single UsageStatisticsService instance reused across filter calls.
+  final _usageService = UsageStatisticsService();
 
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
   bool _isCounterSelected = false;
-  int? _selectedCounterIndex;
-  List<int>? _selectedCounterPath; // Secondary path for structured counters
-  // Which sub-item inside a structured counter is selected (null = whole counter)
+  bool _showAngleSelector = false;
+  // Improvement #3: _selectedCounterIndex removed — was always _selectedCounterPath?.first.
+  List<int>? _selectedCounterPath;
 
-  // Modes
-  bool _isDefenseMode = false;
-  bool _isSimultaneousMode = false;
-  bool _isChainMode = false;
-  bool _isCounterSimultaneousMode = false;
-  bool _isCounterChainMode = false;
+  // Improvement #1: mode enum
+  _BuilderMode _mode = _BuilderMode.none;
 
   // History for undo/redo
-  final List<_HistoryEntry> _undoStack = [];
-  final List<_HistoryEntry> _redoStack = [];
+  final List<BuilderHistoryEntry> _undoStack = [];
+  final List<BuilderHistoryEntry> _redoStack = [];
 
   void _saveHistory() {
     _undoStack.add(
-      _HistoryEntry(
+      BuilderHistoryEntry(
         cards: List.from(_workspaceCards),
         selectedPath: _selectedPath != null ? List.from(_selectedPath!) : null,
         isCounterSelected: _isCounterSelected,
         selectedCounterPath: _selectedCounterPath != null
             ? List.from(_selectedCounterPath!)
             : null,
-        selectedCounterIndex: _selectedCounterIndex,
       ),
     );
     _redoStack.clear();
@@ -81,7 +98,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     HapticFeedback.mediumImpact();
     setState(() {
       _redoStack.add(
-        _HistoryEntry(
+        BuilderHistoryEntry(
           cards: List.from(_workspaceCards),
           selectedPath: _selectedPath != null
               ? List.from(_selectedPath!)
@@ -90,7 +107,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           selectedCounterPath: _selectedCounterPath != null
               ? List.from(_selectedCounterPath!)
               : null,
-          selectedCounterIndex: _selectedCounterIndex,
         ),
       );
       final entry = _undoStack.removeLast();
@@ -99,7 +115,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       _selectedPath = entry.selectedPath;
       _isCounterSelected = entry.isCounterSelected;
       _selectedCounterPath = entry.selectedCounterPath;
-      _selectedCounterIndex = entry.selectedCounterIndex;
     });
   }
 
@@ -108,7 +123,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     HapticFeedback.mediumImpact();
     setState(() {
       _undoStack.add(
-        _HistoryEntry(
+        BuilderHistoryEntry(
           cards: List.from(_workspaceCards),
           selectedPath: _selectedPath != null
               ? List.from(_selectedPath!)
@@ -117,7 +132,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           selectedCounterPath: _selectedCounterPath != null
               ? List.from(_selectedCounterPath!)
               : null,
-          selectedCounterIndex: _selectedCounterIndex,
         ),
       );
       final entry = _redoStack.removeLast();
@@ -126,7 +140,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       _selectedPath = entry.selectedPath;
       _isCounterSelected = entry.isCounterSelected;
       _selectedCounterPath = entry.selectedCounterPath;
-      _selectedCounterIndex = entry.selectedCounterIndex;
     });
   }
 
@@ -134,6 +147,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     Set<String> cats = {move.category};
     if (move.counterCategory != null && move.counterCategory!.isNotEmpty) {
       cats.add(move.counterCategory!);
+    }
+    // If Kali is relevant, standard and custom angles are also relevant
+    if (cats.contains('kali')) {
+      cats.add('angles');
+      cats.add('custom_angles');
     }
     for (var m in move.subMoves) {
       cats.addAll(_getRelevantCategories(m));
@@ -197,10 +215,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
     final result = [...correct, ...finalDistractors];
     // Re-sort result by usage count to maintain the UI triage
-    final usageService = UsageStatisticsService();
     result.sort((a, b) {
-      final countA = usageService.getCount(a['name'] ?? '');
-      final countB = usageService.getCount(b['name'] ?? '');
+      final countA = _usageService.getCount(a['name'] ?? '');
+      final countB = _usageService.getCount(b['name'] ?? '');
       if (countA != countB) {
         return countB.compareTo(countA);
       }
@@ -239,6 +256,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   @override
   void dispose() {
     _customTextController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -281,6 +299,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       level: m.level,
       isFeint: m.isFeint,
       specialAction: m.specialAction,
+      kaliAngle: m.kaliAngle,
+      strikeType: m.strikeType,
       glossaryId: m.glossaryId,
       counterName: m.counterName,
       counterCategory: m.counterCategory,
@@ -421,16 +441,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  void _clearAllModes() {
-    _isSimultaneousMode = false;
-    _isChainMode = false;
-    _isDefenseMode = false;
-    _isCounterSimultaneousMode = false;
-    _isCounterChainMode = false;
-  }
-
   Widget _buildTopToolbar(String lang) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSimulActive =
+        _mode == _BuilderMode.simultaneous ||
+        _mode == _BuilderMode.counterSimultaneous;
+    final isChainActive =
+        _mode == _BuilderMode.chain || _mode == _BuilderMode.counterChain;
+    final isDefenseActive = _mode == _BuilderMode.defense;
+
     return Row(
       children: [
         // LEFT group: action buttons
@@ -482,28 +501,23 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   null,
-                  (_isSimultaneousMode || _isCounterSimultaneousMode)
-                      ? Colors.green
-                      : Colors.blueAccent,
+                  isSimulActive ? Colors.green : Colors.blueAccent,
                   () {
                     if (_selectedPath != null) {
                       setState(() {
-                        _clearAllModes();
-                        if (_isCounterSelected) {
-                          _isCounterSimultaneousMode = true;
-                        } else {
-                          _isSimultaneousMode = true;
-                        }
+                        _mode = _isCounterSelected
+                            ? _BuilderMode.counterSimultaneous
+                            : _BuilderMode.simultaneous;
                       });
                       _showGlossaryPicker();
                     }
                   },
-                  isActive: _isSimultaneousMode || _isCounterSimultaneousMode,
+                  isActive: isSimulActive,
                   customChild: Builder(
                     builder: (context) {
-                      final active =
-                          _isSimultaneousMode || _isCounterSimultaneousMode;
-                      final fg = active ? Colors.white : Colors.blueAccent;
+                      final fg = isSimulActive
+                          ? Colors.white
+                          : Colors.blueAccent;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -539,27 +553,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   null,
-                  (_isChainMode || _isCounterChainMode)
-                      ? Colors.green
-                      : Colors.teal,
+                  isChainActive ? Colors.green : Colors.teal,
                   () {
                     if (_selectedPath != null) {
                       setState(() {
-                        _clearAllModes();
-                        if (_isCounterSelected) {
-                          _isCounterChainMode = true;
-                        } else {
-                          _isChainMode = true;
-                        }
+                        _mode = _isCounterSelected
+                            ? _BuilderMode.counterChain
+                            : _BuilderMode.chain;
                       });
                       _showGlossaryPicker();
                     }
                   },
-                  isActive: _isChainMode || _isCounterChainMode,
+                  isActive: isChainActive,
                   customChild: Builder(
                     builder: (context) {
-                      final active = _isChainMode || _isCounterChainMode;
-                      final fg = active ? Colors.white : Colors.teal;
+                      final fg = isChainActive ? Colors.white : Colors.teal;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -588,7 +596,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   '',
                   Icons.subdirectory_arrow_right,
-                  _isDefenseMode
+                  isDefenseActive
                       ? Colors.green
                       : ((_selectedPath != null && _isCounterSelected)
                             ? Colors.grey
@@ -597,13 +605,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     // Prevent nested answers: disable if an answer is already selected
                     if (_selectedPath != null && !_isCounterSelected) {
                       setState(() {
-                        _clearAllModes();
-                        _isDefenseMode = true;
+                        _mode = _BuilderMode.defense;
                       });
                       _showGlossaryPicker();
                     }
                   },
-                  isActive: _isDefenseMode,
+                  isActive: isDefenseActive,
                 ),
               ],
             ),
@@ -633,53 +640,86 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildBottomToolbar(String lang) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _toolbarButton(
-            LocalizationService.translate('left', lang),
-            Icons.arrow_back,
-            Colors.blue,
-            () => _updateSelectedCard(side: 'L'),
+    final data = _getDataAtPath(_selectedPath!);
+    final isKali =
+        data != null && (data.category == 'kali' || data.category == 'angles');
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isKali && _showAngleSelector) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: KaliHitSelector(
+              selectedAngle: data.kaliAngle,
+              selectedStrikeType: data.strikeType,
+              onAngleSelected: (angle) => _updateSelectedCard(kaliAngle: angle),
+              onStrikeTypeSelected: (type) =>
+                  _updateSelectedCard(strikeType: type),
+            ),
           ),
-          _toolbarButton(
-            LocalizationService.translate('right', lang),
-            Icons.arrow_forward,
-            Colors.red,
-            () => _updateSelectedCard(side: 'R'),
-          ),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton(
-            LocalizationService.translate('draw', lang),
-            Icons.gesture,
-            Colors.purple,
-            () => _updateSelectedCard(toggleFeint: true),
-          ),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton(
-            'H',
-            Icons.north_east,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'High'),
-            customText: Colors.white,
-          ),
-          _toolbarButton(
-            'M',
-            Icons.arrow_forward,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'Mid'),
-            customText: Colors.white,
-          ),
-          _toolbarButton(
-            'L',
-            Icons.south_east,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'Low'),
-            customText: Colors.white,
-          ),
+          const Divider(),
         ],
-      ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (isKali) ...[
+                _toolbarButton(
+                  'Angle',
+                  Icons.architecture,
+                  _showAngleSelector ? Colors.brown : Colors.grey,
+                  () =>
+                      setState(() => _showAngleSelector = !_showAngleSelector),
+                  isActive: _showAngleSelector,
+                ),
+                const SizedBox(width: 8, child: VerticalDivider()),
+              ],
+              _toolbarButton(
+                LocalizationService.translate('left', lang),
+                Icons.arrow_back,
+                Colors.blue,
+                () => _updateSelectedCard(side: 'L'),
+              ),
+              _toolbarButton(
+                LocalizationService.translate('right', lang),
+                Icons.arrow_forward,
+                Colors.red,
+                () => _updateSelectedCard(side: 'R'),
+              ),
+              const SizedBox(width: 8, child: VerticalDivider()),
+              _toolbarButton(
+                LocalizationService.translate('draw', lang),
+                Icons.gesture,
+                Colors.purple,
+                () => _updateSelectedCard(toggleFeint: true),
+              ),
+              const SizedBox(width: 8, child: VerticalDivider()),
+              _toolbarButton(
+                'H',
+                Icons.north_east,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'High'),
+                customText: Colors.white,
+              ),
+              _toolbarButton(
+                'M',
+                Icons.arrow_forward,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'Mid'),
+                customText: Colors.white,
+              ),
+              _toolbarButton(
+                'L',
+                Icons.south_east,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'Low'),
+                customText: Colors.white,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -716,8 +756,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          minimumSize: const Size(0, 32),
           backgroundColor: bgColor,
           side: isDark
               ? BorderSide(color: color.withValues(alpha: 0.4), width: 1)
@@ -728,13 +768,13 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (icon != null) Icon(icon, size: 20, color: fgColor),
-                if (icon != null && label.isNotEmpty) const SizedBox(width: 4),
+                if (icon != null) Icon(icon, size: 16, color: fgColor),
+                if (icon != null && label.isNotEmpty) const SizedBox(width: 2),
                 if (label.isNotEmpty)
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: fgColor,
                     ),
@@ -928,11 +968,25 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          MoveDisplayWidgets.getCategoryIcon(data.category),
-                          size: 20,
-                          color: color,
-                        ),
+                        if ((data.category == 'kali' ||
+                                data.category == 'angles') &&
+                            data.kaliAngle != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: KaliAngleIcon(
+                              angle: data.kaliAngle!,
+                              size: 24,
+                              color: MoveDisplayWidgets.getCategoryColor(
+                                'kali',
+                              ),
+                            ),
+                          )
+                        else
+                          Icon(
+                            MoveDisplayWidgets.getCategoryIcon(data.category),
+                            size: 20,
+                            color: color,
+                          ),
                         const SizedBox(height: 4),
                         Text(
                           data.name,
@@ -1144,11 +1198,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                MoveDisplayWidgets.getCategoryIcon(sm.category),
-                size: 18,
-                color: color,
-              ),
+              if ((sm.category == 'kali' || sm.category == 'angles') &&
+                  sm.kaliAngle != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2.0),
+                  child: KaliAngleIcon(
+                    angle: sm.kaliAngle!,
+                    size: 20,
+                    color: MoveDisplayWidgets.getCategoryColor('kali'),
+                  ),
+                )
+              else
+                Icon(
+                  MoveDisplayWidgets.getCategoryIcon(sm.category),
+                  size: 18,
+                  color: color,
+                ),
               Text(
                 sm.name,
                 style: TextStyle(
@@ -1166,7 +1231,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     if (sm.side.isNotEmpty)
                       MoveDisplayWidgets.sideCircle(
                         LocalizationService.translate(
-                          sm.side == 'L' ? 'left' : 'right',
+                          sm.side == 'L'
+                              ? 'left'
+                              : (sm.side == 'R' ? 'right' : 'mid'),
                           lang,
                         ).substring(0, 1),
                         sm.side,
@@ -1191,9 +1258,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   ) {
     final theme = Theme.of(context);
     final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
-    // Whole-counter selected (no specific sub-item)
+    // Improvement #3: derive from _selectedCounterPath instead of removed _selectedCounterIndex.
     final bool isWholeCounterSelected =
-        isThisCounterSelected && _selectedCounterIndex == null;
+        isThisCounterSelected && _selectedCounterPath == null;
 
     // Build inner content based on counter structure
     Widget counterContent;
@@ -1320,6 +1387,17 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
           const SizedBox(height: 2),
+          if ((data.counterCategory == 'kali' ||
+                  data.counterCategory == 'angles') &&
+              data.kaliAngle != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: KaliAngleIcon(
+                angle: data.kaliAngle!,
+                size: 20,
+                color: MoveDisplayWidgets.getCategoryColor('kali'),
+              ),
+            ),
           Text(
             data.counterName!,
             style: TextStyle(
@@ -1409,23 +1487,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   void _selectPath(
     List<int> path, {
     bool isCounter = false,
-    int? counterIndex,
     List<int>? counterPath,
   }) {
     setState(() {
       _selectedPath = List<int>.from(path);
       _isCounterSelected = isCounter;
-      // Map old-style single index to a list path for backwards compatibility
-      if (counterIndex != null) {
-        _selectedCounterIndex = counterIndex;
-        _selectedCounterPath = [counterIndex];
-      } else if (counterPath != null) {
-        _selectedCounterIndex = counterPath[0];
-        _selectedCounterPath = List<int>.from(counterPath);
-      } else {
-        _selectedCounterIndex = null;
-        _selectedCounterPath = null;
-      }
+      _showAngleSelector = false;
+      _selectedCounterPath = counterPath != null
+          ? List<int>.from(counterPath)
+          : null;
     });
   }
 
@@ -1448,7 +1518,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _onAddClick() {
     setState(() {
-      _clearAllModes();
+      _mode = _BuilderMode.none;
     });
     _showGlossaryPicker();
   }
@@ -1600,7 +1670,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         _updateDataAtPath(_selectedPath!, (item) {
           return _deleteNestedData(item, _selectedCounterPath!) ?? item;
         });
-        _selectedCounterIndex = null;
         _selectedCounterPath = null;
       } else if (_isCounterSelected) {
         // DELETE ONLY THE ANSWER of the item at the selected path
@@ -1616,7 +1685,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           );
         });
         _isCounterSelected = false;
-        _selectedCounterIndex = null;
         _selectedCounterPath = null;
       } else if (_selectedPath!.length > 1) {
         // DELETE ONLY THE TARGETED SUB-ITEM
@@ -1659,13 +1727,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         });
 
         _selectedPath = null;
-        _selectedCounterIndex = null;
         _selectedCounterPath = null;
       } else {
         // DELETE ENTIRE TOP-LEVEL CARD
         _workspaceCards.removeAt(_selectedPath![0]);
         _selectedPath = null;
-        _selectedCounterIndex = null;
         _selectedCounterPath = null;
       }
     });
@@ -1741,6 +1807,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       level: data.level,
       isFeint: data.isFeint,
       specialAction: data.specialAction,
+      kaliAngle: data.kaliAngle,
+      strikeType: data.strikeType,
       glossaryId: data.glossaryId,
       counterName: data.counterName,
       counterCategory: data.counterCategory,
@@ -1852,6 +1920,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? side,
     String? level,
     bool toggleFeint,
+    int? kaliAngle,
+    String? strikeType,
   ) {
     if (counterPath.isEmpty) {
       // BASE CASE: We reached the target sub-item. Toggle its properties.
@@ -1867,6 +1937,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side: finalSide,
         level: finalLevel,
         isFeint: toggleFeint ? !root.isFeint : root.isFeint,
+        kaliAngle: kaliAngle ?? root.kaliAngle,
+        strikeType: strikeType ?? root.strikeType,
       );
     }
 
@@ -1882,6 +1954,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(chain: newList);
     } else if (root.isCombo && idx < root.subMoves.length) {
@@ -1892,6 +1966,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(subMoves: newList);
     } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
@@ -1902,6 +1978,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(counterSubMoves: newList);
     } else if (root.hasCounterChain && idx < root.counterChain.length) {
@@ -1912,6 +1990,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         side,
         level,
         toggleFeint,
+        kaliAngle,
+        strikeType,
       );
       return root.copyWith(counterChain: newList);
     }
@@ -1924,6 +2004,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? level,
     bool toggleFeint = false,
     String? specialAction,
+    int? kaliAngle,
+    String? strikeType,
   }) {
     if (_selectedPath == null) return;
     _saveHistory();
@@ -1938,6 +2020,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             side,
             level,
             toggleFeint,
+            kaliAngle,
+            strikeType,
           );
         } else if (_isCounterSelected) {
           // Simple single counter toggle logic
@@ -1955,6 +2039,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterIsFeint: toggleFeint
                 ? !item.counterIsFeint
                 : item.counterIsFeint,
+            kaliAngle: kaliAngle ?? item.kaliAngle,
+            strikeType: strikeType ?? item.strikeType,
           );
         } else {
           // Top-level attacker toggle logic
@@ -1971,6 +2057,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             level: finalLevel,
             isFeint: toggleFeint ? !item.isFeint : item.isFeint,
             specialAction: specialAction ?? item.specialAction,
+            kaliAngle: kaliAngle ?? item.kaliAngle,
+            strikeType: strikeType ?? item.strikeType,
           );
         }
       });
@@ -1978,16 +2066,36 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   void _showGlossaryPicker() {
+    // Improvement #2: reset the persistent controller instead of recreating it.
     _glossarySearchQuery = '';
+    _searchController.clear();
+
+    // Performance (#9): build the tab definitions once per modal open rather
+    // than rebuilding them on every setModalState call.
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+    final allTabs = _buildAllTabDefs(lang);
+
+    // Compute enabled tabs once — trainingLevel and trainingOriginalMove are
+    // stable for the lifetime of this widget.
+    List<Map<String, dynamic>> enabledTabs;
+    if (widget.trainingLevel == TrainingLevel.beginner &&
+        widget.trainingOriginalMove != null) {
+      final relevantCats = _getRelevantCategories(widget.trainingOriginalMove!);
+      enabledTabs = allTabs.where((tab) {
+        final cats = tab['cats'] as List<String>;
+        if (tab['id'] == 'text') return true; // always show text tab
+        return cats.any((c) => relevantCats.contains(c));
+      }).toList();
+      if (enabledTabs.isEmpty) enabledTabs = [allTabs.last];
+    } else {
+      enabledTabs = allTabs;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) {
-        final lang = Provider.of<SeriesProvider>(
-          context,
-          listen: false,
-        ).language;
         return StatefulBuilder(
           builder: (context, setModalState) {
             return DraggableScrollableSheet(
@@ -2021,10 +2129,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                               decoration: InputDecoration(
                                 hintText: LocalizationService.translate(
                                   'search_hint',
-                                  Provider.of<SeriesProvider>(
-                                    context,
-                                    listen: false,
-                                  ).language,
+                                  lang,
                                 ),
                                 prefixIcon: const Icon(
                                   Icons.search,
@@ -2039,6 +2144,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                         ),
                                         onPressed: () {
                                           HapticFeedback.lightImpact();
+                                          _searchController.clear();
                                           setModalState(() {
                                             _glossarySearchQuery = '';
                                           });
@@ -2048,14 +2154,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                 border: InputBorder.none,
                                 isDense: true,
                               ),
-                              controller: TextEditingController.fromValue(
-                                TextEditingValue(
-                                  text: _glossarySearchQuery,
-                                  selection: TextSelection.collapsed(
-                                    offset: _glossarySearchQuery.length,
-                                  ),
-                                ),
-                              ),
+                              controller: _searchController,
                               onChanged: (val) {
                                 setModalState(() => _glossarySearchQuery = val);
                               },
@@ -2075,119 +2174,32 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
                   Expanded(
                     child: _glossarySearchQuery.isEmpty
-                        ? Builder(
-                            builder: (context) {
-                              // Define all possible tabs
-                              final allTabs = [
-                                {
-                                  'id': 'punch_kick',
-                                  'label':
-                                      '${LocalizationService.translate('punches', lang)} / ${LocalizationService.translate('kicks', lang)}',
-                                  'cats': ['punch', 'kick'],
-                                  'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab(
-                                        'punch',
-                                        'kick',
-                                        sc,
-                                      ),
-                                },
-                                {
-                                  'id': 'packs_trapping',
-                                  'label':
-                                      '${LocalizationService.translate('packs', lang)} / ${LocalizationService.translate('trapping', lang)}',
-                                  'cats': ['packs', 'trapping'],
-                                  'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab(
-                                        'packs',
-                                        'trapping',
-                                        sc,
-                                      ),
-                                },
-                                {
-                                  'id': 'move',
-                                  'label': LocalizationService.translate(
-                                    'move',
-                                    lang,
-                                  ),
-                                  'cats': ['move'],
-                                  'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab('move', null, sc),
-                                },
-
-                                {
-                                  'id': 'kali',
-                                  'label': LocalizationService.translate(
-                                    'kali',
-                                    lang,
-                                  ),
-                                  'cats': ['kali'],
-                                  'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab('kali', null, sc),
-                                },
-                                {
-                                  'id': 'text',
-                                  'label': LocalizationService.translate(
-                                    'text',
-                                    lang,
-                                  ),
-                                  'cats': ['text'],
-                                  'view': (ScrollController sc) =>
-                                      _buildDualGlossaryTab('text', null, sc),
-                                },
-                              ];
-
-                              // Filter if in Beginner mode
-                              var enabledTabs = allTabs;
-                              if (widget.trainingLevel ==
-                                      TrainingLevel.beginner &&
-                                  widget.trainingOriginalMove != null) {
-                                final relevantCats = _getRelevantCategories(
-                                  widget.trainingOriginalMove!,
-                                );
-                                enabledTabs = allTabs.where((tab) {
-                                  final cats = tab['cats'] as List<String>;
-                                  // Text tab is always relevant for custom notes
-                                  if (tab['id'] == 'text') return true;
-                                  return cats.any(
-                                    (c) => relevantCats.contains(c),
-                                  );
-                                }).toList();
-                              }
-
-                              if (enabledTabs.isEmpty) {
-                                enabledTabs = [
-                                  allTabs.last,
-                                ]; // Fallback to Text
-                              }
-
-                              return DefaultTabController(
-                                length: enabledTabs.length,
-                                child: Column(
-                                  children: [
-                                    TabBar(
-                                      isScrollable: true,
-                                      tabs: enabledTabs.map((tab) {
-                                        return Tab(
-                                          text: tab['label'] as String,
-                                        );
-                                      }).toList(),
-                                    ),
-                                    Expanded(
-                                      child: TabBarView(
-                                        children: enabledTabs.map((tab) {
-                                          final builder =
-                                              tab['view']
-                                                  as Widget Function(
-                                                    ScrollController,
-                                                  );
-                                          return builder(scrollController);
-                                        }).toList(),
-                                      ),
-                                    ),
-                                  ],
+                        ? DefaultTabController(
+                            length: enabledTabs.length,
+                            child: Column(
+                              children: [
+                                TabBar(
+                                  isScrollable: true,
+                                  tabs: enabledTabs
+                                      .map(
+                                        (t) => Tab(text: t['label'] as String),
+                                      )
+                                      .toList(),
                                 ),
-                              );
-                            },
+                                Expanded(
+                                  child: TabBarView(
+                                    children: enabledTabs.map((tab) {
+                                      final builder =
+                                          tab['view']
+                                              as Widget Function(
+                                                ScrollController,
+                                              );
+                                      return builder(scrollController);
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
                           )
                         : _buildGlobalGlossarySearchResults(scrollController),
                   ),
@@ -2198,6 +2210,62 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         );
       },
     );
+  }
+
+  /// Defines the fixed set of glossary tabs. Called once per modal open.
+  List<Map<String, dynamic>> _buildAllTabDefs(String lang) {
+    return [
+      {
+        'id': 'punch_kick',
+        'label':
+            '${LocalizationService.translate('punches', lang)} / ${LocalizationService.translate('kicks', lang)}',
+        'cats': ['punch', 'kick'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('punch', 'kick', sc),
+      },
+      {
+        'id': 'packs_trapping',
+        'label':
+            '${LocalizationService.translate('packs', lang)} / ${LocalizationService.translate('trapping', lang)}',
+        'cats': ['packs', 'trapping'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('packs', 'trapping', sc),
+      },
+      {
+        'id': 'move',
+        'label': LocalizationService.translate('move', lang),
+        'cats': ['move'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('move', null, sc),
+      },
+      {
+        'id': 'kali',
+        'label': LocalizationService.translate('kali', lang),
+        'cats': ['kali'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('kali', null, sc),
+      },
+      {
+        'id': 'angles',
+        'label': LocalizationService.translate('angles', lang),
+        'cats': ['angles'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('angles', null, sc),
+      },
+      {
+        'id': 'custom_angles',
+        'label': lang == 'fr' ? 'Angles Persos' : 'Custom Angles',
+        'cats': ['custom_angles'],
+        'view': (ScrollController sc) => _buildCustomAnglesTab(sc),
+      },
+      {
+        'id': 'text',
+        'label': LocalizationService.translate('text', lang),
+        'cats': ['text'],
+        'view': (ScrollController sc) =>
+            _buildDualGlossaryTab('text', null, sc),
+      },
+    ];
   }
 
   Widget _buildDualGlossaryTab(
@@ -2215,11 +2283,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       );
     }
 
+    // Performance: cache futures so switching tabs does not re-fetch.
+    _glossaryCache[cat1] ??= GlossaryDataService.fetchGlossaryByCategory(cat1);
+    if (cat2 != null) {
+      _glossaryCache[cat2] ??= GlossaryDataService.fetchGlossaryByCategory(
+        cat2,
+      );
+    }
+
     return FutureBuilder<List<List<Map<String, dynamic>>>>(
       future: Future.wait([
-        GlossaryDataService.fetchGlossaryByCategory(cat1),
+        _glossaryCache[cat1]!,
         cat2 != null
-            ? GlossaryDataService.fetchGlossaryByCategory(cat2)
+            ? _glossaryCache[cat2]!
             : Future.value(<Map<String, dynamic>>[]),
       ]),
       builder: (context, snapshot) {
@@ -2337,11 +2413,34 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               width: 0.5,
             ),
           ),
-          child: Icon(
-            MoveDisplayWidgets.getCategoryIcon(category),
-            color: MoveDisplayWidgets.getCategoryColor(category),
-            size: 22,
-          ),
+          child: (category == 'angles')
+              ? Builder(
+                  builder: (context) {
+                    final name = item['name'].toString();
+                    final match = RegExp(r'Angle\s+(\d+)').firstMatch(name);
+                    final angle = match != null
+                        ? int.tryParse(match.group(1) ?? '')
+                        : null;
+                    if (angle != null) {
+                      return KaliAngleIcon(
+                        angle: angle,
+                        size: 28, // Increased from 22
+                        color: MoveDisplayWidgets.getCategoryColor(category),
+                        showCircle: false,
+                      );
+                    }
+                    return Icon(
+                      MoveDisplayWidgets.getCategoryIcon(category),
+                      color: MoveDisplayWidgets.getCategoryColor(category),
+                      size: 28, // Increased from 22
+                    );
+                  },
+                )
+              : Icon(
+                  MoveDisplayWidgets.getCategoryIcon(category),
+                  color: MoveDisplayWidgets.getCategoryColor(category),
+                  size: 28, // Increased from 22
+                ),
         ),
         title: Text(
           item['name'],
@@ -2361,10 +2460,20 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               )
             : null,
         onTap: () {
+          int? angle;
+          if (category == 'kali' || category == 'angles') {
+            final name = item['name'].toString();
+            final match = RegExp(r'Angle\s+(\d+)').firstMatch(name);
+            if (match != null) {
+              angle = int.tryParse(match.group(1) ?? '');
+            }
+          }
+
           final newItem = BuilderCardData(
             name: item['name'],
             category: category,
             glossaryId: item['id'],
+            kaliAngle: angle,
           );
           _onAddItem(newItem);
           Navigator.pop(context);
@@ -2373,262 +2482,413 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Improvement #5: _onAddItem split into focused sub-methods per mode.
+  // ---------------------------------------------------------------------------
+
   void _onAddItem(BuilderCardData newItem) {
     HapticFeedback.lightImpact();
     _saveHistory();
     setState(() {
-      if (_isCounterSimultaneousMode && _selectedPath != null) {
-        // A+B for ANSWER
-        _updateDataAtPath(_selectedPath!, (target) {
-          if (_selectedCounterIndex != null) {
-            // A+B on a specific counter sub-item
-            final idx = _selectedCounterIndex!;
-            if (target.hasCounterCombo && idx < target.counterSubMoves.length) {
-              // Append new item to the simultaneous group
-              final newList = List<BuilderCardData>.from(
-                target.counterSubMoves,
-              );
-              newList.insert(idx + 1, newItem);
-              return target.copyWith(
-                counterSubMoves: newList,
-                counterName: newList.map((m) => m.name).join(' + '),
-              );
-            } else if (target.hasCounterChain &&
-                idx < target.counterChain.length) {
-              // Replace the selected chain item with a simultaneous group
-              final subItem = target.counterChain[idx];
-              final simultaneous = BuilderCardData(
-                name: '${subItem.name} + ${newItem.name}',
-                category: 'simultaneous',
-                subMoves: [subItem, newItem],
-              );
-              final newList = List<BuilderCardData>.from(target.counterChain);
-              newList[idx] = simultaneous;
-              return target.copyWith(counterChain: newList);
-            }
-            return target;
-          }
-          if (target.hasCounterCombo) {
-            // Already a simultaneous counter — append
-            return target.copyWith(
-              counterSubMoves: [...target.counterSubMoves, newItem],
-              counterName:
-                  '${target.counterSubMoves.map((m) => m.name).join(' + ')} + ${newItem.name}',
-            );
-          }
-          if (target.hasCounterChain) {
-            // Has a chain — wrap it as the first simultaneous item,
-            // then add the new item as second simultaneous item.
-            // (A -> B) + C
-            final chainGroup = BuilderCardData(
-              name: target.counterChain.map((m) => m.name).join(' -> '),
-              category: 'chain',
-              chain: List.from(target.counterChain),
-            );
-            return target.copyWith(
-              counterSubMoves: [chainGroup, newItem],
-              counterChain: const [], // clear — now inside simultaneous
-              counterName: '(${chainGroup.name}) + ${newItem.name}',
-            );
-          }
-          // Create simultaneous group from existing single counter + new item
-          final existingCounter = BuilderCardData(
-            name: target.counterName ?? '',
-            category: target.counterCategory ?? '',
-            glossaryId: target.counterGlossaryId,
-            side: target.counterSide,
-            level: target.counterLevel,
-          );
-          return target.copyWith(
-            counterSubMoves: [existingCounter, newItem],
-            counterName: '${target.counterName} + ${newItem.name}',
-          );
-        });
-        _isCounterSimultaneousMode = false;
-        _selectedCounterIndex = null;
-      } else if (_isCounterChainMode && _selectedPath != null) {
-        // A->+ for ANSWER
-        _updateDataAtPath(_selectedPath!, (target) {
-          if (_selectedCounterIndex != null) {
-            // A->+ on a specific counter sub-item
-            final idx = _selectedCounterIndex!;
-            if (target.hasCounterChain && idx < target.counterChain.length) {
-              // Insert after the selected chain item
-              final newList = List<BuilderCardData>.from(target.counterChain);
-              newList.insert(idx + 1, newItem);
-              return target.copyWith(
-                counterChain: newList,
-                counterName: newList.map((m) => m.name).join(' -> '),
-              );
-            } else if (target.hasCounterCombo &&
-                idx < target.counterSubMoves.length) {
-              // Replace the selected simultaneous item with a chain
-              final subItem = target.counterSubMoves[idx];
-              final chainItem = BuilderCardData(
-                name: '${subItem.name} -> ${newItem.name}',
-                category: 'chain',
-                chain: [subItem, newItem],
-              );
-              final newList = List<BuilderCardData>.from(
-                target.counterSubMoves,
-              );
-              newList[idx] = chainItem;
-              return target.copyWith(counterSubMoves: newList);
-            }
-            return target;
-          }
-          if (target.hasCounterChain) {
-            // Already a counter chain — append
-            return target.copyWith(
-              counterChain: [...target.counterChain, newItem],
-              counterName:
-                  '${target.counterChain.map((m) => m.name).join(' -> ')} -> ${newItem.name}',
-            );
-          }
-          if (target.hasCounterCombo) {
-            // Has a simultaneous group — wrap it as the first chain item,
-            // then append the new item as second chain step.
-            // (Insinda + Jab) -> Hook
-            final simultaneousGroup = BuilderCardData(
-              name: target.counterSubMoves.map((m) => m.name).join(' + '),
-              category: 'simultaneous',
-              subMoves: List.from(target.counterSubMoves),
-            );
-            return target.copyWith(
-              counterChain: [simultaneousGroup, newItem],
-              counterSubMoves: const [], // clear — now inside chain
-              counterName: '(${simultaneousGroup.name}) -> ${newItem.name}',
-            );
-          }
-          // Create chain from existing single counter + new item
-          final existingCounter = BuilderCardData(
-            name: target.counterName ?? '',
-            category: target.counterCategory ?? '',
-            glossaryId: target.counterGlossaryId,
-            side: target.counterSide,
-            level: target.counterLevel,
-          );
-          return target.copyWith(
-            counterChain: [existingCounter, newItem],
-            counterName: '${target.counterName} -> ${newItem.name}',
-          );
-        });
-        _isCounterChainMode = false;
-        _selectedCounterIndex = null;
-      } else if (_isDefenseMode && _selectedPath != null) {
-        // Nested Answer (inside chain or combo)
-        _updateDataAtPath(
-          _selectedPath!,
-          (target) => target.copyWith(
-            counterName: newItem.name,
-            counterCategory: newItem.category,
-            counterGlossaryId: newItem.glossaryId,
-            // Clear any structured counter when setting a simple one
-            counterSubMoves: const [],
-            counterChain: const [],
-          ),
-        );
-        _isDefenseMode = false;
-      } else if (_isChainMode && _selectedPath != null) {
-        // CHAIN / INSERT AFTER — context-aware:
-        if (_selectedPath!.length > 1) {
-          // Nested item — find the nearest chain ancestor and
-          // insert after the child index within that chain.
-          for (int depth = _selectedPath!.length - 1; depth >= 1; depth--) {
-            final parentPath = _selectedPath!.sublist(0, depth);
-            final childIndex = _selectedPath![depth];
-            bool inserted = false;
-            _updateDataAtPath(parentPath, (parent) {
-              if (parent.isChain) {
-                final newChain = List<BuilderCardData>.from(parent.chain);
-                newChain.insert(childIndex + 1, newItem);
-                inserted = true;
-                return parent.copyWith(chain: newChain);
-              }
-              return parent;
-            });
-            if (inserted) {
-              // Select the newly inserted item
-              _selectedPath = [...parentPath, childIndex + 1];
-              break;
-            }
-          }
-        } else {
-          // Top-level card
-          final topIndex = _selectedPath![0];
-          final selected = _getDataAtPath(_selectedPath!);
-
-          if (selected != null && selected.isChain) {
-            // Already a chain — append new item at end
-            _updateDataAtPath(_selectedPath!, (target) {
-              return target.copyWith(chain: [...target.chain, newItem]);
-            });
-            // Select the newly appended item
-            _selectedPath = [topIndex, selected.chain.length];
-          } else {
-            // Standalone card — wrap selected + new into a chain
-            _workspaceCards[topIndex] = BuilderCardData(
-              name: 'Chain',
-              category: 'chain',
-              chain: [_workspaceCards[topIndex], newItem],
-            );
-            // Select the new item inside the chain
-            _selectedPath = [topIndex, 1];
-          }
-        }
-        _isChainMode = false;
-      } else if (_isSimultaneousMode && _selectedPath != null) {
-        // SMART APPEND into existing combo or create new one
-        bool appended = false;
-        if (_selectedPath!.length > 1) {
-          final parentPath = _selectedPath!.sublist(
-            0,
-            _selectedPath!.length - 1,
-          );
-          _updateDataAtPath(parentPath, (parent) {
-            if (parent.isCombo) {
-              appended = true;
-              return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
-            }
-            return parent;
-          });
-        }
-
-        if (!appended) {
-          _updateDataAtPath(_selectedPath!, (target) {
-            if (target.isCombo) {
-              return target.copyWith(subMoves: [...target.subMoves, newItem]);
-            }
-            return BuilderCardData(
-              name: 'Combo',
-              category: 'simultaneous',
-              subMoves: [target, newItem],
-            );
-          });
-          // Auto-select the newly added sub-item in the combo
-          final target = _getDataAtPath(_selectedPath!);
-          if (target != null && target.isCombo) {
-            _selectedPath = [..._selectedPath!, target.subMoves.length - 1];
-          }
-        }
-        _isSimultaneousMode = false;
-      } else {
-        // Insert after selected top-level card, or append at end
-        if (_selectedPath != null && _selectedPath!.length == 1) {
-          final insertIndex = _selectedPath![0] + 1;
-          _workspaceCards.insert(insertIndex, newItem);
-          _selectedPath = [insertIndex]; // Auto-select newly inserted item
-        } else {
-          _workspaceCards.add(newItem);
-          // If it's the only item, auto-select it
-          if (_workspaceCards.length == 1) {
-            _selectedPath = [0];
-          } else {
-            _selectedPath = [_workspaceCards.length - 1]; // Select last added
-          }
-        }
+      switch (_mode) {
+        case _BuilderMode.counterSimultaneous:
+          if (_selectedPath != null) _addItemCounterSimultaneous(newItem);
+        case _BuilderMode.counterChain:
+          if (_selectedPath != null) _addItemCounterChain(newItem);
+        case _BuilderMode.defense:
+          if (_selectedPath != null) _addItemDefense(newItem);
+        case _BuilderMode.chain:
+          if (_selectedPath != null) _addItemToChain(newItem);
+        case _BuilderMode.simultaneous:
+          if (_selectedPath != null) _addItemSimultaneous(newItem);
+        case _BuilderMode.none:
+          _addItemDefault(newItem);
       }
     });
+  }
+
+  void _addItemCounterSimultaneous(BuilderCardData newItem) {
+    _updateDataAtPath(_selectedPath!, (target) {
+      if (_selectedCounterPath != null) {
+        final idx = _selectedCounterPath![0];
+        if (target.hasCounterCombo && idx < target.counterSubMoves.length) {
+          final newList = List<BuilderCardData>.from(target.counterSubMoves);
+          newList.insert(idx + 1, newItem);
+          return target.copyWith(
+            counterSubMoves: newList,
+            counterName: newList.map((m) => m.name).join(' + '),
+          );
+        } else if (target.hasCounterChain && idx < target.counterChain.length) {
+          final subItem = target.counterChain[idx];
+          final simultaneous = BuilderCardData(
+            name: '${subItem.name} + ${newItem.name}',
+            category: 'simultaneous',
+            subMoves: [subItem, newItem],
+          );
+          final newList = List<BuilderCardData>.from(target.counterChain);
+          newList[idx] = simultaneous;
+          return target.copyWith(counterChain: newList);
+        }
+        return target;
+      }
+      if (target.hasCounterCombo) {
+        return target.copyWith(
+          counterSubMoves: [...target.counterSubMoves, newItem],
+          counterName:
+              '${target.counterSubMoves.map((m) => m.name).join(' + ')} + ${newItem.name}',
+        );
+      }
+      if (target.hasCounterChain) {
+        final chainGroup = BuilderCardData(
+          name: target.counterChain.map((m) => m.name).join(' -> '),
+          category: 'chain',
+          chain: List.from(target.counterChain),
+        );
+        return target.copyWith(
+          counterSubMoves: [chainGroup, newItem],
+          counterChain: const [],
+          counterName: '(${chainGroup.name}) + ${newItem.name}',
+        );
+      }
+      final existingCounter = BuilderCardData(
+        name: target.counterName ?? '',
+        category: target.counterCategory ?? '',
+        glossaryId: target.counterGlossaryId,
+        side: target.counterSide,
+        level: target.counterLevel,
+      );
+      return target.copyWith(
+        counterSubMoves: [existingCounter, newItem],
+        counterName: '${target.counterName} + ${newItem.name}',
+      );
+    });
+    _mode = _BuilderMode.none;
+    _selectedCounterPath = null;
+  }
+
+  void _addItemCounterChain(BuilderCardData newItem) {
+    _updateDataAtPath(_selectedPath!, (target) {
+      if (_selectedCounterPath != null) {
+        final idx = _selectedCounterPath![0];
+        if (target.hasCounterChain && idx < target.counterChain.length) {
+          final newList = List<BuilderCardData>.from(target.counterChain);
+          newList.insert(idx + 1, newItem);
+          return target.copyWith(
+            counterChain: newList,
+            counterName: newList.map((m) => m.name).join(' -> '),
+          );
+        } else if (target.hasCounterCombo &&
+            idx < target.counterSubMoves.length) {
+          final subItem = target.counterSubMoves[idx];
+          final chainItem = BuilderCardData(
+            name: '${subItem.name} -> ${newItem.name}',
+            category: 'chain',
+            chain: [subItem, newItem],
+          );
+          final newList = List<BuilderCardData>.from(target.counterSubMoves);
+          newList[idx] = chainItem;
+          return target.copyWith(counterSubMoves: newList);
+        }
+        return target;
+      }
+      if (target.hasCounterChain) {
+        return target.copyWith(
+          counterChain: [...target.counterChain, newItem],
+          counterName:
+              '${target.counterChain.map((m) => m.name).join(' -> ')} -> ${newItem.name}',
+        );
+      }
+      if (target.hasCounterCombo) {
+        final simultaneousGroup = BuilderCardData(
+          name: target.counterSubMoves.map((m) => m.name).join(' + '),
+          category: 'simultaneous',
+          subMoves: List.from(target.counterSubMoves),
+        );
+        return target.copyWith(
+          counterChain: [simultaneousGroup, newItem],
+          counterSubMoves: const [],
+          counterName: '(${simultaneousGroup.name}) -> ${newItem.name}',
+        );
+      }
+      final existingCounter = BuilderCardData(
+        name: target.counterName ?? '',
+        category: target.counterCategory ?? '',
+        glossaryId: target.counterGlossaryId,
+        side: target.counterSide,
+        level: target.counterLevel,
+      );
+      return target.copyWith(
+        counterChain: [existingCounter, newItem],
+        counterName: '${target.counterName} -> ${newItem.name}',
+      );
+    });
+    _mode = _BuilderMode.none;
+    _selectedCounterPath = null;
+  }
+
+  void _addItemDefense(BuilderCardData newItem) {
+    _updateDataAtPath(
+      _selectedPath!,
+      (target) => target.copyWith(
+        counterName: newItem.name,
+        counterCategory: newItem.category,
+        counterGlossaryId: newItem.glossaryId,
+        counterSubMoves: const [],
+        counterChain: const [],
+      ),
+    );
+    _mode = _BuilderMode.none;
+  }
+
+  void _addItemToChain(BuilderCardData newItem) {
+    if (_selectedPath!.length > 1) {
+      for (int depth = _selectedPath!.length - 1; depth >= 1; depth--) {
+        final parentPath = _selectedPath!.sublist(0, depth);
+        final childIndex = _selectedPath![depth];
+        bool inserted = false;
+        _updateDataAtPath(parentPath, (parent) {
+          if (parent.isChain) {
+            final newChain = List<BuilderCardData>.from(parent.chain);
+            newChain.insert(childIndex + 1, newItem);
+            inserted = true;
+            return parent.copyWith(chain: newChain);
+          }
+          return parent;
+        });
+        if (inserted) {
+          _selectedPath = [...parentPath, childIndex + 1];
+          break;
+        }
+      }
+    } else {
+      final topIndex = _selectedPath![0];
+      final selected = _getDataAtPath(_selectedPath!);
+      if (selected != null && selected.isChain) {
+        _updateDataAtPath(_selectedPath!, (target) {
+          return target.copyWith(chain: [...target.chain, newItem]);
+        });
+        _selectedPath = [topIndex, selected.chain.length];
+      } else {
+        _workspaceCards[topIndex] = BuilderCardData(
+          name: 'Chain',
+          category: 'chain',
+          chain: [_workspaceCards[topIndex], newItem],
+        );
+        _selectedPath = [topIndex, 1];
+      }
+    }
+    _mode = _BuilderMode.none;
+  }
+
+  void _addItemSimultaneous(BuilderCardData newItem) {
+    bool appended = false;
+    if (_selectedPath!.length > 1) {
+      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+      _updateDataAtPath(parentPath, (parent) {
+        if (parent.isCombo) {
+          appended = true;
+          return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
+        }
+        return parent;
+      });
+    }
+    if (!appended) {
+      _updateDataAtPath(_selectedPath!, (target) {
+        if (target.isCombo) {
+          return target.copyWith(subMoves: [...target.subMoves, newItem]);
+        }
+        return BuilderCardData(
+          name: 'Combo',
+          category: 'simultaneous',
+          subMoves: [target, newItem],
+        );
+      });
+      final target = _getDataAtPath(_selectedPath!);
+      if (target != null && target.isCombo) {
+        _selectedPath = [..._selectedPath!, target.subMoves.length - 1];
+      }
+    }
+    _mode = _BuilderMode.none;
+  }
+
+  void _addItemDefault(BuilderCardData newItem) {
+    if (_selectedPath != null && _selectedPath!.length == 1) {
+      final insertIndex = _selectedPath![0] + 1;
+      _workspaceCards.insert(insertIndex, newItem);
+      _selectedPath = [insertIndex];
+    } else {
+      _workspaceCards.add(newItem);
+      if (_workspaceCards.length == 1) {
+        _selectedPath = [0];
+      } else {
+        _selectedPath = [_workspaceCards.length - 1];
+      }
+    }
+    _mode = _BuilderMode.none;
+  }
+
+  Widget _buildCustomAnglesTab(ScrollController scrollController) {
+    return Consumer<SeriesProvider>(
+      builder: (context, provider, child) {
+        final customAngles = provider.customAngles;
+        final lang = provider.language;
+
+        if (customAngles.isEmpty) {
+          return Stack(
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text(
+                    lang == 'fr'
+                        ? 'Aucun angle personnalisé créé.\nTapez sur + pour en créer un.'
+                        : 'No custom angles created.\nTap + to design one.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton(
+                  heroTag: 'add_custom_angle_empty_fab',
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => KaliAngleDesigner(),
+                    );
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Stack(
+          children: [
+            GridView.builder(
+              controller: scrollController,
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.9,
+              ),
+              itemCount: customAngles.length,
+              itemBuilder: (context, index) {
+                final custom = customAngles[index];
+                return InkWell(
+                  onTap: () {
+                    final newItem = BuilderCardData(
+                      name: custom.name,
+                      category: 'kali',
+                      kaliAngle: custom.id,
+                    );
+                    _onAddItem(newItem);
+                    Navigator.pop(context);
+                  },
+                  onLongPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Custom Angle?'),
+                        content: Text('Delete "${custom.name}"?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () {
+                              provider.deleteCustomAngle(custom.id);
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Card(
+                    elevation: 2,
+                    child: Stack(
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: double.infinity),
+                            KaliAngleIcon(
+                              angle: custom.id,
+                              size: 60,
+                              showCircle: true,
+                            ),
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Text(
+                                custom.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: IconButton(
+                            icon: const Icon(Icons.edit, size: 16),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: FloatingActionButton(
+                heroTag: 'add_custom_angle_fab',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) => KaliAngleDesigner(),
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildTextTab() {
@@ -2707,173 +2967,4 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       },
     );
   }
-}
-
-class BuilderCardData {
-  final String name;
-  final String category;
-  final int? glossaryId;
-  final String side;
-  final String level;
-  final bool isFeint;
-  final String? specialAction;
-  final List<BuilderCardData> subMoves; // For simultaneous moves (+)
-  final List<BuilderCardData> chain; // For sequential moves (->)
-
-  // Counter (Answer) fields
-  final String? counterName;
-  final String? counterCategory;
-  final int? counterGlossaryId;
-  final String counterSide;
-  final String counterLevel;
-  final bool counterIsFeint;
-
-  // Structured counter: simultaneous answer moves (A+B for answer)
-  final List<BuilderCardData> counterSubMoves;
-  // Structured counter: sequential answer chain (A->+ for answer)
-  final List<BuilderCardData> counterChain;
-
-  BuilderCardData({
-    required this.name,
-    required this.category,
-    this.glossaryId,
-    this.side = '',
-    this.level = '',
-    this.isFeint = false,
-    this.specialAction,
-    this.subMoves = const [],
-    this.chain = const [],
-    this.counterName,
-    this.counterCategory,
-    this.counterGlossaryId,
-    this.counterSide = '',
-    this.counterLevel = '',
-    this.counterIsFeint = false,
-    this.counterSubMoves = const [],
-    this.counterChain = const [],
-  });
-
-  bool get isCombo => subMoves.isNotEmpty;
-  bool get isChain => chain.isNotEmpty;
-  bool get hasCounter =>
-      counterName != null ||
-      counterSubMoves.isNotEmpty ||
-      counterChain.isNotEmpty;
-  bool get hasCounterCombo => counterSubMoves.isNotEmpty;
-  bool get hasCounterChain => counterChain.isNotEmpty;
-  bool get hasStructuredCounter => hasCounterCombo || hasCounterChain;
-
-  BuilderCardData copyWith({
-    String? name,
-    String? category,
-    int? glossaryId,
-    String? side,
-    String? level,
-    bool? isFeint,
-    String? specialAction,
-    List<BuilderCardData>? subMoves,
-    List<BuilderCardData>? chain,
-    Object? counterName = _sentinel,
-    Object? counterCategory = _sentinel,
-    Object? counterGlossaryId = _sentinel,
-    String? counterSide,
-    String? counterLevel,
-    bool? counterIsFeint,
-    List<BuilderCardData>? counterSubMoves,
-    List<BuilderCardData>? counterChain,
-  }) {
-    return BuilderCardData(
-      name: name ?? this.name,
-      category: category ?? this.category,
-      glossaryId: glossaryId ?? this.glossaryId,
-      side: side ?? this.side,
-      level: level ?? this.level,
-      isFeint: isFeint ?? this.isFeint,
-      specialAction: specialAction ?? this.specialAction,
-      subMoves: subMoves ?? this.subMoves,
-      chain: chain ?? this.chain,
-      counterName: counterName == _sentinel
-          ? this.counterName
-          : (counterName as String?),
-      counterCategory: counterCategory == _sentinel
-          ? this.counterCategory
-          : (counterCategory as String?),
-      counterGlossaryId: counterGlossaryId == _sentinel
-          ? this.counterGlossaryId
-          : (counterGlossaryId as int?),
-      counterSide: counterSide ?? this.counterSide,
-      counterLevel: counterLevel ?? this.counterLevel,
-      counterIsFeint: counterIsFeint ?? this.counterIsFeint,
-      counterSubMoves: counterSubMoves ?? this.counterSubMoves,
-      counterChain: counterChain ?? this.counterChain,
-    );
-  }
-
-  static const _sentinel = Object();
-}
-
-class DiagonalCross extends StatelessWidget {
-  final Widget child;
-  final bool show;
-  final Color color;
-
-  const DiagonalCross({
-    super.key,
-    required this.child,
-    required this.show,
-    this.color = Colors.purple,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!show) return child;
-
-    return Stack(
-      children: [
-        child,
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(painter: DiagonalCrossPainter(color: color)),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class DiagonalCrossPainter extends CustomPainter {
-  final Color color;
-
-  DiagonalCrossPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.5)
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-
-    // Draw X
-    canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);
-    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _HistoryEntry {
-  final List<BuilderCardData> cards;
-  final List<int>? selectedPath;
-  final bool isCounterSelected;
-  final List<int>? selectedCounterPath;
-  final int? selectedCounterIndex;
-
-  _HistoryEntry({
-    required this.cards,
-    this.selectedPath,
-    this.isCounterSelected = false,
-    this.selectedCounterPath,
-    this.selectedCounterIndex,
-  });
 }

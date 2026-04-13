@@ -14,7 +14,10 @@ import '../services/import_service.dart';
 import '../services/media_backup_service.dart';
 import '../services/backup_service.dart';
 import '../services/database_service.dart';
+import '../services/web_storage_service.dart';
+import '../screens/series_list/dialogs/cloud_library_dialog.dart';
 import '../models/series.dart';
+import '../models/custom_kali_angle.dart';
 import '../models/training_program.dart';
 import '../models/program_day.dart';
 
@@ -82,9 +85,7 @@ class _BackupModalState extends State<BackupModal> {
                 onTap: () => _handleGlobalRestore(provider),
               ),
               const Divider(height: 32),
-              _buildSectionTitle(
-                LocalizationService.translate('export_title', lang),
-              ),
+              _buildSectionTitle(lang == 'fr' ? 'Séries' : 'Series'),
               _buildBackupTile(
                 title: LocalizationService.translate(
                   'export_description',
@@ -188,6 +189,54 @@ class _BackupModalState extends State<BackupModal> {
                 icon: Icons.unarchive,
                 color: Colors.greenAccent,
                 onTap: () => _handleMediaRestore(provider),
+              ),
+              const Divider(height: 32),
+              _buildSectionTitle(
+                lang == 'fr' ? 'Angles Kali Persos' : 'Custom Kali Angles',
+              ),
+              _buildBackupTile(
+                title: lang == 'fr'
+                    ? 'Exporter les Angles Kali'
+                    : 'Export Kali Angles',
+                subtitle: lang == 'fr'
+                    ? 'Sauvegarder vos angles personnalisés'
+                    : 'Backup your custom angles',
+                icon: Icons.architecture,
+                color: Colors.brown,
+                onTap: () => _handleCustomAnglesBackup(provider),
+              ),
+              _buildBackupTile(
+                title: lang == 'fr'
+                    ? 'Importer des Angles Kali'
+                    : 'Import Kali Angles',
+                subtitle: lang == 'fr'
+                    ? 'Restaurer depuis un fichier JSON'
+                    : 'Restore from a JSON file',
+                icon: Icons.upload_file,
+                color: Colors.brown.withValues(alpha: 0.6),
+                onTap: () => _handleCustomAnglesRestore(provider),
+              ),
+              _buildBackupTile(
+                title: lang == 'fr'
+                    ? 'Sync Cloud (Custom Angles)'
+                    : 'Cloud Sync (Custom Angles)',
+                subtitle: lang == 'fr'
+                    ? 'Envoyer vos angles sur le serveur'
+                    : 'Upload your custom angles to the server',
+                icon: Icons.cloud_upload,
+                color: Colors.blue,
+                onTap: () => _handleCustomAnglesCloudUpload(provider),
+              ),
+              _buildBackupTile(
+                title: lang == 'fr'
+                    ? 'Récupérer du Cloud (Custom Angles)'
+                    : 'Download from Cloud (Custom Angles)',
+                subtitle: lang == 'fr'
+                    ? 'Télécharger vos angles depuis le serveur'
+                    : 'Download your custom angles from the server',
+                icon: Icons.cloud_download,
+                color: Colors.blueAccent,
+                onTap: () => _handleCustomAnglesCloudDownload(provider),
               ),
             ],
           ),
@@ -323,6 +372,7 @@ class _BackupModalState extends State<BackupModal> {
       );
 
       if (success) {
+        await provider.reloadSettings();
         await provider.loadSeries();
         await provider.loadGlossary();
         await provider.loadActiveProgram();
@@ -653,6 +703,34 @@ class _BackupModalState extends State<BackupModal> {
 
     if (result == null || result.files.single.path == null) return;
 
+    if (!mounted) return;
+    final lang = provider.language;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          lang == 'fr' ? 'Importer des Programmes' : 'Import Training Programs',
+        ),
+        content: Text(
+          lang == 'fr'
+              ? 'Les programmes seront ajoutés à ceux existants. Continuer ?'
+              : 'Programs will be added to existing ones. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(LocalizationService.translate('cancel', lang)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(lang == 'fr' ? 'Importer' : 'Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     _setLoading(true);
     try {
       final file = File(result.files.single.path!);
@@ -759,6 +837,141 @@ class _BackupModalState extends State<BackupModal> {
     }
   }
 
+  Future<void> _handleCustomAnglesBackup(SeriesProvider provider) async {
+    final customAngles = provider.customAngles;
+    if (customAngles.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No custom angles to export')),
+        );
+      }
+      return;
+    }
+
+    final action = await _showActionDialog('Export Custom Angles');
+    if (action == null) return;
+
+    _setLoading(true);
+    try {
+      final jsonList = customAngles.map((a) => a.toJson()).toList();
+      final jsonString = const JsonEncoder.withIndent('  ').convert(jsonList);
+      final fileName = 'jkd-custom-angles-${_getTimestamp()}.json';
+
+      if (action == 'share') {
+        final tempDir = await getTemporaryDirectory();
+        final file = File(p.join(tempDir.path, fileName));
+        await file.writeAsString(jsonString);
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            text: 'JKD Custom Kali Angles Backup',
+          ),
+        );
+      } else {
+        String? targetDir = await FilePicker.platform.getDirectoryPath();
+        if (targetDir != null) {
+          final file = File(p.join(targetDir, fileName));
+          await file.writeAsString(jsonString);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Exported: ${p.basename(file.path)}')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Custom angles backup error: $e');
+    }
+    _setLoading(false);
+  }
+
+  Future<void> _handleCustomAnglesRestore(SeriesProvider provider) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result == null || result.files.single.path == null) return;
+
+    _setLoading(true);
+    try {
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      final List<dynamic> jsonList = json.decode(content);
+      final imported = jsonList
+          .map((j) => CustomKaliAngle.fromJson(j))
+          .toList();
+
+      await provider.importCustomAngles(imported);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Custom angles imported successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Custom angles restore error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to import custom angles'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+    _setLoading(false);
+  }
+
+  Future<void> _handleCustomAnglesCloudUpload(SeriesProvider provider) async {
+    final customAngles = provider.customAngles;
+    if (customAngles.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No custom angles to upload')),
+        );
+      }
+      return;
+    }
+
+    final username = provider.contributorName.isNotEmpty
+        ? provider.contributorName
+        : 'anonymous';
+
+    _setLoading(true);
+    try {
+      final webService = WebStorageService();
+      final jsonList = customAngles.map((a) => a.toJson()).toList();
+      await webService.uploadCustomAngles(jsonList, username);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Custom angles synced to cloud successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cloud sync failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+    _setLoading(false);
+  }
+
+  Future<void> _handleCustomAnglesCloudDownload(SeriesProvider provider) async {
+    CloudLibraryDialog.show(context, filterCategory: 'Custom Angles');
+  }
+
   Future<String?> _showActionDialog(String title) async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return showDialog<String>(
@@ -788,23 +1001,5 @@ class _BackupModalState extends State<BackupModal> {
         ],
       ),
     );
-  }
-}
-
-class RadioGroup<T> extends StatelessWidget {
-  final T groupValue;
-  final ValueChanged<T?> onChanged;
-  final Widget child;
-
-  const RadioGroup({
-    super.key,
-    required this.groupValue,
-    required this.onChanged,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
   }
 }

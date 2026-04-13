@@ -58,6 +58,17 @@ class BackupService {
         }
       }
 
+      // 2.1 Include Custom Kali Angles if exist
+      final docsDir = await getApplicationDocumentsDirectory();
+      final customAnglesFile = File(
+        p.join(docsDir.path, 'custom_kali_angles.json'),
+      );
+      if (await customAnglesFile.exists()) {
+        await customAnglesFile.copy(
+          p.join(workspaceDir.path, 'custom_kali_angles.json'),
+        );
+      }
+
       // 3. Include Media if path provided
       if (galleryPath != null) {
         final mediaSourceDir = Directory(galleryPath);
@@ -163,6 +174,17 @@ class BackupService {
           }
         }
       });
+
+      // 3.1 Restore Custom Kali Angles
+      final customAnglesFile = File(
+        p.join(basePath, 'custom_kali_angles.json'),
+      );
+      if (await customAnglesFile.exists()) {
+        final docsDir = await getApplicationDocumentsDirectory();
+        await customAnglesFile.copy(
+          p.join(docsDir.path, 'custom_kali_angles.json'),
+        );
+      }
 
       // 4. Restore Media
       if (galleryPath != null) {

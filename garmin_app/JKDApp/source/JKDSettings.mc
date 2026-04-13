@@ -18,6 +18,7 @@ module JKDSettings {
     var enableBeep = false;
     var enableVoice = false;
     var language = LANG_EN;
+    var mirrorMode = false;
 
     // Reference to the active training view so onPhoneAppMessage can call back into it.
     var currentView = null;
@@ -35,6 +36,8 @@ module JKDSettings {
         language = (s != null) ? s : LANG_EN;
         s = Application.Storage.getValue("forceLargeText");
         forceLargeText = (s != null) ? s : false;
+        s = Application.Storage.getValue("mirrorMode");
+        mirrorMode = (s != null) ? s : false;
     }
 
     function saveSettings() {
@@ -44,6 +47,7 @@ module JKDSettings {
         Application.Storage.setValue("enableVoice", enableVoice);
         Application.Storage.setValue("language", language);
         Application.Storage.setValue("forceLargeText", forceLargeText);
+        Application.Storage.setValue("mirrorMode", mirrorMode);
     }
 }
 

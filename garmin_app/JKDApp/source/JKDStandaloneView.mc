@@ -27,6 +27,7 @@ class JKDStandaloneView extends WatchUi.View {
     private var _autoAdvanceTicks = 0;
     private var _tickCount = 0;
     private var _isWaitingForTts = false;
+    private var _repCount = 0;
 
     function initialize(series as JKDSeries.Series) {
         View.initialize();
@@ -110,12 +111,28 @@ class JKDStandaloneView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function isShowingDetail() {
+        return _showDetail;
+    }
+
+    function toggleMirrorMode() {
+        JKDSettings.mirrorMode = !JKDSettings.mirrorMode;
+        JKDSettings.saveSettings();
+        vibrate();
+        WatchUi.requestUpdate();
+    }
+
     function nextCombo() {
         var combos = _series.combos;
         if (JKDSettings.trainingMode == JKDSettings.MODE_RANDOM) {
             _comboIndex = Math.rand() % combos.size();
         } else {
-            _comboIndex = (_comboIndex + 1) % combos.size();
+            var nextIndex = _comboIndex + 1;
+            if (nextIndex >= combos.size()) {
+                _repCount++;
+                nextIndex = 0;
+            }
+            _comboIndex = nextIndex;
         }
         _autoAdvanceTicks = 0;
         resetScroll();
@@ -252,11 +269,31 @@ class JKDStandaloneView extends WatchUi.View {
             var settings = System.getDeviceSettings();
             if (settings.phoneConnected) {
                 dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-                // Draw small dot or 'BT'
                 dc.drawText(screenWidth - 30, pillY, Graphics.FONT_XTINY, "BT", Graphics.TEXT_JUSTIFY_RIGHT);
             } else {
                 dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(screenWidth - 30, pillY, Graphics.FONT_XTINY, "BT", Graphics.TEXT_JUSTIFY_RIGHT);
+            }
+
+            // Rep count (top-left, only when > 0)
+            if (_repCount > 0) {
+                var repStr = "x" + _repCount.toString();
+                var repW = dc.getTextWidthInPixels(repStr, pFont);
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+                dc.fillRoundedRectangle(4, pillY, repW + 8, textH, 4);
+                dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(8, pillY, pFont, repStr, Graphics.TEXT_JUSTIFY_LEFT);
+            }
+
+            // Mirror mode indicator (center bottom)
+            if (JKDSettings.mirrorMode) {
+                var mirW = dc.getTextWidthInPixels("MIR", pFont);
+                var mirH = textH;
+                var mirY = screenHeight - mirH - 6;
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+                dc.fillRoundedRectangle(centerX - (mirW / 2) - 4, mirY, mirW + 8, mirH, 4);
+                dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(centerX, mirY, pFont, "MIR", Graphics.TEXT_JUSTIFY_CENTER);
             }
 
             if (JKDSettings.autoAdvanceSec > 0) {
@@ -354,8 +391,12 @@ class JKDStandaloneView extends WatchUi.View {
             var currentX = centerX - (totalW / 2);
             for (var j = 0; j < words.size(); j++) {
                 var word = words[j];
+                if (JKDSettings.mirrorMode) {
+                    if (word.equals("L")) { word = "R"; }
+                    else if (word.equals("R")) { word = "L"; }
+                }
                 var color = Graphics.COLOR_WHITE;
-                
+
                 if (word.equals("L")) { color = Graphics.COLOR_BLUE; }
                 else if (word.equals("R")) { color = Graphics.COLOR_RED; }
                 else if (word.equals("->")) { 
@@ -449,20 +490,13 @@ class JKDStandaloneView extends WatchUi.View {
         dc.drawText(centerX + 80, labelY - 20, Graphics.FONT_XTINY, "max", Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(centerX + 80, labelY + 5, Graphics.FONT_XTINY, _sessionMaxHR.toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
-        var combos = _series.combos;
-        var nextIdx = (_comboIndex + 1) % combos.size();
-        var fullNextText = combos[nextIdx];
-        var nextText = fullNextText;
-        var pIdx = fullNextText.find(" + ");
-        if (pIdx != null) {
-            var secondPart = fullNextText.substring(pIdx + 3, fullNextText.length());
-            var pIdx2 = secondPart.find(" + ");
-            if (pIdx2 != null) { nextText = fullNextText.substring(0, pIdx + 3 + pIdx2) + "..."; }
-        }
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, screenHeight - 75, Graphics.FONT_XTINY, "UP NEXT:", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, screenHeight - 55, Graphics.FONT_XTINY, nextText, Graphics.TEXT_JUSTIFY_CENTER);
+        // Mirror mode toggle
+        var mirrorColor = JKDSettings.mirrorMode ? Graphics.COLOR_ORANGE : Graphics.COLOR_LT_GRAY;
+        var mirrorLabel = JKDSettings.mirrorMode ? "MIRROR: ON" : "MIRROR: OFF";
+        dc.setColor(mirrorColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(centerX, screenHeight - 70, Graphics.FONT_SMALL, mirrorLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(centerX, screenHeight - 45, Graphics.FONT_XTINY, "^ On  v Off", Graphics.TEXT_JUSTIFY_CENTER);
     }
 }
 

@@ -18,6 +18,10 @@ class Move {
   final Map<String, String> translations;
   final int repetitions;
 
+  // Kali specific fields
+  final int? kaliAngle; // 1-12
+  final String? strikeType; // 'Lobtik', 'Witik', 'Saksak'
+
   final String? counterName;
   final String? counterSide;
   final String? counterLevel;
@@ -49,6 +53,8 @@ class Move {
     this.specialAction,
     this.translations = const {},
     this.repetitions = 1,
+    this.kaliAngle,
+    this.strikeType,
     this.counterName,
     this.counterSide,
     this.counterLevel,
@@ -126,6 +132,8 @@ class Move {
       'chain_json': chain.isNotEmpty
           ? json.encode(chain.map((m) => m.toMap()).toList())
           : null,
+      'kali_angle': kaliAngle,
+      'strike_type': strikeType,
     };
   }
 
@@ -207,6 +215,8 @@ class Move {
       specialAction: map['special_action'],
       translations: trans,
       repetitions: map['repetitions'] ?? 1,
+      kaliAngle: map['kali_angle'],
+      strikeType: map['strike_type'],
       counterName: map['counter_name'],
       counterSide: map['counter_side'],
       counterLevel: map['counter_level'],
@@ -235,6 +245,8 @@ class Move {
     String? specialAction,
     Map<String, String>? translations,
     int? repetitions,
+    int? kaliAngle,
+    String? strikeType,
     String? counterName,
     String? counterSide,
     String? counterLevel,
@@ -263,6 +275,8 @@ class Move {
       specialAction: specialAction ?? this.specialAction,
       translations: translations ?? this.translations,
       repetitions: repetitions ?? this.repetitions,
+      kaliAngle: kaliAngle ?? this.kaliAngle,
+      strikeType: strikeType ?? this.strikeType,
       counterName: counterName ?? this.counterName,
       counterSide: counterSide ?? this.counterSide,
       counterLevel: counterLevel ?? this.counterLevel,

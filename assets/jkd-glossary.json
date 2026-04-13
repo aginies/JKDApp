@@ -572,6 +572,143 @@
       "removal": {}
     }
   ],
+  "angles": [
+    {
+      "name": "Angle 1",
+      "translations": {
+        "en": "Diagonal Down Left (Forehand)",
+        "fr": "Diagonal descendant gauche"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 2",
+      "translations": {
+        "en": "Diagonal Down Right (Backhand)",
+        "fr": "Diagonal descendant droite"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 3",
+      "translations": {
+        "en": "Horizontal Right",
+        "fr": "Horizontal droite"
+      },
+      "possible_level": "M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 4",
+      "translations": {
+        "en": "Horizontal Left",
+        "fr": "Horizontal gauche"
+      },
+      "possible_level": "M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 5",
+      "translations": {
+        "en": "Straight Thrust (Center)",
+        "fr": "Estoc direct"
+      },
+      "possible_level": "M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 6",
+      "translations": {
+        "en": "Shoulder Thrust Left",
+        "fr": "Estoc épaule gauche"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 7",
+      "translations": {
+        "en": "Shoulder Thrust Right",
+        "fr": "Estoc épaule droite"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 8",
+      "translations": {
+        "en": "Vertical Down strike",
+        "fr": "Frappe verticale descendante"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 9",
+      "translations": {
+        "en": "Uppercut Left",
+        "fr": "Uppercut Gauche"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 10",
+      "translations": {
+        "en": "Uppercut Right",
+        "fr": "Uppercut Droit"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 11",
+      "translations": {
+        "en": "Thrust Low Left",
+        "fr": "Estoc Bas Gauche"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 12",
+      "translations": {
+        "en": "Thrust Low Right",
+        "fr": "Estoc Low Droite"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 13",
+      "translations": {
+        "en": "Abanico",
+        "fr": "Abanico"
+      },
+      "possible_level": "H",
+      "removal": {}
+    },
+    {
+      "name": "Angle 14",
+      "translations": {
+        "en": "Pugno hit",
+        "fr": "Frappe Pugno"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    },
+    {
+      "name": "Angle 15",
+      "translations": {
+        "en": "Backend strike",
+        "fr": "Frappe Backend"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    }
+  ],
   "packs": [
     {
       "name": "Pak Sao",
@@ -1740,12 +1877,21 @@
       },
       "possible_level": "H,M,L",
       "removal": {}
+    },
+    {
+      "name": "Abanico",
+      "translations": {
+        "en": "Fan strike (over head)",
+        "fr": "Frappe en éventail (dessus tête)"
+      },
+      "possible_level": "H",
+      "removal": {}
     }
   ],
   "metadata": {
     "Author": "Antoine Giniès",
-    "Version": "1.9.1+1",
+    "Version": "2.3.0",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-10"
   }
 }

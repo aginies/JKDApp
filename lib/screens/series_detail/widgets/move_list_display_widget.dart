@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../services/localization_service.dart';
 import '../controllers/training_controller.dart';
 import 'move_display_widgets.dart';
+import 'diagonal_cross.dart';
+import 'kali_angle_icon.dart';
 
 /// Displays the list of moves in a series with edit controls
 class MoveListDisplayWidget {
@@ -297,13 +299,24 @@ class MoveListDisplayWidget {
                 spacing: 6,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Icon(
-                    MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
-                    size: iconSize,
-                    color: MoveDisplayWidgets.getCategoryColor(
-                      sub.displayCategory,
+                  if ((sub.category == 'kali' || sub.category == 'angles') &&
+                      sub.kaliAngle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: KaliAngleIcon(
+                        angle: sub.kaliAngle!,
+                        size: iconSize * 1.8, // Increased from 1.5
+                        color: MoveDisplayWidgets.getCategoryColor('kali'),
+                      ),
+                    )
+                  else
+                    Icon(
+                      MoveDisplayWidgets.getCategoryIcon(sub.displayCategory),
+                      size: iconSize,
+                      color: MoveDisplayWidgets.getCategoryColor(
+                        sub.displayCategory,
+                      ),
                     ),
-                  ),
                   const SizedBox(width: 4),
                   Text(
                     sub.name,
@@ -545,16 +558,18 @@ class MoveListDisplayWidget {
                                                     color: Colors.grey,
                                                   ),
                                                 ),
-                                              _buildMoveContent(
-                                                sub,
-                                                language,
-                                                glossary,
-                                                onShowMediaGallery,
-                                                onEdit: isEditing
-                                                    ? onEdit(i)
-                                                    : null,
-                                                showTranslation:
-                                                    showTranslation,
+                                              Flexible(
+                                                child: _buildMoveContent(
+                                                  sub,
+                                                  language,
+                                                  glossary,
+                                                  onShowMediaGallery,
+                                                  onEdit: isEditing
+                                                      ? onEdit(i)
+                                                      : null,
+                                                  showTranslation:
+                                                      showTranslation,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -611,17 +626,33 @@ class MoveListDisplayWidget {
                                                                     color: Colors
                                                                         .orange,
                                                                   ),
-                                                                  Icon(
-                                                                    MoveDisplayWidgets.getCategoryIcon(
-                                                                      sub.counterCategory ??
-                                                                          '',
+                                                                  if ((sub.counterCategory ==
+                                                                              'kali' ||
+                                                                          sub.counterCategory ==
+                                                                              'angles') &&
+                                                                      sub.kaliAngle !=
+                                                                          null)
+                                                                    KaliAngleIcon(
+                                                                      angle: sub
+                                                                          .kaliAngle!,
+                                                                      size:
+                                                                          44, // Increased from 36
+                                                                      color: MoveDisplayWidgets.getCategoryColor(
+                                                                        'kali',
+                                                                      ),
+                                                                    )
+                                                                  else
+                                                                    Icon(
+                                                                      MoveDisplayWidgets.getCategoryIcon(
+                                                                        sub.counterCategory ??
+                                                                            '',
+                                                                      ),
+                                                                      size: 22,
+                                                                      color: MoveDisplayWidgets.getCategoryColor(
+                                                                        sub.counterCategory ??
+                                                                            '',
+                                                                      ),
                                                                     ),
-                                                                    size: 22,
-                                                                    color: MoveDisplayWidgets.getCategoryColor(
-                                                                      sub.counterCategory ??
-                                                                          '',
-                                                                    ),
-                                                                  ),
                                                                   Text(
                                                                     sub.counterName!,
                                                                     style: TextStyle(
@@ -777,6 +808,33 @@ class MoveListDisplayWidget {
                                                   size: 28,
                                                   color: Colors.orange,
                                                 ),
+                                                if ((moves[i].counterCategory ==
+                                                            'kali' ||
+                                                        moves[i].counterCategory ==
+                                                            'angles') &&
+                                                    moves[i].kaliAngle != null)
+                                                  KaliAngleIcon(
+                                                    angle: moves[i].kaliAngle!,
+                                                    size:
+                                                        52, // Increased from 44
+                                                    color:
+                                                        MoveDisplayWidgets.getCategoryColor(
+                                                          'kali',
+                                                        ),
+                                                  )
+                                                else
+                                                  Icon(
+                                                    MoveDisplayWidgets.getCategoryIcon(
+                                                      moves[i].counterCategory ??
+                                                          '',
+                                                    ),
+                                                    size: 28,
+                                                    color: MoveDisplayWidgets.getCategoryColor(
+                                                      moves[i].counterCategory ??
+                                                          '',
+                                                    ),
+                                                  ),
+                                                const SizedBox(width: 4),
                                                 DiagonalCross(
                                                   show: moves[i].counterIsFeint,
                                                   color: Colors.purple,
@@ -784,18 +842,6 @@ class MoveListDisplayWidget {
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
-                                                      Icon(
-                                                        MoveDisplayWidgets.getCategoryIcon(
-                                                          moves[i].counterCategory ??
-                                                              '',
-                                                        ),
-                                                        size: 28,
-                                                        color: MoveDisplayWidgets.getCategoryColor(
-                                                          moves[i].counterCategory ??
-                                                              '',
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
                                                       Text(
                                                         moves[i].counterName!,
                                                         style: TextStyle(
@@ -1008,54 +1054,4 @@ class MoveListDisplayWidget {
         ),
     ];
   }
-}
-
-class DiagonalCross extends StatelessWidget {
-  final Widget child;
-  final bool show;
-  final Color color;
-
-  const DiagonalCross({
-    super.key,
-    required this.child,
-    required this.show,
-    this.color = Colors.purple,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!show) return child;
-
-    return Stack(
-      children: [
-        child,
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(painter: DiagonalCrossPainter(color: color)),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class DiagonalCrossPainter extends CustomPainter {
-  final Color color;
-
-  DiagonalCrossPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.5)
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-
-    // Draw X
-    canvas.drawLine(const Offset(0, 0), Offset(size.width, size.height), paint);
-    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

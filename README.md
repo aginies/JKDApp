@@ -18,9 +18,19 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Adaptive UI**: Interface elements automatically adjust colors for maximum readability in Light, Dark, and AMOLED modes.
 - **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
 - **Media Gallery**: Attach instructional photos to techniques with auto-compression and swipe navigation.
-- **Integrated Logging**: View and save application logs directly from settings for troubleshooting.
+- **Integrated Logging**: Multi-level logging system (INFO, WARN, ERROR) with in-app viewer and export/share capabilities for easier troubleshooting.
 - **PDF Export**: Generate printable training sheets.
 - **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
+- **Cloud Library**: Share and download community-contributed training series via the integrated web service.
+
+## Web Cloud Storage
+
+The project includes a full PHP-based web backend and interface located in the `/web` directory:
+- **Central Repository**: A cloud-based library for discovering and sharing JKD training series.
+- **Web Interface**: Browse, search, and preview series content directly in any web browser.
+- **REST API**: Seamless integration with the mobile app for automated uploads and downloads.
+- **Admin Tools**: Built-in moderation and content management tools.
+- **Logging & Debugging**: Centralized logging of all API requests, uploads, and administrative actions in `web/logs/app.log`.
 
 ## Wearable Extensions
 
@@ -44,10 +54,11 @@ Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
 .
 ├── garmin_app/          # Garmin ConnectIQ source code (Monkey C)
 ├── wear_os_app/         # Native Wear OS Flutter application
+├── web/                 # PHP Backend and Web Interface for Cloud Storage
 ├── lib/                 # Main Mobile/Desktop application source
 │   ├── models/          # Data models (Move, JkdSeries)
 │   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
-│   ├── screens/         # UI Screens
+│   ├── screens/         # UI Screens and platform-specific sub-folders
 │   └── ...
 ```
 
@@ -81,19 +92,27 @@ You can now group variations of a move using letters (a, b, c...):
 |----------|--------|-------|
 | Android  | ✅ Full | Primary mobile platform support |
 | Wear OS  | ✅ Full | Native app for Watch 4/5/6/7, Pixel Watch, etc. |
-| Garmin   | ✅ Full | ConnectIQ extension for compatible Garmin devices |
+| Garmin   | ✅ Full | ConnectIQ extension for over 80 Garmin devices |
 | Windows  | ✅ Full | Fully supported desktop platform |
 | MacOS    | ✅ Full | Fully supported desktop platform |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
 | iOS      | ⚠️ Limited | Supported by code but not officially built |
 
-## Recent Updates (v2.1.0+1)
+## Development Guidelines
 
-- **Wear OS Launch**: Complete standalone watch application with Bubble Layout.
-- **Garmin Extension**: Remote synchronization support for Garmin devices.
-- **Automated Updates**: System series and glossary now update automatically via asset hashing (no reset required).
-- **Personal Backups**: Added option to export only custom (non-system) series.
-- **Database v13**: Added `sub_letter` support and automatic system series re-seeding.
+To maintain code quality and manageability, the following organization principles are encouraged:
+- **File Size**: Individual Dart files should aim to stay under **2,000 lines**.
+- **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
+- **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
+
+## Recent Updates (v2.4.0)
+
+- **Beta Cloud Library**: Upload and share your custom series with the community.
+- **Enhanced Web View**: Fully responsive, mobile-optimized interface for browsing the library and downloading binaries.
+- **Multi-Level Logging**: Comprehensive logging system for both the Flutter app and PHP backend to simplify troubleshooting.
+- **Broad Garmin Support**: Dynamic build scripts supporting the entire modern Garmin product line (Fenix 8, Forerunner 965, etc.).
+- **Wear OS Precision**: Standalone watch application with architecture-specific compatibility (arm64-v8a/armeabi-v7a).
+- **Security**: Non-overwriting cloud uploads with automatic title incrementing.
 
 ## Development
 

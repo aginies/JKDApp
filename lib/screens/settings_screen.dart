@@ -335,34 +335,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(),
               Expanded(
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    LoggingService.allLogs.isEmpty
-                        ? 'No logs available.'
-                        : LoggingService.allLogs,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                    ),
-                  ),
+                child: ListView.builder(
+                  itemCount: LoggingService.logs.length,
+                  itemBuilder: (context, index) {
+                    final log = LoggingService.logs[index];
+                    Color color = Colors.black87;
+                    if (log.contains('[ERROR]')) color = Colors.red;
+                    if (log.contains('[WARN ]')) color = Colors.orange;
+                    if (log.contains('[INFO ]')) color = Colors.blue;
+                    if (log.contains('[DEBUG]')) color = Colors.grey;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: SelectableText(
+                        log,
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: color,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    String? path = await LoggingService.saveLogsToDevice();
-                    if (path == null || !context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${LocalizationService.translate('logs_saved', lang)}: $path',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.save),
+                  onPressed: () => LoggingService.shareLogs(),
+                  icon: const Icon(Icons.share),
                   label: Text(LocalizationService.translate('save_logs', lang)),
                 ),
               ),
@@ -414,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Icon(Icons.fitness_center, size: 48, color: Colors.blue),
             const SizedBox(height: 16),
             Text(
-              'v2.1.0+1',
+              'v2.4.0',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -473,6 +475,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (val != null) provider.setLanguage(val);
                   },
                 ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: Text(
+                  lang == 'fr' ? 'Nom du contributeur' : 'Contributor Name',
+                ),
+                subtitle: Text(
+                  provider.contributorName.isEmpty
+                      ? (lang == 'fr' ? 'Non défini' : 'Not set')
+                      : provider.contributorName,
+                  style: TextStyle(
+                    color: provider.contributorName.isEmpty
+                        ? Theme.of(context).hintColor
+                        : null,
+                  ),
+                ),
+                onTap: () {
+                  final controller = TextEditingController(
+                    text: provider.contributorName,
+                  );
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(
+                        lang == 'fr'
+                            ? 'Nom du contributeur'
+                            : 'Contributor Name',
+                      ),
+                      content: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: lang == 'fr' ? 'Votre nom' : 'Your name',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(lang == 'fr' ? 'Annuler' : 'Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            provider.setContributorName(controller.text.trim());
+                            Navigator.pop(ctx);
+                          },
+                          child: Text(lang == 'fr' ? 'Enregistrer' : 'Save'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.brightness_medium),
@@ -795,6 +849,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: Text(
                   LocalizationService.translate('manage_series_desc', lang),
                 ),
+                value: provider.manageSeriesMode,
+                onChanged: (val) => provider.setManageSeriesMode(val),
+              ),
+              const Divider(),
+              SwitchListTile(
+                secondary: const Icon(Icons.code),
+                title: Text(
+                  LocalizationService.translate('developer_mode', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('developer_mode_desc', lang),
+                ),
                 value: provider.developerMode,
                 onChanged: (val) => provider.setDeveloperMode(val),
               ),
@@ -805,7 +871,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     vertical: 8.0,
                   ),
                   child: Text(
-                    'Developer Sync',
+                    'Developer Sync & Tools',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
@@ -924,7 +990,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     InkWell(
                       onTap: () => _showAboutModal(context, lang),
                       child: const Text(
-                        'Antoine Giniès - v2.1.0+1',
+                        'Antoine Giniès - v2.4.0',
                         style: TextStyle(
                           color: Colors.grey,
                           fontStyle: FontStyle.italic,

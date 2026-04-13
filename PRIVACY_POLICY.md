@@ -1,17 +1,17 @@
 # Privacy Policy
 
-**Effective Date: April 2, 2026**
+**Effective Date: April 9, 2026**
 
 This Privacy Policy describes how the **JKD App** ("we", "our", or "the application") handles your information. Your privacy is our top priority.
 
-## 1. Strictly Local Operation
+## 1. Local-First Operation
 
-The JKD App is designed as a **strictly local** utility. All application logic, data processing, and storage occur entirely on your device. 
+The JKD App is designed as a **local-first** utility. By default, all application logic, data processing, and storage occur entirely on your device.
 
 *   **No Data Collection:** We do not collect, store, transmit, or share any personal information, usage statistics, or device identifiers.
 *   **No Account Required:** You do not need to create an account or provide any personal details to use the app.
 *   **No Analytics:** We do not use any third-party analytics or tracking tools.
-*   **No Cloud Storage:** We do not use any cloud services to store your data.
+*   **Privacy-Focused Connectivity:** Server connections are strictly limited to the optional "Cloud Library" features. None of these connections are used to collect data; they are used exclusively for pushing or retrieving JSON files.
 
 ## 2. Internal Database and Data Management
 
@@ -26,11 +26,11 @@ The application manages an **internal local database** to store and display item
 The application requires specific permissions (such as storage or microphone for voice input) to function correctly. These permissions are used exclusively for:
 
 *   **Local Processing:** Managing the internal database and processing user-selected files or voice input entirely on the device.
-*   **No Uploads:** We do not upload your files, voice data, or database content to any external servers.
+*   **Optional Cloud Library:** When you manually choose to share a series or download one from the Cloud Library, the app connects to our server to transmit the series data in JSON format. **This is the only time the app communicates with a server, and no personal data or usage metrics are ever included in these transmissions.**
 
 ## 4. Data Security
 
-Since the application operates strictly locally and does not transmit data over the internet, your information remains private and secure on your own device.
+Since the application operates primarily locally and only transmits manual user-initiated files, your information remains private and secure on your own device.
 
 ## 5. Third-Party Services
 

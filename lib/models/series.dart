@@ -9,6 +9,7 @@ class JkdSeries {
   final List<Move> moves;
   final String notes;
   final bool isSystem;
+  final bool isFromCloud;
 
   JkdSeries({
     this.id,
@@ -19,6 +20,7 @@ class JkdSeries {
     this.moves = const [],
     this.notes = '',
     this.isSystem = false,
+    this.isFromCloud = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +32,7 @@ class JkdSeries {
       'attack_method': attackMethod,
       'notes': notes,
       'is_system': isSystem ? 1 : 0,
+      'is_from_cloud': isFromCloud ? 1 : 0,
     };
   }
 
@@ -42,6 +45,7 @@ class JkdSeries {
       attackMethod: map['attack_method'],
       notes: map['notes'] ?? '',
       isSystem: (map['is_system'] ?? 0) == 1,
+      isFromCloud: (map['is_from_cloud'] ?? 0) == 1,
       moves: moves,
     );
   }
@@ -55,6 +59,7 @@ class JkdSeries {
     List<Move>? moves,
     String? notes,
     bool? isSystem,
+    bool? isFromCloud,
   }) {
     return JkdSeries(
       id: id ?? this.id,
@@ -65,6 +70,7 @@ class JkdSeries {
       moves: moves ?? this.moves,
       notes: notes ?? this.notes,
       isSystem: isSystem ?? this.isSystem,
+      isFromCloud: isFromCloud ?? this.isFromCloud,
     );
   }
 }
