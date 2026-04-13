@@ -51,6 +51,7 @@ class DatabaseService {
     'assets/jkd-series-sinawali-series.json',
     'assets/jkd-series-hou-ou-tek.json',
     'assets/jkd-series-7-d-placements-kali.json',
+    'assets/jkd-series-innosanto-angles.json',
   ];
 
   static Map<String, int?>? _glossaryNameMap;
@@ -70,7 +71,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 24, // Increment version to force glossary refresh
+      version: 25, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
