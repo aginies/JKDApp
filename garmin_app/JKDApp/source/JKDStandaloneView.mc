@@ -10,9 +10,12 @@ import Toybox.UserProfile;
 import Toybox.Lang;
 import Toybox.Math;
 import Toybox.Communications;
+import Toybox.Activity;
+import Toybox.ActivityRecording;
 
 class JKDStandaloneView extends WatchUi.View {
     private var _series as JKDSeries.Series;
+    private var _session = null;
     private var _comboIndex = 0;
     private var _heartRate = 0;
     private var _sessionMinHR = 0;
@@ -46,12 +49,39 @@ class JKDStandaloneView extends WatchUi.View {
     function onShow() {
         JKDSettings.currentView = self;
         _hrTimer.start(method(:onAnimate), 100, true);
+        
+        // Start activity recording
+        if (Toybox has :ActivityRecording) {
+            if (_session == null || (_session != null && !_session.isRecording())) {
+                var sport = Activity.SPORT_GENERIC;
+                if (Activity has :SPORT_MARTIAL_ARTS) {
+                    sport = Activity.SPORT_MARTIAL_ARTS;
+                }
+                
+                _session = ActivityRecording.createSession({
+                    :name => "JKD: " + _series.title,
+                    :sport => sport,
+                    :subSport => Activity.SUB_SPORT_GENERIC
+                });
+                _session.start();
+                vibrate();
+            }
+        }
+        
         sendComboToPhone(); // Send initial combo
     }
 
     function onHide() {
         _hrTimer.stop();
         JKDSettings.currentView = null;
+        
+        // Stop and save activity recording
+        if (_session != null && _session.isRecording()) {
+            _session.stop();
+            _session.save();
+            _session = null;
+            vibrate();
+        }
     }
 
     function onAnimate() {
@@ -273,6 +303,12 @@ class JKDStandaloneView extends WatchUi.View {
             } else {
                 dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(screenWidth - 30, pillY, Graphics.FONT_XTINY, "BT", Graphics.TEXT_JUSTIFY_RIGHT);
+            }
+
+            // Recording Indicator (Red dot)
+            if (_session != null && _session.isRecording()) {
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(screenWidth - 15, pillY + (textH / 2), 4);
             }
 
             // Rep count (top-left, only when > 0)
