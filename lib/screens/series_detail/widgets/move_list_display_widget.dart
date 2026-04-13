@@ -299,7 +299,8 @@ class MoveListDisplayWidget {
                 spacing: 6,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  if ((sub.category == 'kali' || sub.category == 'angles') && sub.kaliAngle != null)
+                  if ((sub.category == 'kali' || sub.category == 'angles') &&
+                      sub.kaliAngle != null)
                     Padding(
                       padding: const EdgeInsets.only(right: 4.0),
                       child: KaliAngleIcon(
@@ -625,11 +626,20 @@ class MoveListDisplayWidget {
                                                                     color: Colors
                                                                         .orange,
                                                                   ),
-                                                                  if ((sub.counterCategory == 'kali' || sub.counterCategory == 'angles') && sub.kaliAngle != null)
+                                                                  if ((sub.counterCategory ==
+                                                                              'kali' ||
+                                                                          sub.counterCategory ==
+                                                                              'angles') &&
+                                                                      sub.kaliAngle !=
+                                                                          null)
                                                                     KaliAngleIcon(
-                                                                      angle: sub.kaliAngle!,
-                                                                      size: 44, // Increased from 36
-                                                                      color: MoveDisplayWidgets.getCategoryColor('kali'),
+                                                                      angle: sub
+                                                                          .kaliAngle!,
+                                                                      size:
+                                                                          44, // Increased from 36
+                                                                      color: MoveDisplayWidgets.getCategoryColor(
+                                                                        'kali',
+                                                                      ),
                                                                     )
                                                                   else
                                                                     Icon(
@@ -798,11 +808,19 @@ class MoveListDisplayWidget {
                                                   size: 28,
                                                   color: Colors.orange,
                                                 ),
-                                                if ((moves[i].counterCategory == 'kali' || moves[i].counterCategory == 'angles') && moves[i].kaliAngle != null)
+                                                if ((moves[i].counterCategory ==
+                                                            'kali' ||
+                                                        moves[i].counterCategory ==
+                                                            'angles') &&
+                                                    moves[i].kaliAngle != null)
                                                   KaliAngleIcon(
                                                     angle: moves[i].kaliAngle!,
-                                                    size: 52, // Increased from 44
-                                                    color: MoveDisplayWidgets.getCategoryColor('kali'),
+                                                    size:
+                                                        52, // Increased from 44
+                                                    color:
+                                                        MoveDisplayWidgets.getCategoryColor(
+                                                          'kali',
+                                                        ),
                                                   )
                                                 else
                                                   Icon(

@@ -26,7 +26,9 @@ class CustomAnglesService {
         final projectFile = File('$projectPath/$_fileName');
         if (await projectFile.exists()) {
           file = projectFile;
-          LoggingService.info('Loading custom angles from project path: ${projectFile.path}');
+          LoggingService.info(
+            'Loading custom angles from project path: ${projectFile.path}',
+          );
         }
       }
 
@@ -43,7 +45,10 @@ class CustomAnglesService {
     }
   }
 
-  Future<void> saveCustomAngles(List<CustomKaliAngle> angles, {String? projectPath}) async {
+  Future<void> saveCustomAngles(
+    List<CustomKaliAngle> angles, {
+    String? projectPath,
+  }) async {
     try {
       final jsonList = angles.map((a) => a.toJson()).toList();
       final jsonString = json.encode(jsonList);
@@ -56,7 +61,9 @@ class CustomAnglesService {
       if (projectPath != null && projectPath.isNotEmpty) {
         final projectFile = File('$projectPath/$_fileName');
         await projectFile.writeAsString(jsonString);
-        LoggingService.info('Custom angles also saved to project path: ${projectFile.path}');
+        LoggingService.info(
+          'Custom angles also saved to project path: ${projectFile.path}',
+        );
       }
     } catch (e) {
       LoggingService.error('Error saving custom angles', e);

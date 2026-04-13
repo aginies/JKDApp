@@ -654,8 +654,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               selectedAngle: data.kaliAngle,
               selectedStrikeType: data.strikeType,
               onAngleSelected: (angle) => _updateSelectedCard(kaliAngle: angle),
-              onStrikeTypeSelected:
-                  (type) => _updateSelectedCard(strikeType: type),
+              onStrikeTypeSelected: (type) =>
+                  _updateSelectedCard(strikeType: type),
             ),
           ),
           const Divider(),
@@ -669,58 +669,59 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   'Angle',
                   Icons.architecture,
                   _showAngleSelector ? Colors.brown : Colors.grey,
-                  () => setState(() => _showAngleSelector = !_showAngleSelector),
+                  () =>
+                      setState(() => _showAngleSelector = !_showAngleSelector),
                   isActive: _showAngleSelector,
                 ),
                 const SizedBox(width: 8, child: VerticalDivider()),
               ],
               _toolbarButton(
-            LocalizationService.translate('left', lang),
-            Icons.arrow_back,
-            Colors.blue,
-            () => _updateSelectedCard(side: 'L'),
+                LocalizationService.translate('left', lang),
+                Icons.arrow_back,
+                Colors.blue,
+                () => _updateSelectedCard(side: 'L'),
+              ),
+              _toolbarButton(
+                LocalizationService.translate('right', lang),
+                Icons.arrow_forward,
+                Colors.red,
+                () => _updateSelectedCard(side: 'R'),
+              ),
+              const SizedBox(width: 8, child: VerticalDivider()),
+              _toolbarButton(
+                LocalizationService.translate('draw', lang),
+                Icons.gesture,
+                Colors.purple,
+                () => _updateSelectedCard(toggleFeint: true),
+              ),
+              const SizedBox(width: 8, child: VerticalDivider()),
+              _toolbarButton(
+                'H',
+                Icons.north_east,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'High'),
+                customText: Colors.white,
+              ),
+              _toolbarButton(
+                'M',
+                Icons.arrow_forward,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'Mid'),
+                customText: Colors.white,
+              ),
+              _toolbarButton(
+                'L',
+                Icons.south_east,
+                Colors.grey[700]!,
+                () => _updateSelectedCard(level: 'Low'),
+                customText: Colors.white,
+              ),
+            ],
           ),
-          _toolbarButton(
-            LocalizationService.translate('right', lang),
-            Icons.arrow_forward,
-            Colors.red,
-            () => _updateSelectedCard(side: 'R'),
-          ),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton(
-            LocalizationService.translate('draw', lang),
-            Icons.gesture,
-            Colors.purple,
-            () => _updateSelectedCard(toggleFeint: true),
-          ),
-          const SizedBox(width: 8, child: VerticalDivider()),
-          _toolbarButton(
-            'H',
-            Icons.north_east,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'High'),
-            customText: Colors.white,
-          ),
-          _toolbarButton(
-            'M',
-            Icons.arrow_forward,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'Mid'),
-            customText: Colors.white,
-          ),
-          _toolbarButton(
-            'L',
-            Icons.south_east,
-            Colors.grey[700]!,
-            () => _updateSelectedCard(level: 'Low'),
-            customText: Colors.white,
-          ),
-        ],
-      ),
-    ),
-  ],
-);
-}
+        ),
+      ],
+    );
+  }
 
   Widget _toolbarButton(
     String label,
@@ -967,13 +968,17 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if ((data.category == 'kali' || data.category == 'angles') && data.kaliAngle != null)
+                        if ((data.category == 'kali' ||
+                                data.category == 'angles') &&
+                            data.kaliAngle != null)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 4.0),
                             child: KaliAngleIcon(
                               angle: data.kaliAngle!,
                               size: 24,
-                              color: MoveDisplayWidgets.getCategoryColor('kali'),
+                              color: MoveDisplayWidgets.getCategoryColor(
+                                'kali',
+                              ),
                             ),
                           )
                         else
@@ -1193,7 +1198,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if ((sm.category == 'kali' || sm.category == 'angles') && sm.kaliAngle != null)
+              if ((sm.category == 'kali' || sm.category == 'angles') &&
+                  sm.kaliAngle != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2.0),
                   child: KaliAngleIcon(
@@ -1201,14 +1207,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     size: 20,
                     color: MoveDisplayWidgets.getCategoryColor('kali'),
                   ),
-                )              else
+                )
+              else
                 Icon(
                   MoveDisplayWidgets.getCategoryIcon(sm.category),
                   size: 18,
                   color: color,
                 ),
               Text(
-                sm.name,                style: TextStyle(
+                sm.name,
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: theme.brightness == Brightness.dark
                       ? FontWeight.w600
@@ -1379,7 +1387,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
           const SizedBox(height: 2),
-          if ((data.counterCategory == 'kali' || data.counterCategory == 'angles') && data.kaliAngle != null)
+          if ((data.counterCategory == 'kali' ||
+                  data.counterCategory == 'angles') &&
+              data.kaliAngle != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 4.0),
               child: KaliAngleIcon(
@@ -2856,10 +2866,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         );
       },
     );
-    }
+  }
 
-    Widget _buildTextTab() {
-
+  Widget _buildTextTab() {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return Padding(
       padding: const EdgeInsets.all(16.0),

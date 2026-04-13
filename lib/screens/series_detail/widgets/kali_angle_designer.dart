@@ -13,7 +13,8 @@ class KaliAngleDesigner extends StatefulWidget {
   State<KaliAngleDesigner> createState() => _KaliAngleDesignerState();
 }
 
-class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTickerProviderStateMixin {
+class _KaliAngleDesignerState extends State<KaliAngleDesigner>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   KaliTool _activeTool = KaliTool.line;
   bool _showArrow = true;
@@ -63,16 +64,29 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
       final point = _toDesignCoords(details.localPosition, size);
       switch (_activeTool) {
         case KaliTool.line:
-          _currentElement = LineElement(start: point, end: point, hasArrow: _showArrow);
+          _currentElement = LineElement(
+            start: point,
+            end: point,
+            hasArrow: _showArrow,
+          );
           break;
         case KaliTool.curve:
-          _currentElement = CurveElement(start: point, control: point, end: point, hasArrow: _showArrow);
+          _currentElement = CurveElement(
+            start: point,
+            control: point,
+            end: point,
+            hasArrow: _showArrow,
+          );
           break;
         case KaliTool.circle:
           _currentElement = CircleElement(center: point, radius: 0);
           break;
         case KaliTool.ellipse:
-          _currentElement = EllipseElement(center: point, radiusX: 0, radiusY: 0);
+          _currentElement = EllipseElement(
+            center: point,
+            radiusX: 0,
+            radiusY: 0,
+          );
           break;
         case KaliTool.path:
           _currentElement = PathElement(points: [point], hasArrow: _showArrow);
@@ -90,8 +104,14 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
       if (current is LineElement) {
         _currentElement = current.copyWith(end: point);
       } else if (current is CurveElement) {
-        final mid = Offset((current.start.dx + point.dx) / 2, (current.start.dy + point.dy) / 2);
-        _currentElement = current.copyWith(end: point, control: Offset(mid.dx, mid.dy - 30));
+        final mid = Offset(
+          (current.start.dx + point.dx) / 2,
+          (current.start.dy + point.dy) / 2,
+        );
+        _currentElement = current.copyWith(
+          end: point,
+          control: Offset(mid.dx, mid.dy - 30),
+        );
       } else if (current is CircleElement) {
         final radius = (point - current.center).distance;
         _currentElement = current.copyWith(radius: radius);
@@ -128,7 +148,10 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
             child: const Text('Save'),
@@ -139,7 +162,10 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
 
     if (name != null && name.trim().isNotEmpty) {
       if (!mounted) return;
-      await context.read<SeriesProvider>().addCustomAngle(name.trim(), _elements);
+      await context.read<SeriesProvider>().addCustomAngle(
+        name.trim(),
+        _elements,
+      );
       if (!mounted) return;
       Navigator.pop(context);
     }
@@ -157,11 +183,15 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
           ),
           IconButton(
             icon: const Icon(Icons.undo),
-            onPressed: _elements.isEmpty ? null : () => setState(() => _elements.removeLast()),
+            onPressed: _elements.isEmpty
+                ? null
+                : () => setState(() => _elements.removeLast()),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            onPressed: _elements.isEmpty ? null : () => setState(() => _elements.clear()),
+            onPressed: _elements.isEmpty
+                ? null
+                : () => setState(() => _elements.clear()),
           ),
           IconButton(
             icon: const Icon(Icons.close),
@@ -193,13 +223,15 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
                   icon: Icons.panorama_fish_eye,
                   label: 'Circle',
                   isActive: _activeTool == KaliTool.circle,
-                  onPressed: () => setState(() => _activeTool = KaliTool.circle),
+                  onPressed: () =>
+                      setState(() => _activeTool = KaliTool.circle),
                 ),
                 _ToolButton(
                   icon: Icons.exposure_zero,
                   label: 'Ellipse',
                   isActive: _activeTool == KaliTool.ellipse,
-                  onPressed: () => setState(() => _activeTool = KaliTool.ellipse),
+                  onPressed: () =>
+                      setState(() => _activeTool = KaliTool.ellipse),
                 ),
                 _ToolButton(
                   icon: Icons.polyline,
@@ -222,10 +254,7 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Move', style: TextStyle(fontSize: 10)),
-                    Switch(
-                      value: _isAnimated,
-                      onChanged: _toggleAnimation,
-                    ),
+                    Switch(value: _isAnimated, onChanged: _toggleAnimation),
                   ],
                 ),
               ],
@@ -254,14 +283,16 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
                             painter: KaliDesignerPainter(
                               elements: _elements,
                               currentElement: _currentElement,
-                              progress: _isAnimated ? _animationController.value : 1.0,
+                              progress: _isAnimated
+                                  ? _animationController.value
+                                  : 1.0,
                             ),
                             size: Size.infinite,
                           );
-                        }
+                        },
                       ),
                     );
-                  }
+                  },
                 ),
               ),
             ),
@@ -277,7 +308,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: AnimatedBuilder(
                     animation: _animationController,
@@ -286,10 +319,12 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner> with SingleTicker
                         painter: KaliDesignerPainter(
                           elements: _elements,
                           isThumbnail: true,
-                          progress: _isAnimated ? _animationController.value : 1.0,
+                          progress: _isAnimated
+                              ? _animationController.value
+                              : 1.0,
                         ),
                       );
-                    }
+                    },
                   ),
                 ),
               ],
@@ -324,7 +359,13 @@ class _ToolButton extends StatelessWidget {
           color: isActive ? Theme.of(context).colorScheme.primary : null,
           onPressed: onPressed,
         ),
-        Text(label, style: TextStyle(fontSize: 10, color: isActive ? Theme.of(context).colorScheme.primary : null)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: isActive ? Theme.of(context).colorScheme.primary : null,
+          ),
+        ),
       ],
     );
   }
@@ -354,7 +395,7 @@ class KaliDesignerPainter extends CustomPainter {
         ..color = Colors.grey.withValues(alpha: 0.1)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(center, radius, refPaint);
-      
+
       final borderPaint = Paint()
         ..color = Colors.grey.withValues(alpha: 0.2)
         ..style = PaintingStyle.stroke
@@ -365,16 +406,17 @@ class KaliDesignerPainter extends CustomPainter {
     final scaleX = size.width / designSize;
     final scaleY = size.height / designSize;
     final scale = math.min(scaleX, scaleY);
-    
+
     final dx = (size.width - designSize * scale) / 2;
     final dy = (size.height - designSize * scale) / 2;
-    
+
     canvas.translate(dx, dy);
     canvas.scale(scale);
 
     final paint = Paint()
       ..color = Colors.brown
-      ..strokeWidth = 36.0 // Standardized design-space width
+      ..strokeWidth =
+          36.0 // Standardized design-space width
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -396,14 +438,18 @@ class KaliDesignerPainter extends CustomPainter {
         ..color = Colors.red
         ..style = PaintingStyle.fill
         ..strokeWidth = 36.0;
-      
+
       final numElements = elements.length;
       final elementDuration = 1.0 / numElements;
-      
+
       final clampedProgress = progress.clamp(0.0, 0.999);
-      final int currentIdx = (clampedProgress / elementDuration).floor().clamp(0, numElements - 1);
-      final double elementProgress = (clampedProgress % elementDuration) / elementDuration;
-      
+      final int currentIdx = (clampedProgress / elementDuration).floor().clamp(
+        0,
+        numElements - 1,
+      );
+      final double elementProgress =
+          (clampedProgress % elementDuration) / elementDuration;
+
       elements[currentIdx].paintAnimatedDot(canvas, dotPaint, elementProgress);
     }
   }

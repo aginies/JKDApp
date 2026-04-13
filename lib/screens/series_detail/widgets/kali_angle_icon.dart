@@ -116,7 +116,8 @@ class _KaliAnglePainter extends CustomPainter {
     final radius = size.width / 2;
 
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.4) // Faded background path
+      ..color = color
+          .withValues(alpha: 0.4) // Faded background path
       ..strokeWidth = size.width * 0.12
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -131,7 +132,7 @@ class _KaliAnglePainter extends CustomPainter {
         ..color = color.withValues(alpha: 0.05)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(center, radius, circlePaint);
-      
+
       final borderPaint = Paint()
         ..color = color.withValues(alpha: 0.1)
         ..style = PaintingStyle.stroke
@@ -170,8 +171,9 @@ class _KaliAnglePainter extends CustomPainter {
         final elementDuration = 1.0 / numElements;
 
         final clampedProgress = progress.clamp(0.0, 0.999);
-        final int currentIdx =
-            (clampedProgress / elementDuration).floor().clamp(0, numElements - 1);
+        final int currentIdx = (clampedProgress / elementDuration)
+            .floor()
+            .clamp(0, numElements - 1);
         final double elementProgress =
             (clampedProgress % elementDuration) / elementDuration;
 
@@ -236,22 +238,47 @@ class _KaliAnglePainter extends CustomPainter {
     }
   }
 
-  void _drawAnimatedBackend(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedBackend(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     // Mirroring Y-coordinates (Horizontal Axis Mirror)
     // From current state in file: start (dx - 0.4, dy - 0.2) -> (dx - 0.4, dy + 0.2)
     final start = Offset(center.dx - radius * 0.4, center.dy + radius * 0.2);
-    final curveControl = Offset(center.dx - radius * 0.9, center.dy + radius * 0.8);
+    final curveControl = Offset(
+      center.dx - radius * 0.9,
+      center.dy + radius * 0.8,
+    );
     final topOfHead = Offset(center.dx, center.dy + radius * 0.9);
-    final strikeStart = Offset(center.dx + radius * 0.2, center.dy + radius * 0.4);
-    
+    final strikeStart = Offset(
+      center.dx + radius * 0.2,
+      center.dy + radius * 0.4,
+    );
+
     // Diagonal strike
-    final strikeEnd = Offset(center.dx + radius * 0.9, center.dy - radius * 0.3);
+    final strikeEnd = Offset(
+      center.dx + radius * 0.9,
+      center.dy - radius * 0.3,
+    );
 
     // Draw background path
     final path = Path();
     path.moveTo(start.dx, start.dy);
-    path.quadraticBezierTo(curveControl.dx, curveControl.dy, topOfHead.dx, topOfHead.dy);
-    path.quadraticBezierTo(center.dx + radius * 0.4, center.dy + radius * 0.8, strikeStart.dx, strikeStart.dy);
+    path.quadraticBezierTo(
+      curveControl.dx,
+      curveControl.dy,
+      topOfHead.dx,
+      topOfHead.dy,
+    );
+    path.quadraticBezierTo(
+      center.dx + radius * 0.4,
+      center.dy + radius * 0.8,
+      strikeStart.dx,
+      strikeStart.dy,
+    );
     path.lineTo(strikeEnd.dx, strikeEnd.dy);
     canvas.drawPath(path, pathPaint);
 
@@ -263,43 +290,64 @@ class _KaliAnglePainter extends CustomPainter {
     if (progress < 0.3) {
       // First curve segment
       final t = progress / 0.3;
-      final x = math.pow(1 - t, 2) * start.dx + 2 * (1 - t) * t * curveControl.dx + math.pow(t, 2) * topOfHead.dx;
-      final y = math.pow(1 - t, 2) * start.dy + 2 * (1 - t) * t * curveControl.dy + math.pow(t, 2) * topOfHead.dy;
+      final x =
+          math.pow(1 - t, 2) * start.dx +
+          2 * (1 - t) * t * curveControl.dx +
+          math.pow(t, 2) * topOfHead.dx;
+      final y =
+          math.pow(1 - t, 2) * start.dy +
+          2 * (1 - t) * t * curveControl.dy +
+          math.pow(t, 2) * topOfHead.dy;
       currentPos = Offset(x, y);
     } else if (progress < 0.6) {
       // Second curve segment (back of head to strike start)
       final t = (progress - 0.3) / 0.3;
       final ctrl = Offset(center.dx + radius * 0.4, center.dy + radius * 0.8);
-      final x = math.pow(1 - t, 2) * topOfHead.dx + 2 * (1 - t) * t * ctrl.dx + math.pow(t, 2) * strikeStart.dx;
-      final y = math.pow(1 - t, 2) * topOfHead.dy + 2 * (1 - t) * t * ctrl.dy + math.pow(t, 2) * strikeStart.dy;
+      final x =
+          math.pow(1 - t, 2) * topOfHead.dx +
+          2 * (1 - t) * t * ctrl.dx +
+          math.pow(t, 2) * strikeStart.dx;
+      final y =
+          math.pow(1 - t, 2) * topOfHead.dy +
+          2 * (1 - t) * t * ctrl.dy +
+          math.pow(t, 2) * strikeStart.dy;
       currentPos = Offset(x, y);
     } else {
       // Straight strike
       final t = (progress - 0.6) / 0.4;
       currentPos = Offset(
         lerpDouble(strikeStart.dx, strikeEnd.dx, t)!,
-        lerpDouble(strikeStart.dy, strikeEnd.dy, t)!
+        lerpDouble(strikeStart.dy, strikeEnd.dy, t)!,
       );
     }
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
-  void _drawAnimatedPugno(Canvas canvas, Offset center, double radius, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedPugno(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     final start = Offset(center.dx, center.dy - radius * 0.85);
     final endLine = Offset(center.dx, center.dy + radius * 0.25);
-    
+
     // Circle at the bottom of the line
     final circleRadius = radius * 0.25;
-    final circleCenter = Offset(center.dx + circleRadius, center.dy + radius * 0.25);
+    final circleCenter = Offset(
+      center.dx + circleRadius,
+      center.dy + radius * 0.25,
+    );
     final rect = Rect.fromCircle(center: circleCenter, radius: circleRadius);
-    
+
     // Draw background path
     final path = Path();
     path.moveTo(start.dx, start.dy);
     path.lineTo(endLine.dx, endLine.dy);
     path.addArc(rect, math.pi, -2 * math.pi); // CCW circle
     canvas.drawPath(path, pathPaint);
-    
+
     // Arrow on top of the line pointing up
     final p1 = Offset(start.dx, start.dy + 1);
     final p2 = Offset(start.dx, start.dy);
@@ -312,7 +360,7 @@ class _KaliAnglePainter extends CustomPainter {
       final t = progress / 0.5;
       currentPos = Offset(
         lerpDouble(start.dx, endLine.dx, t)!,
-        lerpDouble(start.dy, endLine.dy, t)!
+        lerpDouble(start.dy, endLine.dy, t)!,
       );
     } else {
       // Second part: CCW Circle (0.0 to 1.0)
@@ -320,13 +368,21 @@ class _KaliAnglePainter extends CustomPainter {
       final angle = math.pi - (2 * math.pi * t);
       currentPos = Offset(
         circleCenter.dx + circleRadius * math.cos(angle),
-        circleCenter.dy + circleRadius * math.sin(angle)
+        circleCenter.dy + circleRadius * math.sin(angle),
       );
     }
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
-  void _drawAnimatedArc(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedArc(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double startAngleDeg,
+    double endAngleDeg,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     final startRad = startAngleDeg * math.pi / 180;
     final endRad = endAngleDeg * math.pi / 180;
     final sweepRad = endRad - startRad;
@@ -341,19 +397,33 @@ class _KaliAnglePainter extends CustomPainter {
 
     // Draw tracking dot
     final currentRad = startRad + (sweepRad * loopProgress);
-    final currentPos = Offset(center.dx + radius * 0.85 * math.cos(currentRad),
-        center.dy + radius * 0.85 * math.sin(currentRad));
+    final currentPos = Offset(
+      center.dx + radius * 0.85 * math.cos(currentRad),
+      center.dy + radius * 0.85 * math.sin(currentRad),
+    );
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
-  void _drawAnimatedLine(Canvas canvas, Offset center, double radius, double startAngleDeg, double endAngleDeg, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedLine(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double startAngleDeg,
+    double endAngleDeg,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     final startRad = startAngleDeg * math.pi / 180;
     final endRad = endAngleDeg * math.pi / 180;
 
-    final p1 = Offset(center.dx + radius * 0.95 * math.cos(startRad),
-        center.dy + radius * 0.95 * math.sin(startRad));
-    final p2 = Offset(center.dx + radius * 0.95 * math.cos(endRad),
-        center.dy + radius * 0.95 * math.sin(endRad));
+    final p1 = Offset(
+      center.dx + radius * 0.95 * math.cos(startRad),
+      center.dy + radius * 0.95 * math.sin(startRad),
+    );
+    final p2 = Offset(
+      center.dx + radius * 0.95 * math.cos(endRad),
+      center.dy + radius * 0.95 * math.sin(endRad),
+    );
 
     // Draw background line
     canvas.drawLine(p1, p2, pathPaint);
@@ -362,12 +432,21 @@ class _KaliAnglePainter extends CustomPainter {
     _drawArrowHead(canvas, p1, p2, pathPaint);
 
     // Draw tracking dot
-    final currentPos = Offset(lerpDouble(p1.dx, p2.dx, progress)!,
-        lerpDouble(p1.dy, p2.dy, progress)!);
+    final currentPos = Offset(
+      lerpDouble(p1.dx, p2.dx, progress)!,
+      lerpDouble(p1.dy, p2.dy, progress)!,
+    );
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
 
-  void _drawAnimatedCurve(Canvas canvas, Offset center, double radius, bool isRight, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedCurve(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    bool isRight,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     final p1 = isRight
         ? Offset(center.dx - radius * 0.8, center.dy + radius * 0.2)
         : Offset(center.dx + radius * 0.8, center.dy + radius * 0.2);
@@ -383,22 +462,37 @@ class _KaliAnglePainter extends CustomPainter {
 
     // Arrowhead
     final tangentSource = Offset(
-        lerpDouble(ctrl.dx, p2.dx, 0.8)!, lerpDouble(ctrl.dy, p2.dy, 0.8)!);
+      lerpDouble(ctrl.dx, p2.dx, 0.8)!,
+      lerpDouble(ctrl.dy, p2.dy, 0.8)!,
+    );
     _drawArrowHead(canvas, tangentSource, p2, pathPaint);
 
     // Calculate dot position on quadratic bezier: (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
     final t = progress;
-    final dotX = math.pow(1 - t, 2) * p1.dx +
+    final dotX =
+        math.pow(1 - t, 2) * p1.dx +
         2 * (1 - t) * t * ctrl.dx +
         math.pow(t, 2) * p2.dx;
-    final dotY = math.pow(1 - t, 2) * p1.dy +
+    final dotY =
+        math.pow(1 - t, 2) * p1.dy +
         2 * (1 - t) * t * ctrl.dy +
         math.pow(t, 2) * p2.dy;
 
-    canvas.drawCircle(Offset(dotX, dotY), pathPaint.strokeWidth * 0.8, dotPaint);
+    canvas.drawCircle(
+      Offset(dotX, dotY),
+      pathPaint.strokeWidth * 0.8,
+      dotPaint,
+    );
   }
 
-  void _drawAnimatedThrust(Canvas canvas, Offset center, double radius, bool isLeftHand, Paint pathPaint, Paint dotPaint) {
+  void _drawAnimatedThrust(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    bool isLeftHand,
+    Paint pathPaint,
+    Paint dotPaint,
+  ) {
     final start = isLeftHand
         ? Offset(center.dx - radius * 0.7, center.dy + radius * 0.5)
         : Offset(center.dx + radius * 0.7, center.dy + radius * 0.5);
@@ -410,8 +504,10 @@ class _KaliAnglePainter extends CustomPainter {
         : Offset(center.dx - radius * 0.6, center.dy - radius * 0.6);
 
     // Using a more identifiable point for the "loading" part of the thrust
-    final midPoint = Offset(center.dx + (isLeftHand ? -radius * 0.2 : radius * 0.2),
-        center.dy + radius * 0.1);
+    final midPoint = Offset(
+      center.dx + (isLeftHand ? -radius * 0.2 : radius * 0.2),
+      center.dy + radius * 0.1,
+    );
 
     final path = Path();
     path.moveTo(start.dx, start.dy);
@@ -426,18 +522,22 @@ class _KaliAnglePainter extends CustomPainter {
     if (progress < 0.3) {
       // First part: Curve (normalized progress 0.0 to 1.0)
       final t = progress / 0.3;
-      final x = math.pow(1 - t, 2) * start.dx +
+      final x =
+          math.pow(1 - t, 2) * start.dx +
           2 * (1 - t) * t * mid.dx +
           math.pow(t, 2) * midPoint.dx;
-      final y = math.pow(1 - t, 2) * start.dy +
+      final y =
+          math.pow(1 - t, 2) * start.dy +
           2 * (1 - t) * t * mid.dy +
           math.pow(t, 2) * midPoint.dy;
       currentPos = Offset(x, y);
     } else {
       // Second part: Straight line (normalized progress 0.0 to 1.0)
       final t = (progress - 0.3) / 0.7;
-      currentPos = Offset(lerpDouble(midPoint.dx, end.dx, t)!,
-          lerpDouble(midPoint.dy, end.dy, t)!);
+      currentPos = Offset(
+        lerpDouble(midPoint.dx, end.dx, t)!,
+        lerpDouble(midPoint.dy, end.dy, t)!,
+      );
     }
     canvas.drawCircle(currentPos, pathPaint.strokeWidth * 0.8, dotPaint);
   }
@@ -455,10 +555,14 @@ class _KaliAnglePainter extends CustomPainter {
     final arrowSize = strokeWidth * 3.5;
     final path = Path()
       ..moveTo(tip.dx, tip.dy)
-      ..lineTo(tip.dx - arrowSize * math.cos(angle - 0.6),
-          tip.dy - arrowSize * math.sin(angle - 0.6))
-      ..lineTo(tip.dx - arrowSize * math.cos(angle + 0.6),
-          tip.dy - arrowSize * math.sin(angle + 0.6))
+      ..lineTo(
+        tip.dx - arrowSize * math.cos(angle - 0.6),
+        tip.dy - arrowSize * math.sin(angle - 0.6),
+      )
+      ..lineTo(
+        tip.dx - arrowSize * math.cos(angle + 0.6),
+        tip.dy - arrowSize * math.sin(angle + 0.6),
+      )
       ..close();
 
     final headPaint = Paint()

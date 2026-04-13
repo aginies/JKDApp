@@ -273,7 +273,7 @@ class GlossaryUIBuilder {
     final side = pickerState?.selectedSides[id] ?? '';
     final isFeint = pickerState?.selectedFeints[id] ?? false;
     final specialAction = pickerState?.selectedSpecials[id];
-    
+
     final isExpanded = GlossaryDataService.shouldExpandItem(
       id,
       item['name'],

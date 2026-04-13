@@ -139,11 +139,16 @@ class SeriesProvider with ChangeNotifier {
   }
 
   Future<void> loadCustomAngles() async {
-    _customAngles = await _customAnglesService.loadCustomAngles(projectPath: _projectPath);
+    _customAngles = await _customAnglesService.loadCustomAngles(
+      projectPath: _projectPath,
+    );
     notifyListeners();
   }
 
-  Future<void> addCustomAngle(String name, List<DrawingElement> elements) async {
+  Future<void> addCustomAngle(
+    String name,
+    List<DrawingElement> elements,
+  ) async {
     int nextId = 100;
     if (_customAngles.isNotEmpty) {
       nextId = _customAngles.map((a) => a.id).reduce(math.max) + 1;
@@ -156,13 +161,19 @@ class SeriesProvider with ChangeNotifier {
     );
 
     _customAngles.add(newAngle);
-    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
     notifyListeners();
   }
 
   Future<void> deleteCustomAngle(int id) async {
     _customAngles.removeWhere((a) => a.id == id);
-    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
     notifyListeners();
   }
 
@@ -183,7 +194,10 @@ class SeriesProvider with ChangeNotifier {
       _customAngles.add(newAngle);
     }
 
-    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    await _customAnglesService.saveCustomAngles(
+      _customAngles,
+      projectPath: _projectPath,
+    );
     notifyListeners();
   }
 

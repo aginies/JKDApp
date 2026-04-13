@@ -898,8 +898,9 @@ class _BackupModalState extends State<BackupModal> {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
       final List<dynamic> jsonList = json.decode(content);
-      final imported =
-          jsonList.map((j) => CustomKaliAngle.fromJson(j)).toList();
+      final imported = jsonList
+          .map((j) => CustomKaliAngle.fromJson(j))
+          .toList();
 
       await provider.importCustomAngles(imported);
 

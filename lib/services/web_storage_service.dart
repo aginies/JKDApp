@@ -197,7 +197,8 @@ class WebStorageService {
         throw Exception('Custom angles file is too large (max 256KB)');
       }
 
-      final String filename = 'custom_angles_${username.replaceAll(' ', '_')}.json';
+      final String filename =
+          'custom_angles_${username.replaceAll(' ', '_')}.json';
       final String token = await _getToken();
 
       LoggingService.info(

@@ -71,7 +71,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 25, // Increment version to force glossary refresh
+      version: 26, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -426,6 +426,8 @@ class DatabaseService {
               'sub_moves_json': move['sub_moves_json'],
               'chain_json': move['chain_json'],
               'position': i,
+              'kali_angle': move['kali_angle'],
+              'strike_type': move['strike_type'],
             });
           }
         }

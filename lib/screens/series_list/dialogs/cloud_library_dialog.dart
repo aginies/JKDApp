@@ -234,10 +234,12 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
 
       if (category == 'Custom Angles') {
         // Handle Custom Angles import
-        final List<dynamic> jsonList =
-            decodedData is List ? decodedData : [decodedData];
-        final imported =
-            jsonList.map((j) => CustomKaliAngle.fromJson(j)).toList();
+        final List<dynamic> jsonList = decodedData is List
+            ? decodedData
+            : [decodedData];
+        final imported = jsonList
+            .map((j) => CustomKaliAngle.fromJson(j))
+            .toList();
         await provider.importCustomAngles(imported);
       } else {
         // Handle standard Series import
@@ -268,11 +270,11 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
             content: Text(
               category == 'Custom Angles'
                   ? (lang == 'fr'
-                      ? 'Angles importés avec succès !'
-                      : 'Angles imported successfully!')
+                        ? 'Angles importés avec succès !'
+                        : 'Angles imported successfully!')
                   : (lang == 'fr'
-                      ? 'Série importée avec succès !'
-                      : 'Series imported successfully!'),
+                        ? 'Série importée avec succès !'
+                        : 'Series imported successfully!'),
             ),
             backgroundColor: Colors.green,
           ),

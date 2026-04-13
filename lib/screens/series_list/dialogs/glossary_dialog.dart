@@ -311,23 +311,23 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
             customAngles.isEmpty
                 ? const EmptyStateIllustration(titleKey: 'nothing')
                 : ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: customAngles.length,
-                  itemBuilder: (context, index) {
-                    final custom = customAngles[index];
-                    final item = {
-                      'id': custom.id,
-                      'name': custom.name,
-                      'translations': '{}',
-                    };
-                    return _buildGlossaryItemCard(
-                      item,
-                      'kali',
-                      isCustom: true,
-                      onDelete: () => _confirmDelete(context, provider, item),
-                    );
-                  },
-                ),
+                    padding: const EdgeInsets.all(8),
+                    itemCount: customAngles.length,
+                    itemBuilder: (context, index) {
+                      final custom = customAngles[index];
+                      final item = {
+                        'id': custom.id,
+                        'name': custom.name,
+                        'translations': '{}',
+                      };
+                      return _buildGlossaryItemCard(
+                        item,
+                        'kali',
+                        isCustom: true,
+                        onDelete: () => _confirmDelete(context, provider, item),
+                      );
+                    },
+                  ),
             Positioned(
               bottom: 16,
               right: 16,
@@ -435,12 +435,12 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                             angleId = item['id'] as int?;
                           } else {
                             final name = item['name'].toString();
-                            final match =
-                                RegExp(r'Angle\s+(\d+)').firstMatch(name);
-                            angleId =
-                                match != null
-                                    ? int.tryParse(match.group(1) ?? '')
-                                    : null;
+                            final match = RegExp(
+                              r'Angle\s+(\d+)',
+                            ).firstMatch(name);
+                            angleId = match != null
+                                ? int.tryParse(match.group(1) ?? '')
+                                : null;
                           }
 
                           if (angleId != null) {

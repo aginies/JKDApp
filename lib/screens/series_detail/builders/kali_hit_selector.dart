@@ -126,7 +126,9 @@ class KaliHitSelector extends StatelessWidget {
                               onSelected: (val) {
                                 if (val) onStrikeTypeSelected(type);
                               },
-                              selectedColor: Colors.brown.withValues(alpha: 0.2),
+                              selectedColor: Colors.brown.withValues(
+                                alpha: 0.2,
+                              ),
                             ),
                           );
                         }).toList(),
