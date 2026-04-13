@@ -177,6 +177,18 @@ class SeriesProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateCustomAngle(CustomKaliAngle angle) async {
+    final index = _customAngles.indexWhere((a) => a.id == angle.id);
+    if (index != -1) {
+      _customAngles[index] = angle;
+      await _customAnglesService.saveCustomAngles(
+        _customAngles,
+        projectPath: _projectPath,
+      );
+      notifyListeners();
+    }
+  }
+
   Future<void> importCustomAngles(List<CustomKaliAngle> importedAngles) async {
     int maxId = 99;
     if (_customAngles.isNotEmpty) {

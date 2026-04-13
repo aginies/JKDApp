@@ -325,6 +325,14 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         'kali',
                         isCustom: true,
                         onDelete: () => _confirmDelete(context, provider, item),
+                        onEdit: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            useSafeArea: true,
+                            builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                          );
+                        },
                       );
                     },
                   ),
@@ -338,7 +346,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                     context: context,
                     isScrollControlled: true,
                     useSafeArea: true,
-                    builder: (context) => const KaliAngleDesigner(),
+                    builder: (context) => KaliAngleDesigner(),
                   );
                 },
                 child: const Icon(Icons.add),
@@ -383,6 +391,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
     String category, {
     bool isCustom = false,
     VoidCallback? onDelete,
+    VoidCallback? onEdit,
   }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final themeColor = provider.themeColor;
@@ -500,13 +509,19 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         snapshot.hasData && snapshot.data!.isNotEmpty;
                     return Icon(
                       Icons.image,
-                      size: 18,
-                      color: hasImages ? Colors.blue : Colors.grey[300],
+                      color: hasImages ? themeColor : Colors.grey[300],
+                      size: 20,
                     );
-                  },
-                ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                    },
+                    ),
+                    if (onEdit != null)
+                    IconButton(
+                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                    onPressed: onEdit,
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+
             ],
           ),
         ),

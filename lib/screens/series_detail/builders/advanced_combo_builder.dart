@@ -2758,7 +2758,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                       context: context,
                       isScrollControlled: true,
                       useSafeArea: true,
-                      builder: (context) => const KaliAngleDesigner(),
+                      builder: (context) => KaliAngleDesigner(),
                     );
                   },
                   child: const Icon(Icons.add),
@@ -2822,23 +2822,46 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   },
                   child: Card(
                     elevation: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Stack(
                       children: [
-                        KaliAngleIcon(
-                          angle: custom.id,
-                          size: 60,
-                          showCircle: true,
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: double.infinity),
+                            KaliAngleIcon(
+                              angle: custom.id,
+                              size: 60,
+                              showCircle: true,
+                            ),
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Text(
+                                custom.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          custom.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: IconButton(
+                            icon: const Icon(Icons.edit, size: 16),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                              );
+                            },
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -2856,7 +2879,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     context: context,
                     isScrollControlled: true,
                     useSafeArea: true,
-                    builder: (context) => const KaliAngleDesigner(),
+                    builder: (context) => KaliAngleDesigner(),
                   );
                 },
                 child: const Icon(Icons.add),

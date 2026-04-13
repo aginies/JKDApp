@@ -5,6 +5,9 @@ abstract class DrawingElement {
   void paint(Canvas canvas, Paint paint, {bool isThumbnail = false});
   void paintAnimatedDot(Canvas canvas, Paint paint, double progress);
   Map<String, dynamic> toJson();
+  
+  List<Offset> getControlPoints();
+  DrawingElement updateControlPoint(int index, Offset newPoint);
 
   static DrawingElement fromJson(Map<String, dynamic> json) {
     switch (json['type']) {
@@ -37,6 +40,16 @@ class LineElement extends DrawingElement {
       end: end ?? this.end,
       hasArrow: hasArrow ?? this.hasArrow,
     );
+  }
+  
+  @override
+  List<Offset> getControlPoints() => [start, end];
+  
+  @override
+  DrawingElement updateControlPoint(int index, Offset newPoint) {
+    if (index == 0) return copyWith(start: newPoint);
+    if (index == 1) return copyWith(end: newPoint);
+    return this;
   }
 
   @override
@@ -106,6 +119,17 @@ class CurveElement extends DrawingElement {
       end: end ?? this.end,
       hasArrow: hasArrow ?? this.hasArrow,
     );
+  }
+  
+  @override
+  List<Offset> getControlPoints() => [start, control, end];
+  
+  @override
+  DrawingElement updateControlPoint(int index, Offset newPoint) {
+    if (index == 0) return copyWith(start: newPoint);
+    if (index == 1) return copyWith(control: newPoint);
+    if (index == 2) return copyWith(end: newPoint);
+    return this;
   }
 
   @override
@@ -179,6 +203,19 @@ class CircleElement extends DrawingElement {
       radius: radius ?? this.radius,
     );
   }
+  
+  @override
+  List<Offset> getControlPoints() => [center, Offset(center.dx + radius, center.dy)];
+  
+  @override
+  DrawingElement updateControlPoint(int index, Offset newPoint) {
+    if (index == 0) return copyWith(center: newPoint);
+    if (index == 1) {
+      final r = (newPoint - center).distance;
+      return copyWith(radius: r);
+    }
+    return this;
+  }
 
   @override
   Map<String, dynamic> toJson() => {
@@ -232,6 +269,21 @@ class EllipseElement extends DrawingElement {
       radiusX: radiusX ?? this.radiusX,
       radiusY: radiusY ?? this.radiusY,
     );
+  }
+  
+  @override
+  List<Offset> getControlPoints() => [
+    center, 
+    Offset(center.dx + radiusX, center.dy),
+    Offset(center.dx, center.dy + radiusY)
+  ];
+  
+  @override
+  DrawingElement updateControlPoint(int index, Offset newPoint) {
+    if (index == 0) return copyWith(center: newPoint);
+    if (index == 1) return copyWith(radiusX: (newPoint.dx - center.dx).abs());
+    if (index == 2) return copyWith(radiusY: (newPoint.dy - center.dy).abs());
+    return this;
   }
 
   @override
@@ -290,6 +342,19 @@ class PathElement extends DrawingElement {
       points: points ?? this.points,
       hasArrow: hasArrow ?? this.hasArrow,
     );
+  }
+  
+  @override
+  List<Offset> getControlPoints() => points;
+  
+  @override
+  DrawingElement updateControlPoint(int index, Offset newPoint) {
+    if (index >= 0 && index < points.length) {
+      final newPoints = List<Offset>.from(points);
+      newPoints[index] = newPoint;
+      return copyWith(points: newPoints);
+    }
+    return this;
   }
 
   @override
