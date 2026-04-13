@@ -893,7 +893,6 @@ class _WearTrainingViewState extends State<WearTrainingView>
               ),
 
             // Visual Countdown Border
-
             if (_progressController != null)
               Positioned.fill(
                 child: AnimatedBuilder(

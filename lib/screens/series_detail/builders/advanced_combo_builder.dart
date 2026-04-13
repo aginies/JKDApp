@@ -2835,7 +2835,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             ),
                             const SizedBox(height: 4),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4.0,
+                              ),
                               child: Text(
                                 custom.name,
                                 style: const TextStyle(
@@ -2858,7 +2860,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                 context: context,
                                 isScrollControlled: true,
                                 useSafeArea: true,
-                                builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                                builder: (context) =>
+                                    KaliAngleDesigner(existingAngle: custom),
                               );
                             },
                           ),

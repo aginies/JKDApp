@@ -330,7 +330,8 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                             context: context,
                             isScrollControlled: true,
                             useSafeArea: true,
-                            builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                            builder: (context) =>
+                                KaliAngleDesigner(existingAngle: custom),
                           );
                         },
                       );
@@ -512,16 +513,15 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                       color: hasImages ? themeColor : Colors.grey[300],
                       size: 20,
                     );
-                    },
-                    ),
-                    if (onEdit != null)
-                    IconButton(
-                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    onPressed: onEdit,
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-
+                  },
+                ),
+              if (onEdit != null)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                  onPressed: onEdit,
+                ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
             ],
           ),
         ),

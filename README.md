@@ -105,7 +105,7 @@ To maintain code quality and manageability, the following organization principle
 - **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
 - **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
 
-## Recent Updates (v2.4.0)
+## Recent Updates (v2.5.0)
 
 - **Beta Cloud Library**: Upload and share your custom series with the community.
 - **Enhanced Web View**: Fully responsive, mobile-optimized interface for browsing the library and downloading binaries.

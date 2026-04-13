@@ -104,7 +104,10 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
     } else if (el is PathElement) {
       double minD = double.infinity;
       for (int i = 0; i < el.points.length - 1; i++) {
-        minD = math.min(minD, _distanceToLineSegment(point, el.points[i], el.points[i+1]));
+        minD = math.min(
+          minD,
+          _distanceToLineSegment(point, el.points[i], el.points[i + 1]),
+        );
       }
       return minD;
     }
@@ -114,9 +117,11 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
   double _distanceToLineSegment(Offset p, Offset a, Offset b) {
     final l2 = (a - b).distanceSquared;
     if (l2 == 0) return (p - a).distance;
-    var t = ((p.dx - a.dx) * (b.dx - a.dx) + (p.dy - a.dy) * (b.dy - a.dy)) / l2;
+    var t =
+        ((p.dx - a.dx) * (b.dx - a.dx) + (p.dy - a.dy) * (b.dy - a.dy)) / l2;
     t = math.max(0, math.min(1, t));
-    return (p - Offset(a.dx + t * (b.dx - a.dx), a.dy + t * (b.dy - a.dy))).distance;
+    return (p - Offset(a.dx + t * (b.dx - a.dx), a.dy + t * (b.dy - a.dy)))
+        .distance;
   }
 
   void _handlePanStart(DragStartDetails details, Size size) {
@@ -129,7 +134,8 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
         final el = _elements[_selectedElementIndex!];
         final points = el.getControlPoints();
         for (int i = 0; i < points.length; i++) {
-          if ((point - points[i]).distance < 30) { // Increased hit area
+          if ((point - points[i]).distance < 30) {
+            // Increased hit area
             setState(() {
               _selectedControlPointIndex = i;
             });
@@ -155,7 +161,7 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
       // 3. Try to select by tapping the SHAPE itself
       int? bestMatch;
       double minD = 30.0; // Max selection distance
-      
+
       for (int i = _elements.length - 1; i >= 0; i--) {
         final dist = _getDistanceToElement(point, _elements[i]);
         if (dist < minD) {
@@ -280,7 +286,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          widget.existingAngle == null ? 'Save Kali Angle' : 'Update Kali Angle',
+          widget.existingAngle == null
+              ? 'Save Kali Angle'
+              : 'Update Kali Angle',
         ),
         content: TextField(
           controller: controller,
@@ -336,20 +344,20 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
             onPressed: _elements.isEmpty
                 ? null
                 : () => setState(() {
-                      _elements.removeLast();
-                      _selectedElementIndex = null;
-                      _selectedControlPointIndex = null;
-                    }),
+                    _elements.removeLast();
+                    _selectedElementIndex = null;
+                    _selectedControlPointIndex = null;
+                  }),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: _elements.isEmpty
                 ? null
                 : () => setState(() {
-                      _elements.clear();
-                      _selectedElementIndex = null;
-                      _selectedControlPointIndex = null;
-                    }),
+                    _elements.clear();
+                    _selectedElementIndex = null;
+                    _selectedControlPointIndex = null;
+                  }),
           ),
 
           IconButton(
@@ -372,45 +380,52 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                     icon: Icons.near_me,
                     label: 'Select',
                     isActive: _activeTool == KaliTool.select,
-                    onPressed: () => setState(() => _activeTool = KaliTool.select),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.select),
                   ),
                   const SizedBox(width: 8, child: VerticalDivider()),
                   _ToolButton(
                     icon: Icons.linear_scale,
                     label: 'Line',
                     isActive: _activeTool == KaliTool.line,
-                    onPressed: () => setState(() => _activeTool = KaliTool.line),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.line),
                   ),
                   _ToolButton(
                     icon: Icons.gesture,
                     label: 'Curve',
                     isActive: _activeTool == KaliTool.curve,
-                    onPressed: () => setState(() => _activeTool = KaliTool.curve),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.curve),
                   ),
                   _ToolButton(
                     icon: Icons.panorama_fish_eye,
                     label: 'Circle',
                     isActive: _activeTool == KaliTool.circle,
-                    onPressed: () => setState(() => _activeTool = KaliTool.circle),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.circle),
                   ),
                   _ToolButton(
                     icon: Icons.exposure_zero,
                     label: 'Ellipse',
                     isActive: _activeTool == KaliTool.ellipse,
-                    onPressed: () => setState(() => _activeTool = KaliTool.ellipse),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.ellipse),
                   ),
                   _ToolButton(
                     icon: Icons.polyline,
                     label: 'Path',
                     isActive: _activeTool == KaliTool.path,
-                    onPressed: () => setState(() => _activeTool = KaliTool.path),
+                    onPressed: () =>
+                        setState(() => _activeTool = KaliTool.path),
                   ),
                   const VerticalDivider(),
                   _ToolButton(
                     icon: _snapEnabled ? Icons.grid_on : Icons.grid_off,
                     label: 'Snap',
                     isActive: _snapEnabled,
-                    onPressed: () => setState(() => _snapEnabled = !_snapEnabled),
+                    onPressed: () =>
+                        setState(() => _snapEnabled = !_snapEnabled),
                   ),
                   const VerticalDivider(),
                   Column(
@@ -459,7 +474,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                               elements: _elements,
                               currentElement: _currentElement,
                               selectedElementIndex: _selectedElementIndex,
-                              progress: _isAnimated ? _animationController.value : 1.0,
+                              progress: _isAnimated
+                                  ? _animationController.value
+                                  : 1.0,
                             ),
                             size: Size.infinite,
                           );
@@ -482,7 +499,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: AnimatedBuilder(
                     animation: _animationController,
@@ -492,7 +511,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                           elements: _elements,
                           isThumbnail: true,
                           selectedElementIndex: _selectedElementIndex,
-                          progress: _isAnimated ? _animationController.value : 1.0,
+                          progress: _isAnimated
+                              ? _animationController.value
+                              : 1.0,
                         ),
                       );
                     },
@@ -580,10 +601,18 @@ class KaliDesignerPainter extends CustomPainter {
         final gridPaint = Paint()
           ..color = Colors.grey.withValues(alpha: 0.05)
           ..strokeWidth = 0.5;
-        for (double i = 0; i <= size.width; i += (size.width / (designSize / 15))) {
+        for (
+          double i = 0;
+          i <= size.width;
+          i += (size.width / (designSize / 15))
+        ) {
           canvas.drawLine(Offset(i, 0), Offset(i, size.height), gridPaint);
         }
-        for (double i = 0; i <= size.height; i += (size.height / (designSize / 15))) {
+        for (
+          double i = 0;
+          i <= size.height;
+          i += (size.height / (designSize / 15))
+        ) {
           canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
         }
       }
@@ -613,10 +642,10 @@ class KaliDesignerPainter extends CustomPainter {
       final isSelected = i == selectedElementIndex;
       final p = isSelected
           ? (Paint()
-            ..color = Colors.blue.withValues(alpha: 0.8)
-            ..strokeWidth = strokeWidth
-            ..strokeCap = StrokeCap.round
-            ..style = PaintingStyle.stroke)
+              ..color = Colors.blue.withValues(alpha: 0.8)
+              ..strokeWidth = strokeWidth
+              ..strokeCap = StrokeCap.round
+              ..style = PaintingStyle.stroke)
           : paint;
       elements[i].paint(canvas, p, isThumbnail: isThumbnail);
 
