@@ -5,18 +5,20 @@ import '../../../services/series_provider.dart';
 import '../../../services/web_storage_service.dart';
 import '../../../models/series.dart';
 import '../../../models/move.dart';
+import '../../../models/custom_kali_angle.dart';
 
 class CloudLibraryDialog extends StatefulWidget {
-  const CloudLibraryDialog({super.key});
+  final String? filterCategory;
+  const CloudLibraryDialog({super.key, this.filterCategory});
 
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {String? filterCategory}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const CloudLibraryDialog(),
+      builder: (context) => CloudLibraryDialog(filterCategory: filterCategory),
     );
   }
 
@@ -31,13 +33,26 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
   @override
   void initState() {
     super.initState();
-    // Initialize the future once to prevent redundant re-fetching on rebuilds
-    _availableSeriesFuture = _webService.fetchAvailableSeries();
+    _availableSeriesFuture = _webService.fetchAvailableSeries().then((items) {
+      if (widget.filterCategory != null) {
+        return items
+            .where((item) => item['category'] == widget.filterCategory)
+            .toList();
+      }
+      return items;
+    });
   }
 
   void _refreshList() {
     setState(() {
-      _availableSeriesFuture = _webService.fetchAvailableSeries();
+      _availableSeriesFuture = _webService.fetchAvailableSeries().then((items) {
+        if (widget.filterCategory != null) {
+          return items
+              .where((item) => item['category'] == widget.filterCategory)
+              .toList();
+        }
+        return items;
+      });
     });
   }
 
@@ -183,6 +198,7 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
                           onPressed: () => _downloadAndImportSeries(
                             context,
                             item['filename'],
+                            item['category'],
                           ),
                         ),
                       );
@@ -200,6 +216,7 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
   Future<void> _downloadAndImportSeries(
     BuildContext context,
     String filename,
+    String? category,
   ) async {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
@@ -213,36 +230,49 @@ class _CloudLibraryDialogState extends State<CloudLibraryDialog> {
 
     try {
       final jsonContent = await _webService.downloadJson(filename);
-      final Map<String, dynamic> data = jsonDecode(jsonContent);
+      final dynamic decodedData = jsonDecode(jsonContent);
 
-      // Convert JSON to JkdSeries
-      final List<dynamic> movesData = data['moves'] ?? [];
-      final List<Move> moves = movesData
-          .map((m) => Move.fromMap(m as Map<String, dynamic>))
-          .toList();
+      if (category == 'Custom Angles') {
+        // Handle Custom Angles import
+        final List<dynamic> jsonList =
+            decodedData is List ? decodedData : [decodedData];
+        final imported =
+            jsonList.map((j) => CustomKaliAngle.fromJson(j)).toList();
+        await provider.importCustomAngles(imported);
+      } else {
+        // Handle standard Series import
+        final Map<String, dynamic> data = decodedData as Map<String, dynamic>;
+        final List<dynamic> movesData = data['moves'] ?? [];
+        final List<Move> moves = movesData
+            .map((m) => Move.fromMap(m as Map<String, dynamic>))
+            .toList();
 
-      final newSeries = JkdSeries(
-        title: data['title'],
-        category: data['category'] ?? 'JKD',
-        type: data['type'] ?? 'Attack',
-        attackMethod: data['attack_method'],
-        notes: data['notes'] ?? '',
-        moves: moves,
-        isSystem: false,
-        isFromCloud: true,
-      );
+        final newSeries = JkdSeries(
+          title: data['title'],
+          category: data['category'] ?? 'JKD',
+          type: data['type'] ?? 'Attack',
+          attackMethod: data['attack_method'],
+          notes: data['notes'] ?? '',
+          moves: moves,
+          isSystem: false,
+          isFromCloud: true,
+        );
 
-      // Import into provider
-      await provider.addSeries(newSeries);
+        await provider.addSeries(newSeries);
+      }
 
       if (context.mounted) {
         Navigator.pop(context); // Close loading indicator dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              lang == 'fr'
-                  ? 'Série importée avec succès !'
-                  : 'Series imported successfully!',
+              category == 'Custom Angles'
+                  ? (lang == 'fr'
+                      ? 'Angles importés avec succès !'
+                      : 'Angles imported successfully!')
+                  : (lang == 'fr'
+                      ? 'Série importée avec succès !'
+                      : 'Series imported successfully!'),
             ),
             backgroundColor: Colors.green,
           ),

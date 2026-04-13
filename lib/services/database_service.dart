@@ -70,7 +70,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 23, // Increment version to force glossary refresh
+      version: 24, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );

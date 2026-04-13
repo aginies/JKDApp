@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,12 +10,15 @@ import '../models/move.dart';
 import '../models/search_result.dart';
 import '../models/user_program_progress.dart';
 import '../models/training_program.dart';
+import '../models/custom_kali_angle.dart';
+import '../models/kali_angle_elements.dart';
 import '../services/database_service.dart';
 import '../services/garmin_service.dart';
 import '../services/localization_service.dart';
 import '../services/logging_service.dart';
 import '../services/training_program_service.dart';
 import '../services/usage_statistics_service.dart';
+import '../services/custom_angles_service.dart';
 import '../utils/translation_utils.dart';
 
 enum JkdThemeMode { system, light, dark, amoled }
@@ -64,16 +68,19 @@ class SeriesProvider with ChangeNotifier {
   String _contributorName = '';
   UserProgramProgress? _activeProgram;
   TrainingProgram? _activeProgramDetails;
+  List<CustomKaliAngle> _customAngles = [];
 
   final DatabaseService _dbService = DatabaseService();
   final TrainingProgramService _programService = TrainingProgramService();
   final UsageStatisticsService _usageService = UsageStatisticsService();
+  final CustomAnglesService _customAnglesService = CustomAnglesService();
 
   List<JkdSeries> get series => _series;
   List<TrainingProgram> get allPrograms => _allPrograms;
   UserProgramProgress? get activeProgram => _activeProgram;
   TrainingProgram? get activeProgramDetails => _activeProgramDetails;
   List<Map<String, dynamic>> get glossary => _glossary;
+  List<CustomKaliAngle> get customAngles => _customAngles;
   String get language => _language;
   JkdThemeMode get themeMode => _themeMode;
   Color get themeColor => _themeColor;
@@ -128,6 +135,56 @@ class SeriesProvider with ChangeNotifier {
     await loadSeries();
     await loadAllPrograms();
     await loadActiveProgram();
+    await loadCustomAngles();
+  }
+
+  Future<void> loadCustomAngles() async {
+    _customAngles = await _customAnglesService.loadCustomAngles(projectPath: _projectPath);
+    notifyListeners();
+  }
+
+  Future<void> addCustomAngle(String name, List<DrawingElement> elements) async {
+    int nextId = 100;
+    if (_customAngles.isNotEmpty) {
+      nextId = _customAngles.map((a) => a.id).reduce(math.max) + 1;
+    }
+
+    final newAngle = CustomKaliAngle(
+      id: nextId,
+      name: name,
+      elements: elements,
+    );
+
+    _customAngles.add(newAngle);
+    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    notifyListeners();
+  }
+
+  Future<void> deleteCustomAngle(int id) async {
+    _customAngles.removeWhere((a) => a.id == id);
+    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    notifyListeners();
+  }
+
+  Future<void> importCustomAngles(List<CustomKaliAngle> importedAngles) async {
+    int maxId = 99;
+    if (_customAngles.isNotEmpty) {
+      maxId = _customAngles.map((a) => a.id).reduce(math.max);
+    }
+
+    for (final imported in importedAngles) {
+      // Ensure no ID conflicts by assigning new IDs
+      maxId++;
+      final newAngle = CustomKaliAngle(
+        id: maxId,
+        name: imported.name,
+        elements: imported.elements,
+      );
+      _customAngles.add(newAngle);
+    }
+
+    await _customAnglesService.saveCustomAngles(_customAngles, projectPath: _projectPath);
+    notifyListeners();
   }
 
   Future<void> _loadSettings(Map<String, String> prefs) async {

@@ -13,7 +13,9 @@ import '../../../services/usage_statistics_service.dart';
 import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
 import 'builder_card_data.dart';
+import 'kali_hit_selector.dart';
 import '../widgets/kali_angle_icon.dart';
+import '../widgets/kali_angle_designer.dart';
 
 // Improvement #1: single enum replaces 5 booleans — enforces mutual exclusivity.
 enum _BuilderMode {
@@ -63,6 +65,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   // Path-based selection for recursive structures
   List<int>? _selectedPath;
   bool _isCounterSelected = false;
+  bool _showAngleSelector = false;
   // Improvement #3: _selectedCounterIndex removed — was always _selectedCounterPath?.first.
   List<int>? _selectedCounterPath;
 
@@ -144,6 +147,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     Set<String> cats = {move.category};
     if (move.counterCategory != null && move.counterCategory!.isNotEmpty) {
       cats.add(move.counterCategory!);
+    }
+    // If Kali is relevant, standard and custom angles are also relevant
+    if (cats.contains('kali')) {
+      cats.add('angles');
+      cats.add('custom_angles');
     }
     for (var m in move.subMoves) {
       cats.addAll(_getRelevantCategories(m));
@@ -632,14 +640,41 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildBottomToolbar(String lang) {
+    final data = _getDataAtPath(_selectedPath!);
+    final isKali =
+        data != null && (data.category == 'kali' || data.category == 'angles');
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (isKali && _showAngleSelector) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: KaliHitSelector(
+              selectedAngle: data.kaliAngle,
+              selectedStrikeType: data.strikeType,
+              onAngleSelected: (angle) => _updateSelectedCard(kaliAngle: angle),
+              onStrikeTypeSelected:
+                  (type) => _updateSelectedCard(strikeType: type),
+            ),
+          ),
+          const Divider(),
+        ],
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-          _toolbarButton(
+              if (isKali) ...[
+                _toolbarButton(
+                  'Angle',
+                  Icons.architecture,
+                  _showAngleSelector ? Colors.brown : Colors.grey,
+                  () => setState(() => _showAngleSelector = !_showAngleSelector),
+                  isActive: _showAngleSelector,
+                ),
+                const SizedBox(width: 8, child: VerticalDivider()),
+              ],
+              _toolbarButton(
             LocalizationService.translate('left', lang),
             Icons.arrow_back,
             Colors.blue,
@@ -1447,6 +1482,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     setState(() {
       _selectedPath = List<int>.from(path);
       _isCounterSelected = isCounter;
+      _showAngleSelector = false;
       _selectedCounterPath = counterPath != null
           ? List<int>.from(counterPath)
           : null;
@@ -2207,6 +2243,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             _buildDualGlossaryTab('angles', null, sc),
       },
       {
+        'id': 'custom_angles',
+        'label': lang == 'fr' ? 'Angles Persos' : 'Custom Angles',
+        'cats': ['custom_angles'],
+        'view': (ScrollController sc) => _buildCustomAnglesTab(sc),
+      },
+      {
         'id': 'text',
         'label': LocalizationService.translate('text', lang),
         'cats': ['text'],
@@ -2672,9 +2714,152 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         _selectedPath = [_workspaceCards.length - 1];
       }
     }
+    _mode = _BuilderMode.none;
   }
 
-  Widget _buildTextTab() {
+  Widget _buildCustomAnglesTab(ScrollController scrollController) {
+    return Consumer<SeriesProvider>(
+      builder: (context, provider, child) {
+        final customAngles = provider.customAngles;
+        final lang = provider.language;
+
+        if (customAngles.isEmpty) {
+          return Stack(
+            children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text(
+                    lang == 'fr'
+                        ? 'Aucun angle personnalisé créé.\nTapez sur + pour en créer un.'
+                        : 'No custom angles created.\nTap + to design one.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton(
+                  heroTag: 'add_custom_angle_empty_fab',
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => const KaliAngleDesigner(),
+                    );
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Stack(
+          children: [
+            GridView.builder(
+              controller: scrollController,
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.9,
+              ),
+              itemCount: customAngles.length,
+              itemBuilder: (context, index) {
+                final custom = customAngles[index];
+                return InkWell(
+                  onTap: () {
+                    final newItem = BuilderCardData(
+                      name: custom.name,
+                      category: 'kali',
+                      kaliAngle: custom.id,
+                    );
+                    _onAddItem(newItem);
+                    Navigator.pop(context);
+                  },
+                  onLongPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Custom Angle?'),
+                        content: Text('Delete "${custom.name}"?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () {
+                              provider.deleteCustomAngle(custom.id);
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Card(
+                    elevation: 2,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        KaliAngleIcon(
+                          angle: custom.id,
+                          size: 60,
+                          showCircle: true,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          custom.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: FloatingActionButton(
+                heroTag: 'add_custom_angle_fab',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) => const KaliAngleDesigner(),
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    }
+
+    Widget _buildTextTab() {
+
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return Padding(
       padding: const EdgeInsets.all(16.0),

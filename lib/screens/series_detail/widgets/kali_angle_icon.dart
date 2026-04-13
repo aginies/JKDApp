@@ -1,5 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../services/series_provider.dart';
+import '../../../models/kali_angle_elements.dart';
+import 'kali_angle_designer.dart';
 
 class KaliAngleIcon extends StatefulWidget {
   final int angle;
@@ -30,7 +34,7 @@ class _KaliAngleIconState extends State<KaliAngleIcon>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 3000),
     );
     if (widget.animated) {
       _controller.repeat();
@@ -55,20 +59,36 @@ class _KaliAngleIconState extends State<KaliAngleIcon>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return SizedBox(
-          width: widget.size,
-          height: widget.size,
-          child: CustomPaint(
-            painter: _KaliAnglePainter(
-              angle: widget.angle,
-              color: widget.color,
-              showCircle: widget.showCircle,
-              progress: widget.animated ? _controller.value : 1.0,
-            ),
-          ),
+    return Consumer<SeriesProvider>(
+      builder: (context, provider, child) {
+        List<DrawingElement>? customElements;
+        if (widget.angle >= 100) {
+          try {
+            customElements = provider.customAngles
+                .firstWhere((a) => a.id == widget.angle)
+                .elements;
+          } catch (_) {
+            // Not found
+          }
+        }
+
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return SizedBox(
+              width: widget.size,
+              height: widget.size,
+              child: CustomPaint(
+                painter: _KaliAnglePainter(
+                  angle: widget.angle,
+                  color: widget.color,
+                  showCircle: widget.showCircle,
+                  progress: widget.animated ? _controller.value : 1.0,
+                  customElements: customElements,
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -80,12 +100,14 @@ class _KaliAnglePainter extends CustomPainter {
   final Color color;
   final bool showCircle;
   final double progress;
+  final List<DrawingElement>? customElements;
 
   _KaliAnglePainter({
     required this.angle,
     required this.color,
     required this.showCircle,
     required this.progress,
+    this.customElements,
   });
 
   @override
@@ -101,6 +123,7 @@ class _KaliAnglePainter extends CustomPainter {
 
     final dotPaint = Paint()
       ..color = color
+      ..strokeWidth = paint.strokeWidth
       ..style = PaintingStyle.fill;
 
     if (showCircle) {
@@ -114,6 +137,52 @@ class _KaliAnglePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1;
       canvas.drawCircle(center, radius, borderPaint);
+    }
+
+    if (angle >= 100 && customElements != null) {
+      // Scale from design size (300) to actual size
+      const designSize = KaliDesignerPainter.designSize;
+      final scale = size.width / designSize;
+
+      canvas.save();
+      canvas.scale(scale);
+
+      // Use strokeWidth consistent with 0.12 * designSize (300 * 0.12 = 36)
+      final customPaint = Paint()
+        ..color = color.withValues(alpha: 0.4)
+        ..strokeWidth = 36.0
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      final customDotPaint = Paint()
+        ..color = color
+        ..strokeWidth = customPaint.strokeWidth
+        ..style = PaintingStyle.fill;
+
+      // Background path
+      for (final element in customElements!) {
+        element.paint(canvas, customPaint);
+      }
+
+      // Animated dot
+      if (customElements!.isNotEmpty) {
+        final numElements = customElements!.length;
+        final elementDuration = 1.0 / numElements;
+
+        final clampedProgress = progress.clamp(0.0, 0.999);
+        final int currentIdx =
+            (clampedProgress / elementDuration).floor().clamp(0, numElements - 1);
+        final double elementProgress =
+            (clampedProgress % elementDuration) / elementDuration;
+
+        customElements![currentIdx].paintAnimatedDot(
+          canvas,
+          customDotPaint,
+          elementProgress,
+        );
+      }
+      canvas.restore();
+      return;
     }
 
     switch (angle) {

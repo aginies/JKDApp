@@ -10,6 +10,7 @@ import '../../../utils/category_utils.dart';
 import '../../../utils/translation_utils.dart';
 import '../../../widgets/empty_state_illustration.dart';
 import '../../series_detail/widgets/kali_angle_icon.dart';
+import '../../series_detail/widgets/kali_angle_designer.dart';
 
 class GlossaryDialog extends StatefulWidget {
   final String lang;
@@ -59,7 +60,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: DefaultTabController(
-        length: 9,
+        length: 10,
         child: Column(
           children: [
             Container(
@@ -203,6 +204,12 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         icon: Icon(CategoryUtils.getCategoryIcon('angles')),
                       ),
                       Tab(
+                        text: widget.lang == 'fr'
+                            ? 'Angles Persos'
+                            : 'Custom Angles',
+                        icon: const Icon(Icons.architecture),
+                      ),
+                      Tab(
                         text: LocalizationService.translate(
                           'general',
                           widget.lang,
@@ -231,6 +238,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         _buildGlossaryList('move'),
                         _buildGlossaryList('kali'),
                         _buildGlossaryList('angles'),
+                        _buildCustomAnglesTab(),
                         _buildGlossaryList('general'),
                         _buildGlossaryList('other'),
                       ],
@@ -293,7 +301,89 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
     );
   }
 
-  Widget _buildGlossaryItemCard(Map<String, dynamic> item, String category) {
+  Widget _buildCustomAnglesTab() {
+    return Consumer<SeriesProvider>(
+      builder: (context, provider, child) {
+        final customAngles = provider.customAngles;
+
+        return Stack(
+          children: [
+            customAngles.isEmpty
+                ? const EmptyStateIllustration(titleKey: 'nothing')
+                : ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: customAngles.length,
+                  itemBuilder: (context, index) {
+                    final custom = customAngles[index];
+                    final item = {
+                      'id': custom.id,
+                      'name': custom.name,
+                      'translations': '{}',
+                    };
+                    return _buildGlossaryItemCard(
+                      item,
+                      'kali',
+                      isCustom: true,
+                      onDelete: () => _confirmDelete(context, provider, item),
+                    );
+                  },
+                ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: FloatingActionButton(
+                heroTag: 'glossary_add_custom_angle_fab',
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) => const KaliAngleDesigner(),
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDelete(
+    BuildContext context,
+    SeriesProvider provider,
+    Map<String, dynamic> item,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Custom Angle?'),
+        content: Text('Delete "${item['name']}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              provider.deleteCustomAngle(item['id']);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlossaryItemCard(
+    Map<String, dynamic> item,
+    String category, {
+    bool isCustom = false,
+    VoidCallback? onDelete,
+  }) {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final themeColor = provider.themeColor;
     final galleryPath = provider.galleryPath;
@@ -315,6 +405,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
         borderRadius: BorderRadius.circular(12),
         onTap: () => widget.onShowMediaGallery(category, item['name']),
         onDoubleTap: () => widget.onShowMediaGallery(category, item['name']),
+        onLongPress: isCustom ? onDelete : null,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
@@ -336,35 +427,41 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                     width: 0.5,
                   ),
                 ),
-                child: (category == 'angles')
+                child: (category == 'angles' || isCustom)
                     ? Builder(
                         builder: (context) {
-                          final name = item['name'].toString();
-                          final match =
-                              RegExp(r'Angle\s+(\d+)').firstMatch(name);
-                          final angle =
-                              match != null
-                                  ? int.tryParse(match.group(1) ?? '')
-                                  : null;
-                          if (angle != null) {
+                          int? angleId;
+                          if (isCustom) {
+                            angleId = item['id'] as int?;
+                          } else {
+                            final name = item['name'].toString();
+                            final match =
+                                RegExp(r'Angle\s+(\d+)').firstMatch(name);
+                            angleId =
+                                match != null
+                                    ? int.tryParse(match.group(1) ?? '')
+                                    : null;
+                          }
+
+                          if (angleId != null) {
                             return KaliAngleIcon(
-                              angle: angle,
-                              size: 32, // Increased from 24
-                              color: CategoryUtils.getCategoryColor(category),
+                              angle: angleId,
+                              size: 32,
+                              color: CategoryUtils.getCategoryColor('kali'),
                               showCircle: false,
                             );
                           }
                           return Icon(
                             CategoryUtils.getCategoryIcon(category),
                             color: CategoryUtils.getCategoryColor(category),
-                            size: 32, // Increased from 24
+                            size: 32,
                           );
                         },
                       )
                     : Icon(
                         CategoryUtils.getCategoryIcon(category),
                         color: CategoryUtils.getCategoryColor(category),
-                        size: 32, // Increased from 24
+                        size: 32,
                       ),
               ),
               const SizedBox(width: 16),

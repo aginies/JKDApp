@@ -184,4 +184,48 @@ class WebStorageService {
       throw Exception('Connection error: $e');
     }
   }
+
+  Future<Map<String, dynamic>> uploadCustomAngles(
+    List<Map<String, dynamic>> anglesJson,
+    String username,
+  ) async {
+    try {
+      final String jsonContent = jsonEncode(anglesJson);
+
+      const int maxSize = 256 * 1024; // 256KB for angles
+      if (jsonContent.length > maxSize) {
+        throw Exception('Custom angles file is too large (max 256KB)');
+      }
+
+      final String filename = 'custom_angles_${username.replaceAll(' ', '_')}.json';
+      final String token = await _getToken();
+
+      LoggingService.info(
+        'WebStorageService: Uploading custom angles: $filename',
+      );
+
+      final response = await _buildClient()
+          .post(
+            Uri.parse(serverUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Token': token,
+              'X-USERNAME': Uri.encodeComponent(username),
+              'X-FILENAME': Uri.encodeComponent(filename),
+              'X-CATEGORY': Uri.encodeComponent('Custom Angles'),
+            },
+            body: jsonContent,
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Upload failed (${response.statusCode})');
+      }
+    } catch (e) {
+      LoggingService.error('WebStorageService: Custom angles upload error', e);
+      rethrow;
+    }
+  }
 }
