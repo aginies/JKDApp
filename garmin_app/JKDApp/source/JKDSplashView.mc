@@ -51,7 +51,8 @@ class JKDSplashView extends WatchUi.View {
         } else {
             menuView = new WatchUi.Menu2({:title=>"JKD Training"});
             for (var i = 0; i < seriesList.size(); i++) {
-                menuView.addItem(new WatchUi.MenuItem(seriesList[i].title, seriesList[i].combos.size().toString() + " moves", i, null));
+                var s = seriesList[i];
+                menuView.addItem(new WatchUi.MenuItem(s.title, s.combos.size().toString() + " moves", i, null));
             }
             menuView.addItem(new WatchUi.MenuItem("Settings", null, :item_settings, null));
         }

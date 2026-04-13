@@ -25,22 +25,36 @@ def parse_series(series_data):
 
     combos = []
     for m in moves_list:
+        combo_text = ""
+        angles = []
+        
         sub_moves_json = m.get("sub_moves_json")
         chain_json = m.get("chain_json")
+        
         if sub_moves_json:
             try:
                 sub_moves = json.loads(sub_moves_json)
-                combos.append(" + ".join([format_move(sm) for sm in sub_moves]))
+                combo_text = " + ".join([format_move(sm) for sm in sub_moves])
+                angles = [sm.get("kali_angle") for sm in sub_moves if sm.get("kali_angle") is not None]
             except:
-                combos.append(format_move(m))
+                combo_text = format_move(m)
+                if m.get("kali_angle") is not None:
+                    angles = [m.get("kali_angle")]
         elif chain_json:
             try:
                 chain_moves = json.loads(chain_json)
-                combos.append(" -> ".join([format_move(cm) for cm in chain_moves]))
+                combo_text = " -> ".join([format_move(cm) for cm in chain_moves])
+                angles = [cm.get("kali_angle") for cm in chain_moves if cm.get("kali_angle") is not None]
             except:
-                combos.append(format_move(m))
+                combo_text = format_move(m)
+                if m.get("kali_angle") is not None:
+                    angles = [m.get("kali_angle")]
         else:
-            combos.append(format_move(m))
+            combo_text = format_move(m)
+            if m.get("kali_angle") is not None:
+                angles = [m.get("kali_angle")]
+
+        combos.append({"text": combo_text, "angles": angles})
 
     return {"title": title, "combos": combos}
 
@@ -53,7 +67,6 @@ def parse_series_file(filepath):
         return [parse_series(s) for s in data if isinstance(s, dict)]
 
 def main():
-    # Assets are now located in the root assets/ directory
     json_files = glob.glob("../assets/jkd-series-*.json")
     all_series = []
     
@@ -68,11 +81,21 @@ def main():
             all_series.append(s)
 
     mc_content = """module JKDSeries {
+    class Combo {
+        var text as $.Toybox.Lang.String;
+        var angles as $.Toybox.Lang.Array<$.Toybox.Lang.Number>;
+
+        function initialize(t as $.Toybox.Lang.String, a as $.Toybox.Lang.Array<$.Toybox.Lang.Number>) {
+            text = t;
+            angles = a;
+        }
+    }
+
     class Series {
         var title as $.Toybox.Lang.String;
-        var combos as $.Toybox.Lang.Array<$.Toybox.Lang.String>;
+        var combos as $.Toybox.Lang.Array<Combo>;
 
-        function initialize(t as $.Toybox.Lang.String, c as $.Toybox.Lang.Array<$.Toybox.Lang.String>) {
+        function initialize(t as $.Toybox.Lang.String, c as $.Toybox.Lang.Array<Combo>) {
             title = t;
             combos = c;
         }
@@ -84,7 +107,12 @@ def main():
     
     series_entries = []
     for s in all_series:
-        combos_fmt = ",\n                ".join([f'"{c}"' for c in s['combos']])
+        combo_objects = []
+        for c in s['combos']:
+            angles_list = ", ".join([str(a) for a in c['angles']])
+            combo_objects.append(f"new Combo(\"{c['text']}\", [{angles_list}])")
+        
+        combos_fmt = ",\n                ".join(combo_objects)
         entry = f"""            new Series("{s['title']}", [
                 {combos_fmt}
             ])"""
@@ -100,7 +128,7 @@ def main():
     with open("JKDApp/source/JKDSeries.mc", "w", encoding="utf-8") as f:
         f.write(mc_content)
     
-    print("Successfully generated JKDApp/source/JKDSeries.mc (Single Language Data)")
+    print("Successfully generated JKDApp/source/JKDSeries.mc with Angle data")
 
 if __name__ == "__main__":
     main()

@@ -132,7 +132,17 @@ class JKDStandaloneDelegate extends WatchUi.BehaviorDelegate {
     }
     function onKey(evt) {
         var key = evt.getKey();
-        if (key == WatchUi.KEY_DOWN) {
+        var isDown = (key == WatchUi.KEY_DOWN);
+        var isUp = (key == WatchUi.KEY_UP);
+        
+        if (WatchUi has :KEY_NEXT_PAGE && key == WatchUi.KEY_NEXT_PAGE) {
+            isDown = true;
+        }
+        if (WatchUi has :KEY_PREVIOUS_PAGE && key == WatchUi.KEY_PREVIOUS_PAGE) {
+            isUp = true;
+        }
+
+        if (isDown) {
             if (_view.isShowingDetail()) {
                 JKDSettings.mirrorMode = false;
                 JKDSettings.saveSettings();
@@ -141,7 +151,7 @@ class JKDStandaloneDelegate extends WatchUi.BehaviorDelegate {
                 _view.nextCombo();
             }
             return true;
-        } else if (key == WatchUi.KEY_UP) {
+        } else if (isUp) {
             if (_view.isShowingDetail()) {
                 JKDSettings.mirrorMode = true;
                 JKDSettings.saveSettings();

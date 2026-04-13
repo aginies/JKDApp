@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:jkd_app/services/series_provider.dart';
 import 'package:jkd_app/models/series.dart';
 import 'package:jkd_app/models/move.dart';
+import 'package:jkd_app/screens/series_detail/widgets/kali_angle_icon.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -848,6 +849,11 @@ class _WearTrainingViewState extends State<WearTrainingView>
       displayName = displayName.substring(7);
     }
 
+    // Filter out "Angle #" if we are showing the icon
+    if (move.kaliAngle != null) {
+      displayName = displayName.replaceAll(RegExp(r'Angle\s+\d+'), '').trim();
+    }
+
     displayName = displayName
         .replaceAll(RegExp(r'\s*/\s*'), '\n↳ ')
         .replaceAll(RegExp(r'\s*Counter:\s*', caseSensitive: false), '\n↳ ')
@@ -871,7 +877,23 @@ class _WearTrainingViewState extends State<WearTrainingView>
         behavior: HitTestBehavior.opaque,
         child: Stack(
           children: [
+            // Large Centered Kali Angle Icon
+            if (move.kaliAngle != null)
+              Center(
+                child: Opacity(
+                  opacity: 0.6,
+                  child: KaliAngleIcon(
+                    angle: move.kaliAngle!,
+                    size: 140,
+                    color: Colors.orangeAccent,
+                    showCircle: true,
+                    animated: true,
+                  ),
+                ),
+              ),
+
             // Visual Countdown Border
+
             if (_progressController != null)
               Positioned.fill(
                 child: AnimatedBuilder(
