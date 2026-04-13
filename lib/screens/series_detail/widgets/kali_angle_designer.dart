@@ -87,16 +87,49 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
     );
   }
 
+  double _getDistanceToElement(Offset point, DrawingElement el) {
+    if (el is LineElement) {
+      return _distanceToLineSegment(point, el.start, el.end);
+    } else if (el is CurveElement) {
+      // Simplified: check distance to start, end, and control
+      final d1 = (point - el.start).distance;
+      final d2 = (point - el.end).distance;
+      final d3 = (point - el.control).distance;
+      return math.min(math.min(d1, d2), d3);
+    } else if (el is CircleElement) {
+      final d = (point - el.center).distance;
+      return (d - el.radius).abs();
+    } else if (el is EllipseElement) {
+      return (point - el.center).distance; // Simplified
+    } else if (el is PathElement) {
+      double minD = double.infinity;
+      for (int i = 0; i < el.points.length - 1; i++) {
+        minD = math.min(minD, _distanceToLineSegment(point, el.points[i], el.points[i+1]));
+      }
+      return minD;
+    }
+    return double.infinity;
+  }
+
+  double _distanceToLineSegment(Offset p, Offset a, Offset b) {
+    final l2 = (a - b).distanceSquared;
+    if (l2 == 0) return (p - a).distance;
+    var t = ((p.dx - a.dx) * (b.dx - a.dx) + (p.dy - a.dy) * (b.dy - a.dy)) / l2;
+    t = math.max(0, math.min(1, t));
+    return (p - Offset(a.dx + t * (b.dx - a.dx), a.dy + t * (b.dy - a.dy))).distance;
+  }
+
   void _handlePanStart(DragStartDetails details, Size size) {
     final point = _toDesignCoords(details.localPosition, size);
 
     if (_activeTool == KaliTool.select) {
-      // 1. Check if clicking on an existing control point of selected element
-      if (_selectedElementIndex != null) {
+      // 1. Check if clicking on an existing control point of selected element (High Priority)
+      if (_selectedElementIndex != null &&
+          _selectedElementIndex! < _elements.length) {
         final el = _elements[_selectedElementIndex!];
         final points = el.getControlPoints();
         for (int i = 0; i < points.length; i++) {
-          if ((point - points[i]).distance < 15) {
+          if ((point - points[i]).distance < 30) { // Increased hit area
             setState(() {
               _selectedControlPointIndex = i;
             });
@@ -105,18 +138,38 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
         }
       }
 
-      // 2. Try to select an element
+      // 2. Try to select a control point of ANY element
       for (int i = _elements.length - 1; i >= 0; i--) {
         final points = _elements[i].getControlPoints();
-        for (var p in points) {
-          if ((point - p).distance < 20) {
+        for (int j = 0; j < points.length; j++) {
+          if ((point - points[j]).distance < 30) {
             setState(() {
               _selectedElementIndex = i;
-              _selectedControlPointIndex = null;
+              _selectedControlPointIndex = j;
             });
             return;
           }
         }
+      }
+
+      // 3. Try to select by tapping the SHAPE itself
+      int? bestMatch;
+      double minD = 30.0; // Max selection distance
+      
+      for (int i = _elements.length - 1; i >= 0; i--) {
+        final dist = _getDistanceToElement(point, _elements[i]);
+        if (dist < minD) {
+          minD = dist;
+          bestMatch = i;
+        }
+      }
+
+      if (bestMatch != null) {
+        setState(() {
+          _selectedElementIndex = bestMatch;
+          _selectedControlPointIndex = null;
+        });
+        return;
       }
 
       setState(() {
@@ -282,14 +335,23 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
             icon: const Icon(Icons.undo),
             onPressed: _elements.isEmpty
                 ? null
-                : () => setState(() => _elements.removeLast()),
+                : () => setState(() {
+                      _elements.removeLast();
+                      _selectedElementIndex = null;
+                      _selectedControlPointIndex = null;
+                    }),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: _elements.isEmpty
                 ? null
-                : () => setState(() => _elements.clear()),
+                : () => setState(() {
+                      _elements.clear();
+                      _selectedElementIndex = null;
+                      _selectedControlPointIndex = null;
+                    }),
           ),
+
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -537,9 +599,13 @@ class KaliDesignerPainter extends CustomPainter {
     canvas.translate(dx, dy);
     canvas.scale(scale);
 
+    // Use thinner lines in the designer for better visibility of control points,
+    // but keep them thick in the thumbnail (preview).
+    final strokeWidth = isThumbnail ? 36.0 : 12.0;
+
     final paint = Paint()
       ..color = Colors.brown
-      ..strokeWidth = 36.0 // Standardized design-space width
+      ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -548,7 +614,7 @@ class KaliDesignerPainter extends CustomPainter {
       final p = isSelected
           ? (Paint()
             ..color = Colors.blue.withValues(alpha: 0.8)
-            ..strokeWidth = 36.0
+            ..strokeWidth = strokeWidth
             ..strokeCap = StrokeCap.round
             ..style = PaintingStyle.stroke)
           : paint;
@@ -561,10 +627,10 @@ class KaliDesignerPainter extends CustomPainter {
           ..style = PaintingStyle.fill;
         final controlPoints = elements[i].getControlPoints();
         for (var pt in controlPoints) {
-          canvas.drawCircle(pt, 10, cpPaint);
+          canvas.drawCircle(pt, 6, cpPaint); // Slightly smaller control points
           canvas.drawCircle(
             pt,
-            8,
+            4,
             Paint()
               ..color = Colors.white
               ..style = PaintingStyle.fill,
@@ -576,7 +642,7 @@ class KaliDesignerPainter extends CustomPainter {
     if (currentElement != null) {
       final currentPaint = Paint()
         ..color = Colors.blue.withValues(alpha: 0.5)
-        ..strokeWidth = 36.0
+        ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;
       currentElement!.paint(canvas, currentPaint);
@@ -586,7 +652,7 @@ class KaliDesignerPainter extends CustomPainter {
       final dotPaint = Paint()
         ..color = Colors.red
         ..style = PaintingStyle.fill
-        ..strokeWidth = 36.0;
+        ..strokeWidth = strokeWidth;
 
       final numElements = elements.length;
       final elementDuration = 1.0 / numElements;
