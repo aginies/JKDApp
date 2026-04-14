@@ -278,6 +278,45 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
     });
   }
 
+  void _deleteSelected() {
+    if (_selectedElementIndex != null) {
+      setState(() {
+        _elements.removeAt(_selectedElementIndex!);
+        _selectedElementIndex = null;
+        _selectedControlPointIndex = null;
+      });
+    }
+  }
+
+  void _clearAll() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All'),
+        content: const Text('Are you sure you want to clear all elements?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _elements.clear();
+        _selectedElementIndex = null;
+        _selectedControlPointIndex = null;
+      });
+    }
+  }
+
   void _saveAngle() async {
     if (_elements.isEmpty) return;
 
@@ -340,26 +379,10 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
             onPressed: _elements.isEmpty ? null : _saveAngle,
           ),
           IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: _elements.isEmpty
-                ? null
-                : () => setState(() {
-                    _elements.removeLast();
-                    _selectedElementIndex = null;
-                    _selectedControlPointIndex = null;
-                  }),
-          ),
-          IconButton(
             icon: const Icon(Icons.delete_outline),
-            onPressed: _elements.isEmpty
-                ? null
-                : () => setState(() {
-                    _elements.clear();
-                    _selectedElementIndex = null;
-                    _selectedControlPointIndex = null;
-                  }),
+            tooltip: 'Clear All',
+            onPressed: _elements.isEmpty ? null : _clearAll,
           ),
-
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -369,85 +392,126 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _ToolButton(
-                    icon: Icons.near_me,
-                    label: 'Select',
-                    isActive: _activeTool == KaliTool.select,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.select),
-                  ),
-                  const SizedBox(width: 8, child: VerticalDivider()),
-                  _ToolButton(
-                    icon: Icons.linear_scale,
-                    label: 'Line',
-                    isActive: _activeTool == KaliTool.line,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.line),
-                  ),
-                  _ToolButton(
-                    icon: Icons.gesture,
-                    label: 'Curve',
-                    isActive: _activeTool == KaliTool.curve,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.curve),
-                  ),
-                  _ToolButton(
-                    icon: Icons.panorama_fish_eye,
-                    label: 'Circle',
-                    isActive: _activeTool == KaliTool.circle,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.circle),
-                  ),
-                  _ToolButton(
-                    icon: Icons.exposure_zero,
-                    label: 'Ellipse',
-                    isActive: _activeTool == KaliTool.ellipse,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.ellipse),
-                  ),
-                  _ToolButton(
-                    icon: Icons.polyline,
-                    label: 'Path',
-                    isActive: _activeTool == KaliTool.path,
-                    onPressed: () =>
-                        setState(() => _activeTool = KaliTool.path),
-                  ),
-                  const VerticalDivider(),
-                  _ToolButton(
-                    icon: _snapEnabled ? Icons.grid_on : Icons.grid_off,
-                    label: 'Snap',
-                    isActive: _snapEnabled,
-                    onPressed: () =>
-                        setState(() => _snapEnabled = !_snapEnabled),
-                  ),
-                  const VerticalDivider(),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Arrow', style: TextStyle(fontSize: 10)),
-                      Switch(
-                        value: _showArrow,
-                        onChanged: (val) => setState(() => _showArrow = val),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Move', style: TextStyle(fontSize: 10)),
-                      Switch(value: _isAnimated, onChanged: _toggleAnimation),
-                    ],
-                  ),
-                ],
-              ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _ToolButton(
+                      icon: Icons.near_me,
+                      label: 'Select',
+                      isActive: _activeTool == KaliTool.select,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.select),
+                    ),
+                    _ToolButton(
+                      icon: Icons.linear_scale,
+                      label: 'Line',
+                      isActive: _activeTool == KaliTool.line,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.line),
+                    ),
+                    _ToolButton(
+                      icon: Icons.gesture,
+                      label: 'Curve',
+                      isActive: _activeTool == KaliTool.curve,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.curve),
+                    ),
+                    _ToolButton(
+                      icon: Icons.panorama_fish_eye,
+                      label: 'Circle',
+                      isActive: _activeTool == KaliTool.circle,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.circle),
+                    ),
+                    _ToolButton(
+                      icon: Icons.exposure_zero,
+                      label: 'Ellipse',
+                      isActive: _activeTool == KaliTool.ellipse,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.ellipse),
+                    ),
+                    _ToolButton(
+                      icon: Icons.polyline,
+                      label: 'Path',
+                      isActive: _activeTool == KaliTool.path,
+                      onPressed: () =>
+                          setState(() => _activeTool = KaliTool.path),
+                    ),
+                  ],
+                ),
+                const Divider(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Undo', style: TextStyle(fontSize: 10)),
+                        IconButton(
+                          icon: const Icon(Icons.undo),
+                          onPressed: _elements.isEmpty
+                              ? null
+                              : () => setState(() {
+                                  _elements.removeLast();
+                                  _selectedElementIndex = null;
+                                  _selectedControlPointIndex = null;
+                                }),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Delete', style: TextStyle(fontSize: 10)),
+                        IconButton(
+                          icon: const Icon(Icons.delete_forever,
+                              color: Colors.red),
+                          onPressed: _selectedElementIndex == null
+                              ? null
+                              : _deleteSelected,
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Snap', style: TextStyle(fontSize: 10)),
+                        IconButton(
+                          icon: Icon(_snapEnabled
+                              ? Icons.grid_on
+                              : Icons.grid_off),
+                          onPressed: () =>
+                              setState(() => _snapEnabled = !_snapEnabled),
+                          color: _snapEnabled
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Arrow', style: TextStyle(fontSize: 10)),
+                        Switch(
+                          value: _showArrow,
+                          onChanged: (val) => setState(() => _showArrow = val),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Move', style: TextStyle(fontSize: 10)),
+                        Switch(value: _isAnimated, onChanged: _toggleAnimation),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
