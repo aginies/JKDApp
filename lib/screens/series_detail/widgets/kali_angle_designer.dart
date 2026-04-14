@@ -468,8 +468,10 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                       children: [
                         const Text('Delete', style: TextStyle(fontSize: 10)),
                         IconButton(
-                          icon: const Icon(Icons.delete_forever,
-                              color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete_forever,
+                            color: Colors.red,
+                          ),
                           onPressed: _selectedElementIndex == null
                               ? null
                               : _deleteSelected,
@@ -481,9 +483,9 @@ class _KaliAngleDesignerState extends State<KaliAngleDesigner>
                       children: [
                         const Text('Snap', style: TextStyle(fontSize: 10)),
                         IconButton(
-                          icon: Icon(_snapEnabled
-                              ? Icons.grid_on
-                              : Icons.grid_off),
+                          icon: Icon(
+                            _snapEnabled ? Icons.grid_on : Icons.grid_off,
+                          ),
                           onPressed: () =>
                               setState(() => _snapEnabled = !_snapEnabled),
                           color: _snapEnabled
