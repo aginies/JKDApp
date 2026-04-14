@@ -8,6 +8,7 @@ import '../services/media_service.dart';
 import 'series_detail_screen.dart';
 import 'settings_screen.dart';
 import 'programs_list_screen.dart';
+import 'warmup_screen.dart';
 import 'series_list/widgets/random_reader_widget.dart';
 import 'series_list/dialogs/cloud_library_dialog.dart';
 import 'series_list/dialogs/voice_notes_dialog.dart';
@@ -38,9 +39,11 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _tabController.addListener(() {
-      setState(() {}); // Rebuild to show/hide FAB based on tab
+      if (mounted) {
+        setState(() {}); // Rebuild to show/hide FAB based on tab
+      }
     });
   }
 
@@ -447,6 +450,16 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.fitness_center, size: 28),
+                          const SizedBox(width: 8),
+                          Text(LocalizationService.translate('warmup', lang)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           const Icon(Icons.play_circle_fill, size: 28),
                           const SizedBox(width: 8),
                           Text(
@@ -487,13 +500,14 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('Kali', lang),
           _buildSeriesList('Moves', lang),
+          const WarmupScreen(),
           _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
       ),
       floatingActionButton:
-          _tabController.index == 4 || _tabController.index == 5
-          ? null // Hide FAB on Active Training and Training Programs tab
+          _tabController.index == 4 || _tabController.index == 5 || _tabController.index == 6
+          ? null // Hide FAB on Warmup, Active Training and Training Programs tab
           : Stack(
               children: [
                 Positioned(

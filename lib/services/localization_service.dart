@@ -233,6 +233,13 @@ class LocalizationService {
       'help_chain_desc': 'Moves in sequence (one after another).',
       'help_simultaneous_long_desc': 'Moves performed at the same time.',
       'help_answer_long_desc': 'Defensive response or counter-attack.',
+      'warmup': 'Warm Up',
+      'work': 'Work',
+      'rest': 'Rest',
+      'rounds': 'Rounds',
+      'exercises': 'Exercises',
+      'duration': 'Duration',
+      'start_warmup': 'Start Warm Up',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -469,6 +476,13 @@ class LocalizationService {
       'help_chain_desc': 'Mouvements en séquence (l\'un après l\'autre).',
       'help_simultaneous_long_desc': 'Mouvements effectués en même temps.',
       'help_answer_long_desc': 'Réponse défensive ou contre-attaque.',
+      'warmup': 'Échauffement',
+      'work': 'Travail',
+      'rest': 'Repos',
+      'rounds': 'Rounds',
+      'exercises': 'Exercices',
+      'duration': 'Durée',
+      'start_warmup': 'Démarrer l\'échauffement',
     },
   };
 
