@@ -7,6 +7,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
+import '../services/usage_statistics_service.dart';
 
 class WarmupScreen extends StatefulWidget {
   const WarmupScreen({super.key});
@@ -197,6 +198,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
       _secondsRemaining = _workDuration;
     });
     
+    // Record activity in usage statistics
+    UsageStatisticsService().recordActivity('Warmup');
+    
     _runTimer();
     _speakExercise();
   }
@@ -328,11 +332,12 @@ class _WarmupScreenState extends State<WarmupScreen> {
     final lang = Provider.of<SeriesProvider>(context).language;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    if (_isRunning) {
-      return _buildTimerUI(lang, isDark);
-    }
-    
-    return _buildConfigUI(lang, isDark);
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: _isRunning 
+          ? _buildTimerUI(lang, isDark)
+          : _buildConfigUI(lang, isDark),
+    );
   }
 
   Widget _buildConfigUI(String lang, bool isDark) {

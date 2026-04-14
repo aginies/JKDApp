@@ -44,12 +44,14 @@ class JKDSplashView extends WatchUi.View {
                 :locY=>20
             });
             menuView = new WatchUi.CustomMenu(45, Graphics.COLOR_BLACK, {:title=>title});
+            menuView.addItem(new JKDWarmupItem(:item_warmup, "Warm Up"));
             for (var i = 0; i < seriesList.size(); i++) {
                 menuView.addItem(new JKDSeriesItem(i, seriesList[i].title, seriesList[i].combos.size()));
             }
             menuView.addItem(new JKDSettingsItem(:item_settings, "Settings"));
         } else {
             menuView = new WatchUi.Menu2({:title=>"JKD Training"});
+            menuView.addItem(new WatchUi.MenuItem("Warm Up", null, :item_warmup, null));
             for (var i = 0; i < seriesList.size(); i++) {
                 var s = seriesList[i];
                 menuView.addItem(new WatchUi.MenuItem(s.title, s.combos.size().toString() + " moves", i, null));

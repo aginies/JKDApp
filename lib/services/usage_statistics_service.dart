@@ -67,4 +67,9 @@ class UsageStatisticsService {
   Future<void> refresh(List<JkdSeries> allSeries) async {
     await init(allSeries);
   }
+
+  /// Record a generic training activity (e.g. Warmup)
+  void recordActivity(String activityName) {
+    _incrementCount(activityName);
+  }
 }

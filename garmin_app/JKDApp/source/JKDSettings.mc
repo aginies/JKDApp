@@ -20,6 +20,20 @@ module JKDSettings {
     var language = LANG_EN;
     var mirrorMode = false;
 
+    // Warmup settings
+    var warmupDuration = 10; // minutes: 5, 8, 10, 15, 20
+    var warmupWork = 20;     // seconds: 20, 25, 30, 35, 40
+    var warmupRest = 10;     // seconds: 10, 15
+
+    // Warmup exercise categories (all on by default)
+    var warmupCatSquats         = true;
+    var warmupCatPushups        = true;
+    var warmupCatCrunches       = true;
+    var warmupCatJumpingJacks   = true;
+    var warmupCatBurpees        = true;
+    var warmupCatMtnClimbers    = true;
+    var warmupCatLunges         = true;
+
     // Reference to the active training view so onPhoneAppMessage can call back into it.
     var currentView = null;
 
@@ -38,6 +52,26 @@ module JKDSettings {
         forceLargeText = (s != null) ? s : false;
         s = Application.Storage.getValue("mirrorMode");
         mirrorMode = (s != null) ? s : false;
+        s = Application.Storage.getValue("warmupDuration");
+        warmupDuration = (s != null) ? s : 10;
+        s = Application.Storage.getValue("warmupWork");
+        warmupWork = (s != null) ? s : 20;
+        s = Application.Storage.getValue("warmupRest");
+        warmupRest = (s != null) ? s : 10;
+        s = Application.Storage.getValue("warmupCatSquats");
+        warmupCatSquats = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatPushups");
+        warmupCatPushups = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatCrunches");
+        warmupCatCrunches = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatJumpingJacks");
+        warmupCatJumpingJacks = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatBurpees");
+        warmupCatBurpees = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatMtnClimbers");
+        warmupCatMtnClimbers = (s != null) ? s : true;
+        s = Application.Storage.getValue("warmupCatLunges");
+        warmupCatLunges = (s != null) ? s : true;
     }
 
     function saveSettings() {
@@ -48,6 +82,16 @@ module JKDSettings {
         Application.Storage.setValue("language", language);
         Application.Storage.setValue("forceLargeText", forceLargeText);
         Application.Storage.setValue("mirrorMode", mirrorMode);
+        Application.Storage.setValue("warmupDuration", warmupDuration);
+        Application.Storage.setValue("warmupWork", warmupWork);
+        Application.Storage.setValue("warmupRest", warmupRest);
+        Application.Storage.setValue("warmupCatSquats",       warmupCatSquats);
+        Application.Storage.setValue("warmupCatPushups",      warmupCatPushups);
+        Application.Storage.setValue("warmupCatCrunches",     warmupCatCrunches);
+        Application.Storage.setValue("warmupCatJumpingJacks", warmupCatJumpingJacks);
+        Application.Storage.setValue("warmupCatBurpees",      warmupCatBurpees);
+        Application.Storage.setValue("warmupCatMtnClimbers",  warmupCatMtnClimbers);
+        Application.Storage.setValue("warmupCatLunges",       warmupCatLunges);
     }
 }
 

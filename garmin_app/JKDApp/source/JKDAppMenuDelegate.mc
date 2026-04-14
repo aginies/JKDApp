@@ -90,6 +90,9 @@ class JKDAppMenuDelegate extends WatchUi.Menu2InputDelegate {
             var view = new JKDStandaloneView(selectedSeries);
             var delegate = new JKDStandaloneDelegate(view);
             WatchUi.pushView(view, delegate, WatchUi.SLIDE_LEFT);
+        } else if (id == :item_warmup) {
+            var setup = new JKDWarmupSetupView();
+            WatchUi.pushView(setup, new JKDWarmupSetupDelegate(setup), WatchUi.SLIDE_LEFT);
         } else if (id == :item_settings) {
             WatchUi.pushView(new JKDSettingsMenu(), new JKDSettingsMenuDelegate(), WatchUi.SLIDE_LEFT);
         }
