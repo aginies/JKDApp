@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -175,6 +176,60 @@ class WatchScreen extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
                           letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Warm Up Button
+            Center(
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WearWarmupScreen(),
+                  ),
+                ),
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                  width: 110,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF66BB6A), Color(0xFF388E3C)],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.directions_run, size: 16, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'WARM UP',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ],
@@ -1026,6 +1081,562 @@ class _WearTrainingViewState extends State<WearTrainingView>
     );
   }
 }
+
+// ──────────────────────────────────────────────
+// WEAR OS WARMUP
+// ──────────────────────────────────────────────
+
+class WearWarmupScreen extends StatefulWidget {
+  const WearWarmupScreen({super.key});
+
+  @override
+  State<WearWarmupScreen> createState() => _WearWarmupScreenState();
+}
+
+class _WearWarmupScreenState extends State<WearWarmupScreen> {
+  // ── exercise data (mirrors warmup_screen.dart) ──
+  static const Map<String, List<String>> _exerciseCategories = {
+    'Squats': ['Squats (Classical)', 'Squats (Low)', 'Squats (Jump)', 'Squats (Beat)'],
+    'Push-ups': ['Push-ups (Classical)', 'Push-ups (Diamond)', 'Push-ups (Wide)', 'Push-up 2026'],
+    'Crunches': ['Crunches (Abs)', 'Crunches (Leg 90°)', 'Crunches (Leg 180°)', 'Ciseaux'],
+    'Jumping Jacks': ['Jumping Jacks'],
+    'Burpees': ['Burpees'],
+    'Mountain Climbers': ['Mountain Climbers', 'Mountain Climbers Diagonal'],
+    'Lunges': ['Lunges', 'Lunges (Beat)'],
+  };
+
+  // ── config ──
+  final _durations = [5, 8, 10, 15, 20];
+  final _works     = [20, 25, 30, 35, 40];
+  final _rests     = [10, 15];
+  int _durIdx  = 2; // 10 min
+  int _workIdx = 0; // 20 s
+  int _restIdx = 0; // 10 s
+  late Set<String> _selectedCategories;
+
+  // ── runtime ──
+  bool _isRunning = false;
+  bool _isPaused  = false;
+  bool _isWork    = true;
+  bool _finished  = false;
+  int  _secondsRemaining = 0;
+  int  _currentRound = 0;
+  int  _totalRounds  = 0;
+  List<String> _sequence = [];
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategories = Set.from(_exerciseCategories.keys);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _workDuration  => _works[_workIdx];
+  int get _restDuration  => _rests[_restIdx];
+  int get _totalMinutes  => _durations[_durIdx];
+
+  void _buildSequence() {
+    final pool = <String>[];
+    for (final cat in _selectedCategories) {
+      pool.addAll(_exerciseCategories[cat]!);
+    }
+    if (pool.isEmpty) return;
+
+    final rng = math.Random();
+    final totalSec = _totalMinutes * 60;
+    final roundDur = _workDuration + _restDuration;
+    _totalRounds = math.max(4, totalSec ~/ roundDur);
+
+    _sequence = [];
+    int lastIdx = -1;
+
+    // Always start with a Jumping Jack or Squat if either category is selected
+    final starters = <String>[
+      if (_selectedCategories.contains('Jumping Jacks'))
+        ..._exerciseCategories['Jumping Jacks']!,
+      if (_selectedCategories.contains('Squats'))
+        ..._exerciseCategories['Squats']!,
+    ];
+    if (starters.isNotEmpty) {
+      final first = starters[rng.nextInt(starters.length)];
+      _sequence.add(first);
+      lastIdx = pool.indexOf(first);
+    }
+
+    for (int i = _sequence.length; i < _totalRounds; i++) {
+      int idx;
+      int tries = 0;
+      do {
+        idx = rng.nextInt(pool.length);
+        tries++;
+      } while (idx == lastIdx && pool.length > 1 && tries < 5);
+      lastIdx = idx;
+      _sequence.add(pool[idx]);
+    }
+  }
+
+  void _start() {
+    _buildSequence();
+    if (_sequence.isEmpty) return;
+    setState(() {
+      _isRunning = true;
+      _isPaused  = false;
+      _isWork    = true;
+      _finished  = false;
+      _currentRound = 0;
+      _secondsRemaining = _workDuration;
+    });
+    HapticFeedback.mediumImpact();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  void _tick() {
+    if (_isPaused) return;
+    setState(() {
+      if (_secondsRemaining > 0) {
+        _secondsRemaining--;
+        if (_secondsRemaining <= 3 && _secondsRemaining > 0) {
+          HapticFeedback.selectionClick();
+        }
+      } else {
+        _nextPeriod();
+      }
+    });
+  }
+
+  void _nextPeriod() {
+    HapticFeedback.mediumImpact();
+    if (_isWork) {
+      _isWork = false;
+      _secondsRemaining = _restDuration;
+    } else {
+      _currentRound++;
+      if (_currentRound < _totalRounds) {
+        _isWork = true;
+        _secondsRemaining = _workDuration;
+      } else {
+        _timer?.cancel();
+        _isRunning = false;
+        _finished  = true;
+        HapticFeedback.heavyImpact();
+      }
+    }
+  }
+
+  void _togglePause() {
+    setState(() => _isPaused = !_isPaused);
+    HapticFeedback.lightImpact();
+  }
+
+  void _stop() {
+    _timer?.cancel();
+    setState(() {
+      _isRunning = false;
+      _isPaused  = false;
+      _finished  = false;
+    });
+  }
+
+  // ── total progress (0..1) ──
+  double get _totalProgress {
+    final totalSec = _totalRounds * (_workDuration + _restDuration);
+    final workElapsed = _isWork ? _workDuration - _secondsRemaining : _workDuration;
+    final elapsed = _currentRound * (_workDuration + _restDuration)
+        + (_isWork ? workElapsed : _workDuration + _restDuration - _secondsRemaining);
+    return (elapsed / totalSec).clamp(0.0, 1.0);
+  }
+
+  // ── period progress (1 → 0 as time drains) ──
+  double get _periodProgress {
+    final limit = _isWork ? _workDuration : _restDuration;
+    return (_secondsRemaining / limit).clamp(0.0, 1.0);
+  }
+
+  int get _totalRemainingSec {
+    final totalSec = _totalRounds * (_workDuration + _restDuration);
+    final workElapsed = _isWork ? _workDuration - _secondsRemaining : _workDuration;
+    final elapsed = _currentRound * (_workDuration + _restDuration)
+        + (_isWork ? workElapsed : _workDuration + _restDuration - _secondsRemaining);
+    return math.max(0, totalSec - elapsed);
+  }
+
+  // ────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    if (_finished) return _buildFinishedView();
+    if (_isRunning) return _buildRunningView();
+    return _buildSetupView();
+  }
+
+  // ── SETUP ────────────────────────────────────
+  Widget _buildSetupView() {
+    final isRound =
+        MediaQuery.of(context).size.width == MediaQuery.of(context).size.height;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          vertical: isRound ? 36 : 16,
+          horizontal: 10,
+        ),
+        child: Column(
+          children: [
+            const Text(
+              'WARM UP',
+              style: TextStyle(
+                color: Colors.greenAccent,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── duration / work / rest ──
+            _buildCycleRow('Duration', '${_durations[_durIdx]} min', () {
+              setState(() => _durIdx = (_durIdx + 1) % _durations.length);
+            }),
+            const SizedBox(height: 4),
+            _buildCycleRow('Work', '${_works[_workIdx]} s', () {
+              setState(() => _workIdx = (_workIdx + 1) % _works.length);
+            }),
+            const SizedBox(height: 4),
+            _buildCycleRow('Rest', '${_rests[_restIdx]} s', () {
+              setState(() => _restIdx = (_restIdx + 1) % _rests.length);
+            }),
+            const SizedBox(height: 8),
+
+            // ── category chips ──
+            const Text(
+              'EXERCISES',
+              style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
+              children: _exerciseCategories.keys.map((cat) {
+                final on = _selectedCategories.contains(cat);
+                return GestureDetector(
+                  onTap: () => setState(() {
+                    if (on) {
+                      _selectedCategories.remove(cat);
+                    } else {
+                      _selectedCategories.add(cat);
+                    }
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: on
+                          ? Colors.green.withValues(alpha: 0.25)
+                          : Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: on ? Colors.greenAccent : Colors.white24,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: on ? Colors.greenAccent : Colors.white38,
+                        fontWeight: on ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 12),
+
+            // ── START ──
+            GestureDetector(
+              onTap: _selectedCategories.isEmpty ? null : _start,
+              child: Container(
+                width: 100,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: _selectedCategories.isEmpty
+                      ? const LinearGradient(colors: [Colors.grey, Colors.grey])
+                      : const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFF66BB6A), Color(0xFF388E3C)],
+                        ),
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: _selectedCategories.isEmpty
+                      ? []
+                      : [BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 10)],
+                ),
+                child: const Text(
+                  'START',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCycleRow(String label, String value, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.yellowAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── RUNNING ──────────────────────────────────
+  Widget _buildRunningView() {
+    final color = _isPaused
+        ? Colors.yellow
+        : _isWork
+            ? Colors.green
+            : Colors.red;
+    final phase = _isPaused ? 'PAUSED' : (_isWork ? 'WORK' : 'REST');
+    final exercise = _sequence[_currentRound];
+    final nextExercise = (!_isWork && _currentRound + 1 < _totalRounds)
+        ? _sequence[_currentRound + 1]
+        : null;
+    final rem = _totalRemainingSec;
+    final remStr =
+        '${rem ~/ 60}:${(rem % 60).toString().padLeft(2, '0')}';
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: _togglePause,
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          children: [
+            // ── dual progress rings ──
+            Positioned.fill(
+              child: CustomPaint(
+                painter: WarmupRingPainter(
+                  totalProgress: _totalProgress,
+                  periodProgress: _periodProgress,
+                  periodColor: color,
+                ),
+              ),
+            ),
+
+            // ── content ──
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // round counter + total remaining
+                  Text(
+                    '${_currentRound + 1}/$_totalRounds  $remStr',
+                    style: TextStyle(
+                        color: Colors.white54, fontSize: 10),
+                  ),
+                  const SizedBox(height: 4),
+                  // phase label
+                  Text(
+                    phase,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5),
+                  ),
+                  const SizedBox(height: 2),
+                  // exercise name (work) or next exercise (rest)
+                  if (_isWork)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 36),
+                      child: Text(
+                        exercise,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  else if (nextExercise != null) ...[
+                    Text(
+                      'Next',
+                      style: TextStyle(color: Colors.white38, fontSize: 10),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 36),
+                      child: Text(
+                        nextExercise,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ] else
+                    const SizedBox(height: 13),
+                  const SizedBox(height: 4),
+                  // countdown
+                  Text(
+                    '$_secondsRemaining',
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── stop button ──
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: GestureDetector(
+                onTap: _stop,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                  ),
+                  child: const Icon(Icons.stop, color: Colors.red, size: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── FINISHED ─────────────────────────────────
+  Widget _buildFinishedView() {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.greenAccent, size: 48),
+              const SizedBox(height: 8),
+              const Text(
+                'DONE!',
+                style: TextStyle(
+                    color: Colors.greenAccent,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'TAP TO EXIT',
+                style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WarmupRingPainter extends CustomPainter {
+  final double totalProgress;   // 0..1 blue outer ring
+  final double periodProgress;  // 1..0 colored inner ring
+  final Color periodColor;
+
+  const WarmupRingPainter({
+    required this.totalProgress,
+    required this.periodProgress,
+    required this.periodColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    const startAngle = -math.pi / 2;
+
+    // ── outer ring (total progress, blue) ──
+    final outerR = (size.shortestSide / 2) - 6;
+    _drawArc(canvas, cx, cy, outerR, 10, Colors.white12, 2 * math.pi);
+    _drawArc(canvas, cx, cy, outerR, 10, Colors.blue, totalProgress * 2 * math.pi);
+
+    // ── inner ring (period countdown, color) ──
+    final innerR = outerR - 14;
+    _drawArc(canvas, cx, cy, innerR, 7, Colors.white12, 2 * math.pi);
+    _drawArc(canvas, cx, cy, innerR, 7, periodColor, periodProgress * 2 * math.pi,
+        startAngle: startAngle);
+  }
+
+  void _drawArc(Canvas canvas, double cx, double cy, double r, double stroke,
+      Color color, double sweep,
+      {double startAngle = -math.pi / 2}) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = stroke
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    if (sweep > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        startAngle,
+        sweep,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(WarmupRingPainter old) =>
+      old.totalProgress != totalProgress ||
+      old.periodProgress != periodProgress ||
+      old.periodColor != periodColor;
+}
+
+// ──────────────────────────────────────────────
 
 class ProgressPainter extends CustomPainter {
   final double progress;
