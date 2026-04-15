@@ -155,15 +155,13 @@ class JKDWarmupSetupView extends WatchUi.View {
             var mid = y + itemH / 2;
 
             if (i == _selected) {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                // Bright highlight: white background, black text
+                var hlColor = (i == 0) ? Graphics.COLOR_GREEN : Graphics.COLOR_WHITE;
+                dc.setColor(hlColor, Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(0, y, w, itemH);
-                dc.setColor(i == 0 ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW,
-                    Graphics.COLOR_TRANSPARENT);
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
             } else {
-                // Dim category items that are off
-                var isOff = (i >= 4) && (_valueFor(i).equals("Off"));
-                dc.setColor(isOff ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_WHITE,
-                    Graphics.COLOR_TRANSPARENT);
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             }
 
             dc.drawText(12, mid, Graphics.FONT_SMALL, _labelFor(i),
@@ -171,13 +169,15 @@ class JKDWarmupSetupView extends WatchUi.View {
 
             var val = _valueFor(i);
             if (!val.equals("")) {
-                var valColor = Graphics.COLOR_WHITE;
+                var valColor;
                 if (i == _selected) {
-                    valColor = (i == 0) ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW;
+                    valColor = Graphics.COLOR_BLACK;
                 } else if (val.equals("Off")) {
-                    valColor = Graphics.COLOR_DK_GRAY;
+                    valColor = Graphics.COLOR_RED;
                 } else if (val.equals("On")) {
                     valColor = Graphics.COLOR_GREEN;
+                } else {
+                    valColor = Graphics.COLOR_YELLOW;
                 }
                 dc.setColor(valColor, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(w - 12, mid, Graphics.FONT_SMALL, val,
