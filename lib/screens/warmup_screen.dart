@@ -19,16 +19,31 @@ class WarmupScreen extends StatefulWidget {
 class _WarmupScreenState extends State<WarmupScreen> {
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _audioPlayer = AudioPlayer();
-  
+
   // Configuration
   int _workDuration = 30;
   int _restDuration = 10;
   int _totalDurationMinutes = 10;
-  
+
   final Map<String, List<String>> _exerciseCategories = {
-    'Squats': ['Squats (Classical)', 'Squats (Low)', 'Squats (Jump)', 'Squats (beat)'],
-    'Push-ups': ['Push-ups (Classical)', 'Push-ups (Diamond)', 'Push-ups (Wide)', 'Push-up 2026'],
-    'Crunches': ['Crunches (Abs)', 'Crunches (Leg at 90)', 'Crunches (Leg at 180)', 'Ciseaux (Scissors)'],
+    'Squats': [
+      'Squats (Classical)',
+      'Squats (Low)',
+      'Squats (Jump)',
+      'Squats (beat)',
+    ],
+    'Push-ups': [
+      'Push-ups (Classical)',
+      'Push-ups (Diamond)',
+      'Push-ups (Wide)',
+      'Push-up 2026',
+    ],
+    'Crunches': [
+      'Crunches (Abs)',
+      'Crunches (Leg at 90)',
+      'Crunches (Leg at 180)',
+      'Ciseaux (Scissors)',
+    ],
     'Jumping Jacks': ['Jumping Jacks'],
     'Burpees': ['Burpees'],
     'Mountain Climbers': ['Mountain Climbers', 'Mountain Climbers Diagonal'],
@@ -63,7 +78,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
     'Mountain Climbers': 'Mountain Climbers',
     'Mountain Climbers Diagonal': 'Montée Climbers Croisée',
     'Lunges': 'Fentes',
-    'Lunges': 'Fentes (Battement)',
+    'Lunges (Beat)': 'Fentes (Battement)',
   };
 
   final Set<String> _selectedCategories = {};
@@ -82,7 +97,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
     }
     return name;
   }
-  
+
   // Timer State
   bool _isRunning = false;
   bool _isPaused = false;
@@ -90,7 +105,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
   bool _isWorkPeriod = true;
   int _secondsRemaining = 0;
   Timer? _timer;
-  
+
   @override
   void initState() {
     super.initState();
@@ -130,12 +145,12 @@ class _WarmupScreenState extends State<WarmupScreen> {
 
   void _startWarmup() {
     if (_selectedCategories.isEmpty) return;
-    
+
     // Generate Workout Sequence
     final roundDuration = _workDuration + _restDuration;
     final totalSeconds = _totalDurationMinutes * 60;
     int numRounds = (totalSeconds / roundDuration).floor();
-    
+
     // Ensure at least enough rounds for one of each selected category
     if (numRounds < _selectedCategories.length) {
       numRounds = _selectedCategories.length;
@@ -151,8 +166,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
       if (availableCategories.length > 1 && lastCategory != null) {
         availableCategories.remove(lastCategory);
       }
-      
-      final category = availableCategories[random.nextInt(availableCategories.length)];
+
+      final category =
+          availableCategories[random.nextInt(availableCategories.length)];
       lastCategory = category;
 
       // Pick a random variation from that category
@@ -160,35 +176,41 @@ class _WarmupScreenState extends State<WarmupScreen> {
       final variation = variations[random.nextInt(variations.length)];
       sequence.add(variation);
     }
-    
+
     // Ensure all selected categories appear at least once if rounds allow
     if (numRounds >= _selectedCategories.length) {
       for (var cat in _selectedCategories) {
-        bool exists = sequence.any((ex) => _exerciseCategories[cat]!.contains(ex));
+        bool exists = sequence.any(
+          (ex) => _exerciseCategories[cat]!.contains(ex),
+        );
         if (!exists) {
           // Replace a random entry (not the same category neighbor)
           // Simplified: find first occurrence that doesn't break "no-repeat" rule
           for (int j = 0; j < sequence.length; j++) {
-             // Check neighbors
-             String? prevCat;
-             if (j > 0) {
-                prevCat = _exerciseCategories.entries.firstWhere((e) => e.value.contains(sequence[j-1])).key;
-             }
-             String? nextCat;
-             if (j < sequence.length - 1) {
-                nextCat = _exerciseCategories.entries.firstWhere((e) => e.value.contains(sequence[j+1])).key;
-             }
-             
-             if (prevCat != cat && nextCat != cat) {
-                final variations = _exerciseCategories[cat]!;
-                sequence[j] = variations[random.nextInt(variations.length)];
-                break;
-             }
+            // Check neighbors
+            String? prevCat;
+            if (j > 0) {
+              prevCat = _exerciseCategories.entries
+                  .firstWhere((e) => e.value.contains(sequence[j - 1]))
+                  .key;
+            }
+            String? nextCat;
+            if (j < sequence.length - 1) {
+              nextCat = _exerciseCategories.entries
+                  .firstWhere((e) => e.value.contains(sequence[j + 1]))
+                  .key;
+            }
+
+            if (prevCat != cat && nextCat != cat) {
+              final variations = _exerciseCategories[cat]!;
+              sequence[j] = variations[random.nextInt(variations.length)];
+              break;
+            }
           }
         }
       }
     }
-    
+
     setState(() {
       _workoutSequence = sequence;
       _isRunning = true;
@@ -197,10 +219,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
       _isWorkPeriod = true;
       _secondsRemaining = _workDuration;
     });
-    
+
     // Record activity in usage statistics
     UsageStatisticsService().recordActivity('Warmup');
-    
+
     _runTimer();
     _speakExercise();
   }
@@ -209,17 +231,17 @@ class _WarmupScreenState extends State<WarmupScreen> {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isPaused) return;
-      
+
       setState(() {
         if (_secondsRemaining > 0) {
           if (!_isWorkPeriod && _secondsRemaining == 4) {
-             _countdownAndStart();
+            _countdownAndStart();
           }
-          
+
           if (_secondsRemaining <= 3) {
             _playBeep(0.5); // Beep during each of the last 3 seconds
           }
-          
+
           _secondsRemaining--;
         } else {
           _nextPeriod();
@@ -231,14 +253,14 @@ class _WarmupScreenState extends State<WarmupScreen> {
   void _nextPeriod() async {
     _playBeep(1.0); // Long beep
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    
+
     if (_isWorkPeriod) {
       // Switch to Rest
       setState(() {
         _isWorkPeriod = false;
         _secondsRemaining = _restDuration;
       });
-      
+
       String restMsg = lang == 'fr' ? 'Repos' : 'Rest';
       if (_currentExerciseIndex < _workoutSequence.length - 1) {
         final nextEx = _workoutSequence[_currentExerciseIndex + 1];
@@ -271,7 +293,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
 
   Future<void> _countdownAndStart() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
-    
+
     // 3, 2, 1, Go! (Triggered at 4s remaining in rest)
     await _speak('3');
     await Future.delayed(const Duration(milliseconds: 250));
@@ -294,7 +316,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
   Future<void> _speak(String text) async {
     if (Platform.isLinux) {
       try {
-        final lang = Provider.of<SeriesProvider>(context, listen: false).language;
+        final lang = Provider.of<SeriesProvider>(
+          context,
+          listen: false,
+        ).language;
         await Process.run('spd-say', ['-l', lang, '-w', text]);
       } catch (e) {
         debugPrint("spd-say warning: $e");
@@ -331,10 +356,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<SeriesProvider>(context).language;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: _isRunning 
+      child: _isRunning
           ? _buildTimerUI(lang, isDark)
           : _buildConfigUI(lang, isDark),
     );
@@ -376,7 +401,8 @@ class _WarmupScreenState extends State<WarmupScreen> {
             value: _totalDurationMinutes.toDouble(),
             min: 1,
             max: 30,
-            onChanged: (val) => setState(() => _totalDurationMinutes = val.toInt()),
+            onChanged: (val) =>
+                setState(() => _totalDurationMinutes = val.toInt()),
             unit: ' min',
           ),
           _buildSlider(
@@ -429,7 +455,13 @@ class _WarmupScreenState extends State<WarmupScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${value.toInt()}$unit', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+            Text(
+              '${value.toInt()}$unit',
+              style: const TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         Slider(
@@ -450,13 +482,15 @@ class _WarmupScreenState extends State<WarmupScreen> {
     final nextExercise = _currentExerciseIndex < _workoutSequence.length - 1
         ? _workoutSequence[_currentExerciseIndex + 1]
         : null;
-    final nextExerciseName = nextExercise != null ? _getExerciseName(nextExercise, lang) : null;
+    final nextExerciseName = nextExercise != null
+        ? _getExerciseName(nextExercise, lang)
+        : null;
 
     // Calculate total progress
     final totalRounds = _workoutSequence.length;
     final roundDuration = _workDuration + _restDuration;
     final totalWorkoutSeconds = totalRounds * roundDuration;
-    
+
     // Seconds already elapsed in completed rounds
     final completedRoundsSeconds = _currentExerciseIndex * roundDuration;
     // Seconds elapsed in current round
@@ -466,17 +500,20 @@ class _WarmupScreenState extends State<WarmupScreen> {
     } else {
       currentRoundElapsed = _workDuration + (_restDuration - _secondsRemaining);
     }
-    
+
     final totalElapsedSeconds = completedRoundsSeconds + currentRoundElapsed;
-    final totalPercent = (totalElapsedSeconds / totalWorkoutSeconds).clamp(0.0, 1.0);
+    final totalPercent = (totalElapsedSeconds / totalWorkoutSeconds).clamp(
+      0.0,
+      1.0,
+    );
     final totalRemainingSeconds = totalWorkoutSeconds - totalElapsedSeconds;
-    
+
     String formatDuration(int totalSecs) {
       final mins = (totalSecs / 60).floor();
       final secs = totalSecs % 60;
       return '$mins:${secs.toString().padLeft(2, '0')}';
     }
-    
+
     return Container(
       width: double.infinity,
       color: color.withValues(alpha: 0.1),
@@ -492,11 +529,18 @@ class _WarmupScreenState extends State<WarmupScreen> {
                   children: [
                     Text(
                       '${(totalPercent * 100).toInt()}%',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                      ),
                     ),
                     Text(
                       formatDuration(totalRemainingSeconds),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 24),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 24,
+                      ),
                     ),
                   ],
                 ),
@@ -512,7 +556,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
           ),
           const Spacer(),
           Text(
-            _isWorkPeriod ? LocalizationService.translate('work', lang).toUpperCase() : LocalizationService.translate('rest', lang).toUpperCase(),
+            _isWorkPeriod
+                ? LocalizationService.translate('work', lang).toUpperCase()
+                : LocalizationService.translate('rest', lang).toUpperCase(),
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -529,7 +575,11 @@ class _WarmupScreenState extends State<WarmupScreen> {
             const SizedBox(height: 8),
             Text(
               '${lang == 'fr' ? 'Prochain' : 'Next'}: $nextExerciseName',
-              style: const TextStyle(fontSize: 18, color: Colors.blueGrey, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.blueGrey,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
           const SizedBox(height: 48),
@@ -540,7 +590,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
                 width: 200,
                 height: 200,
                 child: CircularProgressIndicator(
-                  value: _secondsRemaining / (_isWorkPeriod ? _workDuration : _restDuration),
+                  value:
+                      _secondsRemaining /
+                      (_isWorkPeriod ? _workDuration : _restDuration),
                   strokeWidth: 12,
                   color: color,
                   backgroundColor: color.withValues(alpha: 0.2),
@@ -548,7 +600,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
               ),
               Text(
                 '$_secondsRemaining',
-                style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 80,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

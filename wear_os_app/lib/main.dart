@@ -1096,9 +1096,24 @@ class WearWarmupScreen extends StatefulWidget {
 class _WearWarmupScreenState extends State<WearWarmupScreen> {
   // ── exercise data (mirrors warmup_screen.dart) ──
   static const Map<String, List<String>> _exerciseCategories = {
-    'Squats': ['Squats (Classical)', 'Squats (Low)', 'Squats (Jump)', 'Squats (Beat)'],
-    'Push-ups': ['Push-ups (Classical)', 'Push-ups (Diamond)', 'Push-ups (Wide)', 'Push-up 2026'],
-    'Crunches': ['Crunches (Abs)', 'Crunches (Leg 90°)', 'Crunches (Leg 180°)', 'Ciseaux'],
+    'Squats': [
+      'Squats (Classical)',
+      'Squats (Low)',
+      'Squats (Jump)',
+      'Squats (Beat)',
+    ],
+    'Push-ups': [
+      'Push-ups (Classical)',
+      'Push-ups (Diamond)',
+      'Push-ups (Wide)',
+      'Push-up 2026',
+    ],
+    'Crunches': [
+      'Crunches (Abs)',
+      'Crunches (Leg 90°)',
+      'Crunches (Leg 180°)',
+      'Ciseaux',
+    ],
     'Jumping Jacks': ['Jumping Jacks'],
     'Burpees': ['Burpees'],
     'Mountain Climbers': ['Mountain Climbers', 'Mountain Climbers Diagonal'],
@@ -1107,21 +1122,21 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
 
   // ── config ──
   final _durations = [5, 8, 10, 15, 20];
-  final _works     = [20, 25, 30, 35, 40];
-  final _rests     = [10, 15];
-  int _durIdx  = 2; // 10 min
+  final _works = [20, 25, 30, 35, 40];
+  final _rests = [10, 15];
+  int _durIdx = 2; // 10 min
   int _workIdx = 0; // 20 s
   int _restIdx = 0; // 10 s
   late Set<String> _selectedCategories;
 
   // ── runtime ──
   bool _isRunning = false;
-  bool _isPaused  = false;
-  bool _isWork    = true;
-  bool _finished  = false;
-  int  _secondsRemaining = 0;
-  int  _currentRound = 0;
-  int  _totalRounds  = 0;
+  bool _isPaused = false;
+  bool _isWork = true;
+  bool _finished = false;
+  int _secondsRemaining = 0;
+  int _currentRound = 0;
+  int _totalRounds = 0;
   List<String> _sequence = [];
   Timer? _timer;
 
@@ -1137,9 +1152,9 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
     super.dispose();
   }
 
-  int get _workDuration  => _works[_workIdx];
-  int get _restDuration  => _rests[_restIdx];
-  int get _totalMinutes  => _durations[_durIdx];
+  int get _workDuration => _works[_workIdx];
+  int get _restDuration => _rests[_restIdx];
+  int get _totalMinutes => _durations[_durIdx];
 
   void _buildSequence() {
     final pool = <String>[];
@@ -1186,9 +1201,9 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
     if (_sequence.isEmpty) return;
     setState(() {
       _isRunning = true;
-      _isPaused  = false;
-      _isWork    = true;
-      _finished  = false;
+      _isPaused = false;
+      _isWork = true;
+      _finished = false;
       _currentRound = 0;
       _secondsRemaining = _workDuration;
     });
@@ -1223,7 +1238,7 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
       } else {
         _timer?.cancel();
         _isRunning = false;
-        _finished  = true;
+        _finished = true;
         HapticFeedback.heavyImpact();
       }
     }
@@ -1238,17 +1253,22 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
     _timer?.cancel();
     setState(() {
       _isRunning = false;
-      _isPaused  = false;
-      _finished  = false;
+      _isPaused = false;
+      _finished = false;
     });
   }
 
   // ── total progress (0..1) ──
   double get _totalProgress {
     final totalSec = _totalRounds * (_workDuration + _restDuration);
-    final workElapsed = _isWork ? _workDuration - _secondsRemaining : _workDuration;
-    final elapsed = _currentRound * (_workDuration + _restDuration)
-        + (_isWork ? workElapsed : _workDuration + _restDuration - _secondsRemaining);
+    final workElapsed = _isWork
+        ? _workDuration - _secondsRemaining
+        : _workDuration;
+    final elapsed =
+        _currentRound * (_workDuration + _restDuration) +
+        (_isWork
+            ? workElapsed
+            : _workDuration + _restDuration - _secondsRemaining);
     return (elapsed / totalSec).clamp(0.0, 1.0);
   }
 
@@ -1260,9 +1280,14 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
 
   int get _totalRemainingSec {
     final totalSec = _totalRounds * (_workDuration + _restDuration);
-    final workElapsed = _isWork ? _workDuration - _secondsRemaining : _workDuration;
-    final elapsed = _currentRound * (_workDuration + _restDuration)
-        + (_isWork ? workElapsed : _workDuration + _restDuration - _secondsRemaining);
+    final workElapsed = _isWork
+        ? _workDuration - _secondsRemaining
+        : _workDuration;
+    final elapsed =
+        _currentRound * (_workDuration + _restDuration) +
+        (_isWork
+            ? workElapsed
+            : _workDuration + _restDuration - _secondsRemaining);
     return math.max(0, totalSec - elapsed);
   }
 
@@ -1315,7 +1340,11 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
             // ── category chips ──
             const Text(
               'EXERCISES',
-              style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 1),
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+                letterSpacing: 1,
+              ),
             ),
             const SizedBox(height: 4),
             Wrap(
@@ -1333,7 +1362,10 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                     }
                   }),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: on
                           ? Colors.green.withValues(alpha: 0.25)
@@ -1375,7 +1407,12 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: _selectedCategories.isEmpty
                       ? []
-                      : [BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 10)],
+                      : [
+                          BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                          ),
+                        ],
                 ),
                 child: const Text(
                   'START',
@@ -1408,13 +1445,18 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.yellowAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.yellowAccent,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -1426,16 +1468,15 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
     final color = _isPaused
         ? Colors.yellow
         : _isWork
-            ? Colors.green
-            : Colors.red;
+        ? Colors.green
+        : Colors.red;
     final phase = _isPaused ? 'PAUSED' : (_isWork ? 'WORK' : 'REST');
     final exercise = _sequence[_currentRound];
     final nextExercise = (!_isWork && _currentRound + 1 < _totalRounds)
         ? _sequence[_currentRound + 1]
         : null;
     final rem = _totalRemainingSec;
-    final remStr =
-        '${rem ~/ 60}:${(rem % 60).toString().padLeft(2, '0')}';
+    final remStr = '${rem ~/ 60}:${(rem % 60).toString().padLeft(2, '0')}';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -1463,18 +1504,18 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                   // round counter + total remaining
                   Text(
                     '${_currentRound + 1}/$_totalRounds  $remStr',
-                    style: TextStyle(
-                        color: Colors.white54, fontSize: 10),
+                    style: TextStyle(color: Colors.white54, fontSize: 10),
                   ),
                   const SizedBox(height: 4),
                   // phase label
                   Text(
                     phase,
                     style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5),
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   // exercise name (work) or next exercise (rest)
@@ -1487,9 +1528,10 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     )
                   else if (nextExercise != null) ...[
@@ -1505,9 +1547,10 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ] else
@@ -1517,9 +1560,10 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                   Text(
                     '$_secondsRemaining',
                     style: TextStyle(
-                        color: color,
-                        fontSize: 38,
-                        fontWeight: FontWeight.w900),
+                      color: color,
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ],
               ),
@@ -1536,7 +1580,9 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
                   decoration: BoxDecoration(
                     color: Colors.red.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: const Icon(Icons.stop, color: Colors.red, size: 16),
                 ),
@@ -1559,19 +1605,28 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Colors.greenAccent, size: 48),
+              const Icon(
+                Icons.check_circle,
+                color: Colors.greenAccent,
+                size: 48,
+              ),
               const SizedBox(height: 8),
               const Text(
                 'DONE!',
                 style: TextStyle(
-                    color: Colors.greenAccent,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.greenAccent,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'TAP TO EXIT',
-                style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1.5),
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                ),
               ),
             ],
           ),
@@ -1582,8 +1637,8 @@ class _WearWarmupScreenState extends State<WearWarmupScreen> {
 }
 
 class WarmupRingPainter extends CustomPainter {
-  final double totalProgress;   // 0..1 blue outer ring
-  final double periodProgress;  // 1..0 colored inner ring
+  final double totalProgress; // 0..1 blue outer ring
+  final double periodProgress; // 1..0 colored inner ring
   final Color periodColor;
 
   const WarmupRingPainter({
@@ -1601,18 +1656,41 @@ class WarmupRingPainter extends CustomPainter {
     // ── outer ring (total progress, blue) ──
     final outerR = (size.shortestSide / 2) - 6;
     _drawArc(canvas, cx, cy, outerR, 10, Colors.white12, 2 * math.pi);
-    _drawArc(canvas, cx, cy, outerR, 10, Colors.blue, totalProgress * 2 * math.pi);
+    _drawArc(
+      canvas,
+      cx,
+      cy,
+      outerR,
+      10,
+      Colors.blue,
+      totalProgress * 2 * math.pi,
+    );
 
     // ── inner ring (period countdown, color) ──
     final innerR = outerR - 14;
     _drawArc(canvas, cx, cy, innerR, 7, Colors.white12, 2 * math.pi);
-    _drawArc(canvas, cx, cy, innerR, 7, periodColor, periodProgress * 2 * math.pi,
-        startAngle: startAngle);
+    _drawArc(
+      canvas,
+      cx,
+      cy,
+      innerR,
+      7,
+      periodColor,
+      periodProgress * 2 * math.pi,
+      startAngle: startAngle,
+    );
   }
 
-  void _drawArc(Canvas canvas, double cx, double cy, double r, double stroke,
-      Color color, double sweep,
-      {double startAngle = -math.pi / 2}) {
+  void _drawArc(
+    Canvas canvas,
+    double cx,
+    double cy,
+    double r,
+    double stroke,
+    Color color,
+    double sweep, {
+    double startAngle = -math.pi / 2,
+  }) {
     final paint = Paint()
       ..color = color
       ..strokeWidth = stroke

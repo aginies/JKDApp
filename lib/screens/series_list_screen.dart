@@ -506,7 +506,9 @@ class _SeriesListScreenState extends State<SeriesListScreen>
         ],
       ),
       floatingActionButton:
-          _tabController.index == 4 || _tabController.index == 5 || _tabController.index == 6
+          _tabController.index == 4 ||
+              _tabController.index == 5 ||
+              _tabController.index == 6
           ? null // Hide FAB on Warmup, Active Training and Training Programs tab
           : Stack(
               children: [
