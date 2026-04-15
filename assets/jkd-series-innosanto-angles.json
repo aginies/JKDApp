@@ -1,6 +1,6 @@
 [
   {
-    "id": 41,
+    "id": 42,
     "title": "Innosanto Angles",
     "category": "Kali",
     "type": "Attack",
@@ -10,7 +10,7 @@
     "is_from_cloud": 0,
     "moves": [
       {
-        "id": 446,
+        "id": 461,
         "glossary_id": 3365,
         "counter_glossary_id": null,
         "name": "Angle 1",
@@ -37,7 +37,7 @@
         "strike_type": null
       },
       {
-        "id": 447,
+        "id": 462,
         "glossary_id": 3366,
         "counter_glossary_id": null,
         "name": "Angle 2",
@@ -64,7 +64,7 @@
         "strike_type": null
       },
       {
-        "id": 448,
+        "id": 463,
         "glossary_id": 3367,
         "counter_glossary_id": null,
         "name": "Angle 3",
@@ -91,7 +91,7 @@
         "strike_type": null
       },
       {
-        "id": 449,
+        "id": 464,
         "glossary_id": 3368,
         "counter_glossary_id": null,
         "name": "Angle 4",
@@ -118,7 +118,7 @@
         "strike_type": null
       },
       {
-        "id": 450,
+        "id": 465,
         "glossary_id": 3369,
         "counter_glossary_id": null,
         "name": "Angle 5",
@@ -145,7 +145,7 @@
         "strike_type": null
       },
       {
-        "id": 451,
+        "id": 466,
         "glossary_id": 3370,
         "counter_glossary_id": null,
         "name": "Angle 6",
@@ -172,7 +172,7 @@
         "strike_type": null
       },
       {
-        "id": 452,
+        "id": 467,
         "glossary_id": 3371,
         "counter_glossary_id": null,
         "name": "Angle 7",
@@ -199,7 +199,7 @@
         "strike_type": null
       },
       {
-        "id": 453,
+        "id": 468,
         "glossary_id": 3372,
         "counter_glossary_id": null,
         "name": "Angle 8",
@@ -226,7 +226,7 @@
         "strike_type": null
       },
       {
-        "id": 454,
+        "id": 469,
         "glossary_id": 3373,
         "counter_glossary_id": null,
         "name": "Angle 9",
@@ -253,7 +253,7 @@
         "strike_type": null
       },
       {
-        "id": 455,
+        "id": 470,
         "glossary_id": 3374,
         "counter_glossary_id": null,
         "name": "Angle 10",
@@ -280,7 +280,7 @@
         "strike_type": null
       },
       {
-        "id": 456,
+        "id": 471,
         "glossary_id": 3375,
         "counter_glossary_id": null,
         "name": "Angle 11",
@@ -307,7 +307,7 @@
         "strike_type": null
       },
       {
-        "id": 457,
+        "id": 472,
         "glossary_id": 3376,
         "counter_glossary_id": null,
         "name": "Angle 12",
@@ -334,7 +334,7 @@
         "strike_type": null
       },
       {
-        "id": 458,
+        "id": 473,
         "glossary_id": 3377,
         "counter_glossary_id": null,
         "name": "Angle 13",
@@ -361,7 +361,34 @@
         "strike_type": null
       },
       {
-        "id": 459,
+        "id": 474,
+        "glossary_id": 3377,
+        "counter_glossary_id": null,
+        "name": "Angle 13",
+        "category": "angles",
+        "side": "",
+        "level": "",
+        "sub_letter": null,
+        "is_feint": 0,
+        "special_action": null,
+        "translations": "{}",
+        "repetitions": 1,
+        "counter_name": null,
+        "counter_side": "",
+        "counter_level": "",
+        "counter_special_action": null,
+        "counter_category": null,
+        "counter_is_feint": 0,
+        "counter_translations": "{}",
+        "counter_sub_moves_json": null,
+        "counter_chain_json": null,
+        "sub_moves_json": null,
+        "chain_json": null,
+        "kali_angle": 13,
+        "strike_type": null
+      },
+      {
+        "id": 475,
         "glossary_id": 3378,
         "counter_glossary_id": null,
         "name": "Angle 14",
@@ -388,7 +415,7 @@
         "strike_type": null
       },
       {
-        "id": 460,
+        "id": 476,
         "glossary_id": 3774,
         "counter_glossary_id": null,
         "name": "Angle 15",
@@ -412,6 +439,33 @@
         "sub_moves_json": null,
         "chain_json": null,
         "kali_angle": 15,
+        "strike_type": null
+      },
+      {
+        "id": 477,
+        "glossary_id": null,
+        "counter_glossary_id": null,
+        "name": "Pic remontant vers la Gauche",
+        "category": "text",
+        "side": "",
+        "level": "",
+        "sub_letter": null,
+        "is_feint": 0,
+        "special_action": null,
+        "translations": "{}",
+        "repetitions": 1,
+        "counter_name": null,
+        "counter_side": "",
+        "counter_level": "",
+        "counter_special_action": null,
+        "counter_category": null,
+        "counter_is_feint": 0,
+        "counter_translations": "{}",
+        "counter_sub_moves_json": null,
+        "counter_chain_json": null,
+        "sub_moves_json": null,
+        "chain_json": null,
+        "kali_angle": null,
         "strike_type": null
       }
     ]
