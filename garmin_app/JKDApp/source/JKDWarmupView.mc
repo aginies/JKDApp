@@ -72,8 +72,27 @@ class JKDWarmupView extends WatchUi.View {
         _totalRounds = totalSeconds / roundDuration;
         if (_totalRounds < 4) { _totalRounds = 4; }
         _workoutSequence = new [_totalRounds];
+
+        // Always start with a Jumping Jack or Squat if either category is enabled
+        var starters = new [0];
+        if (JKDSettings.warmupCatJumpingJacks) { starters = starters.add("Jumping Jacks"); }
+        if (JKDSettings.warmupCatSquats) {
+            starters = starters.add("Squat Classical");
+            starters = starters.add("Squat Low");
+            starters = starters.add("Squat Jump");
+        }
         var lastIdx = -1;
-        for (var i = 0; i < _totalRounds; i++) {
+        if (starters.size() > 0) {
+            var startIdx = Math.rand() % starters.size();
+            _workoutSequence[0] = starters[startIdx];
+            // find lastIdx in pool to avoid repeat
+            for (var k = 0; k < pool.size(); k++) {
+                if (pool[k].equals(_workoutSequence[0])) { lastIdx = k; }
+            }
+        }
+
+        var startI = (starters.size() > 0) ? 1 : 0;
+        for (var i = startI; i < _totalRounds; i++) {
             var idx = Math.rand() % pool.size();
             var tries = 0;
             while (pool.size() > 1 && idx == lastIdx && tries < 5) {
@@ -125,7 +144,8 @@ class JKDWarmupView extends WatchUi.View {
             _tickCount = 0;
             if (_secondsRemaining > 0) {
                 _secondsRemaining--;
-                if (_secondsRemaining > 0 && _secondsRemaining <= 3) {
+                // 3-2-1 countdown beeps only during work to announce upcoming rest
+                if (_isWorkPeriod && _secondsRemaining > 0 && _secondsRemaining <= 3) {
                     if (Attention has :playTone) {
                         Attention.playTone(Attention.TONE_KEY);
                     }
@@ -138,11 +158,11 @@ class JKDWarmupView extends WatchUi.View {
     }
 
     function advancePeriod() {
-        if (Attention has :playTone) {
-            Attention.playTone(Attention.TONE_LOUD_BEEP);
-        }
-
         if (_isWorkPeriod) {
+            // Work → Rest: short beep (rest begins)
+            if (Attention has :playTone) {
+                Attention.playTone(Attention.TONE_LOUD_BEEP);
+            }
             _isWorkPeriod = false;
             _secondsRemaining = _restDuration;
             buzz(false);
@@ -156,6 +176,10 @@ class JKDWarmupView extends WatchUi.View {
         } else {
             _currentRound++;
             if (_currentRound < _totalRounds) {
+                // Rest → Work: long tone to announce exercise restart
+                if (Attention has :playTone) {
+                    Attention.playTone(Attention.TONE_START);
+                }
                 _isWorkPeriod = true;
                 _secondsRemaining = _workDuration;
                 buzz(true);
@@ -246,35 +270,40 @@ class JKDWarmupView extends WatchUi.View {
         dc.drawArc(cx, cy, innerRadius, Graphics.ARC_CLOCKWISE, 90, 90 + periodSweep);
         dc.setPenWidth(1);
 
-        // Round counter (top)
+        // Round counter (top) — small dark pill background
+        var counterText = (_currentRound + 1).toString() + "/" + _totalRounds.toString();
+        var bgW = 44;
+        var bgH = 16;
+        dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(cx - bgW / 2, 3, bgW, bgH, 6);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, 5, Graphics.FONT_XTINY,
-            (_currentRound + 1).toString() + "/" + _totalRounds.toString(),
-            Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 4, Graphics.FONT_XTINY, counterText, Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Phase
+        // Phase label — moved higher during rest to leave room for Next block
         var phase = _isWorkPeriod ? "WORK" : "REST";
         if (_isPaused) { phase = "PAUSED"; }
+        var phaseY = (_isWorkPeriod || _isPaused) ? cy - 55 : cy - 72;
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 55, Graphics.FONT_XTINY, phase, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, phaseY, Graphics.FONT_XTINY, phase, Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Exercise name
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 38, Graphics.FONT_SMALL,
-            _workoutSequence[_currentRound], Graphics.TEXT_JUSTIFY_CENTER);
+        // Exercise name (work) or next exercise (rest)
+        if (_isWorkPeriod) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy - 38, Graphics.FONT_SMALL,
+                _workoutSequence[_currentRound], Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (_currentRound < _totalRounds - 1) {
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy - 55, Graphics.FONT_XTINY, "Next",
+                Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, cy - 38, Graphics.FONT_SMALL,
+                _workoutSequence[_currentRound + 1], Graphics.TEXT_JUSTIFY_CENTER);
+        }
 
         // Countdown
         dc.drawText(cx, cy - 10, Graphics.FONT_NUMBER_MEDIUM,
             _secondsRemaining.toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Next exercise hint
-        if (!_isWorkPeriod && _currentRound < _totalRounds - 1) {
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy + 45, Graphics.FONT_XTINY,
-                "Next: " + _workoutSequence[_currentRound + 1],
-                Graphics.TEXT_JUSTIFY_CENTER);
-        }
 
         // Time remaining
         var remaining = totalSec - elapsed;
