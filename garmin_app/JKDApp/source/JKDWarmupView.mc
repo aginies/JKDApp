@@ -7,6 +7,8 @@ import Toybox.Math;
 import Toybox.Communications;
 import Toybox.ActivityRecording;
 import Toybox.Activity;
+import Toybox.Sensor;
+import Toybox.UserProfile;
 
 class JKDWarmupView extends WatchUi.View {
     private var _timer;
@@ -24,6 +26,7 @@ class JKDWarmupView extends WatchUi.View {
     private var _workoutSequence = null;
     private var _tickCount = 0;
     private var _finished = false;
+    private var _heartRate = 0;
 
     function initialize(totalDurationMinutes, workDuration, restDuration) {
         View.initialize();
@@ -32,8 +35,12 @@ class JKDWarmupView extends WatchUi.View {
         _restDuration = restDuration;
         _timer = new Timer.Timer();
 
+        Sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
+
         // Build exercise pool from enabled categories
         var pool = new [0];
+        // ... (rest of initialize unchanged)
+
         if (JKDSettings.warmupCatSquats) {
             pool = pool.add("Squat Classical");
             pool = pool.add("Squat Low");
@@ -140,8 +147,20 @@ class JKDWarmupView extends WatchUi.View {
         }
 
         _tickCount++;
-        if (_tickCount >= 10) {
-            _tickCount = 0;
+
+        // Update HR and transmit every second (10 ticks)
+        if (_tickCount % 10 == 0) {
+            var info = Sensor.getInfo();
+            if (info != null && info.heartRate != null) {
+                _heartRate = info.heartRate;
+
+                // Periodic HR transmission to phone every 2 seconds (20 ticks)
+                if (_tickCount % 20 == 0) {
+                    Communications.transmit({"hr" => _heartRate}, null, new CommListener());
+                }
+            }
+
+            // Decrement remaining seconds
             if (_secondsRemaining > 0) {
                 _secondsRemaining--;
                 // 3-2-1 countdown beeps only during work to announce upcoming rest
@@ -157,7 +176,19 @@ class JKDWarmupView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function getHRColor() {
+        if (_heartRate == 0) { return Graphics.COLOR_WHITE; }
+        var zones = UserProfile.getHeartRateZones(UserProfile.HR_ZONE_SPORT_GENERIC);
+        if (zones == null || zones.size() < 5) { return Graphics.COLOR_RED; }
+        if (_heartRate < zones[1]) { return Graphics.COLOR_BLUE; }
+        if (_heartRate < zones[2]) { return Graphics.COLOR_GREEN; }
+        if (_heartRate < zones[3]) { return Graphics.COLOR_YELLOW; }
+        if (_heartRate < zones[4]) { return Graphics.COLOR_ORANGE; }
+        return Graphics.COLOR_RED;
+    }
+
     function advancePeriod() {
+
         if (_isWorkPeriod) {
             // Work → Rest: short beep (rest begins)
             if (Attention has :playTone) {
@@ -282,7 +313,7 @@ class JKDWarmupView extends WatchUi.View {
         // Phase label — moved higher during rest to leave room for Next block
         var phase = _isWorkPeriod ? "WORK" : "REST";
         if (_isPaused) { phase = "PAUSED"; }
-        var phaseY = (_isWorkPeriod || _isPaused) ? cy - 55 : cy - 72;
+        var phaseY = (_isWorkPeriod && !_isPaused) ? cy - 55 : cy - 72;
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, phaseY, Graphics.FONT_XTINY, phase, Graphics.TEXT_JUSTIFY_CENTER);
 
@@ -313,8 +344,15 @@ class JKDWarmupView extends WatchUi.View {
         var remStr = remMin.toString() + ":" + remSec.format("%02d");
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, cy + 62, Graphics.FONT_TINY, remStr, Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Heart Rate (bottom left)
+        if (_heartRate > 0) {
+            dc.setColor(getHRColor(), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx - 50, cy + 62, Graphics.FONT_TINY, _heartRate.toString(), Graphics.TEXT_JUSTIFY_RIGHT);
+        }
     }
 }
+
 
 class JKDWarmupDelegate extends WatchUi.BehaviorDelegate {
     private var _view;

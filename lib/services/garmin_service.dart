@@ -40,17 +40,21 @@ class GarminService {
       StreamController<bool>.broadcast();
   final StreamController<bool> _coachingVoiceController =
       StreamController<bool>.broadcast();
+  final StreamController<int> _hrController = StreamController<int>.broadcast();
 
   Stream<bool> get onConnectionChanged => _connectionController.stream;
   Stream<bool> get onCoachingVoiceChanged => _coachingVoiceController.stream;
+  Stream<int> get onHeartRateReceived => _hrController.stream;
 
   bool _isConnected = false;
   bool _watchCoachingVoiceActive = false;
   bool _ttsEnabled = false;
   String _language = 'en';
+  int _currentHR = 0;
 
   bool get isConnected => _isConnected;
   bool get watchCoachingVoiceActive => _watchCoachingVoiceActive;
+  int get currentHR => _currentHR;
 
   bool _enabled = true;
   StreamSubscription? _eventSubscription;
@@ -75,6 +79,41 @@ class GarminService {
     _speechRate = speechRate;
     _language = language;
     _tts.setSpeechRate(_speechRate);
+
+    // Set audio context for beep player
+    _beepPlayer.setAudioContext(AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.playback,
+        options: {
+          AVAudioSessionOptions.mixWithOthers,
+          AVAudioSessionOptions.duckOthers,
+        },
+      ),
+      android: AudioContextAndroid(
+        isSpeakerphoneOn: false,
+        stayAwake: false,
+        contentType: AndroidContentType.speech,
+        usageType: AndroidUsageType.media,
+        audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+      ),
+    ));
+
+    // Support background music ducking
+    if (_isMobile) {
+      _tts.setSharedInstance(true);
+      if (Platform.isIOS) {
+        _tts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.playback,
+          [
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+            IosTextToSpeechAudioCategoryOptions.duckOthers,
+            IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+          ],
+        );
+      } else if (Platform.isAndroid) {
+        _tts.setAudioAttributesForNavigation();
+      }
+    }
 
     // Reset so the first deviceStatus event after (re-)init always propagates.
     _isConnected = false;
@@ -129,6 +168,13 @@ class GarminService {
               _watchCoachingVoiceActive = active;
               _coachingVoiceController.add(_watchCoachingVoiceActive);
               LoggingService.log('Watch coaching voice: $active');
+            }
+          }
+          if (data.containsKey('hr')) {
+            final hr = data['hr'] as int?;
+            if (hr != null && hr != _currentHR) {
+              _currentHR = hr;
+              _hrController.add(_currentHR);
             }
           }
         }
@@ -262,7 +308,7 @@ class GarminService {
       if (!completer.isCompleted) completer.complete();
     });
 
-    await _tts.speak(text);
+    await _tts.speak(text, focus: true);
     await completer.future.timeout(
       const Duration(seconds: 10),
       onTimeout: () {

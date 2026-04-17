@@ -58,6 +58,7 @@ class SeriesProvider with ChangeNotifier {
   bool _developerMode = false;
   bool _manageSeriesMode = false;
   bool _showTranslation = true;
+  bool _keepScreenOn = false;
   String? _projectPath;
   double _speechRate = 0.50;
   double _fontSizeScale = 1.0;
@@ -91,6 +92,7 @@ class SeriesProvider with ChangeNotifier {
   bool get developerMode => _developerMode;
   bool get manageSeriesMode => _manageSeriesMode;
   bool get showTranslation => _showTranslation;
+  bool get keepScreenOn => _keepScreenOn;
   String? get projectPath => _projectPath;
   double get speechRate => _speechRate;
   double get fontSizeScale => _fontSizeScale;
@@ -241,6 +243,7 @@ class SeriesProvider with ChangeNotifier {
 
     // Translation (Enabled by default)
     _showTranslation = (prefs['show_translation'] ?? '1') == '1';
+    _keepScreenOn = (prefs['keep_screen_on'] ?? '0') == '1';
 
     // Speech Rate
     if (prefs.containsKey('speech_rate')) {
@@ -368,6 +371,12 @@ class SeriesProvider with ChangeNotifier {
   void setShowTranslation(bool enabled) async {
     _showTranslation = enabled;
     await _dbService.saveSetting('show_translation', enabled ? '1' : '0');
+    notifyListeners();
+  }
+
+  void setKeepScreenOn(bool enabled) async {
+    _keepScreenOn = enabled;
+    await _dbService.saveSetting('keep_screen_on', enabled ? '1' : '0');
     notifyListeners();
   }
 

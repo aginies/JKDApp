@@ -52,13 +52,14 @@ build_device() {
 
     if [ $? -eq 0 ]; then
         echo "SUCCESS: $OUTPUT_FILE"
+        return 0
     else
         echo "FAILED: $DEVICE"
         return 1
     fi
 }
 
-# Loop through devices
+# Loop through devices sequentially
 FAILED_DEVICES=""
 for DEV in $DEVICES; do
     build_device "$DEV" || FAILED_DEVICES="$FAILED_DEVICES $DEV"

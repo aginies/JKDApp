@@ -93,6 +93,11 @@ class JKDStandaloneView extends WatchUi.View {
                 _heartRate = info.heartRate;
                 if (_sessionMinHR == 0 || _heartRate < _sessionMinHR) { _sessionMinHR = _heartRate; }
                 if (_heartRate > _sessionMaxHR) { _sessionMaxHR = _heartRate; }
+
+                // Periodic HR transmission to phone (every 2 seconds to avoid flooding)
+                if (_tickCount % 20 == 0) {
+                    Communications.transmit({"hr" => _heartRate}, null, new CommListener());
+                }
             }
 
             // If voice coaching was disabled while we were waiting, clear the flag
@@ -510,7 +515,14 @@ class JKDStandaloneView extends WatchUi.View {
             dc.setPenWidth(1);
         }
 
+        // Heart Rate (bottom left)
+        if (_heartRate > 0) {
+            dc.setColor(getHRColor(), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(centerX - 50, screenHeight - 25, Graphics.FONT_TINY, _heartRate.toString(), Graphics.TEXT_JUSTIFY_RIGHT);
+        }
+
         var combo = combos[_comboIndex];
+
         var comboText = combo.text;
         var rawLines = [];
         var rest = comboText;

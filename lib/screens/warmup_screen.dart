@@ -8,6 +8,9 @@ import 'package:audioplayers/audioplayers.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/usage_statistics_service.dart';
+import '../services/garmin_service.dart';
+import '../services/audio_session_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class WarmupScreen extends StatefulWidget {
   const WarmupScreen({super.key});
@@ -19,6 +22,8 @@ class WarmupScreen extends StatefulWidget {
 class _WarmupScreenState extends State<WarmupScreen> {
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  StreamSubscription? _hrSubscription;
+  int _currentHRFromWatch = 0;
 
   // Configuration
   int _workDuration = 30;
@@ -110,6 +115,13 @@ class _WarmupScreenState extends State<WarmupScreen> {
   void initState() {
     super.initState();
     _initTts();
+    _hrSubscription = GarminService().onHeartRateReceived.listen((hr) {
+      if (mounted) {
+        setState(() {
+          _currentHRFromWatch = hr;
+        });
+      }
+    });
   }
 
   Future<void> _initTts() async {
@@ -118,6 +130,24 @@ class _WarmupScreenState extends State<WarmupScreen> {
       final lang = Provider.of<SeriesProvider>(context, listen: false).language;
       await _tts.setLanguage(lang == 'fr' ? 'fr-FR' : 'en-US');
       await _tts.setSpeechRate(0.5);
+      await _tts.awaitSpeakCompletion(true);
+
+      // Support background music ducking
+      if (Platform.isIOS || Platform.isAndroid) {
+        await _tts.setSharedInstance(true);
+        if (Platform.isIOS) {
+          await _tts.setIosAudioCategory(
+            IosTextToSpeechAudioCategory.playback,
+            [
+              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+              IosTextToSpeechAudioCategoryOptions.duckOthers,
+              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+            ],
+          );
+        } else if (Platform.isAndroid) {
+          await _tts.setAudioAttributesForNavigation();
+        }
+      }
     } catch (e) {
       debugPrint("Warmup TTS Init Warning: $e");
     }
@@ -126,8 +156,11 @@ class _WarmupScreenState extends State<WarmupScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _hrSubscription?.cancel();
     _stopTts();
     _audioPlayer.dispose();
+    AudioSessionService.releaseFocus();
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -223,6 +256,11 @@ class _WarmupScreenState extends State<WarmupScreen> {
     // Record activity in usage statistics
     UsageStatisticsService().recordActivity('Warmup');
 
+    final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+    if (keepScreenOn) {
+      WakelockPlus.enable();
+    }
+
     _runTimer();
     _speakExercise();
   }
@@ -286,7 +324,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
         setState(() {
           _isRunning = false;
         });
-        _speak(lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete');
+        await _speak(lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete');
+        AudioSessionService.releaseFocus();
+        WakelockPlus.disable();
       }
     }
   }
@@ -294,23 +334,18 @@ class _WarmupScreenState extends State<WarmupScreen> {
   Future<void> _countdownAndStart() async {
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
 
-    // 3, 2, 1, Go! (Triggered at 4s remaining in rest)
     await _speak('3');
-    await Future.delayed(const Duration(milliseconds: 250));
     await _speak('2');
-    await Future.delayed(const Duration(milliseconds: 250));
     await _speak('1');
-    await Future.delayed(const Duration(milliseconds: 250));
     await _speak(lang == 'fr' ? 'Go !' : 'Go !');
   }
 
   Future<void> _speakExercise() async {
-    // Initial start
     final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     final exercise = _workoutSequence[_currentExerciseIndex];
     final exerciseName = _getExerciseName(exercise, lang);
     await _speak(exerciseName);
-    await _countdownAndStart();
+    await _speak('Go !');
   }
 
   Future<void> _speak(String text) async {
@@ -326,7 +361,8 @@ class _WarmupScreenState extends State<WarmupScreen> {
       }
     } else {
       try {
-        await _tts.speak(text);
+        await _tts.speak(text, focus: true);
+        await AudioSessionService.releaseFocus();
       } catch (e) {
         debugPrint("TTS speak error: $e");
       }
@@ -340,6 +376,8 @@ class _WarmupScreenState extends State<WarmupScreen> {
   void _stopWarmup() {
     _timer?.cancel();
     _stopTts();
+    AudioSessionService.releaseFocus();
+    WakelockPlus.disable();
     setState(() {
       _isRunning = false;
       _isPaused = false;
@@ -514,123 +552,157 @@ class _WarmupScreenState extends State<WarmupScreen> {
       return '$mins:${secs.toString().padLeft(2, '0')}';
     }
 
+    Color getHRColor(int hr) {
+      if (hr < 100) return Colors.grey;
+      if (hr < 120) return Colors.blue;
+      if (hr < 140) return Colors.green;
+      if (hr < 160) return Colors.orange;
+      return Colors.red;
+    }
+
     return Container(
       width: double.infinity,
       color: color.withValues(alpha: 0.1),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Column(
                   children: [
-                    Text(
-                      '${(totalPercent * 100).toInt()}%',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${(totalPercent * 100).toInt()}%',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                        Text(
+                          formatDuration(totalRemainingSeconds),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                            fontSize: 24,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      formatDuration(totalRemainingSeconds),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                        fontSize: 24,
-                      ),
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: totalPercent,
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                      minHeight: 16,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: totalPercent,
-                  backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                  minHeight: 16,
-                  borderRadius: BorderRadius.circular(8),
+              ),
+              const Spacer(),
+              Text(
+                _isWorkPeriod
+                    ? LocalizationService.translate('work', lang).toUpperCase()
+                    : LocalizationService.translate('rest', lang).toUpperCase(),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                currentExerciseName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (!_isWorkPeriod && nextExerciseName != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${lang == 'fr' ? 'Prochain' : 'Next'}: $nextExerciseName',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.blueGrey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
-            ),
-          ),
-          const Spacer(),
-          Text(
-            _isWorkPeriod
-                ? LocalizationService.translate('work', lang).toUpperCase()
-                : LocalizationService.translate('rest', lang).toUpperCase(),
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            currentExerciseName,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-          ),
-          if (!_isWorkPeriod && nextExerciseName != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              '${lang == 'fr' ? 'Prochain' : 'Next'}: $nextExerciseName',
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.blueGrey,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 48),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: CircularProgressIndicator(
+                      value:
+                          _secondsRemaining /
+                          (_isWorkPeriod ? _workDuration : _restDuration),
+                      strokeWidth: 12,
+                      color: color,
+                      backgroundColor: color.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  Text(
+                    '$_secondsRemaining',
+                    style: const TextStyle(
+                      fontSize: 80,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-          const SizedBox(height: 48),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: CircularProgressIndicator(
-                  value:
-                      _secondsRemaining /
-                      (_isWorkPeriod ? _workDuration : _restDuration),
-                  strokeWidth: 12,
-                  color: color,
-                  backgroundColor: color.withValues(alpha: 0.2),
-                ),
+              const SizedBox(height: 48),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton.filled(
+                    onPressed: _togglePause,
+                    icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
+                    iconSize: 48,
+                  ),
+                  const SizedBox(width: 32),
+                  IconButton.filled(
+                    onPressed: _stopWarmup,
+                    icon: const Icon(Icons.stop),
+                    iconSize: 48,
+                    style: IconButton.styleFrom(backgroundColor: Colors.grey),
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
               Text(
-                '$_secondsRemaining',
-                style: const TextStyle(
-                  fontSize: 80,
-                  fontWeight: FontWeight.bold,
-                ),
+                '${_currentExerciseIndex + 1} / ${_workoutSequence.length}',
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
               ),
+              const Spacer(),
             ],
           ),
-          const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton.filled(
-                onPressed: _togglePause,
-                icon: Icon(_isPaused ? Icons.play_arrow : Icons.pause),
-                iconSize: 48,
+          if (_currentHRFromWatch > 0)
+            Positioned(
+              left: 16,
+              bottom: 16,
+              child: Row(
+                children: [
+                  Icon(Icons.favorite, color: getHRColor(_currentHRFromWatch)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_currentHRFromWatch',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: getHRColor(_currentHRFromWatch),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 32),
-              IconButton.filled(
-                onPressed: _stopWarmup,
-                icon: const Icon(Icons.stop),
-                iconSize: 48,
-                style: IconButton.styleFrom(backgroundColor: Colors.grey),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '${_currentExerciseIndex + 1} / ${_workoutSequence.length}',
-            style: const TextStyle(fontSize: 18, color: Colors.grey),
-          ),
-          const Spacer(),
+            ),
         ],
       ),
     );

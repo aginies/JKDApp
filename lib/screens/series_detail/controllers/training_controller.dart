@@ -5,6 +5,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/garmin_service.dart';
+import '../../../services/audio_session_service.dart';
+import '../../../services/series_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class TtsLine {
   final String text;
@@ -60,9 +64,12 @@ class TrainingController {
         if (Platform.isIOS) {
           await _tts
               .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+                IosTextToSpeechAudioCategoryOptions.mixWithOthers,
                 IosTextToSpeechAudioCategoryOptions.duckOthers,
                 IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
               ]);
+        } else if (Platform.isAndroid) {
+          await _tts.setAudioAttributesForNavigation();
         }
       }
     } catch (e) {
@@ -112,7 +119,8 @@ class TrainingController {
           debugPrint("spd-say warning: $e");
         }
       } else {
-        await _tts.speak(line.text);
+        await _tts.speak(line.text, focus: true);
+        await AudioSessionService.releaseFocus();
       }
 
       if (!_isTraining || _isPaused) break;
@@ -213,6 +221,13 @@ class TrainingController {
     _currentIndex = startIndex - 1;
     _subIndex = -1;
     onIndexChanged(_currentIndex);
+
+    if (context.mounted) {
+      final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+      if (keepScreenOn) {
+        WakelockPlus.enable();
+      }
+    }
 
     _playStep(
       moves: moves,
@@ -373,6 +388,8 @@ class TrainingController {
   void stop() {
     _timer?.cancel();
     stopTts();
+    AudioSessionService.releaseFocus();
+    WakelockPlus.disable();
     _isTraining = false;
     _isPaused = false;
     _currentIndex = -1;

@@ -11,6 +11,29 @@ class VoiceNoteService {
   final AudioPlayer _player = AudioPlayer();
   final DatabaseService _db = DatabaseService();
 
+  VoiceNoteService() {
+    _initAudioContext();
+  }
+
+  Future<void> _initAudioContext() async {
+    await _player.setAudioContext(AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.playback,
+        options: {
+          AVAudioSessionOptions.mixWithOthers,
+          AVAudioSessionOptions.duckOthers,
+        },
+      ),
+      android: AudioContextAndroid(
+        isSpeakerphoneOn: false,
+        stayAwake: false,
+        contentType: AndroidContentType.speech,
+        usageType: AndroidUsageType.media,
+        audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+      ),
+    ));
+  }
+
   Future<String?> startRecording() async {
     try {
       if (await _recorder.hasPermission()) {

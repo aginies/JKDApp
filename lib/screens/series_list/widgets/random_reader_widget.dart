@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../../services/series_provider.dart';
 import '../../../services/localization_service.dart';
+import '../../../services/audio_session_service.dart';
 import '../../series_detail/dialogs/congratulations_animation.dart';
 
 class RandomReaderWidget extends StatefulWidget {
@@ -74,14 +75,31 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     } else {
       await _tts.setLanguage('en-US');
     }
-  }
 
+    // Support background music ducking
+    if (Platform.isIOS || Platform.isAndroid) {
+      await _tts.setSharedInstance(true);
+      if (Platform.isIOS) {
+        await _tts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.playback,
+          [
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+            IosTextToSpeechAudioCategoryOptions.duckOthers,
+            IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+          ],
+        );
+      } else if (Platform.isAndroid) {
+        await _tts.setAudioAttributesForNavigation();
+      }
+    }
+  }
   @override
   void dispose() {
     _timer?.cancel();
     if (!Platform.isLinux) {
       _tts.stop();
     }
+    AudioSessionService.releaseFocus();
     super.dispose();
   }
 
@@ -157,7 +175,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       await Process.run('spd-say', ['-l', 'en', '-w', targetSeries.title]);
     } else {
       await _tts.setLanguage('en-US');
-      await _tts.speak(targetSeries.title);
+      await _tts.speak(targetSeries.title, focus: true);
     }
   }
 
@@ -247,7 +265,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       } else {
         await _tts.setLanguage('en-US');
       }
-      await _tts.speak(moveNumber);
+      await _tts.speak(moveNumber, focus: true);
     }
   }
 

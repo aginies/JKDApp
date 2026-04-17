@@ -416,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Icon(Icons.fitness_center, size: 48, color: Colors.blue),
             const SizedBox(height: 16),
             Text(
-              'v2.6.0+1',
+              'v2.6.1+1',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,
@@ -718,6 +718,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
+              SwitchListTile(
+                secondary: const Icon(Icons.screen_lock_portrait),
+                title: Text(
+                  LocalizationService.translate('keep_screen_on', lang),
+                ),
+                subtitle: Text(
+                  LocalizationService.translate('keep_screen_on_desc', lang),
+                ),
+                value: provider.keepScreenOn,
+                onChanged: (val) => provider.setKeepScreenOn(val),
+              ),
               const Divider(),
               // Garmin Watch Coaching Voice section
               ListTile(
@@ -990,7 +1001,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     InkWell(
                       onTap: () => _showAboutModal(context, lang),
                       child: const Text(
-                        'Antoine Giniès - v2.6.0+1',
+                        'Antoine Giniès - v2.6.1+1',
                         style: TextStyle(
                           color: Colors.grey,
                           fontStyle: FontStyle.italic,
