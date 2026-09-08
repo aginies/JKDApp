@@ -510,38 +510,46 @@ class _SeriesListScreenState extends State<SeriesListScreen>
               _tabController.index == 5 ||
               _tabController.index == 6
           ? null // Hide FAB on Warmup, Active Training and Training Programs tab
-          : Stack(
-              children: [
-                Positioned(
-                  bottom: 20,
-                  right: 100,
-                  child: FloatingActionButton(
-                    heroTag: 'add_series_fab',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SeriesDetailScreen(),
-                        ),
-                      );
-                    },
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-                Positioned(
-                  bottom: 84,
-                  right: 100,
-                  child: FloatingActionButton(
-                    heroTag: 'cloud_download_fab',
-                    backgroundColor: Colors.blueAccent,
-                    onPressed: () => CloudLibraryDialog.show(context),
-                    child: const Icon(
-                      Icons.cloud_download,
-                      color: Colors.white,
+          : SizedBox(
+              // Finite size — a Stack with only Positioned children expands
+              // to the whole Scaffold, which the Scaffold then treats as a
+              // full-screen FAB rect and pushes floating SnackBars off-screen.
+              // 156 = 100 right-inset + 56 FAB; 140 = 84 top-FAB offset + 56 FAB.
+              width: 156,
+              height: 140,
+              child: Stack(
+                children: [
+                  Positioned(
+                    bottom: 20,
+                    right: 100,
+                    child: FloatingActionButton(
+                      heroTag: 'add_series_fab',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SeriesDetailScreen(),
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.add),
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    bottom: 84,
+                    right: 100,
+                    child: FloatingActionButton(
+                      heroTag: 'cloud_download_fab',
+                      backgroundColor: Colors.blueAccent,
+                      onPressed: () => CloudLibraryDialog.show(context),
+                      child: const Icon(
+                        Icons.cloud_download,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
