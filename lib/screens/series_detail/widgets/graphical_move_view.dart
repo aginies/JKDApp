@@ -209,9 +209,9 @@ class GraphicalMoveView {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'CHAIN',
-              style: TextStyle(
+            Text(
+              LocalizationService.translate('chain', lang).toUpperCase(),
+              style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -273,9 +273,9 @@ class GraphicalMoveView {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'SIMULTANEOUS',
-              style: TextStyle(
+            Text(
+              LocalizationService.translate('simultaneous', lang).toUpperCase(),
+              style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -598,9 +598,9 @@ class GraphicalMoveView {
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'SIMULTANEOUS',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('simultaneous', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 7,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -782,7 +782,12 @@ class GraphicalMoveView {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              move.isChain ? 'CHAIN' : 'SIMUL.',
+              move.isChain
+                  ? LocalizationService.translate('chain', lang).toUpperCase()
+                  : LocalizationService.translate(
+                      'simultaneous',
+                      lang,
+                    ).toUpperCase(),
               style: const TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.bold,

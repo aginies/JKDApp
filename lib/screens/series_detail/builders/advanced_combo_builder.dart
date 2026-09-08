@@ -820,9 +820,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'CHAIN',
-                    style: TextStyle(
+                  Text(
+                    LocalizationService.translate('chain', lang).toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -882,9 +882,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'SIMULTANEOUS',
-                    style: TextStyle(
+                  Text(
+                    LocalizationService.translate(
+                      'simultaneous',
+                      lang,
+                    ).toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -1116,7 +1119,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                sm.isChain ? 'CHAIN' : 'SIMUL.',
+                sm.isChain
+                    ? LocalizationService.translate('chain', lang).toUpperCase()
+                    : LocalizationService.translate(
+                        'simultaneous',
+                        lang,
+                      ).toUpperCase(),
                 style: const TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
@@ -1269,18 +1277,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // SIMULTANEOUS counter (A+B answer)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'SIMULTANEOUS',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('simultaneous', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -1327,18 +1335,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // CHAIN counter (A->+ answer)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'CHAIN',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('chain', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -1378,9 +1386,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // Simple single counter (existing behavior)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
@@ -2796,12 +2804,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Delete Custom Angle?'),
-                        content: Text('Delete "${custom.name}"?'),
+                        title: Text(
+                          LocalizationService.translate(
+                            'delete_custom_angle',
+                            lang,
+                          ),
+                        ),
+                        content: Text(
+                          '${LocalizationService.translate('delete', lang)} '
+                          '"${custom.name}"?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Cancel'),
+                            child: Text(
+                              LocalizationService.translate('cancel', lang),
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -2811,9 +2829,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                               provider.deleteCustomAngle(custom.id);
                               Navigator.pop(ctx);
                             },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.white),
+                            child: Text(
+                              LocalizationService.translate('delete', lang),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
