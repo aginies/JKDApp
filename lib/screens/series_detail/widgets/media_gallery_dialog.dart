@@ -47,6 +47,46 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
   String get _lang => Provider.of<SeriesProvider>(context, listen: false)
       .language;
 
+  /// Pick or record a video and store it, surfacing errors as snackbars.
+  Future<void> _handleVideoPick({required bool capture}) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final lang = _lang;
+    try {
+      final file = capture
+          ? await _mediaService.captureAndSaveVideo(
+              widget.galleryPath,
+              widget.category,
+              widget.moveName,
+            )
+          : await _mediaService.pickAndSaveVideo(
+              widget.galleryPath,
+              widget.category,
+              widget.moveName,
+            );
+      if (file != null && mounted) setState(() {});
+    } on VideoTooLargeException {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('video_too_large', lang),
+            ),
+          ),
+        );
+      }
+    } on NoCameraAvailableException {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              LocalizationService.translate('no_camera', lang),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = _lang;
@@ -96,35 +136,21 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
                 }
               },
             ),
-          ] else
+          ] else ...[
             IconButton(
               icon: const Icon(Icons.videocam, color: Colors.green),
               tooltip: LocalizationService.translate('pick_video', lang),
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  final file = await _mediaService.pickAndSaveVideo(
-                    widget.galleryPath,
-                    widget.category,
-                    widget.moveName,
-                  );
-                  if (file != null && mounted) setState(() {});
-                } on VideoTooLargeException catch (_) {
-                  if (mounted) {
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          LocalizationService.translate(
-                            'video_too_large',
-                            lang,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
+              onPressed: () => _handleVideoPick(capture: false),
             ),
+            IconButton(
+              icon: const Icon(
+                Icons.video_stable,
+                color: Colors.blueAccent,
+              ),
+              tooltip: LocalizationService.translate('capture_video', lang),
+              onPressed: () => _handleVideoPick(capture: true),
+            ),
+          ],
         ],
       ),
       content: Column(

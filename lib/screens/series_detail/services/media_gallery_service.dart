@@ -6,12 +6,13 @@ import '../widgets/media_gallery_dialog.dart';
 
 /// Service for handling media gallery functionality in series detail screen
 class MediaGalleryService {
-  /// Show media gallery dialog (photos + videos) for a specific move
-  void showMediaGallery(
+  /// Show media gallery dialog (photos + videos) for a specific move.
+  /// Completes when the dialog is dismissed.
+  Future<void> showMediaGallery(
     BuildContext context,
     String category,
     String moveName,
-  ) {
+  ) async {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
     final galleryPath = provider.galleryPath;
@@ -25,7 +26,7 @@ class MediaGalleryService {
       return;
     }
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) => MediaGalleryDialog(
         category: category,

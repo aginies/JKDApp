@@ -182,8 +182,51 @@ class MediaService {
     final String? sourcePath = picked?.path;
     if (picked == null || sourcePath == null) return null;
 
-    if (picked.size > maxVideoBytes) {
-      throw VideoTooLargeException(picked.size);
+    return _saveVideo(
+      File(sourcePath),
+      baseGalleryPath,
+      category,
+      moveName,
+    );
+  }
+
+  /// Record a video with the device camera and store it for a move.
+  ///
+  /// Throws [NoCameraAvailableException] when the platform has no camera
+  /// (e.g. Linux desktop). Throws [VideoTooLargeException] when the
+  /// recording exceeds [maxVideoBytes]. Returns null when the user cancels.
+  Future<File?> captureAndSaveVideo(
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
+    final XFile? video;
+    try {
+      video = await _picker.pickVideo(source: ImageSource.camera);
+    } catch (_) {
+      throw NoCameraAvailableException();
+    }
+    if (video == null) return null;
+
+    return _saveVideo(
+      File(video.path),
+      baseGalleryPath,
+      category,
+      moveName,
+    );
+  }
+
+  /// Copy [source] into the move's gallery folder with the next
+  /// `move-name-N.mp4` name. Enforces [maxVideoBytes].
+  Future<File> _saveVideo(
+    File source,
+    String baseGalleryPath,
+    String category,
+    String moveName,
+  ) async {
+    final int sizeBytes = await source.length();
+    if (sizeBytes > maxVideoBytes) {
+      throw VideoTooLargeException(sizeBytes);
     }
 
     final String categoryDir = CategoryUtils.getCategoryDirName(category);
@@ -203,9 +246,7 @@ class MediaService {
     final String fileName = '$prefix-$nextNum.mp4';
     final String finalPath = p.join(targetDirPath, fileName);
 
-    final File source = File(sourcePath);
-    final File savedFile = await source.copy(finalPath);
-    return savedFile;
+    return source.copy(finalPath);
   }
 
   Future<bool> deleteVideo(File file) async {

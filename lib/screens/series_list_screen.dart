@@ -56,9 +56,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     super.dispose();
   }
 
-  void _showMediaGallery(String category, String moveName) {
-    _mediaGalleryService.showMediaGallery(context, category, moveName);
-  }
+  Future<void> _showMediaGallery(String category, String moveName) =>
+      _mediaGalleryService.showMediaGallery(context, category, moveName);
 
   void _confirmDelete(
     BuildContext context,
