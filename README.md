@@ -1,126 +1,129 @@
-# JKD App - Jeet Kune Do Notes
+# JKD App - Notes Jeet Kune Do
 
-A comprehensive Flutter application for managing Jeet Kune Do training series, techniques, and combinations.
+Une application Flutter complète pour gérer les séries d'entraînement, techniques et combinaisons de Jeet Kune Do.
 
-## Features
+## Fonctionnalités
 
-### Core Functionality
-- **Series Management**: Create and organize training series for Jun Fan Gung Fu, Jun Fan Kick Boxing, and **JKD Moves** (Footwork).
-- **Move Glossary**: Extensive database of punches, kicks, packs, trapping, and specialized JKD movements.
-- **Combo Builder**: Visual interface to build complex combinations with support for **sub-numbering** (e.g., 1a, 1b, 1c).
-- **Training Mode**: Text-to-speech guided training with configurable intervals and looping.
-- **Training Programs**: Structured multi-day training regimens with progress tracking, daily assignments, and completion statistics.
-- **Multi-language**: Full support for English and French.
+### Fonctionnalités principales
+- **Gestion des séries** : Créez et organisez des séries d'entraînement pour Jun Fan Gung Fu, Jun Fan Kick Boxing, **Kali** et **JKD Moves** (déplacements).
+- **Glossaire des mouvements** : Base de données étendue de coups de poing, de jambe, de packs, de trapping, d'angles Kali et de mouvements spécialisés JKD.
+- **Créateur de combos** : Interface visuelle pour construire des combinaisons complexes avec prise en charge de la **sous-numérotation** (ex. : 1a, 1b, 1c), ainsi que les modes réponse, simultané et chaîne.
+- **Mode entraînement** : Entraînement guidé par synthèse vocale (TTS) avec intervalles configurables et bouclage.
+- **Programmes d'entraînement** : Régimes d'entraînement structurés sur plusieurs jours avec suivi de progression, attributions quotidiennes, statistiques de complétion et vue d'ensemble des entraînements actifs.
+- **Échauffement guidé** : Sessions d'échauffement avec durées travail/repos configurables, guidage vocal TTS et fréquence cardiaque en direct depuis la montre.
+- **Multilingue** : Prise en charge complète de l'anglais et du français.
 
-### Advanced Features
-- **Wearable Support**: Dedicated companion apps for **Wear OS** and **Garmin** watches.
-- **Theme Personalization**: Choose your own **Theme Color** from a wide palette (Blue, Red, Green, etc.).
-- **Adaptive UI**: Interface elements automatically adjust colors for maximum readability in Light, Dark, and AMOLED modes.
-- **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
-- **Media Gallery**: Attach instructional photos to techniques with auto-compression and swipe navigation.
-- **Integrated Logging**: Multi-level logging system (INFO, WARN, ERROR) with in-app viewer and export/share capabilities for easier troubleshooting.
-- **PDF Export**: Generate printable training sheets.
-- **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
-- **Cloud Library**: Share and download community-contributed training series via the integrated web service.
+### Fonctionnalités avancées
+- **Support des montres connectées** : Applications compagnon dédiées pour montres **Wear OS** et **Garmin**.
+- **Personnalisation du thème** : Choisissez votre propre **couleur de thème** dans une large palette (bleu, rouge, vert, etc.).
+- **UI adaptative** : Les éléments d'interface ajustent automatiquement leurs couleurs pour une lisibilité maximale en modes Clair, Sombre et AMOLED.
+- **Coups de riposte** : Ajoutez des réponses défensives aux attaques avec navigation automatique entre onglets pendant l'édition.
+- **Angles Kali personnalisés** : Dessinez et réutilisez vos propres angles Kali dans le créateur de combos.
+- **Saisie vocale** : Reconnaissance vocale pour saisir les noms de mouvements et les instructions.
+- **Galerie média** : Attachez des photos explicatives aux techniques avec compression automatique et navigation par glissement.
+- **Journalisation intégrée** : Système de journalisation multi-niveaux (INFO, WARN, ERROR) avec visionneuse intégrée et export/partage pour un dépannage facilité.
+- **Export PDF** : Générez des fiches d'entraînement imprimables.
+- **Sauvegarde & restauration** : Prise en charge complète des sauvegardes (ZIP) des séries, du glossaire et des médias.
+- **Bibliothèque cloud** : Partagez et téléchargez des séries d'entraînement communautaires via le service web intégré.
 
-## Web Cloud Storage
+## Stockage cloud web
 
-The project includes a full PHP-based web backend and interface located in the `/web` directory:
-- **Central Repository**: A cloud-based library for discovering and sharing JKD training series.
-- **Web Interface**: Browse, search, and preview series content directly in any web browser.
-- **REST API**: Seamless integration with the mobile app for automated uploads and downloads.
-- **Admin Tools**: Built-in moderation and content management tools.
-- **Logging & Debugging**: Centralized logging of all API requests, uploads, and administrative actions in `web/logs/app.log`.
+Le projet inclut un backend web PHP complet et une interface située dans le répertoire `/web` :
+- **Dépôt central** : Une bibliothèque cloud pour découvrir et partager des séries d'entraînement JKD.
+- **Interface web** : Parcourez, recherchez et prévisualisez le contenu des séries dans n'importe quel navigateur web.
+- **API REST** : Intégration transparente avec l'application mobile pour des téléversements et téléchargements automatisés.
+- **Outils d'administration** : Outils intégrés de modération et de gestion de contenu.
+- **Journalisation & débogage** : Journalisation centralisée de toutes les requêtes API, téléversements et actions administratives dans `web/logs/app.log`.
 
-## Wearable Extensions
+## Extensions montres connectées
 
-### Wear OS App
-A fully native companion app designed for hands-free training on watches like the Samsung Galaxy Watch 6 or Pixel Watch:
-- **Bubble Layout**: Each action step is displayed in its own clearly defined, color-coded bubble.
-- **Smart Formatting**: Automatically converts complex chains (e.g., "L Jab -> R Cross") into a vertical, easy-to-read flow.
-- **Auto-Advance**: Configurable timer (2s to 30s) allows you to train without touching the watch.
-- **Visual Countdown**: A circular border gradient (Red -> Yellow -> Green) provides a real-time progress cue.
-- **Dual-Column Mode**: Automatically switches between 1 and 2 columns based on move length to maximize screen space.
-- **Auto-Scrolling**: Seamlessly loops long descriptions up and down so you never miss a detail.
+### Application Wear OS
+Une application compagnon entièrement native conçue pour l'entraînement mains libres sur des montres comme la Samsung Galaxy Watch 6 ou la Pixel Watch :
+- **Disposition en bulles** : Chaque étape d'action est affichée dans sa propre bulle clairement définie et codée par couleur.
+- **Mise en forme intelligente** : Convertit automatiquement les chaînes complexes (ex. : « L Jab -> R Cross ») en un flux vertical facile à lire.
+- **Avance automatique** : Minuteur configurable (2s à 30s) permettant de s'entraîner sans toucher à la montre.
+- **Compte à rebours visuel** : Un dégradé de bordure circulaire (rouge -> jaune -> vert) fournit une indication de progression en temps réel.
+- **Mode double colonne** : Bascule automatiquement entre 1 et 2 colonnes selon la longueur des mouvements pour maximiser l'écran d'affichage.
+- **Défilement automatique** : Fait défiler en boucle les longues descriptions vers le haut et le bas pour ne rien manquer.
 
 ### Garmin ConnectIQ
-Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
-- **Remote Sync**: Synchronizes current training series and progress to the watch face.
-- **Audio Feedback**: Works in tandem with the phone's TTS engine for a unified coaching experience.
+S'intègre aux montres Garmin (Fenix, Forerunner, etc.) via le SDK Garmin :
+- **Synchronisation à distance** : Synchronise la série d'entraînement en cours et la progression vers l'écran de la montre.
+- **Retour audio** : Fonctionne en tandem avec le moteur TTS du téléphone pour une expérience de coaching unifiée.
 
-## Project Structure
+## Structure du projet
 
 ```
 .
-├── garmin_app/          # Garmin ConnectIQ source code (Monkey C)
-├── wear_os_app/         # Native Wear OS Flutter application
-├── web/                 # PHP Backend and Web Interface for Cloud Storage
-├── lib/                 # Main Mobile/Desktop application source
-│   ├── models/          # Data models (Move, JkdSeries)
-│   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
-│   ├── screens/         # UI Screens and platform-specific sub-folders
+├── garmin_app/          # Code source Garmin ConnectIQ (Monkey C)
+├── wear_os_app/         # Application Wear OS Flutter native
+├── web/                 # Backend PHP et interface web pour le stockage cloud
+├── lib/                 # Source principale de l'application mobile/bureau
+│   ├── models/          # Modèles de données (Move, JkdSeries)
+│   ├── services/        # Logique métier (DB, synchro Garmin, hachage)
+│   ├── screens/         # Écrans UI et sous-dossiers spécifiques aux plateformes
 │   └── ...
 ```
 
-## JKD Footwork Training (Random Reader)
+## Entraînement aux déplacements JKD (Lecteur aléatoire)
 
-The **Random Reader** is a specialized tool found in the "JKD Moves" tab. It is designed for reactive footwork drills:
-1. **Sequence**: It announces the Series name (in English) once, waits 1s, and then calls out move numbers (1-6) in the selected language.
-2. **Configuration**:
-   - **Series Selection**: Choose specific footwork patterns (Step and Slide, Pendulum, etc.).
-   - **Guard**: Toggle between Left and Right guard.
-   - **Delay**: Adjustable timing from 0.4s to 2.5s for progressive speed training.
-3. **Visuals**: A prominent display shows the current move in large text for quick reference.
+Le **Lecteur aléatoire** est un outil spécialisé situé dans l'onglet « JKD Moves ». Il est conçu pour les exercices de déplacements réactifs :
+1. **Séquence** : Il annonce le nom de la série (en anglais) une fois, attend 1s, puis appelle les numéros de mouvements (1-6) dans la langue sélectionnée.
+2. **Configuration** :
+   - **Sélection de série** : Choisissez des schémas de déplacements spécifiques (Step and Slide, Pendulum, etc.).
+   - **Garde** : Basculez entre garde gauche et garde droite.
+   - **Délai** : Temporisation ajustable de 0,4s à 2,5s pour un entraînement de vitesse progressif.
+3. **Visuel** : Un affichage proéminent montre le mouvement actuel en grand pour référence rapide.
 
-## Sub-Numbering System (Hierarchy)
+## Système de sous-numérotation (hiérarchie)
 
-You can now group variations of a move using letters (a, b, c...):
-- **Visual Grouping**: Sub-items are automatically indented to the right.
-- **Clean Numbering**: The main sequence number is displayed once at the top of the group, with large yellow letters indicating the sub-variation.
-- **Rhythmic Training**: The training mode and random reader respect this hierarchy for a more natural flow.
+Vous pouvez maintenant regrouper les variations d'un mouvement à l'aide de lettres (a, b, c...) :
+- **Regroupement visuel** : Les sous-éléments sont automatiquement indentés vers la droite.
+- **Numérotation propre** : Le numéro principal de la séquence est affiché une seule fois en haut du groupe, avec de grandes lettres jaunes indiquant la sous-variation.
+- **Entraînement rythmique** : Le mode entraînement et le lecteur aléatoire respectent cette hiérarchie pour un flux plus naturel.
 
-## Personalization & Display
+## Personnalisation & affichage
 
-- **Theme Color**: Change the app's primary accent color in Settings.
-- **AMOLED Support**: Optimized "True Black" mode for OLED screens.
-- **Adaptive Tabs**: Tab titles dynamically switch between White (Dark/AMOLED) and Primary color (Light) for perfect contrast.
-- **Visual Loading**: The JKD logo in the top bar rotates while the database is initializing or loading data.
+- **Couleur de thème** : Changez la couleur d'accent principale de l'application dans les paramètres.
+- **Support AMOLED** : Mode « Noir profond » optimisé pour les écrans OLED.
+- **Onglets adaptatifs** : Les titres d'onglets basculent dynamiquement entre le blanc (Sombre/AMOLED) et la couleur principale (Clair) pour un contraste parfait.
+- **Chargement visuel** : Le logo JKD de la barre supérieure tourne pendant l'initialisation ou le chargement de la base de données.
 
-## Platform Support
+## Support des plateformes
 
-| Platform | Status | Notes |
+| Plateforme | Statut | Notes |
 |----------|--------|-------|
-| Android  | ✅ Full | Primary mobile platform support |
-| Wear OS  | ✅ Full | Native app for Watch 4/5/6/7, Pixel Watch, etc. |
-| Garmin   | ✅ Full | ConnectIQ extension for over 80 Garmin devices |
-| Windows  | ✅ Full | Fully supported desktop platform |
-| MacOS    | ✅ Full | Fully supported desktop platform |
-| Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
-| iOS      | ⚠️ Limited | Supported by code but not officially built |
+| Android  | ✅ Complet | Plateforme mobile principale |
+| Wear OS  | ✅ Complet | Application native pour Watch 4/5/6/7, Pixel Watch, etc. |
+| Garmin   | ✅ Complet | Extension ConnectIQ pour plus de 80 appareils Garmin |
+| Windows  | ✅ Complet | Plateforme bureau entièrement supportée |
+| MacOS    | ✅ Complet | Plateforme bureau entièrement supportée |
+| Linux    | ⚠️ Partiel | Reconnaissance vocale désactivée, TTS via `spd-say` |
+| iOS      | ⚠️ Limité | Supporté par le code mais non officiellement compilé |
 
-## Development Guidelines
+## Lignes directrices de développement
 
-To maintain code quality and manageability, the following organization principles are encouraged:
-- **File Size**: Individual Dart files should aim to stay under **2,000 lines**.
-- **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
-- **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
+Pour maintenir la qualité et la lisibilité du code, les principes d'organisation suivants sont encouragés :
+- **Taille des fichiers** : Les fichiers Dart individuels doivent rester sous **1 000 lignes** (voir `AGENTS.md` pour les règles complètes d'organisation du code).
+- **Séparation des responsabilités** : Le code UI doit résider dans `screens/`, tandis que la logique réutilisable doit être extraite dans `services/` ou des `mixins/` spécifiques aux classes.
+- **Modularité** : Les grands écrans doivent être découpés en widgets plus petits et ciblés situés dans des sous-dossiers (ex. : `lib/screens/series_detail/widgets/`).
 
-## Recent Updates (v2.6.1+1)
+## Mises à jour récentes (v2.6.1+1)
 
-- **Beta Cloud Library**: Upload and share your custom series with the community.
-- **Enhanced Web View**: Fully responsive, mobile-optimized interface for browsing the library and downloading binaries.
-- **Multi-Level Logging**: Comprehensive logging system for both the Flutter app and PHP backend to simplify troubleshooting.
-- **Broad Garmin Support**: Dynamic build scripts supporting the entire modern Garmin product line (Fenix 8, Forerunner 965, etc.).
-- **Wear OS Precision**: Standalone watch application with architecture-specific compatibility (arm64-v8a/armeabi-v7a).
-- **Security**: Non-overwriting cloud uploads with automatic title incrementing.
+- **Bibliothèque cloud bêta** : Téléversez et partagez vos séries personnalisées avec la communauté.
+- **Vue web améliorée** : Interface entièrement responsive et optimisée mobile pour parcourir la bibliothèque et télécharger les binaires.
+- **Journalisation multi-niveaux** : Système de journalisation complet pour l'application Flutter et le backend PHP afin de simplifier le dépannage.
+- **Support Garmin étendu** : Scripts de compilation dynamiques prenant en charge toute la gamme moderne Garmin (Fenix 8, Forerunner 965, etc.).
+- **Précision Wear OS** : Application montre autonome avec compatibilité spécifique à l'architecture (arm64-v8a/armeabi-v7a).
+- **Sécurité** : Téléversements cloud non écrasants avec incrémentation automatique du titre.
 
-## Development
+## Développement
 
-### Building
+### Compilation
 ```bash
 flutter pub get
 flutter run
 ```
 
-## Contributors
-- **Antoine Giniès** (Author & Lead Developer)
+## Contributeurs
+- **Antoine Giniès** (Auteur & développeur principal)
