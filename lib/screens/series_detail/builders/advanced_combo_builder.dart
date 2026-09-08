@@ -221,7 +221,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       if (countA != countB) {
         return countB.compareTo(countA);
       }
-      return 0;
+      // Deterministic tie-break (List.sort is not stable).
+      return a['name'].toString().compareTo(b['name'].toString());
     });
 
     return result;
@@ -326,21 +327,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       if (_selectedCounterPath != null) {
         // Selecting a sub-item in a structured answer
         // Check if the SUB-ITEM is an action card (not a group)
-        BuilderCardData? sub = data;
-        // Navigate down to the sub-item
-        for (int idx in _selectedCounterPath!) {
-          if (sub!.isChain && idx < sub.chain.length) {
-            sub = sub.chain[idx];
-          } else if (sub.isCombo && idx < sub.subMoves.length) {
-            sub = sub.subMoves[idx];
-          } else if (sub.hasCounterCombo && idx < sub.counterSubMoves.length) {
-            sub = sub.counterSubMoves[idx];
-          } else if (sub.hasCounterChain && idx < sub.counterChain.length) {
-            sub = sub.counterChain[idx];
-          } else {
-            return false;
-          }
-        }
+        final sub = _getCounterSubItemAtPath(data, _selectedCounterPath!);
         if (sub == null) return false;
         // Don't show for container groups even inside counters
         return !sub.isChain && !sub.isCombo;
@@ -641,8 +628,17 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   Widget _buildBottomToolbar(String lang) {
     final data = _getDataAtPath(_selectedPath!);
-    final isKali =
-        data != null && (data.category == 'kali' || data.category == 'angles');
+    // The Angle selector edits the selected card's own kaliAngle/strikeType.
+    // A simple counter (no counterPath) has no dedicated angle fields, so the
+    // selector is hidden to avoid silently editing the attacker instead.
+    BuilderCardData? angleTarget = data;
+    if (data != null && _isCounterSelected) {
+      angleTarget = _selectedCounterPath != null
+          ? _getCounterSubItemAtPath(data, _selectedCounterPath!)
+          : null;
+    }
+    final isKali = angleTarget != null &&
+        (angleTarget.category == 'kali' || angleTarget.category == 'angles');
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -651,8 +647,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
             child: KaliHitSelector(
-              selectedAngle: data.kaliAngle,
-              selectedStrikeType: data.strikeType,
+              selectedAngle: angleTarget.kaliAngle,
+              selectedStrikeType: angleTarget.strikeType,
               onAngleSelected: (angle) => _updateSelectedCard(kaliAngle: angle),
               onStrikeTypeSelected: (type) =>
                   _updateSelectedCard(strikeType: type),
@@ -1395,17 +1391,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             ),
           ),
           const SizedBox(height: 2),
-          if ((data.counterCategory == 'kali' ||
-                  data.counterCategory == 'angles') &&
-              data.kaliAngle != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: KaliAngleIcon(
-                angle: data.kaliAngle!,
-                size: 20,
-                color: MoveDisplayWidgets.getCategoryColor('kali'),
-              ),
-            ),
           Text(
             data.counterName!,
             style: TextStyle(
@@ -1524,6 +1509,40 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     return current;
   }
 
+  /// Returns the counter sub-item addressed by [counterPath] under [root],
+  /// or null if the path is invalid.
+  ///
+  /// The first index always refers to [root]'s counter structure
+  /// (counterSubMoves / counterChain), even when [root] is itself a chain
+  /// or combo. Deeper indices navigate nested groups inside the answer
+  /// (their subMoves / chain).
+  BuilderCardData? _getCounterSubItemAtPath(
+    BuilderCardData root,
+    List<int> counterPath,
+  ) {
+    if (counterPath.isEmpty) return null;
+    BuilderCardData? current = root;
+    for (int i = 0; i < counterPath.length; i++) {
+      final idx = counterPath[i];
+      if (i == 0) {
+        if (current!.hasCounterCombo && idx < current.counterSubMoves.length) {
+          current = current.counterSubMoves[idx];
+        } else if (current.hasCounterChain && idx < current.counterChain.length) {
+          current = current.counterChain[idx];
+        } else {
+          return null;
+        }
+      } else if (current!.isChain && idx < current.chain.length) {
+        current = current.chain[idx];
+      } else if (current.isCombo && idx < current.subMoves.length) {
+        current = current.subMoves[idx];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
   void _onAddClick() {
     setState(() {
       _mode = _BuilderMode.none;
@@ -1533,11 +1552,74 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   BuilderCardData? _deleteNestedData(
     BuilderCardData root,
-    List<int> counterPath,
-  ) {
+    List<int> counterPath, {
+    bool inCounterStructure = true,
+  }) {
     if (counterPath.length == 1) {
       // BASE CASE: We are at the parent of the item to remove
       final idx = counterPath[0];
+
+      if (inCounterStructure) {
+        // The item to remove lives in root's counter structure.
+        if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
+          final newList = List<BuilderCardData>.from(root.counterSubMoves);
+          newList.removeAt(idx);
+          if (newList.isEmpty) {
+            return root.copyWith(
+              counterName: null,
+              counterCategory: null,
+              counterGlossaryId: null,
+              counterSide: '',
+              counterLevel: '',
+              counterSubMoves: const [],
+            );
+          }
+          if (newList.length == 1) {
+            final rem = newList.first;
+            return root.copyWith(
+              counterName: rem.name,
+              counterCategory: rem.category,
+              counterGlossaryId: rem.glossaryId,
+              counterSide: rem.side,
+              counterLevel: rem.level,
+              counterSubMoves: const [],
+            );
+          }
+          return root.copyWith(
+            counterSubMoves: newList,
+            counterName: newList.map((m) => m.name).join(' + '),
+          );
+        } else if (root.hasCounterChain && idx < root.counterChain.length) {
+          final newList = List<BuilderCardData>.from(root.counterChain);
+          newList.removeAt(idx);
+          if (newList.isEmpty) {
+            return root.copyWith(
+              counterName: null,
+              counterCategory: null,
+              counterGlossaryId: null,
+              counterSide: '',
+              counterLevel: '',
+              counterChain: const [],
+            );
+          }
+          if (newList.length == 1) {
+            final rem = newList.first;
+            return root.copyWith(
+              counterName: rem.name,
+              counterCategory: rem.category,
+              counterGlossaryId: rem.glossaryId,
+              counterSide: rem.side,
+              counterLevel: rem.level,
+              counterChain: const [],
+            );
+          }
+          return root.copyWith(
+            counterChain: newList,
+            counterName: newList.map((m) => m.name).join(' -> '),
+          );
+        }
+        return root;
+      }
 
       if (root.isChain && idx < root.chain.length) {
         final newList = List<BuilderCardData>.from(root.chain);
@@ -1551,62 +1633,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (newList.isEmpty) return null;
         if (newList.length == 1) return newList.first;
         return root.copyWith(subMoves: newList);
-      } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-        final newList = List<BuilderCardData>.from(root.counterSubMoves);
-        newList.removeAt(idx);
-        if (newList.isEmpty) {
-          return root.copyWith(
-            counterName: null,
-            counterCategory: null,
-            counterGlossaryId: null,
-            counterSide: '',
-            counterLevel: '',
-            counterSubMoves: const [],
-          );
-        }
-        if (newList.length == 1) {
-          final rem = newList.first;
-          return root.copyWith(
-            counterName: rem.name,
-            counterCategory: rem.category,
-            counterGlossaryId: rem.glossaryId,
-            counterSide: rem.side,
-            counterLevel: rem.level,
-            counterSubMoves: const [],
-          );
-        }
-        return root.copyWith(
-          counterSubMoves: newList,
-          counterName: newList.map((m) => m.name).join(' + '),
-        );
-      } else if (root.hasCounterChain && idx < root.counterChain.length) {
-        final newList = List<BuilderCardData>.from(root.counterChain);
-        newList.removeAt(idx);
-        if (newList.isEmpty) {
-          return root.copyWith(
-            counterName: null,
-            counterCategory: null,
-            counterGlossaryId: null,
-            counterSide: '',
-            counterLevel: '',
-            counterChain: const [],
-          );
-        }
-        if (newList.length == 1) {
-          final rem = newList.first;
-          return root.copyWith(
-            counterName: rem.name,
-            counterCategory: rem.category,
-            counterGlossaryId: rem.glossaryId,
-            counterSide: rem.side,
-            counterLevel: rem.level,
-            counterChain: const [],
-          );
-        }
-        return root.copyWith(
-          counterChain: newList,
-          counterName: newList.map((m) => m.name).join(' -> '),
-        );
       }
       return root;
     }
@@ -1615,9 +1641,53 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     final idx = counterPath[0];
     final remainingPath = counterPath.sublist(1);
 
+    if (inCounterStructure) {
+      // First step: enter root's counter structure, even when root is
+      // itself a chain or combo.
+      if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
+        final newList = List<BuilderCardData>.from(root.counterSubMoves);
+        final updated = _deleteNestedData(
+          newList[idx],
+          remainingPath,
+          inCounterStructure: false,
+        );
+        if (updated == null) {
+          newList.removeAt(idx);
+        } else {
+          newList[idx] = updated;
+        }
+        // Answers don't disappear if empty, they just become simple counters again
+        if (newList.isEmpty) {
+          return root.copyWith(counterName: null, counterSubMoves: const []);
+        }
+        return root.copyWith(counterSubMoves: newList);
+      } else if (root.hasCounterChain && idx < root.counterChain.length) {
+        final newList = List<BuilderCardData>.from(root.counterChain);
+        final updated = _deleteNestedData(
+          newList[idx],
+          remainingPath,
+          inCounterStructure: false,
+        );
+        if (updated == null) {
+          newList.removeAt(idx);
+        } else {
+          newList[idx] = updated;
+        }
+        if (newList.isEmpty) {
+          return root.copyWith(counterName: null, counterChain: const []);
+        }
+        return root.copyWith(counterChain: newList);
+      }
+      return root;
+    }
+
     if (root.isChain && idx < root.chain.length) {
       final newList = List<BuilderCardData>.from(root.chain);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
+      final updated = _deleteNestedData(
+        newList[idx],
+        remainingPath,
+        inCounterStructure: false,
+      );
       if (updated == null) {
         newList.removeAt(idx);
       } else {
@@ -1628,7 +1698,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       return root.copyWith(chain: newList);
     } else if (root.isCombo && idx < root.subMoves.length) {
       final newList = List<BuilderCardData>.from(root.subMoves);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
+      final updated = _deleteNestedData(
+        newList[idx],
+        remainingPath,
+        inCounterStructure: false,
+      );
       if (updated == null) {
         newList.removeAt(idx);
       } else {
@@ -1637,31 +1711,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       if (newList.isEmpty) return null;
       if (newList.length == 1) return newList.first;
       return root.copyWith(subMoves: newList);
-    } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-      final newList = List<BuilderCardData>.from(root.counterSubMoves);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      // Answers don't disappear if empty, they just become simple counters again
-      if (newList.isEmpty) {
-        return root.copyWith(counterName: null, counterSubMoves: const []);
-      }
-      return root.copyWith(counterSubMoves: newList);
-    } else if (root.hasCounterChain && idx < root.counterChain.length) {
-      final newList = List<BuilderCardData>.from(root.counterChain);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      if (newList.isEmpty) {
-        return root.copyWith(counterName: null, counterChain: const []);
-      }
-      return root.copyWith(counterChain: newList);
     }
 
     return root;
@@ -1779,6 +1828,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         chain: data.chain.map((m) => _convertToMove(m)).toList(),
         counterName: data.counterName,
         counterCategory: data.counterCategory,
+        counterGlossaryId: data.counterGlossaryId,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
         counterIsFeint: data.counterIsFeint,
@@ -1797,6 +1847,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         subMoves: data.subMoves.map((m) => _convertToMove(m)).toList(),
         counterName: data.counterName,
         counterCategory: data.counterCategory,
+        counterGlossaryId: data.counterGlossaryId,
         counterSide: data.counterSide,
         counterLevel: data.counterLevel,
         counterIsFeint: data.counterIsFeint,
@@ -1820,6 +1871,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       glossaryId: data.glossaryId,
       counterName: data.counterName,
       counterCategory: data.counterCategory,
+      counterGlossaryId: data.counterGlossaryId,
       counterSide: data.counterSide,
       counterLevel: data.counterLevel,
       counterIsFeint: data.counterIsFeint,
@@ -1929,8 +1981,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     String? level,
     bool toggleFeint,
     int? kaliAngle,
-    String? strikeType,
-  ) {
+    String? strikeType, {
+    bool inCounterStructure = true,
+  }) {
     if (counterPath.isEmpty) {
       // BASE CASE: We reached the target sub-item. Toggle its properties.
       String finalSide = root.side;
@@ -1954,6 +2007,39 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     final idx = counterPath[0];
     final remainingPath = counterPath.sublist(1);
 
+    if (inCounterStructure) {
+      // First step: enter root's counter structure, even when root is
+      // itself a chain or combo.
+      if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
+        final newList = List<BuilderCardData>.from(root.counterSubMoves);
+        newList[idx] = _updateNestedData(
+          newList[idx],
+          remainingPath,
+          side,
+          level,
+          toggleFeint,
+          kaliAngle,
+          strikeType,
+          inCounterStructure: false,
+        );
+        return root.copyWith(counterSubMoves: newList);
+      } else if (root.hasCounterChain && idx < root.counterChain.length) {
+        final newList = List<BuilderCardData>.from(root.counterChain);
+        newList[idx] = _updateNestedData(
+          newList[idx],
+          remainingPath,
+          side,
+          level,
+          toggleFeint,
+          kaliAngle,
+          strikeType,
+          inCounterStructure: false,
+        );
+        return root.copyWith(counterChain: newList);
+      }
+      return root;
+    }
+
     if (root.isChain && idx < root.chain.length) {
       final newList = List<BuilderCardData>.from(root.chain);
       newList[idx] = _updateNestedData(
@@ -1964,6 +2050,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         toggleFeint,
         kaliAngle,
         strikeType,
+        inCounterStructure: false,
       );
       return root.copyWith(chain: newList);
     } else if (root.isCombo && idx < root.subMoves.length) {
@@ -1976,32 +2063,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         toggleFeint,
         kaliAngle,
         strikeType,
+        inCounterStructure: false,
       );
       return root.copyWith(subMoves: newList);
-    } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-      final newList = List<BuilderCardData>.from(root.counterSubMoves);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(counterSubMoves: newList);
-    } else if (root.hasCounterChain && idx < root.counterChain.length) {
-      final newList = List<BuilderCardData>.from(root.counterChain);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(counterChain: newList);
     }
 
     return root;
@@ -2047,8 +2111,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             counterIsFeint: toggleFeint
                 ? !item.counterIsFeint
                 : item.counterIsFeint,
-            kaliAngle: kaliAngle ?? item.kaliAngle,
-            strikeType: strikeType ?? item.strikeType,
           );
         } else {
           // Top-level attacker toggle logic
@@ -2077,6 +2139,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     // Improvement #2: reset the persistent controller instead of recreating it.
     _glossarySearchQuery = '';
     _searchController.clear();
+    // Drop cached glossary futures so new/edited glossary entries show up.
+    // (Cache still prevents re-fetch on tab switches within one session.)
+    _glossaryCache.clear();
 
     // Performance (#9): build the tab definitions once per modal open rather
     // than rebuilding them on every setModalState call.
@@ -2558,6 +2623,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           counterName: '(${chainGroup.name}) + ${newItem.name}',
         );
       }
+      if (target.counterName == null || target.counterName!.isEmpty) {
+        // No existing simple answer: start the structured answer with the
+        // new item (no empty placeholder).
+        return target.copyWith(
+          counterSubMoves: [newItem],
+          counterName: newItem.name,
+        );
+      }
       final existingCounter = BuilderCardData(
         name: target.counterName ?? '',
         category: target.counterCategory ?? '',
@@ -2618,6 +2691,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           counterName: '(${simultaneousGroup.name}) -> ${newItem.name}',
         );
       }
+      if (target.counterName == null || target.counterName!.isEmpty) {
+        // No existing simple answer: start the structured answer with the
+        // new item (no empty placeholder).
+        return target.copyWith(
+          counterChain: [newItem],
+          counterName: newItem.name,
+        );
+      }
       final existingCounter = BuilderCardData(
         name: target.counterName ?? '',
         category: target.counterCategory ?? '',
@@ -2650,10 +2731,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _addItemToChain(BuilderCardData newItem) {
     if (_selectedPath!.length > 1) {
-      for (int depth = _selectedPath!.length - 1; depth >= 1; depth--) {
+      bool inserted = false;
+      for (int depth = _selectedPath!.length - 1; depth >= 1 && !inserted; depth--) {
         final parentPath = _selectedPath!.sublist(0, depth);
         final childIndex = _selectedPath![depth];
-        bool inserted = false;
         _updateDataAtPath(parentPath, (parent) {
           if (parent.isChain) {
             final newChain = List<BuilderCardData>.from(parent.chain);
@@ -2665,8 +2746,19 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         });
         if (inserted) {
           _selectedPath = [...parentPath, childIndex + 1];
-          break;
         }
+      }
+      if (!inserted) {
+        // No chain ancestor (e.g. leaf inside a simultaneous group):
+        // wrap the selected item in a new chain instead of dropping it.
+        _updateDataAtPath(_selectedPath!, (target) {
+          return BuilderCardData(
+            name: 'Chain',
+            category: 'chain',
+            chain: [target, newItem],
+          );
+        });
+        _selectedPath = [..._selectedPath!, 1];
       }
     } else {
       final topIndex = _selectedPath![0];
@@ -2690,8 +2782,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   void _addItemSimultaneous(BuilderCardData newItem) {
     bool appended = false;
+    List<int>? parentPath;
     if (_selectedPath!.length > 1) {
-      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
+      parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
       _updateDataAtPath(parentPath, (parent) {
         if (parent.isCombo) {
           appended = true;
@@ -2699,6 +2792,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         }
         return parent;
       });
+    }
+    if (appended && parentPath != null) {
+      final parent = _getDataAtPath(parentPath);
+      if (parent != null && parent.isCombo) {
+        _selectedPath = [...parentPath, parent.subMoves.length - 1];
+      }
     }
     if (!appended) {
       _updateDataAtPath(_selectedPath!, (target) {
@@ -2720,17 +2819,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   void _addItemDefault(BuilderCardData newItem) {
-    if (_selectedPath != null && _selectedPath!.length == 1) {
+    if (_selectedPath != null && _selectedPath![0] < _workspaceCards.length) {
+      // Insert right after the selected card's top-level card (also works
+      // for nested selections, not only top-level ones).
       final insertIndex = _selectedPath![0] + 1;
       _workspaceCards.insert(insertIndex, newItem);
       _selectedPath = [insertIndex];
     } else {
       _workspaceCards.add(newItem);
-      if (_workspaceCards.length == 1) {
-        _selectedPath = [0];
-      } else {
-        _selectedPath = [_workspaceCards.length - 1];
-      }
+      _selectedPath = [_workspaceCards.length - 1];
     }
     _mode = _BuilderMode.none;
   }
