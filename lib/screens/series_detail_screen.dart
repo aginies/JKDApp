@@ -45,7 +45,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
   bool _localShowTranslation = true;
   List<Move> _moves = [];
   bool _isEditing = false;
-  bool _isGraphicalView = false;
+  bool _isGraphicalView = true;
 
   final FlutterTts _tts = FlutterTts();
   late TrainingController _trainingController;
