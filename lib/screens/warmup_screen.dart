@@ -135,6 +135,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
       // Support background music ducking
       if (Platform.isIOS || Platform.isAndroid) {
         await _tts.setSharedInstance(true);
+        // Keep the shared AVAudioSession active between lines (iOS):
+        // otherwise flutter_tts deactivates it after every utterance and
+        // background music un-ducks between lines of a long session.
+        await _tts.autoStopSharedSession(false);
         if (Platform.isIOS) {
           await _tts.setIosAudioCategory(
             IosTextToSpeechAudioCategory.playback,
@@ -261,6 +265,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
       WakelockPlus.enable();
     }
 
+    // Hold audio focus for the whole warmup session so background music
+    // stays ducked between lines (released in _stopWarmup()/dispose()).
+    AudioSessionService.acquireFocus();
+
     _runTimer();
     _speakExercise();
   }
@@ -362,7 +370,6 @@ class _WarmupScreenState extends State<WarmupScreen> {
     } else {
       try {
         await _tts.speak(text, focus: true);
-        await AudioSessionService.releaseFocus();
       } catch (e) {
         debugPrint("TTS speak error: $e");
       }

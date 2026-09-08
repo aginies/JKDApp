@@ -177,14 +177,7 @@ class JKDWarmupView extends WatchUi.View {
     }
 
     function getHRColor() {
-        if (_heartRate == 0) { return Graphics.COLOR_WHITE; }
-        var zones = UserProfile.getHeartRateZones(UserProfile.HR_ZONE_SPORT_GENERIC);
-        if (zones == null || zones.size() < 5) { return Graphics.COLOR_RED; }
-        if (_heartRate < zones[1]) { return Graphics.COLOR_BLUE; }
-        if (_heartRate < zones[2]) { return Graphics.COLOR_GREEN; }
-        if (_heartRate < zones[3]) { return Graphics.COLOR_YELLOW; }
-        if (_heartRate < zones[4]) { return Graphics.COLOR_ORANGE; }
-        return Graphics.COLOR_RED;
+        return JkdUtility.getHRColor(_heartRate);
     }
 
     function advancePeriod() {

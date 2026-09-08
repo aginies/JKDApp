@@ -6,7 +6,6 @@ import '../models/series.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/export_service.dart';
-import '../services/audio_session_service.dart';
 import 'series_detail/dialogs/voice_input_dialog.dart';
 import 'series_detail/dialogs/training_options_dialog.dart';
 import 'series_detail/dialogs/congratulations_animation.dart';
@@ -151,7 +150,6 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
     _trainingController.dispose();
     _titleController.dispose();
     _movesScrollController.dispose();
-    AudioSessionService.releaseFocus();
     super.dispose();
   }
 

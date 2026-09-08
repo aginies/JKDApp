@@ -56,6 +56,21 @@ class AudioSessionService {
     }
   }
 
+  /// Acquire (or hold) audio focus for the duration of a TTS session.
+  /// Call once at session start (training, warmup) and pair with a single
+  /// [releaseFocus] at session end. Holding the session prevents the
+  /// per-utterance focus release inside flutter_tts from un-ducking
+  /// background music between spoken lines.
+  static Future<void> acquireFocus() async {
+    try {
+      final session = await aud_session.AudioSession.instance;
+      await session.setActive(true);
+      debugPrint('AudioSessionService: Focus acquired.');
+    } catch (e) {
+      debugPrint('AudioSessionService Acquire Error: $e');
+    }
+  }
+
   /// Manually release audio focus (useful if ducking gets stuck)
   static Future<void> releaseFocus() async {
     try {

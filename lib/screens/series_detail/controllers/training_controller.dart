@@ -61,6 +61,10 @@ class TrainingController {
       await _tts.awaitSpeakCompletion(true);
       if (Platform.isIOS || Platform.isAndroid) {
         await _tts.setSharedInstance(true);
+        // Keep the shared AVAudioSession active between lines (iOS):
+        // otherwise flutter_tts deactivates it after every utterance and
+        // background music un-ducks between lines of a long session.
+        await _tts.autoStopSharedSession(false);
         if (Platform.isIOS) {
           await _tts
               .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
@@ -120,7 +124,6 @@ class TrainingController {
         }
       } else {
         await _tts.speak(line.text, focus: true);
-        await AudioSessionService.releaseFocus();
       }
 
       if (!_isTraining || _isPaused) break;
@@ -228,6 +231,10 @@ class TrainingController {
         WakelockPlus.enable();
       }
     }
+
+    // Hold audio focus for the whole training session so background music
+    // stays ducked between lines (released in stop()/dispose()).
+    AudioSessionService.acquireFocus();
 
     _playStep(
       moves: moves,
@@ -399,6 +406,11 @@ class TrainingController {
 
   void dispose() {
     _timer?.cancel();
+    // Release session resources even if the screen is left mid-training:
+    // without this the wakelock keeps the screen on forever and the audio
+    // session keeps background music ducked.
+    AudioSessionService.releaseFocus();
+    WakelockPlus.disable();
     // Fire-and-forget async stop, with platform check to avoid plugin errors
     if (!Platform.isLinux) {
       _tts.stop().catchError((e) {

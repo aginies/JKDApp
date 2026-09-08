@@ -227,7 +227,6 @@ module JKDSeries {
                 new Combo("Angle 11", [11]),
                 new Combo("Angle 12", [12]),
                 new Combo("Angle 13", [13]),
-                new Combo("Angle 13", [13]),
                 new Combo("Angle 14", [14]),
                 new Combo("Angle 15", [15]),
                 new Combo("Pic remontant vers la Gauche", [])

@@ -31,6 +31,11 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   final FlutterTts _tts = FlutterTts();
   bool _isPlaying = false;
   bool _isPaused = false;
+  // True while an utterance is speaking or was stopped mid-speech.
+  // Used in dispose() to release the global audio session only when this
+  // widget actually owns it (avoids killing focus held by other TTS
+  // components, e.g. Garmin combo speech).
+  bool _ttsActive = false;
   String? _selectedSeriesId;
   String _selectedGuard = 'L';
   double _delaySeconds = 1.5;
@@ -70,6 +75,11 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.0);
     await _tts.awaitSpeakCompletion(true);
+    // Natural completion: flutter_tts already released focus (Android) or
+    // deactivated the shared session (iOS), so we no longer own it.
+    _tts.setCompletionHandler(() {
+      _ttsActive = false;
+    });
     if (widget.language == 'fr') {
       await _tts.setLanguage('fr-FR');
     } else {
@@ -99,7 +109,14 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     if (!Platform.isLinux) {
       _tts.stop();
     }
-    AudioSessionService.releaseFocus();
+    // Only release if we own the session: an utterance that was stopped
+    // mid-speech leaves the iOS AVAudioSession active (didCancel does not
+    // deactivate it), so music would stay ducked otherwise. A naturally
+    // completed utterance already released focus — releasing again could
+    // kill focus held by another component (e.g. Garmin combo TTS).
+    if (_ttsActive) {
+      AudioSessionService.releaseFocus();
+    }
     super.dispose();
   }
 
@@ -175,6 +192,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       await Process.run('spd-say', ['-l', 'en', '-w', targetSeries.title]);
     } else {
       await _tts.setLanguage('en-US');
+      _ttsActive = true;
       await _tts.speak(targetSeries.title, focus: true);
     }
   }
@@ -265,6 +283,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       } else {
         await _tts.setLanguage('en-US');
       }
+      _ttsActive = true;
       await _tts.speak(moveNumber, focus: true);
     }
   }
