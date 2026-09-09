@@ -15,7 +15,7 @@ import '../services/media_backup_service.dart';
 import '../services/backup_service.dart';
 import '../services/database_service.dart';
 import '../services/web_storage_service.dart';
-import '../screens/series_list/dialogs/cloud_library_dialog.dart';
+import 'cloud_library_dialog.dart';
 import '../models/series.dart';
 import '../models/custom_kali_angle.dart';
 import '../models/training_program.dart';

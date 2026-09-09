@@ -2,10 +2,10 @@
 // Handles database queries, translation parsing, and caching
 
 import 'dart:convert';
-import '../../../models/move.dart';
-import '../../../services/database_service.dart';
-import '../../../services/usage_statistics_service.dart';
-import '../state/picker_state.dart';
+import '../models/move.dart';
+import 'database_service.dart';
+import 'usage_statistics_service.dart';
+import '../models/picker_state.dart';
 
 class GlossaryDataService {
   // Simple cache: Map<String, List<Map<String, dynamic>>>

@@ -9,7 +9,7 @@ import '../models/training_program.dart';
 import '../models/program_day.dart';
 import '../models/user_program_progress.dart';
 import '../utils/translation_utils.dart';
-import '../screens/series_detail/glossary/glossary_data_service.dart';
+import 'glossary_data_service.dart';
 import 'logging_service.dart';
 
 class DatabaseService {

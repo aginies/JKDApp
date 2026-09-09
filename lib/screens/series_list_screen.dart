@@ -6,11 +6,12 @@ import '../services/voice_note_service.dart';
 import '../services/media_service.dart';
 import 'series_detail/services/media_gallery_service.dart';
 import 'series_detail_screen.dart';
+import 'program_detail_screen.dart';
 import 'settings_screen.dart';
 import 'programs_list_screen.dart';
 import 'warmup_screen.dart';
 import 'series_list/widgets/random_reader_widget.dart';
-import 'series_list/dialogs/cloud_library_dialog.dart';
+import '../widgets/cloud_library_dialog.dart';
 import 'series_list/dialogs/voice_notes_dialog.dart';
 import 'series_list/dialogs/glossary_dialog.dart';
 import '../models/series.dart';
@@ -153,7 +154,22 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: GlobalSearchDelegate(context),
+                delegate: GlobalSearchDelegate(
+                  context,
+                  onSeriesTap: (series) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SeriesDetailScreen(series: series),
+                    ),
+                  ),
+                  onProgramTap: (program) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProgramDetailScreen(program: program),
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -414,6 +430,20 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           ActiveProgramCard(
             progress: activeProgram,
             program: activeProgramDetails,
+            onProgramTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ProgramDetailScreen(program: activeProgramDetails),
+              ),
+            ),
+            onSeriesTap: (series, itemRange) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SeriesDetailScreen(series: series, itemRange: itemRange),
+              ),
+            ),
           ),
         ],
       ),

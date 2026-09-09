@@ -6,17 +6,23 @@ import '../models/program_day.dart';
 import '../models/series.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
-import '../screens/program_detail_screen.dart';
-import '../screens/series_detail_screen.dart';
 
 class ActiveProgramCard extends StatelessWidget {
   final UserProgramProgress progress;
   final TrainingProgram program;
 
+  /// Called when the card is tapped. Navigation is the caller's concern.
+  final VoidCallback onProgramTap;
+
+  /// Called when a series should be opened. Navigation is the caller's concern.
+  final void Function(JkdSeries series, String? itemRange) onSeriesTap;
+
   const ActiveProgramCard({
     super.key,
     required this.progress,
     required this.program,
+    required this.onProgramTap,
+    required this.onSeriesTap,
   });
 
   @override
@@ -31,14 +37,7 @@ class ActiveProgramCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       elevation: 4,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProgramDetailScreen(program: program),
-            ),
-          );
-        },
+        onTap: onProgramTap,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -194,16 +193,7 @@ class ActiveProgramCard extends StatelessWidget {
                                         )
                                         .itemRange;
 
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SeriesDetailScreen(
-                                              series: s,
-                                              itemRange: range,
-                                            ),
-                                      ),
-                                    );
+                                    onSeriesTap(s, range);
                                   } else {
                                     // Show selection dialog for multiple series
                                     _showSeriesSelection(
@@ -280,13 +270,7 @@ class ActiveProgramCard extends StatelessWidget {
                           : null,
                       onTap: () {
                         Navigator.pop(context); // Close bottom sheet
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                SeriesDetailScreen(series: s, itemRange: range),
-                          ),
-                        );
+                        onSeriesTap(s, range);
                       },
                     );
                   },

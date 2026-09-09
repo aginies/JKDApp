@@ -5,7 +5,7 @@ import '../../../models/move.dart';
 import '../../../services/series_provider.dart';
 import '../../../services/voice_parsing_service.dart';
 import '../dialogs/voice_input_dialog.dart';
-import '../state/picker_state.dart';
+import '../../../models/picker_state.dart';
 
 /// Service for handling voice input functionality in series detail screen
 class VoiceProcessingService {
