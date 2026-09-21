@@ -16,7 +16,6 @@ class JKDWarmupView extends WatchUi.View {
 
     private var _workDuration;
     private var _restDuration;
-    private var _totalDurationMinutes;
 
     private var _isPaused = false;
     private var _isWorkPeriod = true;
@@ -30,7 +29,6 @@ class JKDWarmupView extends WatchUi.View {
 
     function initialize(totalDurationMinutes, workDuration, restDuration) {
         View.initialize();
-        _totalDurationMinutes = totalDurationMinutes;
         _workDuration = workDuration;
         _restDuration = restDuration;
         _timer = new Timer.Timer();
@@ -38,8 +36,7 @@ class JKDWarmupView extends WatchUi.View {
         Sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
 
         // Build exercise pool from enabled categories
-        var pool = new [0];
-        // ... (rest of initialize unchanged)
+        var pool = [];
 
         if (JKDSettings.warmupCatSquats) {
             pool = pool.add("Squat Classical");
@@ -81,7 +78,7 @@ class JKDWarmupView extends WatchUi.View {
         _workoutSequence = new [_totalRounds];
 
         // Always start with a Jumping Jack or Squat if either category is enabled
-        var starters = new [0];
+        var starters = [];
         if (JKDSettings.warmupCatJumpingJacks) { starters = starters.add("Jumping Jacks"); }
         if (JKDSettings.warmupCatSquats) {
             starters = starters.add("Squat Classical");

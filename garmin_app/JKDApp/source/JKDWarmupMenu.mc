@@ -18,6 +18,7 @@ class JKDWarmupSetupView extends WatchUi.View {
     private var _selected = 0;
     private var _numItems = 11;
     private var _scrollOffset = 0; // index of first visible item
+    private var _visible = 5;      // rows that fit on the current screen
 
     function initialize() {
         View.initialize();
@@ -54,7 +55,7 @@ class JKDWarmupSetupView extends WatchUi.View {
     }
 
     function _visibleCount() {
-        return 5; // items visible at once
+        return _visible;
     }
 
     function _labelFor(idx) {
@@ -145,7 +146,12 @@ class JKDWarmupSetupView extends WatchUi.View {
         var itemH      = 40;
         var listTop    = 30;
         var listBottom = h - 20;
-        var visible    = _visibleCount();
+        // Fit the visible window to the actual screen height: a row counts
+        // as visible when its text center fits above listBottom (small
+        // devices like the D2 Air only have room for ~2 rows).
+        _visible = (listBottom - listTop - itemH / 2) / itemH + 1;
+        if (_visible < 1) { _visible = 1; }
+        var visible    = _visible;
         var end        = _scrollOffset + visible;
         if (end > _numItems) { end = _numItems; }
 

@@ -30,6 +30,8 @@ class JKDStandaloneView extends WatchUi.View {
     private var _autoAdvanceTicks = 0;
     private var _tickCount = 0;
     private var _isWaitingForTts = false;
+    private var _ttsWaitTicks = 0;
+    private var _ttsTimeoutSec = 15;
     private var _repCount = 0;
 
     function initialize(series as JKDSeries.Series) {
@@ -52,7 +54,7 @@ class JKDStandaloneView extends WatchUi.View {
         
         // Start activity recording
         if (Toybox has :ActivityRecording) {
-            if (_session == null || (_session != null && !_session.isRecording())) {
+            if (_session == null || !_session.isRecording()) {
                 var sport = Activity.SPORT_GENERIC;
                 if (Activity has :SPORT_MARTIAL_ARTS) {
                     sport = Activity.SPORT_MARTIAL_ARTS;
@@ -103,6 +105,17 @@ class JKDStandaloneView extends WatchUi.View {
             // If voice coaching was disabled while we were waiting, clear the flag
             if (!JKDSettings.enableVoice && _isWaitingForTts) {
                 _isWaitingForTts = false;
+            }
+
+            // Safety net: if the phone never confirms TTS completion (no
+            // companion app, Bluetooth dropped), release the wait after a
+            // timeout instead of blocking auto-advance forever.
+            if (_isWaitingForTts) {
+                _ttsWaitTicks++;
+                if (_ttsWaitTicks >= _ttsTimeoutSec) {
+                    _isWaitingForTts = false;
+                    _ttsWaitTicks = 0;
+                }
             }
 
             // Auto-advance logic
@@ -195,6 +208,7 @@ class JKDStandaloneView extends WatchUi.View {
         _autoAdvanceTicks = 0; // Reset timer when we show/start a new combo
         if (JKDSettings.enableVoice) {
             _isWaitingForTts = true;
+            _ttsWaitTicks = 0;
             var comboText = _series.combos[_comboIndex].text;
             // Format for speech (strip + and -> for cleaner pronunciation)
             var cleanText = comboText;
@@ -207,6 +221,9 @@ class JKDStandaloneView extends WatchUi.View {
                 cleanText = cleanText.substring(0, idx) + ", counter with " + cleanText.substring(idx + 4, cleanText.length());
             }
             
+            // Scale the timeout to the text length (long combos take longer
+            // to pronounce) plus a margin for Bluetooth latency.
+            _ttsTimeoutSec = 10 + cleanText.length() / 15;
             Communications.transmit({"speak" => cleanText}, null, new CommListener());
         }
     }
@@ -216,6 +233,7 @@ class JKDStandaloneView extends WatchUi.View {
     function onTtsComplete() {
         System.println("onTtsComplete called in View");
         _isWaitingForTts = false;
+        _ttsWaitTicks = 0;
         _autoAdvanceTicks = 0; // Countdown starts from NOW
         vibrate();
         WatchUi.requestUpdate();
@@ -652,6 +670,7 @@ class JKDStandaloneView extends WatchUi.View {
                 
                 // Skip "Angle" and the subsequent number if it's just a label
                 if (word.equals("Angle")) {
+                    currentX += wordWidths[j] + spaceW;
                     continue;
                 }
                 // Check if it's just a number string following "Angle"
@@ -664,6 +683,7 @@ class JKDStandaloneView extends WatchUi.View {
                     }
                 }
                 if (isNumber && j > 0 && words[j-1].equals("Angle")) {
+                    currentX += wordWidths[j] + spaceW;
                     continue;
                 }
 
@@ -785,7 +805,7 @@ class JKDStandaloneView extends WatchUi.View {
         dc.setColor(hrColor, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(4);
         dc.drawRectangle(centerX - 50, centerY + 30, 100, 4); 
-        dc.fillRectangle(centerX - 50, centerY + 30, (_heartRate % 100), 4);
+        dc.fillRectangle(centerX - 50, centerY + 30, _heartRate < 100 ? _heartRate : 100, 4);
         dc.drawText(centerX, centerY - 45, Graphics.FONT_NUMBER_MEDIUM, _heartRate.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(centerX, centerY + 5, Graphics.FONT_TINY, "BPM", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
