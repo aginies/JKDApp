@@ -50,6 +50,8 @@ web/secrets.php
 
 garmin_app/JKDApp/bin/
 garmin_app/bin/
+# Garmin Connect IQ signing key — never commit
+garmin_app/JKDApp/developer_key
 wear_os_app/.metadata
 wear_os_app/PRIVACY_POLICY.md
 wear_os_app/android/
