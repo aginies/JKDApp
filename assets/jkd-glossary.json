@@ -1038,6 +1038,33 @@
       },
       "possible_level": "H,M",
       "removal": {}
+    },
+    {
+      "name": "Jeet Que",
+      "translations": {
+        "en": "Intercepting bridge",
+        "fr": "Pont intercepteur"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    },
+    {
+      "name": "Jeet Sao",
+      "translations": {
+        "en": "Intercepting hand (biceps stop)",
+        "fr": "Main interceptrice (arrêt au biceps)"
+      },
+      "possible_level": "H,M",
+      "removal": {}
+    },
+    {
+      "name": "Lai Sao",
+      "translations": {
+        "en": "Palm-up pulling deflection",
+        "fr": "Déviation tirante, paume vers le haut"
+      },
+      "possible_level": "H,M",
+      "removal": {}
     }
   ],
   "move": [
@@ -1262,6 +1289,15 @@
     }
   ],
   "general": [
+    {
+      "name": "Chi",
+      "translations": {
+        "en": "Energy, spirit, breath",
+        "fr": "Énergie, esprit, souffle"
+      },
+      "possible_level": "",
+      "removal": {}
+    },
     {
       "name": "Kwoon",
       "translations": {
@@ -1552,6 +1588,42 @@
     }
   ],
   "other": [
+    {
+      "name": "Jeet Da",
+      "translations": {
+        "en": "Stop hit, intercepting hit",
+        "fr": "Coup d'arrêt, coup intercepteur"
+      },
+      "possible_level": "H,M,L",
+      "removal": {}
+    },
+    {
+      "name": "Ha Da",
+      "translations": {
+        "en": "Low hit",
+        "fr": "Coup bas"
+      },
+      "possible_level": "H,M,L",
+      "removal": {}
+    },
+    {
+      "name": "Jun Da",
+      "translations": {
+        "en": "Middle hit",
+        "fr": "Coup au milieu"
+      },
+      "possible_level": "H,M,L",
+      "removal": {}
+    },
+    {
+      "name": "Go Da",
+      "translations": {
+        "en": "High hit",
+        "fr": "Coup haut"
+      },
+      "possible_level": "H,M,L",
+      "removal": {}
+    },
     {
       "name": "Tan Da",
       "translations": {
@@ -1932,8 +2004,8 @@
   ],
   "metadata": {
     "Author": "Antoine Giniès",
-    "Version": "2.4.0",
+    "Version": "2.5.0",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-10"
+    "Date": "2026-10-04"
   }
 }
