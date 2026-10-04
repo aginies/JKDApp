@@ -6,7 +6,7 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 
 ### Core Functionality
 - **Series Management**: Create and organize training series for Jun Fan Gung Fu, Jun Fan Kick Boxing, **Kali**, and **JKD Moves** (Footwork).
-- **Move Glossary**: Extensive database of punches, kicks, packs, trapping, Kali angles, and specialized JKD movements.
+- **Move Glossary**: Extensive database of punches, kicks, packs, trapping, Kali angles, specialized JKD movements, and the **5 Ways of Attack** (SAA, IA/HIA, PIA, ABC, ABD).
 - **Combo Builder**: Visual interface to build complex combinations with support for **sub-numbering** (e.g., 1a, 1b, 1c), plus answer, simultaneous, and chain move modes.
 - **Training Mode**: Text-to-speech guided training with configurable intervals and looping.
 - **Training Programs**: Structured multi-day training regimens with progress tracking, daily assignments, completion statistics, and an active training overview.
@@ -20,7 +20,7 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 - **Counter Moves**: Add defensive responses to attacks with automatic tab navigation during editing.
 - **Custom Kali Angles**: Draw and reuse your own Kali angles in the combo builder.
 - **Voice Input**: Speech-to-text for entering move names and instructions.
-- **Media Gallery**: Attach instructional photos to techniques with auto-compression and swipe navigation.
+- **Media Gallery**: Attach instructional photos or videos (live video recording) to techniques with auto-compression and swipe navigation.
 - **Integrated Logging**: Multi-level logging system (INFO, WARN, ERROR) with in-app viewer and export/share capabilities for easier troubleshooting.
 - **PDF Export**: Generate printable training sheets.
 - **Backup & Restore**: Full support for Series, Glossary, and Media (ZIP) backups.
@@ -62,7 +62,11 @@ Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
 │   ├── models/          # Data models (Move, JkdSeries)
 │   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
 │   ├── screens/         # UI Screens and platform-specific sub-folders
+│   ├── widgets/         # Reusable widgets
+│   ├── utils/           # Shared utilities
 │   └── ...
+├── build_and_verify.sh  # Build/verify pipeline (builds, tests, quality)
+└── share_http.py        # Local HTTP server (port 8001) to share the APK
 ```
 
 ## JKD Footwork Training (Random Reader)
@@ -99,23 +103,24 @@ You can now group variations of a move using letters (a, b, c...):
 | Windows  | ✅ Full | Fully supported desktop platform |
 | MacOS    | ✅ Full | Fully supported desktop platform |
 | Linux    | ⚠️ Partial | Voice recognition disabled, TTS uses `spd-say` |
-| iOS      | ⚠️ Limited | Supported by code but not officially built |
+| iOS      | ❌ Not supported | No `ios/` folder in the repository |
 
 ## Development Guidelines
 
 To maintain code quality and manageability, the following organization principles are encouraged:
-- **File Size**: Individual Dart files must stay under **1,000 lines** (see `AGENTS.md` for the full code organization rules).
+- **File Size**: Individual Dart files must stay under **1,500 lines** (recommended: 500; see `AGENTS.md` for the full code organization rules).
 - **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
 - **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
 
-## Recent Updates (v2.6.1+1)
+## Recent Updates (v2.7.0+1)
 
-- **Beta Cloud Library**: Upload and share your custom series with the community.
-- **Enhanced Web View**: Fully responsive, mobile-optimized interface for browsing the library and downloading binaries.
-- **Multi-Level Logging**: Comprehensive logging system for both the Flutter app and PHP backend to simplify troubleshooting.
-- **Broad Garmin Support**: Dynamic build scripts supporting the entire modern Garmin product line (Fenix 8, Forerunner 965, etc.).
-- **Wear OS Precision**: Standalone watch application with architecture-specific compatibility (arm64-v8a/armeabi-v7a).
-- **Security**: Non-overwriting cloud uploads with automatic title incrementing.
+- **5 Ways of Attack**: New glossary category and tab (SAA, IA/HIA, PIA, ABC, ABD) with English and French definitions.
+- **Enhanced Media**: Live video recording, tabbed media gallery with video support, photo/video icons on glossary items.
+- **Card View**: The series detail tab now shows the card view by default.
+- **Translated Labels**: Combo-builder modes (Answer / Simultaneous / Chain) are now translated.
+- **Security**: Removed an exposed Garmin developer key from the repository.
+- **Fixes**: Warmup crash, TTS deadlock, HR bar, angle text, small-screen layout, counter editing, Linux camera, off-screen SnackBar.
+- **Documentation**: README now in French, English version moved to `README.en.md`; max file size limit raised to 1,500 lines in `AGENTS.md`.
 
 ## Development
 
@@ -124,6 +129,19 @@ To maintain code quality and manageability, the following organization principle
 flutter pub get
 flutter run
 ```
+
+### Build & Verify Script
+`./build_and_verify.sh` wraps the full pipeline (examples):
+```bash
+./build_and_verify.sh quality_checks   # format check + analyze + tests
+./build_and_verify.sh build_apk        # release APK build
+./build_and_verify.sh build_macos      # or build_windows / build_linux / build_appimage
+./build_and_verify.sh reset_db         # delete the local database (re-seed)
+./build_and_verify.sh all              # full pipeline (cleanup, deps, quality, APK)
+```
+
+### Sharing the APK
+`python3 share_http.py` serves `build/app/outputs/flutter-apk/` on port 8001 for direct installation on an Android device on the local network.
 
 ## Contributors
 - **Antoine Giniès** (Author & Lead Developer)

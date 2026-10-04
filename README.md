@@ -6,7 +6,7 @@ Une application Flutter complète pour gérer les séries d'entraînement, techn
 
 ### Fonctionnalités principales
 - **Gestion des séries** : Créez et organisez des séries d'entraînement pour Jun Fan Gung Fu, Jun Fan Kick Boxing, **Kali** et **JKD Moves** (déplacements).
-- **Glossaire des mouvements** : Base de données étendue de coups de poing, de jambe, de packs, de trapping, d'angles Kali et de mouvements spécialisés JKD.
+- **Glossaire des mouvements** : Base de données étendue de coups de poing, de jambe, de packs, de trapping, d'angles Kali, des mouvements spécialisés JKD et des **5 modes d'attaque** (SAA, IA/HIA, PIA, ABC, ABD).
 - **Créateur de combos** : Interface visuelle pour construire des combinaisons complexes avec prise en charge de la **sous-numérotation** (ex. : 1a, 1b, 1c), ainsi que les modes réponse, simultané et chaîne.
 - **Mode entraînement** : Entraînement guidé par synthèse vocale (TTS) avec intervalles configurables et bouclage.
 - **Programmes d'entraînement** : Régimes d'entraînement structurés sur plusieurs jours avec suivi de progression, attributions quotidiennes, statistiques de complétion et vue d'ensemble des entraînements actifs.
@@ -20,7 +20,7 @@ Une application Flutter complète pour gérer les séries d'entraînement, techn
 - **Coups de riposte** : Ajoutez des réponses défensives aux attaques avec navigation automatique entre onglets pendant l'édition.
 - **Angles Kali personnalisés** : Dessinez et réutilisez vos propres angles Kali dans le créateur de combos.
 - **Saisie vocale** : Reconnaissance vocale pour saisir les noms de mouvements et les instructions.
-- **Galerie média** : Attachez des photos explicatives aux techniques avec compression automatique et navigation par glissement.
+- **Galerie média** : Attachez des photos ou vidéos explicatives (enregistrement vidéo en direct) aux techniques avec compression automatique et navigation par glissement.
 - **Journalisation intégrée** : Système de journalisation multi-niveaux (INFO, WARN, ERROR) avec visionneuse intégrée et export/partage pour un dépannage facilité.
 - **Export PDF** : Générez des fiches d'entraînement imprimables.
 - **Sauvegarde & restauration** : Prise en charge complète des sauvegardes (ZIP) des séries, du glossaire et des médias.
@@ -62,7 +62,11 @@ S'intègre aux montres Garmin (Fenix, Forerunner, etc.) via le SDK Garmin :
 │   ├── models/          # Modèles de données (Move, JkdSeries)
 │   ├── services/        # Logique métier (DB, synchro Garmin, hachage)
 │   ├── screens/         # Écrans UI et sous-dossiers spécifiques aux plateformes
+│   ├── widgets/         # Widgets réutilisables
+│   ├── utils/           # Utilitaires partagés
 │   └── ...
+├── build_and_verify.sh  # Pipeline de build/vérification (builds, tests, quality)
+└── share_http.py        # Serveur HTTP local (port 8001) pour partager l'APK
 ```
 
 ## Entraînement aux déplacements JKD (Lecteur aléatoire)
@@ -99,23 +103,24 @@ Vous pouvez maintenant regrouper les variations d'un mouvement à l'aide de lett
 | Windows  | ✅ Complet | Plateforme bureau entièrement supportée |
 | MacOS    | ✅ Complet | Plateforme bureau entièrement supportée |
 | Linux    | ⚠️ Partiel | Reconnaissance vocale désactivée, TTS via `spd-say` |
-| iOS      | ⚠️ Limité | Supporté par le code mais non officiellement compilé |
+| iOS      | ❌ Non supporté | Pas de dossier `ios/` dans le dépôt |
 
 ## Lignes directrices de développement
 
 Pour maintenir la qualité et la lisibilité du code, les principes d'organisation suivants sont encouragés :
-- **Taille des fichiers** : Les fichiers Dart individuels doivent rester sous **1 000 lignes** (voir `AGENTS.md` pour les règles complètes d'organisation du code).
+- **Taille des fichiers** : Les fichiers Dart individuels doivent rester sous **1 500 lignes** (recommandé : 500 ; voir `AGENTS.md` pour les règles complètes d'organisation du code).
 - **Séparation des responsabilités** : Le code UI doit résider dans `screens/`, tandis que la logique réutilisable doit être extraite dans `services/` ou des `mixins/` spécifiques aux classes.
 - **Modularité** : Les grands écrans doivent être découpés en widgets plus petits et ciblés situés dans des sous-dossiers (ex. : `lib/screens/series_detail/widgets/`).
 
-## Mises à jour récentes (v2.6.1+1)
+## Mises à jour récentes (v2.7.0+1)
 
-- **Bibliothèque cloud bêta** : Téléversez et partagez vos séries personnalisées avec la communauté.
-- **Vue web améliorée** : Interface entièrement responsive et optimisée mobile pour parcourir la bibliothèque et télécharger les binaires.
-- **Journalisation multi-niveaux** : Système de journalisation complet pour l'application Flutter et le backend PHP afin de simplifier le dépannage.
-- **Support Garmin étendu** : Scripts de compilation dynamiques prenant en charge toute la gamme moderne Garmin (Fenix 8, Forerunner 965, etc.).
-- **Précision Wear OS** : Application montre autonome avec compatibilité spécifique à l'architecture (arm64-v8a/armeabi-v7a).
-- **Sécurité** : Téléversements cloud non écrasants avec incrémentation automatique du titre.
+- **5 modes d'attaque** : Nouvelle catégorie et onglet du glossaire (SAA, IA/HIA, PIA, ABC, ABD) avec définitions en anglais et français.
+- **Média enrichi** : Enregistrement vidéo en direct, galerie média à onglets avec support vidéo, icônes photo/vidéo sur les éléments du glossaire.
+- **Vue carte** : L'onglet détail de série affiche la vue carte par défaut.
+- **Étiquettes traduites** : Les modes du créateur de combos (Réponse / Simultané / Chaîne) sont maintenant traduits.
+- **Sécurité** : Clé développeur Garmin exposée retirée du dépôt.
+- **Corrections** : Crash échauffement, deadlock TTS, barre FC, texte des angles, mise en page petit écran, édition des ripostes, caméra Linux, SnackBar hors écran.
+- **Documentation** : README en français, version anglaise dans `README.en.md` ; limite de taille de fichier portée à 1 500 lignes dans `AGENTS.md`.
 
 ## Développement
 
@@ -124,6 +129,19 @@ Pour maintenir la qualité et la lisibilité du code, les principes d'organisati
 flutter pub get
 flutter run
 ```
+
+### Script de build et vérification
+`./build_and_verify.sh` encapsule le pipeline complet (exemples) :
+```bash
+./build_and_verify.sh quality_checks   # format check + analyze + tests
+./build_and_verify.sh build_apk        # build APK release
+./build_and_verify.sh build_macos      # ou build_windows / build_linux / build_appimage
+./build_and_verify.sh reset_db         # supprimer la base locale (re-seed)
+./build_and_verify.sh all              # pipeline complet (cleanup, deps, quality, APK)
+```
+
+### Partage de l'APK
+`python3 share_http.py` sert `build/app/outputs/flutter-apk/` sur le port 8001 pour installation directe sur un appareil Android du réseau local.
 
 ## Contributeurs
 - **Antoine Giniès** (Auteur & développeur principal)
