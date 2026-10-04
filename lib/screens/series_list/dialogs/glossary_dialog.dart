@@ -67,7 +67,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: DefaultTabController(
-        length: 10,
+        length: 11,
         child: Column(
           children: [
             Container(
@@ -218,6 +218,16 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                       ),
                       Tab(
                         text: LocalizationService.translate(
+                          'attack_methods',
+                          widget.lang,
+                        ),
+                        icon: Icon(
+                          CategoryUtils.getCategoryIcon('methods'),
+                          color: CategoryUtils.getCategoryColor('methods'),
+                        ),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate(
                           'general',
                           widget.lang,
                         ),
@@ -246,6 +256,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         _buildGlossaryList('kali'),
                         _buildGlossaryList('angles'),
                         _buildCustomAnglesTab(),
+                        _buildGlossaryList('methods'),
                         _buildGlossaryList('general'),
                         _buildGlossaryList('other'),
                       ],

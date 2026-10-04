@@ -1888,9 +1888,51 @@
       "removal": {}
     }
   ],
+  "methods": [
+    {
+      "name": "Simple Angled Attack (SAA)",
+      "translations": {
+        "en": "Any simple attack thrown at an unexpected angle, can be preceded by feinting. It is often set up by re-adjusting your distance with footwork.",
+        "fr": "Toute attaque simple lancée sous un angle inattendu, pouvant être précédée de feintes. Souvent mise en place en réajustant la distance par le travail des pieds."
+      },
+      "removal": {}
+    },
+    {
+      "name": "Immobilization Attack (IA / HIA)",
+      "translations": {
+        "en": "The application of an immobilizing preparation (trapping) on the opponent's head (hair), hand or leg as you crash the line to engagement. The trap keeps your opponent from moving that particular part of his body, giving you a safety zone from which to continue.",
+        "fr": "L'application d'une préparation immobilisante (trapping) sur la tête (cheveux), la main ou la jambe de l'adversaire en chargeant la ligne vers l'engagement. Le piège empêche l'adversaire de bouger cette partie de son corps, offrant une zone de sécurité pour poursuivre."
+      },
+      "removal": {}
+    },
+    {
+      "name": "Progressive Indirect Attack (PIA)",
+      "translations": {
+        "en": "Preceded by a feint or an uncommitted strike which is meant to misdirect your opponent's actions or reactions in order to hit an open line or gain a period of movement-time. It is one movement which changes direction, but is preceded by a feint.",
+        "fr": "Précédée d'une feinte ou d'une frappe non engagée visant à désorienter les actions ou réactions de l'adversaire afin de frapper une ligne ouverte ou gagner un temps de mouvement. Un seul mouvement qui change de direction, précédé d'une feinte."
+      },
+      "removal": {}
+    },
+    {
+      "name": "Attack by Combination (ABC)",
+      "translations": {
+        "en": "A series of strikes that follow each other naturally and are generally thrown to more than one line. Each is used to set up the next strike.",
+        "fr": "Une série de frappes qui se suivent naturellement et sont généralement lancées sur plus d'une ligne. Chacune sert à préparer la frappe suivante."
+      },
+      "removal": {}
+    },
+    {
+      "name": "Attack by Drawing (ABD)",
+      "translations": {
+        "en": "An attack or counterattack initiated upon luring the opponent into a commitment by leaving him an apparent opening in your defenses, or performing movements that he may try to time and counter.",
+        "fr": "Une attaque ou contre-attaque initiée en attirant l'adversaire dans un engagement en lui laissant une ouverture apparente dans la défense, ou en effectuant des mouvements qu'il pourrait chronométrer et contrer."
+      },
+      "removal": {}
+    }
+  ],
   "metadata": {
     "Author": "Antoine Giniès",
-    "Version": "2.3.0",
+    "Version": "2.4.0",
     "JKDApp": "ginies.org",
     "Date": "2026-04-10"
   }
