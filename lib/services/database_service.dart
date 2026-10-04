@@ -924,7 +924,8 @@ class DatabaseService {
       'title': program.title,
       'description': program.description,
       if (program.titleFr.isNotEmpty) 'title_fr': program.titleFr,
-      if (program.descriptionFr.isNotEmpty) 'description_fr': program.descriptionFr,
+      if (program.descriptionFr.isNotEmpty)
+        'description_fr': program.descriptionFr,
       'difficulty_level': program.difficultyLevel,
       'duration_days': program.durationDays,
       'is_system': program.isSystem ? 1 : 0,
@@ -957,7 +958,9 @@ class DatabaseService {
         'title': program.title,
         'description': program.description,
         'title_fr': program.titleFr.isNotEmpty ? program.titleFr : null,
-        'description_fr': program.descriptionFr.isNotEmpty ? program.descriptionFr : null,
+        'description_fr': program.descriptionFr.isNotEmpty
+            ? program.descriptionFr
+            : null,
         'difficulty_level': program.difficultyLevel,
         'duration_days': program.durationDays,
         'is_system': program.isSystem ? 1 : 0,
