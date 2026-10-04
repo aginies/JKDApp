@@ -530,4 +530,11 @@ class LocalizationService {
   static String translate(String key, String lang) {
     return _localizedValues[lang]?[key] ?? _localizedValues['en']?[key] ?? key;
   }
+
+  /// Returns the French text when the UI language is French and a translation
+  /// is available, otherwise falls back to the English text.
+  static String localizedContent(String? fr, String en, String lang) {
+    if (lang == 'fr' && fr != null && fr.trim().isNotEmpty) return fr;
+    return en;
+  }
 }

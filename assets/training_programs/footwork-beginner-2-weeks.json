@@ -12,7 +12,8 @@
           "Step and Slide"
         ],
         "notes": "Introduction to Step and Slide. Focus on lead-foot initiation and maintaining a consistent stance width.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Introduction au Step and Slide. Concentrez-vous sur l'initiation par le pied avant et le maintien d'une largeur de garde constante."
       },
       {
         "day_number": 2,
@@ -20,7 +21,8 @@
           "Slide and Step"
         ],
         "notes": "Introduction to Slide and Step. Essential for retreating while staying ready to counter.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Introduction au Slide and Step. Essentiel pour reculer tout en restant pr\u00eat \u00e0 riposter."
       },
       {
         "day_number": 3,
@@ -29,13 +31,15 @@
           "Slide and Step"
         ],
         "notes": "Basic transitions. Practice moving forward then immediately backward.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Transitions de base. Entra\u00eenez-vous \u00e0 avancer puis imm\u00e9diatement reculer."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Focus on keeping your legs relaxed.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. Concentrez-vous sur le maintien de jambes d\u00e9tendues."
       },
       {
         "day_number": 5,
@@ -43,7 +47,8 @@
           "Step and Slide"
         ],
         "notes": "Deep dive into Step and Slide. Work on all directions: forward, backward, left, right.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Approfondissement du Step and Slide. Travaillez toutes les directions : avant, arri\u00e8re, gauche, droite."
       },
       {
         "day_number": 6,
@@ -51,12 +56,15 @@
           "Slide and Step"
         ],
         "notes": "Deep dive into Slide and Step. Ensure the rear foot slides smoothly before the lead foot steps.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Approfondissement du Slide and Step. Assurez-vous que le pied arri\u00e8re glisse en douceur avant que le pied avant ne fasse un pas."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "D\u00e9placements D\u00e9butant - 6 Jours",
+    "description_fr": "Ma\u00eetrisez les essentiels absolus du d\u00e9placement JKD : Step and Slide et Slide and Step. Construisez une base solide d'\u00e9quilibre et de mobilit\u00e9."
   }
 ]

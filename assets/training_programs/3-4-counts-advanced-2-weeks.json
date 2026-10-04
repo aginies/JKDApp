@@ -15,7 +15,8 @@
           }
         ],
         "notes": "Review beginner 3 counts. Focus on total fluidity.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des 3 counts d\u00e9butant. Concentrez-vous sur la fluidit\u00e9 totale."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "3 COUNTS 9-12: Advanced elbow and palm strikes. Short range power.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "3 COUNTS 9-12 : Coups de coude et de paume avanc\u00e9s. Puissance \u00e0 courte port\u00e9e."
       },
       {
         "day_number": 3,
@@ -37,13 +39,15 @@
           }
         ],
         "notes": "FULL SERIES: Flow through all 12 patterns of 3 counts.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "S\u00c9RIE COMPL\u00c8TE : Encha\u00eenez les 12 sch\u00e9mas de 3 counts."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Review the mechanics of close-range strikes.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9visez la m\u00e9canique des frappes \u00e0 courte distance."
       },
       {
         "day_number": 5,
@@ -54,7 +58,8 @@
           }
         ],
         "notes": "Review beginner 4 counts. Focus on balance during kicks.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des 4 counts d\u00e9butant. Concentrez-vous sur l'\u00e9quilibre pendant les coups de pied."
       },
       {
         "day_number": 6,
@@ -65,12 +70,15 @@
           }
         ],
         "notes": "4 COUNTS 9-14: Advanced combinations involving guard changes and lateral steps. Full series goal reached.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "4 COUNTS 9-14 : Combinaisons avanc\u00e9es avec changements de garde et pas lat\u00e9raux. Objectif s\u00e9rie compl\u00e8te atteint."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "3 & 4 Counts Avanc\u00e9 - 6 Jours",
+    "description_fr": "Ma\u00eetrisez la s\u00e9rie compl\u00e8te 3 Counts et les 14 sch\u00e9mas fondamentaux de 4 Counts."
   }
 ]

@@ -71,7 +71,7 @@ class DatabaseService {
     LoggingService.info('Initializing database at $path');
     final db = await openDatabase(
       path,
-      version: 26, // Increment version to force glossary refresh
+      version: 27, // Increment version to force glossary refresh
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -272,6 +272,8 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT,
+        title_fr TEXT,
+        description_fr TEXT,
         difficulty_level TEXT,
         duration_days INTEGER NOT NULL,
         is_system INTEGER DEFAULT 1,
@@ -287,6 +289,7 @@ class DatabaseService {
         series_ids TEXT NOT NULL,
         series_assignments TEXT,
         notes TEXT,
+        notes_fr TEXT,
         is_rest_day INTEGER DEFAULT 0,
         FOREIGN KEY (program_id) REFERENCES training_programs(id) ON DELETE CASCADE
       )
@@ -465,6 +468,8 @@ class DatabaseService {
               'training_programs',
               {
                 'description': programJson['description'] ?? '',
+                'title_fr': programJson['title_fr'] ?? '',
+                'description_fr': programJson['description_fr'] ?? '',
                 'difficulty_level':
                     programJson['difficulty_level'] ?? 'beginner',
                 'duration_days': programJson['duration_days'] ?? 1,
@@ -483,6 +488,8 @@ class DatabaseService {
             programId = await db.insert('training_programs', {
               'title': title,
               'description': programJson['description'] ?? '',
+              'title_fr': programJson['title_fr'] ?? '',
+              'description_fr': programJson['description_fr'] ?? '',
               'difficulty_level': programJson['difficulty_level'] ?? 'beginner',
               'duration_days': programJson['duration_days'] ?? 1,
               'is_system': 1,
@@ -545,6 +552,7 @@ class DatabaseService {
                   ? json.encode(assignments)
                   : null,
               'notes': day['notes'],
+              'notes_fr': day['notes_fr'],
               'is_rest_day': day['is_rest_day'] ?? 0,
             });
           }
@@ -915,6 +923,8 @@ class DatabaseService {
     final programId = await db.insert('training_programs', {
       'title': program.title,
       'description': program.description,
+      if (program.titleFr.isNotEmpty) 'title_fr': program.titleFr,
+      if (program.descriptionFr.isNotEmpty) 'description_fr': program.descriptionFr,
       'difficulty_level': program.difficultyLevel,
       'duration_days': program.durationDays,
       'is_system': program.isSystem ? 1 : 0,
@@ -946,6 +956,8 @@ class DatabaseService {
       {
         'title': program.title,
         'description': program.description,
+        'title_fr': program.titleFr.isNotEmpty ? program.titleFr : null,
+        'description_fr': program.descriptionFr.isNotEmpty ? program.descriptionFr : null,
         'difficulty_level': program.difficultyLevel,
         'duration_days': program.durationDays,
         'is_system': program.isSystem ? 1 : 0,

@@ -12,7 +12,8 @@
           "22 Coups de poings"
         ],
         "notes": "PHASE 1 - DAY 1: Learn all 22 punches. Focus on proper stance, guard, and straight line principle.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "PHASE 1 - JOUR 1 : Apprenez les 22 coups de poing. Concentrez-vous sur la posture, la garde et le principe de la ligne droite."
       },
       {
         "day_number": 2,
@@ -20,7 +21,8 @@
           "18 Kicks"
         ],
         "notes": "PHASE 1 - DAY 2: Learn all 18 kicks. Chamber position, balance, and hip rotation are key.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "PHASE 1 - JOUR 2 : Apprenez les 18 coups de pied. La position de chambre, l'\u00e9quilibre et la rotation des hanches sont essentiels."
       },
       {
         "day_number": 3,
@@ -29,13 +31,15 @@
           "Slide and Step"
         ],
         "notes": "PHASE 1 - DAY 3: Master both forward and reverse footwork patterns. Stay light on your feet.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "PHASE 1 - JOUR 3 : Ma\u00eetrisez les deux sch\u00e9mas de d\u00e9placement avant et arri\u00e8re. Restez l\u00e9ger sur vos pieds."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "REST DAY: Recovery and mental review. Visualize proper form for punches and kicks.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "JOURN\u00c9E DE REPOS : R\u00e9cup\u00e9ration et r\u00e9vision mentale. Visualisez la forme correcte des coups de poing et de pied."
       },
       {
         "day_number": 5,
@@ -43,7 +47,8 @@
           "Push Shuffle"
         ],
         "notes": "PHASE 1 - DAY 5: Explosive forward movement. Essential for closing distance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "PHASE 1 - JOUR 5 : D\u00e9placement avant explosif. Essentiel pour r\u00e9duire la distance."
       },
       {
         "day_number": 6,
@@ -51,12 +56,15 @@
           "4 counts"
         ],
         "notes": "PHASE 1 - DAY 6: Practice 4 Counts series. Focus on FIRST 8 COMBINATIONS only for now.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "PHASE 1 - JOUR 6 : Travaillez la s\u00e9rie 4 counts. Concentrez-vous UNIQUEMENT sur les 8 PREMI\u00c8RES COMBINAISONS pour l'instant."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Fondamentaux JKD - 6 Jours",
+    "description_fr": "Programme d\u00e9butant structur\u00e9 en 3 phases : Phase 1 (bases), Phase 2 (construction), Phase 3 (int\u00e9gration). Ma\u00eetrisez coups de poing, coups de pied, d\u00e9placements, ripostes et trapping."
   }
 ]

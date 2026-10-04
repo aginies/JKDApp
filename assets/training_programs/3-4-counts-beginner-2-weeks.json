@@ -15,7 +15,8 @@
           }
         ],
         "notes": "3 COUNTS 1-4: Basic hand-hand-foot combinations. Focus on resetting quickly after the kick.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "3 COUNTS 1-4 : Combinaisons de base main-main-pied. Concentrez-vous sur le retour rapide apr\u00e8s le coup de pied."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "3 COUNTS 5-8: Lateral steps and knee strikes. Incorporate movement into your combos.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "3 COUNTS 5-8 : Pas lat\u00e9raux et coups de genou. Int\u00e9grez le d\u00e9placement dans vos combos."
       },
       {
         "day_number": 3,
@@ -37,13 +39,15 @@
           }
         ],
         "notes": "3 COUNTS 1-8: Integration. Maintain consistent power across all three counts.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "3 COUNTS 1-8 : Int\u00e9gration. Maintenez une puissance constante sur les trois temps."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Review the coordination of 3-beat rhythms.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9visez la coordination des rythmes \u00e0 3 temps."
       },
       {
         "day_number": 5,
@@ -54,7 +58,8 @@
           }
         ],
         "notes": "4 COUNTS 1-4: Extended combinations starting with kicks. Focus on balance during transitions.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "4 COUNTS 1-4 : Combinaisons \u00e9tendues commen\u00e7ant par des coups de pied. Concentrez-vous sur l'\u00e9quilibre pendant les transitions."
       },
       {
         "day_number": 6,
@@ -65,12 +70,15 @@
           }
         ],
         "notes": "4 COUNTS 5-8: Hand-hand-foot-foot sequences. Build rhythmic endurance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "4 COUNTS 5-8 : S\u00e9quences main-main-pied-pied. Construisez l'endurance rythmique."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "3 & 4 Counts D\u00e9butant - 6 Jours",
+    "description_fr": "Combinaisons fondamentales. Ma\u00eetrisez les 8 premiers sch\u00e9mas des s\u00e9ries 3 Counts et 4 Counts."
   }
 ]

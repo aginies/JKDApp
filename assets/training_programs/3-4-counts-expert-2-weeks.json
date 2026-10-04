@@ -15,7 +15,8 @@
           }
         ],
         "notes": "Review full 3 counts. Focus on max power and speed.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision compl\u00e8te des 3 counts. Concentrez-vous sur la puissance et la vitesse maximales."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "Review full 4 counts. Focus on max power and speed.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision compl\u00e8te des 4 counts. Concentrez-vous sur la puissance et la vitesse maximales."
       },
       {
         "day_number": 3,
@@ -41,13 +43,15 @@
           }
         ],
         "notes": "Integration day. Switch between series based on distance cues.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Journ\u00e9e d'int\u00e9gration. Alternez entre les s\u00e9ries selon les indices de distance."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Recovery for the high-intensity integration week ahead.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9cup\u00e9ration avant la semaine d'int\u00e9gration \u00e0 haute intensit\u00e9."
       },
       {
         "day_number": 5,
@@ -62,7 +66,8 @@
           }
         ],
         "notes": "Adding Footwork: Step and Slide into 3 Counts, Slide and Step out of 4 Counts.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Ajout des d\u00e9placements : Step and Slide vers les 3 Counts, Slide and Step pour sortir des 4 Counts."
       },
       {
         "day_number": 6,
@@ -77,12 +82,15 @@
           }
         ],
         "notes": "Adding Footwork: Push Shuffle into 4 Counts, Rock Shuffle during 3 Counts.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Ajout des d\u00e9placements : Push Shuffle vers les 4 Counts, Rock Shuffle pendant les 3 Counts."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "3 & 4 Counts Expert - 6 Jours",
+    "description_fr": "Ma\u00eetrise totale des combinaisons 3 et 4 temps. Int\u00e9gration avec les d\u00e9placements et timing avanc\u00e9."
   }
 ]

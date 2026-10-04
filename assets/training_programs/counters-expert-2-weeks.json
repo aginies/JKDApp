@@ -15,7 +15,8 @@
           }
         ],
         "notes": "Review Jab-Cross series. Ensure perfect timing and structure for all 13 counters.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision de la s\u00e9rie Jab-Cross. Assurez un timing et une structure parfaits pour les 13 ripostes."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "Review intermediate Jab-Hook counters. Focus on closing distance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des ripostes Jab-Hook interm\u00e9diaire. Concentrez-vous sur la r\u00e9duction de la distance."
       },
       {
         "day_number": 3,
@@ -37,13 +39,15 @@
           }
         ],
         "notes": "COUNTERS 15-20 (Jab-Hook): Defensive responses to LEFT HOOK attacks. Shoulder stops, biceps stops, John Wayne.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 15-20 (Jab-Hook) : R\u00e9ponses d\u00e9fensives aux attaques LEFT HOOK. Shoulder stops, biceps stops, John Wayne."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Review the technical differences between Right and Left Hook defenses.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9visez les diff\u00e9rences techniques entre les d\u00e9fenses contre Right et Left Hook."
       },
       {
         "day_number": 5,
@@ -54,7 +58,8 @@
           }
         ],
         "notes": "COUNTERS 21-27 (Jab-Hook): Advanced kicking ripostes and trapping flows for Left Hook. Full series complete.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 21-27 (Jab-Hook) : Ripostes de coups de pied avanc\u00e9es et flows de trapping contre Left Hook. S\u00e9rie compl\u00e8te termin\u00e9e."
       },
       {
         "day_number": 6,
@@ -65,12 +70,15 @@
           }
         ],
         "notes": "FULL SERIES: Flow through all 27 Jab-Hook defensive responses.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "S\u00c9RIE COMPL\u00c8TE : Encha\u00eenez les 27 r\u00e9ponses d\u00e9fensives Jab-Hook."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Ripostes Expert - 6 Jours",
+    "description_fr": "Le syst\u00e8me d\u00e9fensif complet. Ma\u00eetrisez les s\u00e9ries compl\u00e8tes Contre Jab Cross (13) et Contre Jab Hook (27)."
   }
 ]

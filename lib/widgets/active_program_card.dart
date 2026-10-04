@@ -56,7 +56,11 @@ class ActiveProgramCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          program.title,
+                          LocalizationService.localizedContent(
+                            program.titleFr,
+                            program.title,
+                            lang,
+                          ),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
