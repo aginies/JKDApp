@@ -35,7 +35,7 @@ class DatabaseService {
 
   // List of series JSON files to load from assets (all are trusted system series)
   static const List<String> _seriesFiles = [
-    'assets/jkd-series-punches.json',
+    'assets/jkd-series-24-coups-de-poings.json',
     'assets/jkd-series-3-counts.json',
     'assets/jkd-series-4-counts.json',
     'assets/jkd-series-5-counts.json',
