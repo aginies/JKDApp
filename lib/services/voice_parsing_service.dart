@@ -121,7 +121,7 @@ class VoiceParsingService {
       onResult: (result) {
         onResult(result.recognizedWords);
       },
-      localeId: localeId,
+      listenOptions: SpeechListenOptions(localeId: localeId),
     );
   }
 
