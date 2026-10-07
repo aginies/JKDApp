@@ -39,7 +39,7 @@ Cliquez sur une vignette pour l'agrandir.
 </tr>
 </table>
 
-> 🎞️ **Slideshow interactif** : la page [gallery.html](gallery.html) propose un diaporama complet (flèches clavier, miniatures, lecture automatique). Activez *Settings → Pages* sur GitHub pour l'afficher en ligne.
+> 🎞️ **Slideshow interactif** : la page [galerie](https://aginies.github.io/JKDApp/gallery.html) propose un diaporama complet (flèches clavier, miniatures, lecture automatique).
 
 ## Fonctionnalités
 
