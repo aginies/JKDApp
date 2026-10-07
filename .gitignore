@@ -53,9 +53,8 @@ garmin_app/bin/
 # Garmin Connect IQ signing key — never commit
 garmin_app/JKDApp/developer_key
 wear_os_app/.metadata
-wear_os_app/PRIVACY_POLICY.md
+# wear_os_app/android/ and bin/ hold build state and APKs — never commit
 wear_os_app/android/
-wear_os_app/assets
 wear_os_app/bin
 
 web/releases

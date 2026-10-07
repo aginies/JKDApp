@@ -5,6 +5,16 @@ All notable changes to the JKD App are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-10-07
+
+### Added
+- Glossary: missing JKD concepts (Chi, Jeet Da/Que/Sao, Lai Sao, Ha/Jun/Go Da).
+- Series: "24 Coups de poings" completed — 2 overhead moves added (arrière L, avant R) and series renamed from 22 to 24 Coups de poings.
+- Training programs: translated into French.
+
+### Changed
+- Series data: "24 Coups de poings" moved to a dedicated asset file (`jkd-series-24-coups-de-poings.json`); Garmin `JKDSeries.mc` regenerated accordingly.
+
 ## [2.7.0] - 2026-10-04
 
 ### Added
