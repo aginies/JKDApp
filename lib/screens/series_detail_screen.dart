@@ -936,9 +936,8 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                       ? ReorderableListView(
                           scrollController: _movesScrollController,
                           buildDefaultDragHandles: false,
-                          onReorder: (oldIndex, newIndex) {
+                          onReorderItem: (oldIndex, newIndex) {
                             setState(() {
-                              if (newIndex > oldIndex) newIndex -= 1;
                               final movedItem = _moves.removeAt(oldIndex);
                               _moves.insert(newIndex, movedItem);
                               _normalizeSubLetters();
