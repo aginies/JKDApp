@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JKD App — Galerie</title>
+<style>
+  :root { --bg:#111; --fg:#eee; --accent:#e6b422; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--fg); font-family:system-ui,"Segoe UI",Roboto,sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:1.1rem; font-weight:600; }
+  .toolbar { display:flex; gap:10px; align-items:center; }
+  .toolbar button { background:none; border:1px solid rgba(255,255,255,.25); color:var(--fg); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:.85rem; }
+  .toolbar button:hover { background:rgba(255,255,255,.1); }
+  .toolbar a { color:var(--accent); text-decoration:none; font-size:.9rem; }
+  .stage { position:relative; flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; min-height:50vh; }
+  #slide { max-width:92vw; max-height:calc(100vh - 230px); object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,.6); transition:opacity .25s; }
+  .btn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:var(--fg); font-size:1.8rem; line-height:1; width:52px; height:52px; border-radius:50%; cursor:pointer; transition:background .2s; }
+  .btn:hover { background:rgba(255,255,255,.2); }
+  #prev { left:16px; }
+  #next { right:16px; }
+  .meta { position:absolute; bottom:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.55); padding:6px 14px; border-radius:20px; font-size:.9rem; white-space:nowrap; }
+  .thumbs { display:flex; gap:8px; padding:12px 16px 16px; overflow-x:auto; justify-content:center; flex-wrap:wrap; }
+  .thumbs img { width:72px; height:72px; object-fit:cover; border-radius:6px; cursor:pointer; opacity:.55; border:2px solid transparent; transition:opacity .2s, border-color .2s; }
+  .thumbs img:hover { opacity:.9; }
+  .thumbs img.active { opacity:1; border-color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🥋 JKD App — Galerie</h1>
+  <div class="toolbar">
+    <button id="autoBtn" title="Lecture automatique (Espace)">⏯ Auto</button>
+    <a href="../">← Dépôt</a>
+  </div>
+</header>
+<div class="stage">
+  <button class="btn" id="prev" aria-label="Précédent">‹</button>
+  <img id="slide" alt="">
+  <button class="btn" id="next" aria-label="Suivant">›</button>
+  <div class="meta" id="meta"></div>
+</div>
+<div class="thumbs" id="thumbs"></div>
+<script>
+const SLIDES = [
+  ["images/main.png", "Écran principal"],
+  ["images/card_view.png", "Vue carte"],
+  ["images/serie_cards.png", "Cartes de série"],
+  ["images/glossaire.png", "Glossaire"],
+  ["images/recherche_glossaire.png", "Recherche dans le glossaire"],
+  ["images/recherche_globale.png", "Recherche globale"],
+  ["images/editer_combo.png", "Éditeur de combos"],
+  ["images/edit_combo_help.png", "Aide de l'éditeur de combos"],
+  ["images/angles.png", "Angles Kali personnalisés"],
+  ["images/entrainement_serie.png", "Mode entraînement"],
+  ["images/lecture_deplacement.png", "Lecteur aléatoire (déplacements)"],
+  ["images/deplacement.png", "JKD Moves (déplacements)"],
+  ["images/echauffement_0.png", "Échauffement guidé (1/2)"],
+  ["images/echauffement_1.png", "Échauffement guidé (2/2)"],
+  ["images/enregistrement_vocal.png", "Saisie vocale"],
+  ["images/parametres.png", "Paramètres"],
+  ["images/cloud.png", "Bibliothèque cloud"]
+];
+let i = 0, timer = null, auto = false;
+const slide = document.getElementById("slide");
+const meta = document.getElementById("meta");
+const thumbs = document.getElementById("thumbs");
+const autoBtn = document.getElementById("autoBtn");
+
+SLIDES.forEach(([src, caption], idx) => {
+  const t = document.createElement("img");
+  t.src = src;
+  t.alt = caption;
+  t.title = caption;
+  t.onclick = () => show(idx);
+  thumbs.appendChild(t);
+});
+
+function show(n) {
+  i = (n + SLIDES.length) % SLIDES.length;
+  slide.style.opacity = 0;
+  const img = new Image();
+  img.onload = () => {
+    slide.src = img.src;
+    slide.alt = SLIDES[i][1];
+    slide.style.opacity = 1;
+  };
+  img.src = SLIDES[i][0];
+  meta.textContent = SLIDES[i][1] + "  (" + (i + 1) + "/" + SLIDES.length + ")";
+  Array.from(thumbs.children).forEach((t, idx) => t.classList.toggle("active", idx === i));
+}
+
+function next() { show(i + 1); }
+function prev() { show(i - 1); }
+function setAuto(on) {
+  auto = on;
+  if (on) timer = setInterval(next, 5000);
+  else clearInterval(timer);
+  autoBtn.textContent = auto ? "⏸ Auto" : "⏯ Auto";
+}
+
+autoBtn.onclick = () => setAuto(!auto);
+document.getElementById("next").onclick = next;
+document.getElementById("prev").onclick = prev;
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") next();
+  else if (e.key === "ArrowLeft") prev();
+  else if (e.key === " ") { e.preventDefault(); setAuto(!auto); }
+});
+show(0);
+</script>
+</body>
+</html>

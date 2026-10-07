@@ -2,6 +2,45 @@
 
 Une application Flutter complète pour gérer les séries d'entraînement, techniques et combinaisons de Jeet Kune Do.
 
+## 📸 Galerie d'images
+
+Cliquez sur une vignette pour l'agrandir.
+
+<table>
+<tr>
+<td align="center"><details><summary><img src="images/main.png" width="170" alt="Écran principal"></summary><img src="images/main.png" width="420" alt="Écran principal"><br><b>Écran principal</b></details></td>
+<td align="center"><details><summary><img src="images/card_view.png" width="170" alt="Vue carte"></summary><img src="images/card_view.png" width="420" alt="Vue carte"><br><b>Vue carte</b></details></td>
+<td align="center"><details><summary><img src="images/serie_cards.png" width="170" alt="Cartes de série"></summary><img src="images/serie_cards.png" width="420" alt="Cartes de série"><br><b>Cartes de série</b></details></td>
+</tr>
+<tr>
+<td align="center"><details><summary><img src="images/glossaire.png" width="170" alt="Glossaire"></summary><img src="images/glossaire.png" width="420" alt="Glossaire"><br><b>Glossaire</b></details></td>
+<td align="center"><details><summary><img src="images/recherche_glossaire.png" width="170" alt="Recherche dans le glossaire"></summary><img src="images/recherche_glossaire.png" width="420" alt="Recherche dans le glossaire"><br><b>Recherche dans le glossaire</b></details></td>
+<td align="center"><details><summary><img src="images/recherche_globale.png" width="170" alt="Recherche globale"></summary><img src="images/recherche_globale.png" width="420" alt="Recherche globale"><br><b>Recherche globale</b></details></td>
+</tr>
+<tr>
+<td align="center"><details><summary><img src="images/editer_combo.png" width="170" alt="Éditeur de combos"></summary><img src="images/editer_combo.png" width="420" alt="Éditeur de combos"><br><b>Éditeur de combos</b></details></td>
+<td align="center"><details><summary><img src="images/edit_combo_help.png" width="170" alt="Aide de l'éditeur de combos"></summary><img src="images/edit_combo_help.png" width="420" alt="Aide de l'éditeur de combos"><br><b>Aide de l'éditeur de combos</b></details></td>
+<td align="center"><details><summary><img src="images/angles.png" width="170" alt="Angles Kali personnalisés"></summary><img src="images/angles.png" width="420" alt="Angles Kali personnalisés"><br><b>Angles Kali personnalisés</b></details></td>
+</tr>
+<tr>
+<td align="center"><details><summary><img src="images/entrainement_serie.png" width="170" alt="Mode entraînement"></summary><img src="images/entrainement_serie.png" width="420" alt="Mode entraînement"><br><b>Mode entraînement</b></details></td>
+<td align="center"><details><summary><img src="images/lecture_deplacement.png" width="170" alt="Lecteur aléatoire"></summary><img src="images/lecture_deplacement.png" width="420" alt="Lecteur aléatoire"><br><b>Lecteur aléatoire (déplacements)</b></details></td>
+<td align="center"><details><summary><img src="images/deplacement.png" width="170" alt="JKD Moves"></summary><img src="images/deplacement.png" width="420" alt="JKD Moves"><br><b>JKD Moves (déplacements)</b></details></td>
+</tr>
+<tr>
+<td align="center"><details><summary><img src="images/echauffement_0.png" width="170" alt="Échauffement guidé"></summary><img src="images/echauffement_0.png" width="420" alt="Échauffement guidé"><br><b>Échauffement guidé (1/2)</b></details></td>
+<td align="center"><details><summary><img src="images/echauffement_1.png" width="170" alt="Échauffement guidé"></summary><img src="images/echauffement_1.png" width="420" alt="Échauffement guidé"><br><b>Échauffement guidé (2/2)</b></details></td>
+<td align="center"><details><summary><img src="images/enregistrement_vocal.png" width="170" alt="Saisie vocale"></summary><img src="images/enregistrement_vocal.png" width="420" alt="Saisie vocale"><br><b>Saisie vocale</b></details></td>
+</tr>
+<tr>
+<td align="center"><details><summary><img src="images/parametres.png" width="170" alt="Paramètres"></summary><img src="images/parametres.png" width="420" alt="Paramètres"><br><b>Paramètres</b></details></td>
+<td align="center"><details><summary><img src="images/cloud.png" width="170" alt="Bibliothèque cloud"></summary><img src="images/cloud.png" width="420" alt="Bibliothèque cloud"><br><b>Bibliothèque cloud</b></details></td>
+<td></td>
+</tr>
+</table>
+
+> 🎞️ **Slideshow interactif** : la page [gallery.html](gallery.html) propose un diaporama complet (flèches clavier, miniatures, lecture automatique). Activez *Settings → Pages* sur GitHub pour l'afficher en ligne.
+
 ## Fonctionnalités
 
 ### Fonctionnalités principales
