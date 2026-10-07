@@ -1,15 +1,17 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import '../services/voice_note_service.dart';
 import '../services/media_service.dart';
+import 'series_detail/services/media_gallery_service.dart';
 import 'series_detail_screen.dart';
+import 'program_detail_screen.dart';
 import 'settings_screen.dart';
 import 'programs_list_screen.dart';
+import 'warmup_screen.dart';
 import 'series_list/widgets/random_reader_widget.dart';
-import 'series_list/dialogs/cloud_library_dialog.dart';
+import '../widgets/cloud_library_dialog.dart';
 import 'series_list/dialogs/voice_notes_dialog.dart';
 import 'series_list/dialogs/glossary_dialog.dart';
 import '../models/series.dart';
@@ -28,6 +30,7 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     with TickerProviderStateMixin {
   final VoiceNoteService _voiceNoteService = VoiceNoteService();
   final MediaService _mediaService = MediaService();
+  final MediaGalleryService _mediaGalleryService = MediaGalleryService();
   late AnimationController _rotationController;
   late TabController _tabController;
 
@@ -38,9 +41,11 @@ class _SeriesListScreenState extends State<SeriesListScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _tabController.addListener(() {
-      setState(() {}); // Rebuild to show/hide FAB based on tab
+      if (mounted) {
+        setState(() {}); // Rebuild to show/hide FAB based on tab
+      }
     });
   }
 
@@ -52,191 +57,8 @@ class _SeriesListScreenState extends State<SeriesListScreen>
     super.dispose();
   }
 
-  void _showMediaGallery(String category, String moveName) {
-    final provider = Provider.of<SeriesProvider>(context, listen: false);
-    final lang = provider.language;
-    final galleryPath = provider.galleryPath;
-    if (galleryPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(LocalizationService.translate('gallery_path', lang)),
-        ),
-      );
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AlertDialog(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '$moveName - ${LocalizationService.translate('instructional_photos', lang)}',
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_a_photo,
-                      color: Colors.blueAccent,
-                    ),
-                    onPressed: () async {
-                      final file = await _mediaService.captureAndSaveImage(
-                        galleryPath,
-                        category,
-                        moveName,
-                      );
-                      if (file != null) setModalState(() {});
-                    },
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: FutureBuilder<List<File>>(
-                  future: _mediaService.getImagesForMove(
-                    galleryPath,
-                    category,
-                    moveName,
-                  ),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final images = snapshot.data ?? [];
-                    if (images.isEmpty) {
-                      return Center(
-                        child: Text(
-                          LocalizationService.translate('no_images', lang),
-                        ),
-                      );
-                    }
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                      itemCount: images.length,
-                      itemBuilder: (context, index) {
-                        final imageFile = images[index];
-                        return Stack(
-                          children: [
-                            Positioned.fill(
-                              child: GestureDetector(
-                                onTap: () => _showFullScreenImage(imageFile),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    imageFile,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  final confirmed = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Delete Image?'),
-                                      content: const Text(
-                                        'Are you sure you want to delete this instructional photo?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text('Cancel'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: const Text(
-                                            'Delete',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirmed == true) {
-                                    final deleted = await _mediaService
-                                        .deleteImage(imageFile);
-                                    if (deleted) {
-                                      setModalState(() {});
-                                    }
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.remove,
-                                    color: Colors.red,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(LocalizationService.translate('finish', lang)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showFullScreenImage(File imageFile) => showDialog(
-    context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: Stack(
-        children: [
-          Image.file(imageFile),
-          Positioned(
-            right: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
+  Future<void> _showMediaGallery(String category, String moveName) =>
+      _mediaGalleryService.showMediaGallery(context, category, moveName);
 
   void _confirmDelete(
     BuildContext context,
@@ -332,7 +154,22 @@ class _SeriesListScreenState extends State<SeriesListScreen>
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: GlobalSearchDelegate(context),
+                delegate: GlobalSearchDelegate(
+                  context,
+                  onSeriesTap: (series) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SeriesDetailScreen(series: series),
+                    ),
+                  ),
+                  onProgramTap: (program) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProgramDetailScreen(program: program),
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -447,6 +284,16 @@ class _SeriesListScreenState extends State<SeriesListScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.fitness_center, size: 28),
+                          const SizedBox(width: 8),
+                          Text(LocalizationService.translate('warmup', lang)),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           const Icon(Icons.play_circle_fill, size: 28),
                           const SizedBox(width: 8),
                           Text(
@@ -487,45 +334,56 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           _buildSeriesList('Jun Fan Kick Boxing', lang),
           _buildSeriesList('Kali', lang),
           _buildSeriesList('Moves', lang),
+          const WarmupScreen(),
           _buildActiveTrainingTab(lang),
           const ProgramsListScreen(),
         ],
       ),
       floatingActionButton:
-          _tabController.index == 4 || _tabController.index == 5
-          ? null // Hide FAB on Active Training and Training Programs tab
-          : Stack(
-              children: [
-                Positioned(
-                  bottom: 20,
-                  right: 100,
-                  child: FloatingActionButton(
-                    heroTag: 'add_series_fab',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SeriesDetailScreen(),
-                        ),
-                      );
-                    },
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-                Positioned(
-                  bottom: 84,
-                  right: 100,
-                  child: FloatingActionButton(
-                    heroTag: 'cloud_download_fab',
-                    backgroundColor: Colors.blueAccent,
-                    onPressed: () => CloudLibraryDialog.show(context),
-                    child: const Icon(
-                      Icons.cloud_download,
-                      color: Colors.white,
+          _tabController.index == 4 ||
+              _tabController.index == 5 ||
+              _tabController.index == 6
+          ? null // Hide FAB on Warmup, Active Training and Training Programs tab
+          : SizedBox(
+              // Finite size — a Stack with only Positioned children expands
+              // to the whole Scaffold, which the Scaffold then treats as a
+              // full-screen FAB rect and pushes floating SnackBars off-screen.
+              // 156 = 100 right-inset + 56 FAB; 140 = 84 top-FAB offset + 56 FAB.
+              width: 156,
+              height: 140,
+              child: Stack(
+                children: [
+                  Positioned(
+                    bottom: 20,
+                    right: 100,
+                    child: FloatingActionButton(
+                      heroTag: 'add_series_fab',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SeriesDetailScreen(),
+                          ),
+                        );
+                      },
+                      child: const Icon(Icons.add),
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    bottom: 84,
+                    right: 100,
+                    child: FloatingActionButton(
+                      heroTag: 'cloud_download_fab',
+                      backgroundColor: Colors.blueAccent,
+                      onPressed: () => CloudLibraryDialog.show(context),
+                      child: const Icon(
+                        Icons.cloud_download,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
@@ -572,6 +430,20 @@ class _SeriesListScreenState extends State<SeriesListScreen>
           ActiveProgramCard(
             progress: activeProgram,
             program: activeProgramDetails,
+            onProgramTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    ProgramDetailScreen(program: activeProgramDetails),
+              ),
+            ),
+            onSeriesTap: (series, itemRange) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SeriesDetailScreen(series: series, itemRange: itemRange),
+              ),
+            ),
           ),
         ],
       ),

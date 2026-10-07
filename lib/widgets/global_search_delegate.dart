@@ -7,14 +7,22 @@ import '../models/training_program.dart';
 import '../services/series_provider.dart';
 import '../services/localization_service.dart';
 import 'empty_state_illustration.dart';
-import '../screens/series_detail_screen.dart';
-import '../screens/program_detail_screen.dart';
 import '../utils/translation_utils.dart';
 
 class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
   final BuildContext context;
 
-  GlobalSearchDelegate(this.context);
+  /// Called when a series or move result is selected.
+  final void Function(JkdSeries series) onSeriesTap;
+
+  /// Called when a program result is selected.
+  final void Function(TrainingProgram program) onProgramTap;
+
+  GlobalSearchDelegate(
+    this.context, {
+    required this.onSeriesTap,
+    required this.onProgramTap,
+  });
 
   @override
   String get searchFieldLabel => LocalizationService.translate(
@@ -128,22 +136,10 @@ class GlobalSearchDelegate extends SearchDelegate<SearchResult?> {
     switch (result.type) {
       case SearchResultType.series:
       case SearchResultType.move:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                SeriesDetailScreen(series: result.data as JkdSeries),
-          ),
-        );
+        onSeriesTap(result.data as JkdSeries);
         break;
       case SearchResultType.program:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ProgramDetailScreen(program: result.data as TrainingProgram),
-          ),
-        );
+        onProgramTap(result.data as TrainingProgram);
         break;
       case SearchResultType.glossary:
         final item = result.data as Map<String, dynamic>;

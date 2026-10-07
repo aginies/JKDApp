@@ -14,7 +14,8 @@
           "5 counts"
         ],
         "notes": "Foundation review. Warm up with progressive combinations. Quality repetitions only.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des fondations. \u00c9chauffement avec des combinaisons progressives. Seulement des r\u00e9p\u00e9titions de qualit\u00e9."
       },
       {
         "day_number": 2,
@@ -22,7 +23,8 @@
           "6 counts"
         ],
         "notes": "Extended combinations. Maintain power and speed throughout. No lazy techniques.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Combinaisons \u00e9tendues. Maintenez la puissance et la vitesse du d\u00e9but \u00e0 la fin. Aucune technique paresseuse."
       },
       {
         "day_number": 3,
@@ -30,13 +32,15 @@
           "Loyda JFK"
         ],
         "notes": "Advanced JFK series. Flow, precision, timing - all must be perfect.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "S\u00e9rie JFK avanc\u00e9e. Flow, pr\u00e9cision, timing - tout doit \u00eatre parfait."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Recovery day. Visualize combinations in slow motion, focusing on mechanics.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de r\u00e9cup\u00e9ration. Visualisez les combinaisons au ralenti, en vous concentrant sur la m\u00e9canique."
       },
       {
         "day_number": 5,
@@ -45,7 +49,8 @@
           "Pendulum"
         ],
         "notes": "Angle creation with combinations. Every punch from optimal position.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Cr\u00e9ation d'angles avec les combinaisons. Chaque coup de poing depuis une position optimale."
       },
       {
         "day_number": 6,
@@ -54,12 +59,15 @@
           "Rock Shuffle"
         ],
         "notes": "Rhythmic striking. Develop timing and ability to break opponent's rhythm.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Frappes rythmiques. D\u00e9veloppez le timing et la capacit\u00e9 \u00e0 briser le rythme de l'adversaire."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Ma\u00eetrise des Combinaisons Avanc\u00e9es",
+    "description_fr": "Programme intensif de 45 jours pour pratiquants exp\u00e9riment\u00e9s. Ma\u00eetrisez des combinaisons complexes, int\u00e9grez toutes les port\u00e9es et d\u00e9veloppez votre flow de combat. Fondamentaux solides requis."
   }
 ]

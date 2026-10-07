@@ -15,7 +15,8 @@
           }
         ],
         "notes": "Review beginner Jab-Cross counters. Ensure smooth flow and balance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des ripostes Jab-Cross d\u00e9butant. Assurez un flow fluide et un bon \u00e9quilibre."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "COUNTERS 9-13 (Jab-Cross): Advanced entries including Shoulder Stops, Insinida, and Bob Wave. Full series complete.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 9-13 (Jab-Cross) : Entr\u00e9es avanc\u00e9es avec Shoulder Stops, Insinida et Bob Wave. S\u00e9rie compl\u00e8te termin\u00e9e."
       },
       {
         "day_number": 3,
@@ -37,13 +39,15 @@
           }
         ],
         "notes": "FULL SERIES: Flow through all 13 Jab-Cross defensive responses.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "S\u00c9RIE COMPL\u00c8TE : Encha\u00eenez les 13 r\u00e9ponses d\u00e9fensives Jab-Cross."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Review the technical details of the full series.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9visez les d\u00e9tails techniques de la s\u00e9rie compl\u00e8te."
       },
       {
         "day_number": 5,
@@ -54,7 +58,8 @@
           }
         ],
         "notes": "Review beginner Jab-Hook counters. Focus on closing distance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision des ripostes Jab-Hook d\u00e9butant. Concentrez-vous sur la r\u00e9duction de la distance."
       },
       {
         "day_number": 6,
@@ -65,12 +70,15 @@
           }
         ],
         "notes": "COUNTERS 9-14 (Jab-Hook): Added complexity with knee strikes, pull arms, and kicking entries. Intermediate series goal reached.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 9-14 (Jab-Hook) : Complexit\u00e9 accrue avec coups de genou, tirages de bras et entr\u00e9es par coup de pied. Objectif s\u00e9rie interm\u00e9diaire atteint."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Ripostes Avanc\u00e9 - 6 Jours",
+    "description_fr": "Syst\u00e8me d\u00e9fensif \u00e9largi. Ma\u00eetrisez la s\u00e9rie compl\u00e8te Contre Jab Cross et les 14 premi\u00e8res ripostes Contre Jab Hook."
   }
 ]

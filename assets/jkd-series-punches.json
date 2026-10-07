@@ -1,6 +1,6 @@
 [
   {
-    "title": "22 Coups de poings",
+    "title": "24 Coups de poings",
     "category": "Jun Fan Gung Fu",
     "moves": [
       {
@@ -90,11 +90,19 @@
       {
         "name": "overhead poing arrière",
         "side": "L"
+      },
+      {
+        "name": "overhead poing arrière",
+        "side": "L"
+      },
+      {
+        "name": "overhead poing avant",
+        "side": "R"
       }
     ],
     "Author": "Antoine Giniès",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-10-04"
   }
 ]

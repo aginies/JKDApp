@@ -26,6 +26,7 @@ class ProgramDay {
   final List<SeriesAssignment>?
   seriesAssignments; // New: detailed assignments with ranges
   final String? notes; // Optional guidance for the day
+  final String? notesFr; // French translation of the day notes
   final bool isRestDay;
 
   ProgramDay({
@@ -35,6 +36,7 @@ class ProgramDay {
     List<int>? seriesIds,
     this.seriesAssignments,
     this.notes,
+    this.notesFr,
     this.isRestDay = false,
   }) : seriesIds =
            seriesIds ??
@@ -52,6 +54,7 @@ class ProgramDay {
       'series_ids': json.encode(seriesIds),
       'series_assignments': assignmentsJson,
       'notes': notes,
+      'notes_fr': notesFr,
       'is_rest_day': isRestDay ? 1 : 0,
     };
   }
@@ -99,6 +102,7 @@ class ProgramDay {
       seriesIds: parsedSeriesIds,
       seriesAssignments: parsedAssignments,
       notes: map['notes'] as String?,
+      notesFr: map['notes_fr'] as String?,
       isRestDay: (map['is_rest_day'] as int? ?? 0) == 1,
     );
   }
@@ -110,6 +114,7 @@ class ProgramDay {
     List<int>? seriesIds,
     List<SeriesAssignment>? seriesAssignments,
     String? notes,
+    String? notesFr,
     bool? isRestDay,
   }) {
     return ProgramDay(
@@ -119,6 +124,7 @@ class ProgramDay {
       seriesIds: seriesIds,
       seriesAssignments: seriesAssignments ?? this.seriesAssignments,
       notes: notes ?? this.notes,
+      notesFr: notesFr ?? this.notesFr,
       isRestDay: isRestDay ?? this.isRestDay,
     );
   }

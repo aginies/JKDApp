@@ -7,25 +7,16 @@ import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
 import '../widgets/separated_wrap.dart';
 import '../widgets/diagonal_cross.dart';
-import '../glossary/glossary_data_service.dart';
+import '../../../services/glossary_data_service.dart';
 import '../training/combo_verification_service.dart';
-import '../../../services/usage_statistics_service.dart';
 import '../../../services/logging_service.dart';
 import '../../../widgets/empty_state_illustration.dart';
 import 'builder_card_data.dart';
+import 'combo_builder_controller.dart';
+import 'move_converter.dart';
 import 'kali_hit_selector.dart';
 import '../widgets/kali_angle_icon.dart';
 import '../widgets/kali_angle_designer.dart';
-
-// Improvement #1: single enum replaces 5 booleans — enforces mutual exclusivity.
-enum _BuilderMode {
-  none,
-  defense,
-  simultaneous,
-  chain,
-  counterSimultaneous,
-  counterChain,
-}
 
 class AdvancedComboBuilder extends StatefulWidget {
   final Function(Move) onFinish;
@@ -50,8 +41,10 @@ class AdvancedComboBuilder extends StatefulWidget {
 }
 
 class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
-  // Current state of the workspace
-  final List<BuilderCardData> _workspaceCards = [];
+  // Workspace state + all mutation logic live in ComboBuilderController;
+  // state-mutating calls are wrapped in setState() at the call site.
+  final ComboBuilderController _controller = ComboBuilderController();
+
   final _customTextController = TextEditingController();
   // Improvement #2: persistent controller — disposed in dispose(), not recreated per-frame.
   final _searchController = TextEditingController();
@@ -59,173 +52,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
 
   // Performance: glossary futures cached so tab switches don't re-fetch.
   final Map<String, Future<List<Map<String, dynamic>>>> _glossaryCache = {};
-  // Performance: single UsageStatisticsService instance reused across filter calls.
-  final _usageService = UsageStatisticsService();
 
-  // Path-based selection for recursive structures
-  List<int>? _selectedPath;
-  bool _isCounterSelected = false;
-  bool _showAngleSelector = false;
-  // Improvement #3: _selectedCounterIndex removed — was always _selectedCounterPath?.first.
-  List<int>? _selectedCounterPath;
+  void _undo() => setState(_controller.undo);
 
-  // Improvement #1: mode enum
-  _BuilderMode _mode = _BuilderMode.none;
-
-  // History for undo/redo
-  final List<BuilderHistoryEntry> _undoStack = [];
-  final List<BuilderHistoryEntry> _redoStack = [];
-
-  void _saveHistory() {
-    _undoStack.add(
-      BuilderHistoryEntry(
-        cards: List.from(_workspaceCards),
-        selectedPath: _selectedPath != null ? List.from(_selectedPath!) : null,
-        isCounterSelected: _isCounterSelected,
-        selectedCounterPath: _selectedCounterPath != null
-            ? List.from(_selectedCounterPath!)
-            : null,
-      ),
-    );
-    _redoStack.clear();
-    if (_undoStack.length > 50) {
-      _undoStack.removeAt(0);
-    }
-  }
-
-  void _undo() {
-    if (_undoStack.isEmpty) return;
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _redoStack.add(
-        BuilderHistoryEntry(
-          cards: List.from(_workspaceCards),
-          selectedPath: _selectedPath != null
-              ? List.from(_selectedPath!)
-              : null,
-          isCounterSelected: _isCounterSelected,
-          selectedCounterPath: _selectedCounterPath != null
-              ? List.from(_selectedCounterPath!)
-              : null,
-        ),
-      );
-      final entry = _undoStack.removeLast();
-      _workspaceCards.clear();
-      _workspaceCards.addAll(entry.cards);
-      _selectedPath = entry.selectedPath;
-      _isCounterSelected = entry.isCounterSelected;
-      _selectedCounterPath = entry.selectedCounterPath;
-    });
-  }
-
-  void _redo() {
-    if (_redoStack.isEmpty) return;
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _undoStack.add(
-        BuilderHistoryEntry(
-          cards: List.from(_workspaceCards),
-          selectedPath: _selectedPath != null
-              ? List.from(_selectedPath!)
-              : null,
-          isCounterSelected: _isCounterSelected,
-          selectedCounterPath: _selectedCounterPath != null
-              ? List.from(_selectedCounterPath!)
-              : null,
-        ),
-      );
-      final entry = _redoStack.removeLast();
-      _workspaceCards.clear();
-      _workspaceCards.addAll(entry.cards);
-      _selectedPath = entry.selectedPath;
-      _isCounterSelected = entry.isCounterSelected;
-      _selectedCounterPath = entry.selectedCounterPath;
-    });
-  }
-
-  Set<String> _getRelevantCategories(Move move) {
-    Set<String> cats = {move.category};
-    if (move.counterCategory != null && move.counterCategory!.isNotEmpty) {
-      cats.add(move.counterCategory!);
-    }
-    // If Kali is relevant, standard and custom angles are also relevant
-    if (cats.contains('kali')) {
-      cats.add('angles');
-      cats.add('custom_angles');
-    }
-    for (var m in move.subMoves) {
-      cats.addAll(_getRelevantCategories(m));
-    }
-    for (var m in move.chain) {
-      cats.addAll(_getRelevantCategories(m));
-    }
-    for (var m in move.counterSubMoves) {
-      cats.addAll(_getRelevantCategories(m));
-    }
-    for (var m in move.counterChain) {
-      cats.addAll(_getRelevantCategories(m));
-    }
-    return cats;
-  }
-
-  Set<String> _getTrainingMoves(Move move) {
-    Set<String> names = {move.name.toLowerCase().trim()};
-    if (move.counterName != null && move.counterName!.isNotEmpty) {
-      names.add(move.counterName!.toLowerCase().trim());
-    }
-    for (var m in move.subMoves) {
-      names.addAll(_getTrainingMoves(m));
-    }
-    for (var m in move.chain) {
-      names.addAll(_getTrainingMoves(m));
-    }
-    for (var m in move.counterSubMoves) {
-      names.addAll(_getTrainingMoves(m));
-    }
-    for (var m in move.counterChain) {
-      names.addAll(_getTrainingMoves(m));
-    }
-    return names;
-  }
-
-  List<Map<String, dynamic>> _filterGlossaryForTraining(
-    List<Map<String, dynamic>> items,
-  ) {
-    if (widget.trainingOriginalMove == null) return items;
-
-    final allowedNames = _getTrainingMoves(widget.trainingOriginalMove!);
-    final List<Map<String, dynamic>> correct = [];
-    final List<Map<String, dynamic>> distractors = [];
-
-    for (var item in items) {
-      final name = item['name']?.toString().toLowerCase().trim() ?? '';
-      if (allowedNames.contains(name)) {
-        correct.add(item);
-      } else {
-        distractors.add(item);
-      }
-    }
-
-    // Distractors are already sorted by usage in fetchGlossaryByCategory.
-    // Pick up to 5 random ones from the top distractors to provide variety.
-    // We shuffle the first 15 distractors and take 5.
-    final topDistractors = distractors.take(15).toList();
-    topDistractors.shuffle();
-    final finalDistractors = topDistractors.take(5).toList();
-
-    final result = [...correct, ...finalDistractors];
-    // Re-sort result by usage count to maintain the UI triage
-    result.sort((a, b) {
-      final countA = _usageService.getCount(a['name'] ?? '');
-      final countB = _usageService.getCount(b['name'] ?? '');
-      if (countA != countB) {
-        return countB.compareTo(countA);
-      }
-      return 0;
-    });
-
-    return result;
-  }
+  void _redo() => setState(_controller.redo);
 
   @override
   void initState() {
@@ -246,9 +76,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
           (m.counterName == null || m.counterName!.isEmpty);
 
       if (isComboWrapper) {
-        _workspaceCards.addAll(m.subMoves.map((sm) => _convertFromMove(sm)));
+        _controller.workspaceCards.addAll(
+          m.subMoves.map(builderCardDataFromMove),
+        );
       } else {
-        _workspaceCards.add(_convertFromMove(m));
+        _controller.workspaceCards.add(builderCardDataFromMove(m));
       }
     }
   }
@@ -288,71 +120,6 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       return isSelected ? color : color.withValues(alpha: 0.5);
     }
     return isSelected ? color : color.withValues(alpha: 0.2);
-  }
-
-  // Fully recursive conversion to preserve nested structures (Simultaneous, nested Chains, Answers)
-  BuilderCardData _convertFromMove(Move m) {
-    return BuilderCardData(
-      name: m.name,
-      category: m.category,
-      side: m.side,
-      level: m.level,
-      isFeint: m.isFeint,
-      specialAction: m.specialAction,
-      kaliAngle: m.kaliAngle,
-      strikeType: m.strikeType,
-      glossaryId: m.glossaryId,
-      counterName: m.counterName,
-      counterCategory: m.counterCategory,
-      counterSide: m.counterSide ?? '',
-      counterLevel: m.counterLevel ?? '',
-      counterIsFeint: m.counterIsFeint,
-      subMoves: m.subMoves.map((sm) => _convertFromMove(sm)).toList(),
-      chain: m.chain.map((cm) => _convertFromMove(cm)).toList(),
-      counterSubMoves: m.counterSubMoves
-          .map((cm) => _convertFromMove(cm))
-          .toList(),
-      counterChain: m.counterChain.map((cm) => _convertFromMove(cm)).toList(),
-    );
-  }
-
-  bool _shouldShowBottomToolbar() {
-    if (_selectedPath == null) return false;
-
-    final data = _getDataAtPath(_selectedPath!);
-    if (data == null) return false;
-
-    if (_isCounterSelected) {
-      if (_selectedCounterPath != null) {
-        // Selecting a sub-item in a structured answer
-        // Check if the SUB-ITEM is an action card (not a group)
-        BuilderCardData? sub = data;
-        // Navigate down to the sub-item
-        for (int idx in _selectedCounterPath!) {
-          if (sub!.isChain && idx < sub.chain.length) {
-            sub = sub.chain[idx];
-          } else if (sub.isCombo && idx < sub.subMoves.length) {
-            sub = sub.subMoves[idx];
-          } else if (sub.hasCounterCombo && idx < sub.counterSubMoves.length) {
-            sub = sub.counterSubMoves[idx];
-          } else if (sub.hasCounterChain && idx < sub.counterChain.length) {
-            sub = sub.counterChain[idx];
-          } else {
-            return false;
-          }
-        }
-        if (sub == null) return false;
-        // Don't show for container groups even inside counters
-        return !sub.isChain && !sub.isCombo;
-      }
-      // Selecting the "whole" answer box. Only show if it's a simple answer (not structured).
-      return !data.hasStructuredCounter;
-    }
-
-    // Action cards are NOT containers (Chain or Combo)
-    if (data.isChain || data.isCombo) return false;
-
-    return true;
   }
 
   @override
@@ -398,7 +165,7 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     color: theme.dividerColor.withValues(alpha: 0.5),
                   ),
                 ),
-                child: _workspaceCards.isEmpty
+                child: _controller.workspaceCards.isEmpty
                     ? Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -415,22 +182,24 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _workspaceCards.asMap().entries.map((
-                            entry,
-                          ) {
-                            return _buildCard(
-                              [entry.key],
-                              entry.value,
-                              lang,
-                              cardNumber: entry.key + 1,
-                            );
-                          }).toList(),
+                          children: _controller.workspaceCards
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                                return _buildCard(
+                                  [entry.key],
+                                  entry.value,
+                                  lang,
+                                  cardNumber: entry.key + 1,
+                                );
+                              })
+                              .toList(),
                         ),
                       ),
               ),
             ),
 
-            if (_shouldShowBottomToolbar()) ...[
+            if (_controller.shouldShowBottomToolbar()) ...[
               const SizedBox(height: 8),
               // BOTTOM TOOLBAR: Property buttons (stuck to bottom)
               _buildBottomToolbar(lang),
@@ -444,11 +213,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   Widget _buildTopToolbar(String lang) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSimulActive =
-        _mode == _BuilderMode.simultaneous ||
-        _mode == _BuilderMode.counterSimultaneous;
+        _controller.mode == BuilderMode.simultaneous ||
+        _controller.mode == BuilderMode.counterSimultaneous;
     final isChainActive =
-        _mode == _BuilderMode.chain || _mode == _BuilderMode.counterChain;
-    final isDefenseActive = _mode == _BuilderMode.defense;
+        _controller.mode == BuilderMode.chain ||
+        _controller.mode == BuilderMode.counterChain;
+    final isDefenseActive = _controller.mode == BuilderMode.defense;
 
     return Row(
       children: [
@@ -485,14 +255,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                         Icons.undo,
                         Colors.grey,
                         _undo,
-                        isActive: _undoStack.isNotEmpty,
+                        isActive: _controller.canUndo,
                       ),
                       _toolbarButton(
                         '',
                         Icons.redo,
                         Colors.grey,
                         _redo,
-                        isActive: _redoStack.isNotEmpty,
+                        isActive: _controller.canRedo,
                       ),
                     ],
                   ),
@@ -503,11 +273,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   null,
                   isSimulActive ? Colors.green : Colors.blueAccent,
                   () {
-                    if (_selectedPath != null) {
+                    if (_controller.selectedPath != null) {
                       setState(() {
-                        _mode = _isCounterSelected
-                            ? _BuilderMode.counterSimultaneous
-                            : _BuilderMode.simultaneous;
+                        _controller.mode = _controller.isCounterSelected
+                            ? BuilderMode.counterSimultaneous
+                            : BuilderMode.simultaneous;
                       });
                       _showGlossaryPicker();
                     }
@@ -555,11 +325,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   null,
                   isChainActive ? Colors.green : Colors.teal,
                   () {
-                    if (_selectedPath != null) {
+                    if (_controller.selectedPath != null) {
                       setState(() {
-                        _mode = _isCounterSelected
-                            ? _BuilderMode.counterChain
-                            : _BuilderMode.chain;
+                        _controller.mode = _controller.isCounterSelected
+                            ? BuilderMode.counterChain
+                            : BuilderMode.chain;
                       });
                       _showGlossaryPicker();
                     }
@@ -598,14 +368,16 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                   Icons.subdirectory_arrow_right,
                   isDefenseActive
                       ? Colors.green
-                      : ((_selectedPath != null && _isCounterSelected)
+                      : ((_controller.selectedPath != null &&
+                                _controller.isCounterSelected)
                             ? Colors.grey
                             : Colors.orange),
                   () {
                     // Prevent nested answers: disable if an answer is already selected
-                    if (_selectedPath != null && !_isCounterSelected) {
+                    if (_controller.selectedPath != null &&
+                        !_controller.isCounterSelected) {
                       setState(() {
-                        _mode = _BuilderMode.defense;
+                        _controller.mode = BuilderMode.defense;
                       });
                       _showGlossaryPicker();
                     }
@@ -640,19 +412,29 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
   }
 
   Widget _buildBottomToolbar(String lang) {
-    final data = _getDataAtPath(_selectedPath!);
+    final data = _getDataAtPath(_controller.selectedPath!);
+    // The Angle selector edits the selected card's own kaliAngle/strikeType.
+    // A simple counter (no counterPath) has no dedicated angle fields, so the
+    // selector is hidden to avoid silently editing the attacker instead.
+    BuilderCardData? angleTarget = data;
+    if (data != null && _controller.isCounterSelected) {
+      angleTarget = _controller.selectedCounterPath != null
+          ? _getCounterSubItemAtPath(data, _controller.selectedCounterPath!)
+          : null;
+    }
     final isKali =
-        data != null && (data.category == 'kali' || data.category == 'angles');
+        angleTarget != null &&
+        (angleTarget.category == 'kali' || angleTarget.category == 'angles');
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isKali && _showAngleSelector) ...[
+        if (isKali && _controller.showAngleSelector) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
             child: KaliHitSelector(
-              selectedAngle: data.kaliAngle,
-              selectedStrikeType: data.strikeType,
+              selectedAngle: angleTarget.kaliAngle,
+              selectedStrikeType: angleTarget.strikeType,
               onAngleSelected: (angle) => _updateSelectedCard(kaliAngle: angle),
               onStrikeTypeSelected: (type) =>
                   _updateSelectedCard(strikeType: type),
@@ -668,10 +450,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 _toolbarButton(
                   'Angle',
                   Icons.architecture,
-                  _showAngleSelector ? Colors.brown : Colors.grey,
-                  () =>
-                      setState(() => _showAngleSelector = !_showAngleSelector),
-                  isActive: _showAngleSelector,
+                  _controller.showAngleSelector ? Colors.brown : Colors.grey,
+                  () => setState(
+                    () => _controller.showAngleSelector =
+                        !_controller.showAngleSelector,
+                  ),
+                  isActive: _controller.showAngleSelector,
                 ),
                 const SizedBox(width: 8, child: VerticalDivider()),
               ],
@@ -811,18 +595,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 color: _getSurfaceColor(theme),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (isSelected && !_isCounterSelected)
+                  color: (isSelected && !_controller.isCounterSelected)
                       ? Colors.green
                       : _getBorderColor(Colors.grey, theme),
-                  width: (isSelected && !_isCounterSelected) ? 2 : 1,
+                  width: (isSelected && !_controller.isCounterSelected) ? 2 : 1,
                 ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'CHAIN',
-                    style: TextStyle(
+                  Text(
+                    LocalizationService.translate('chain', lang).toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -873,18 +657,21 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                 color: _getSurfaceColor(theme),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (isSelected && !_isCounterSelected)
+                  color: (isSelected && !_controller.isCounterSelected)
                       ? Colors.green
                       : _getBorderColor(Colors.grey, theme),
-                  width: (isSelected && !_isCounterSelected) ? 2 : 1,
+                  width: (isSelected && !_controller.isCounterSelected) ? 2 : 1,
                 ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'SIMULTANEOUS',
-                    style: TextStyle(
+                  Text(
+                    LocalizationService.translate(
+                      'simultaneous',
+                      lang,
+                    ).toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -960,9 +747,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                         color: _getBorderColor(
                           color,
                           theme,
-                          isSelected: isSelected && !_isCounterSelected,
+                          isSelected:
+                              isSelected && !_controller.isCounterSelected,
                         ),
-                        width: (isSelected && !_isCounterSelected) ? 2.0 : 1,
+                        width: (isSelected && !_controller.isCounterSelected)
+                            ? 2.0
+                            : 1,
                       ),
                     ),
                     child: Column(
@@ -1116,7 +906,12 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                sm.isChain ? 'CHAIN' : 'SIMUL.',
+                sm.isChain
+                    ? LocalizationService.translate('chain', lang).toUpperCase()
+                    : LocalizationService.translate(
+                        'simultaneous',
+                        lang,
+                      ).toUpperCase(),
                 style: const TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
@@ -1257,10 +1052,11 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     bool isTopSelected,
   ) {
     final theme = Theme.of(context);
-    final bool isThisCounterSelected = isTopSelected && _isCounterSelected;
+    final bool isThisCounterSelected =
+        isTopSelected && _controller.isCounterSelected;
     // Improvement #3: derive from _selectedCounterPath instead of removed _selectedCounterIndex.
     final bool isWholeCounterSelected =
-        isThisCounterSelected && _selectedCounterPath == null;
+        isThisCounterSelected && _controller.selectedCounterPath == null;
 
     // Build inner content based on counter structure
     Widget counterContent;
@@ -1269,18 +1065,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // SIMULTANEOUS counter (A+B answer)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'SIMULTANEOUS',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('simultaneous', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -1327,18 +1123,18 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // CHAIN counter (A->+ answer)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'CHAIN',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('chain', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -1378,26 +1174,15 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       // Simple single counter (existing behavior)
       counterContent = Column(
         children: [
-          const Text(
-            'ANSWER',
-            style: TextStyle(
+          Text(
+            LocalizationService.translate('answer', lang).toUpperCase(),
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
               color: Colors.red,
             ),
           ),
           const SizedBox(height: 2),
-          if ((data.counterCategory == 'kali' ||
-                  data.counterCategory == 'angles') &&
-              data.kaliAngle != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: KaliAngleIcon(
-                angle: data.kaliAngle!,
-                size: 20,
-                color: MoveDisplayWidgets.getCategoryColor('kali'),
-              ),
-            ),
           Text(
             data.counterName!,
             style: TextStyle(
@@ -1462,541 +1247,61 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  bool _isPathSelected(List<int> path) {
-    if (_selectedPath == null || _selectedPath!.length != path.length) {
-      return false;
-    }
-    for (int i = 0; i < path.length; i++) {
-      if (_selectedPath![i] != path[i]) return false;
-    }
-    return true;
-  }
+  // ---------------------------------------------------------------------------
+  // Delegation layer: thin wrappers around ComboBuilderController so the UI
+  // builders can keep calling them directly.
+  // ---------------------------------------------------------------------------
 
-  bool _isCounterPathSelected(List<int> path, List<int> counterPath) {
-    if (!_isPathSelected(path)) return false;
-    if (_selectedCounterPath == null ||
-        _selectedCounterPath!.length != counterPath.length) {
-      return false;
-    }
-    for (int i = 0; i < counterPath.length; i++) {
-      if (_selectedCounterPath![i] != counterPath[i]) return false;
-    }
-    return true;
-  }
+  bool _isPathSelected(List<int> path) => _controller.isPathSelected(path);
+
+  bool _isCounterPathSelected(List<int> path, List<int> counterPath) =>
+      _controller.isCounterPathSelected(path, counterPath);
 
   void _selectPath(
     List<int> path, {
     bool isCounter = false,
     List<int>? counterPath,
   }) {
-    setState(() {
-      _selectedPath = List<int>.from(path);
-      _isCounterSelected = isCounter;
-      _showAngleSelector = false;
-      _selectedCounterPath = counterPath != null
-          ? List<int>.from(counterPath)
-          : null;
-    });
+    setState(
+      () => _controller.selectPath(
+        path,
+        isCounter: isCounter,
+        counterPath: counterPath,
+      ),
+    );
   }
 
   /// Read-only helper: returns the BuilderCardData at the given path, or null.
-  BuilderCardData? _getDataAtPath(List<int> path) {
-    if (path.isEmpty || path[0] >= _workspaceCards.length) return null;
-    BuilderCardData current = _workspaceCards[path[0]];
-    for (int i = 1; i < path.length; i++) {
-      final idx = path[i];
-      if (current.isChain && idx < current.chain.length) {
-        current = current.chain[idx];
-      } else if (current.isCombo && idx < current.subMoves.length) {
-        current = current.subMoves[idx];
-      } else {
-        return null;
-      }
-    }
-    return current;
-  }
+  BuilderCardData? _getDataAtPath(List<int> path) =>
+      _controller.getDataAtPath(path);
+
+  /// Returns the counter sub-item addressed by [counterPath] under [root],
+  /// or null if the path is invalid.
+  BuilderCardData? _getCounterSubItemAtPath(
+    BuilderCardData root,
+    List<int> counterPath,
+  ) => _controller.getCounterSubItemAtPath(root, counterPath);
 
   void _onAddClick() {
-    setState(() {
-      _mode = _BuilderMode.none;
-    });
+    setState(() => _controller.mode = BuilderMode.none);
     _showGlossaryPicker();
   }
 
-  BuilderCardData? _deleteNestedData(
-    BuilderCardData root,
-    List<int> counterPath,
-  ) {
-    if (counterPath.length == 1) {
-      // BASE CASE: We are at the parent of the item to remove
-      final idx = counterPath[0];
-
-      if (root.isChain && idx < root.chain.length) {
-        final newList = List<BuilderCardData>.from(root.chain);
-        newList.removeAt(idx);
-        if (newList.isEmpty) return null;
-        if (newList.length == 1) return newList.first;
-        return root.copyWith(chain: newList);
-      } else if (root.isCombo && idx < root.subMoves.length) {
-        final newList = List<BuilderCardData>.from(root.subMoves);
-        newList.removeAt(idx);
-        if (newList.isEmpty) return null;
-        if (newList.length == 1) return newList.first;
-        return root.copyWith(subMoves: newList);
-      } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-        final newList = List<BuilderCardData>.from(root.counterSubMoves);
-        newList.removeAt(idx);
-        if (newList.isEmpty) {
-          return root.copyWith(
-            counterName: null,
-            counterCategory: null,
-            counterGlossaryId: null,
-            counterSide: '',
-            counterLevel: '',
-            counterSubMoves: const [],
-          );
-        }
-        if (newList.length == 1) {
-          final rem = newList.first;
-          return root.copyWith(
-            counterName: rem.name,
-            counterCategory: rem.category,
-            counterGlossaryId: rem.glossaryId,
-            counterSide: rem.side,
-            counterLevel: rem.level,
-            counterSubMoves: const [],
-          );
-        }
-        return root.copyWith(
-          counterSubMoves: newList,
-          counterName: newList.map((m) => m.name).join(' + '),
-        );
-      } else if (root.hasCounterChain && idx < root.counterChain.length) {
-        final newList = List<BuilderCardData>.from(root.counterChain);
-        newList.removeAt(idx);
-        if (newList.isEmpty) {
-          return root.copyWith(
-            counterName: null,
-            counterCategory: null,
-            counterGlossaryId: null,
-            counterSide: '',
-            counterLevel: '',
-            counterChain: const [],
-          );
-        }
-        if (newList.length == 1) {
-          final rem = newList.first;
-          return root.copyWith(
-            counterName: rem.name,
-            counterCategory: rem.category,
-            counterGlossaryId: rem.glossaryId,
-            counterSide: rem.side,
-            counterLevel: rem.level,
-            counterChain: const [],
-          );
-        }
-        return root.copyWith(
-          counterChain: newList,
-          counterName: newList.map((m) => m.name).join(' -> '),
-        );
-      }
-      return root;
-    }
-
-    // RECURSIVE CASE: Navigate deeper
-    final idx = counterPath[0];
-    final remainingPath = counterPath.sublist(1);
-
-    if (root.isChain && idx < root.chain.length) {
-      final newList = List<BuilderCardData>.from(root.chain);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      if (newList.isEmpty) return null;
-      if (newList.length == 1) return newList.first;
-      return root.copyWith(chain: newList);
-    } else if (root.isCombo && idx < root.subMoves.length) {
-      final newList = List<BuilderCardData>.from(root.subMoves);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      if (newList.isEmpty) return null;
-      if (newList.length == 1) return newList.first;
-      return root.copyWith(subMoves: newList);
-    } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-      final newList = List<BuilderCardData>.from(root.counterSubMoves);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      // Answers don't disappear if empty, they just become simple counters again
-      if (newList.isEmpty) {
-        return root.copyWith(counterName: null, counterSubMoves: const []);
-      }
-      return root.copyWith(counterSubMoves: newList);
-    } else if (root.hasCounterChain && idx < root.counterChain.length) {
-      final newList = List<BuilderCardData>.from(root.counterChain);
-      final updated = _deleteNestedData(newList[idx], remainingPath);
-      if (updated == null) {
-        newList.removeAt(idx);
-      } else {
-        newList[idx] = updated;
-      }
-      if (newList.isEmpty) {
-        return root.copyWith(counterName: null, counterChain: const []);
-      }
-      return root.copyWith(counterChain: newList);
-    }
-
-    return root;
-  }
-
   void _onDeleteSelected() {
-    if (_selectedPath == null) return;
-    HapticFeedback.lightImpact();
-    _saveHistory();
-
-    setState(() {
-      if (_isCounterSelected && _selectedCounterPath != null) {
-        // Nested deletion within structured counters
-        _updateDataAtPath(_selectedPath!, (item) {
-          return _deleteNestedData(item, _selectedCounterPath!) ?? item;
-        });
-        _selectedCounterPath = null;
-      } else if (_isCounterSelected) {
-        // DELETE ONLY THE ANSWER of the item at the selected path
-        _updateDataAtPath(_selectedPath!, (item) {
-          return item.copyWith(
-            counterName: null,
-            counterCategory: null,
-            counterGlossaryId: null,
-            counterSide: '',
-            counterLevel: '',
-            counterSubMoves: const [],
-            counterChain: const [],
-          );
-        });
-        _isCounterSelected = false;
-        _selectedCounterPath = null;
-      } else if (_selectedPath!.length > 1) {
-        // DELETE ONLY THE TARGETED SUB-ITEM
-        final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
-        final indexToRemove = _selectedPath!.last;
-
-        _updateDataAtPath(parentPath, (parent) {
-          final isChain = parent.isChain;
-          final List<BuilderCardData> subList = List.from(
-            isChain ? parent.chain : parent.subMoves,
-          );
-          if (indexToRemove < subList.length) {
-            subList.removeAt(indexToRemove);
-          }
-
-          if (subList.isEmpty) return null;
-
-          if (subList.length == 1) {
-            final remaining = subList.first;
-            // Preserve counter from the parent wrapper if the remaining item has none
-            if (parent.hasCounter && !remaining.hasCounter) {
-              return remaining.copyWith(
-                counterName: parent.counterName,
-                counterCategory: parent.counterCategory,
-                counterGlossaryId: parent.counterGlossaryId,
-                counterSide: parent.counterSide,
-                counterLevel: parent.counterLevel,
-                counterSubMoves: parent.counterSubMoves,
-                counterChain: parent.counterChain,
-              );
-            }
-            return remaining;
-          }
-
-          if (isChain) {
-            return parent.copyWith(chain: subList);
-          } else {
-            return parent.copyWith(subMoves: subList);
-          }
-        });
-
-        _selectedPath = null;
-        _selectedCounterPath = null;
-      } else {
-        // DELETE ENTIRE TOP-LEVEL CARD
-        _workspaceCards.removeAt(_selectedPath![0]);
-        _selectedPath = null;
-        _selectedCounterPath = null;
-      }
-    });
+    setState(_controller.deleteSelected);
   }
 
   void _onFinishClick() {
     LoggingService.log('AdvancedComboBuilder: Finish/Verify clicked');
-    if (_workspaceCards.isEmpty) {
+    final finalMove = _controller.buildFinalMove();
+    if (finalMove == null) {
       LoggingService.log(
         'AdvancedComboBuilder: Workspace is empty, ignoring click',
       );
       return;
     }
-
-    Move finalMove;
-    if (_workspaceCards.length == 1) {
-      finalMove = _convertToMove(_workspaceCards.first);
-    } else {
-      final subMoves = _workspaceCards.map((c) => _convertToMove(c)).toList();
-      finalMove = Move(
-        name: 'Combo: ${subMoves.first.name} + ...',
-        category: 'combo',
-        subMoves: subMoves,
-      );
-    }
-
     LoggingService.log('AdvancedComboBuilder: Calling onFinish callback');
     widget.onFinish(finalMove);
-  }
-
-  Move _convertToMove(BuilderCardData data) {
-    // 1. Recursive handling for CHAIN (Inner contents must be leaf or combos, NEVER nested chains)
-    if (data.isChain) {
-      return Move(
-        name: data.chain.map((m) => m.name).join(' -> '),
-        category: 'chain',
-        chain: data.chain.map((m) => _convertToMove(m)).toList(),
-        counterName: data.counterName,
-        counterCategory: data.counterCategory,
-        counterSide: data.counterSide,
-        counterLevel: data.counterLevel,
-        counterIsFeint: data.counterIsFeint,
-        counterSubMoves: data.counterSubMoves
-            .map((cm) => _convertToMove(cm))
-            .toList(),
-        counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
-      );
-    }
-
-    // 2. Recursive handling for SIMULTANEOUS (Combo)
-    if (data.isCombo) {
-      return Move(
-        name: data.subMoves.map((m) => m.name).join(' + '),
-        category: 'simultaneous',
-        subMoves: data.subMoves.map((m) => _convertToMove(m)).toList(),
-        counterName: data.counterName,
-        counterCategory: data.counterCategory,
-        counterSide: data.counterSide,
-        counterLevel: data.counterLevel,
-        counterIsFeint: data.counterIsFeint,
-        counterSubMoves: data.counterSubMoves
-            .map((cm) => _convertToMove(cm))
-            .toList(),
-        counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
-      );
-    }
-
-    // 3. BASE ITEM (Leaf)
-    return Move(
-      name: data.name,
-      category: data.category,
-      side: data.side,
-      level: data.level,
-      isFeint: data.isFeint,
-      specialAction: data.specialAction,
-      kaliAngle: data.kaliAngle,
-      strikeType: data.strikeType,
-      glossaryId: data.glossaryId,
-      counterName: data.counterName,
-      counterCategory: data.counterCategory,
-      counterSide: data.counterSide,
-      counterLevel: data.counterLevel,
-      counterIsFeint: data.counterIsFeint,
-      counterSubMoves: data.counterSubMoves
-          .map((cm) => _convertToMove(cm))
-          .toList(),
-      counterChain: data.counterChain.map((m) => _convertToMove(m)).toList(),
-    );
-  }
-
-  // Deep update helper
-  void _updateDataAtPath(
-    List<int> path,
-    BuilderCardData? Function(BuilderCardData) updater,
-  ) {
-    if (path.isEmpty) return;
-
-    BuilderCardData? updateRecursive(
-      BuilderCardData current,
-      List<int> remainingPath,
-    ) {
-      if (remainingPath.isEmpty) return updater(current);
-
-      final index = remainingPath[0];
-      final nextRemaining = remainingPath.sublist(1);
-
-      if (current.isChain) {
-        final List<BuilderCardData> newList = List.from(current.chain);
-        final result = updateRecursive(newList[index], nextRemaining);
-        if (result == null) {
-          newList.removeAt(index);
-          if (newList.isEmpty) return null;
-          // Unwrap if only 1 item remains
-          if (newList.length == 1) {
-            final remaining = newList.first;
-            if (current.hasCounter && !remaining.hasCounter) {
-              return remaining.copyWith(
-                counterName: current.counterName,
-                counterCategory: current.counterCategory,
-                counterGlossaryId: current.counterGlossaryId,
-                counterSide: current.counterSide,
-                counterLevel: current.counterLevel,
-                counterSubMoves: current.counterSubMoves,
-                counterChain: current.counterChain,
-              );
-            }
-            return remaining;
-          }
-          return current.copyWith(chain: newList);
-        }
-        newList[index] = result;
-        return current.copyWith(chain: newList);
-      } else if (current.isCombo) {
-        final List<BuilderCardData> newList = List.from(current.subMoves);
-        final result = updateRecursive(newList[index], nextRemaining);
-        if (result == null) {
-          newList.removeAt(index);
-          if (newList.isEmpty) return null;
-          // Unwrap if only 1 item remains
-          if (newList.length == 1) {
-            final remaining = newList.first;
-            if (current.hasCounter && !remaining.hasCounter) {
-              return remaining.copyWith(
-                counterName: current.counterName,
-                counterCategory: current.counterCategory,
-                counterGlossaryId: current.counterGlossaryId,
-                counterSide: current.counterSide,
-                counterLevel: current.counterLevel,
-                counterSubMoves: current.counterSubMoves,
-                counterChain: current.counterChain,
-              );
-            }
-            return remaining;
-          }
-          return current.copyWith(subMoves: newList);
-        }
-        newList[index] = result;
-        return current.copyWith(subMoves: newList);
-      }
-      return current;
-    }
-
-    final topIndex = path[0];
-    final remaining = path.sublist(1);
-
-    if (remaining.isEmpty) {
-      final result = updater(_workspaceCards[topIndex]);
-      if (result == null) {
-        _workspaceCards.removeAt(topIndex);
-      } else {
-        _workspaceCards[topIndex] = result;
-      }
-    } else {
-      final result = updateRecursive(_workspaceCards[topIndex], remaining);
-      if (result == null) {
-        _workspaceCards.removeAt(topIndex);
-      } else {
-        _workspaceCards[topIndex] = result;
-      }
-    }
-  }
-
-  BuilderCardData _updateNestedData(
-    BuilderCardData root,
-    List<int> counterPath,
-    String? side,
-    String? level,
-    bool toggleFeint,
-    int? kaliAngle,
-    String? strikeType,
-  ) {
-    if (counterPath.isEmpty) {
-      // BASE CASE: We reached the target sub-item. Toggle its properties.
-      String finalSide = root.side;
-      if (side != null) {
-        finalSide = (root.side == side) ? '' : side;
-      }
-      String finalLevel = root.level;
-      if (level != null) {
-        finalLevel = (root.level == level) ? '' : level;
-      }
-      return root.copyWith(
-        side: finalSide,
-        level: finalLevel,
-        isFeint: toggleFeint ? !root.isFeint : root.isFeint,
-        kaliAngle: kaliAngle ?? root.kaliAngle,
-        strikeType: strikeType ?? root.strikeType,
-      );
-    }
-
-    // RECURSIVE CASE: Navigate deeper
-    final idx = counterPath[0];
-    final remainingPath = counterPath.sublist(1);
-
-    if (root.isChain && idx < root.chain.length) {
-      final newList = List<BuilderCardData>.from(root.chain);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(chain: newList);
-    } else if (root.isCombo && idx < root.subMoves.length) {
-      final newList = List<BuilderCardData>.from(root.subMoves);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(subMoves: newList);
-    } else if (root.hasCounterCombo && idx < root.counterSubMoves.length) {
-      final newList = List<BuilderCardData>.from(root.counterSubMoves);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(counterSubMoves: newList);
-    } else if (root.hasCounterChain && idx < root.counterChain.length) {
-      final newList = List<BuilderCardData>.from(root.counterChain);
-      newList[idx] = _updateNestedData(
-        newList[idx],
-        remainingPath,
-        side,
-        level,
-        toggleFeint,
-        kaliAngle,
-        strikeType,
-      );
-      return root.copyWith(counterChain: newList);
-    }
-
-    return root;
   }
 
   void _updateSelectedCard({
@@ -2007,68 +1312,25 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     int? kaliAngle,
     String? strikeType,
   }) {
-    if (_selectedPath == null) return;
-    _saveHistory();
-
-    setState(() {
-      _updateDataAtPath(_selectedPath!, (item) {
-        if (_isCounterSelected && _selectedCounterPath != null) {
-          // Deep-nested update for structured counters
-          return _updateNestedData(
-            item,
-            _selectedCounterPath!,
-            side,
-            level,
-            toggleFeint,
-            kaliAngle,
-            strikeType,
-          );
-        } else if (_isCounterSelected) {
-          // Simple single counter toggle logic
-          String finalSide = item.counterSide;
-          if (side != null) {
-            finalSide = (item.counterSide == side) ? '' : side;
-          }
-          String finalLevel = item.counterLevel;
-          if (level != null) {
-            finalLevel = (item.counterLevel == level) ? '' : level;
-          }
-          return item.copyWith(
-            counterSide: finalSide,
-            counterLevel: finalLevel,
-            counterIsFeint: toggleFeint
-                ? !item.counterIsFeint
-                : item.counterIsFeint,
-            kaliAngle: kaliAngle ?? item.kaliAngle,
-            strikeType: strikeType ?? item.strikeType,
-          );
-        } else {
-          // Top-level attacker toggle logic
-          String finalSide = item.side;
-          if (side != null) {
-            finalSide = (item.side == side) ? '' : side;
-          }
-          String finalLevel = item.level;
-          if (level != null) {
-            finalLevel = (item.level == level) ? '' : level;
-          }
-          return item.copyWith(
-            side: finalSide,
-            level: finalLevel,
-            isFeint: toggleFeint ? !item.isFeint : item.isFeint,
-            specialAction: specialAction ?? item.specialAction,
-            kaliAngle: kaliAngle ?? item.kaliAngle,
-            strikeType: strikeType ?? item.strikeType,
-          );
-        }
-      });
-    });
+    setState(
+      () => _controller.updateSelectedCard(
+        side: side,
+        level: level,
+        toggleFeint: toggleFeint,
+        specialAction: specialAction,
+        kaliAngle: kaliAngle,
+        strikeType: strikeType,
+      ),
+    );
   }
 
   void _showGlossaryPicker() {
     // Improvement #2: reset the persistent controller instead of recreating it.
     _glossarySearchQuery = '';
     _searchController.clear();
+    // Drop cached glossary futures so new/edited glossary entries show up.
+    // (Cache still prevents re-fetch on tab switches within one session.)
+    _glossaryCache.clear();
 
     // Performance (#9): build the tab definitions once per modal open rather
     // than rebuilding them on every setModalState call.
@@ -2080,7 +1342,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     List<Map<String, dynamic>> enabledTabs;
     if (widget.trainingLevel == TrainingLevel.beginner &&
         widget.trainingOriginalMove != null) {
-      final relevantCats = _getRelevantCategories(widget.trainingOriginalMove!);
+      final relevantCats = _controller.getRelevantCategories(
+        widget.trainingOriginalMove!,
+      );
       enabledTabs = allTabs.where((tab) {
         final cats = tab['cats'] as List<String>;
         if (tab['id'] == 'text') return true; // always show text tab
@@ -2302,8 +1566,14 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final items1 = _filterGlossaryForTraining(snapshot.data![0]);
-        final items2 = _filterGlossaryForTraining(snapshot.data![1]);
+        final items1 = _controller.filterGlossaryForTraining(
+          snapshot.data![0],
+          widget.trainingOriginalMove,
+        );
+        final items2 = _controller.filterGlossaryForTraining(
+          snapshot.data![1],
+          widget.trainingOriginalMove,
+        );
 
         // If cat2 is null, split cat1 into two columns
         if (cat2 == null) {
@@ -2482,249 +1752,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Improvement #5: _onAddItem split into focused sub-methods per mode.
-  // ---------------------------------------------------------------------------
-
+  // Delegation: all add logic lives in ComboBuilderController (the
+  // Improvement #5 per-mode sub-methods moved there).
   void _onAddItem(BuilderCardData newItem) {
-    HapticFeedback.lightImpact();
-    _saveHistory();
-    setState(() {
-      switch (_mode) {
-        case _BuilderMode.counterSimultaneous:
-          if (_selectedPath != null) _addItemCounterSimultaneous(newItem);
-        case _BuilderMode.counterChain:
-          if (_selectedPath != null) _addItemCounterChain(newItem);
-        case _BuilderMode.defense:
-          if (_selectedPath != null) _addItemDefense(newItem);
-        case _BuilderMode.chain:
-          if (_selectedPath != null) _addItemToChain(newItem);
-        case _BuilderMode.simultaneous:
-          if (_selectedPath != null) _addItemSimultaneous(newItem);
-        case _BuilderMode.none:
-          _addItemDefault(newItem);
-      }
-    });
-  }
-
-  void _addItemCounterSimultaneous(BuilderCardData newItem) {
-    _updateDataAtPath(_selectedPath!, (target) {
-      if (_selectedCounterPath != null) {
-        final idx = _selectedCounterPath![0];
-        if (target.hasCounterCombo && idx < target.counterSubMoves.length) {
-          final newList = List<BuilderCardData>.from(target.counterSubMoves);
-          newList.insert(idx + 1, newItem);
-          return target.copyWith(
-            counterSubMoves: newList,
-            counterName: newList.map((m) => m.name).join(' + '),
-          );
-        } else if (target.hasCounterChain && idx < target.counterChain.length) {
-          final subItem = target.counterChain[idx];
-          final simultaneous = BuilderCardData(
-            name: '${subItem.name} + ${newItem.name}',
-            category: 'simultaneous',
-            subMoves: [subItem, newItem],
-          );
-          final newList = List<BuilderCardData>.from(target.counterChain);
-          newList[idx] = simultaneous;
-          return target.copyWith(counterChain: newList);
-        }
-        return target;
-      }
-      if (target.hasCounterCombo) {
-        return target.copyWith(
-          counterSubMoves: [...target.counterSubMoves, newItem],
-          counterName:
-              '${target.counterSubMoves.map((m) => m.name).join(' + ')} + ${newItem.name}',
-        );
-      }
-      if (target.hasCounterChain) {
-        final chainGroup = BuilderCardData(
-          name: target.counterChain.map((m) => m.name).join(' -> '),
-          category: 'chain',
-          chain: List.from(target.counterChain),
-        );
-        return target.copyWith(
-          counterSubMoves: [chainGroup, newItem],
-          counterChain: const [],
-          counterName: '(${chainGroup.name}) + ${newItem.name}',
-        );
-      }
-      final existingCounter = BuilderCardData(
-        name: target.counterName ?? '',
-        category: target.counterCategory ?? '',
-        glossaryId: target.counterGlossaryId,
-        side: target.counterSide,
-        level: target.counterLevel,
-      );
-      return target.copyWith(
-        counterSubMoves: [existingCounter, newItem],
-        counterName: '${target.counterName} + ${newItem.name}',
-      );
-    });
-    _mode = _BuilderMode.none;
-    _selectedCounterPath = null;
-  }
-
-  void _addItemCounterChain(BuilderCardData newItem) {
-    _updateDataAtPath(_selectedPath!, (target) {
-      if (_selectedCounterPath != null) {
-        final idx = _selectedCounterPath![0];
-        if (target.hasCounterChain && idx < target.counterChain.length) {
-          final newList = List<BuilderCardData>.from(target.counterChain);
-          newList.insert(idx + 1, newItem);
-          return target.copyWith(
-            counterChain: newList,
-            counterName: newList.map((m) => m.name).join(' -> '),
-          );
-        } else if (target.hasCounterCombo &&
-            idx < target.counterSubMoves.length) {
-          final subItem = target.counterSubMoves[idx];
-          final chainItem = BuilderCardData(
-            name: '${subItem.name} -> ${newItem.name}',
-            category: 'chain',
-            chain: [subItem, newItem],
-          );
-          final newList = List<BuilderCardData>.from(target.counterSubMoves);
-          newList[idx] = chainItem;
-          return target.copyWith(counterSubMoves: newList);
-        }
-        return target;
-      }
-      if (target.hasCounterChain) {
-        return target.copyWith(
-          counterChain: [...target.counterChain, newItem],
-          counterName:
-              '${target.counterChain.map((m) => m.name).join(' -> ')} -> ${newItem.name}',
-        );
-      }
-      if (target.hasCounterCombo) {
-        final simultaneousGroup = BuilderCardData(
-          name: target.counterSubMoves.map((m) => m.name).join(' + '),
-          category: 'simultaneous',
-          subMoves: List.from(target.counterSubMoves),
-        );
-        return target.copyWith(
-          counterChain: [simultaneousGroup, newItem],
-          counterSubMoves: const [],
-          counterName: '(${simultaneousGroup.name}) -> ${newItem.name}',
-        );
-      }
-      final existingCounter = BuilderCardData(
-        name: target.counterName ?? '',
-        category: target.counterCategory ?? '',
-        glossaryId: target.counterGlossaryId,
-        side: target.counterSide,
-        level: target.counterLevel,
-      );
-      return target.copyWith(
-        counterChain: [existingCounter, newItem],
-        counterName: '${target.counterName} -> ${newItem.name}',
-      );
-    });
-    _mode = _BuilderMode.none;
-    _selectedCounterPath = null;
-  }
-
-  void _addItemDefense(BuilderCardData newItem) {
-    _updateDataAtPath(
-      _selectedPath!,
-      (target) => target.copyWith(
-        counterName: newItem.name,
-        counterCategory: newItem.category,
-        counterGlossaryId: newItem.glossaryId,
-        counterSubMoves: const [],
-        counterChain: const [],
-      ),
-    );
-    _mode = _BuilderMode.none;
-  }
-
-  void _addItemToChain(BuilderCardData newItem) {
-    if (_selectedPath!.length > 1) {
-      for (int depth = _selectedPath!.length - 1; depth >= 1; depth--) {
-        final parentPath = _selectedPath!.sublist(0, depth);
-        final childIndex = _selectedPath![depth];
-        bool inserted = false;
-        _updateDataAtPath(parentPath, (parent) {
-          if (parent.isChain) {
-            final newChain = List<BuilderCardData>.from(parent.chain);
-            newChain.insert(childIndex + 1, newItem);
-            inserted = true;
-            return parent.copyWith(chain: newChain);
-          }
-          return parent;
-        });
-        if (inserted) {
-          _selectedPath = [...parentPath, childIndex + 1];
-          break;
-        }
-      }
-    } else {
-      final topIndex = _selectedPath![0];
-      final selected = _getDataAtPath(_selectedPath!);
-      if (selected != null && selected.isChain) {
-        _updateDataAtPath(_selectedPath!, (target) {
-          return target.copyWith(chain: [...target.chain, newItem]);
-        });
-        _selectedPath = [topIndex, selected.chain.length];
-      } else {
-        _workspaceCards[topIndex] = BuilderCardData(
-          name: 'Chain',
-          category: 'chain',
-          chain: [_workspaceCards[topIndex], newItem],
-        );
-        _selectedPath = [topIndex, 1];
-      }
-    }
-    _mode = _BuilderMode.none;
-  }
-
-  void _addItemSimultaneous(BuilderCardData newItem) {
-    bool appended = false;
-    if (_selectedPath!.length > 1) {
-      final parentPath = _selectedPath!.sublist(0, _selectedPath!.length - 1);
-      _updateDataAtPath(parentPath, (parent) {
-        if (parent.isCombo) {
-          appended = true;
-          return parent.copyWith(subMoves: [...parent.subMoves, newItem]);
-        }
-        return parent;
-      });
-    }
-    if (!appended) {
-      _updateDataAtPath(_selectedPath!, (target) {
-        if (target.isCombo) {
-          return target.copyWith(subMoves: [...target.subMoves, newItem]);
-        }
-        return BuilderCardData(
-          name: 'Combo',
-          category: 'simultaneous',
-          subMoves: [target, newItem],
-        );
-      });
-      final target = _getDataAtPath(_selectedPath!);
-      if (target != null && target.isCombo) {
-        _selectedPath = [..._selectedPath!, target.subMoves.length - 1];
-      }
-    }
-    _mode = _BuilderMode.none;
-  }
-
-  void _addItemDefault(BuilderCardData newItem) {
-    if (_selectedPath != null && _selectedPath!.length == 1) {
-      final insertIndex = _selectedPath![0] + 1;
-      _workspaceCards.insert(insertIndex, newItem);
-      _selectedPath = [insertIndex];
-    } else {
-      _workspaceCards.add(newItem);
-      if (_workspaceCards.length == 1) {
-        _selectedPath = [0];
-      } else {
-        _selectedPath = [_workspaceCards.length - 1];
-      }
-    }
-    _mode = _BuilderMode.none;
+    setState(() => _controller.addItem(newItem));
   }
 
   Widget _buildCustomAnglesTab(ScrollController scrollController) {
@@ -2796,12 +1827,22 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Delete Custom Angle?'),
-                        content: Text('Delete "${custom.name}"?'),
+                        title: Text(
+                          LocalizationService.translate(
+                            'delete_custom_angle',
+                            lang,
+                          ),
+                        ),
+                        content: Text(
+                          '${LocalizationService.translate('delete', lang)} '
+                          '"${custom.name}"?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Cancel'),
+                            child: Text(
+                              LocalizationService.translate('cancel', lang),
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -2811,9 +1852,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                               provider.deleteCustomAngle(custom.id);
                               Navigator.pop(ctx);
                             },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.white),
+                            child: Text(
+                              LocalizationService.translate('delete', lang),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
@@ -2835,7 +1876,9 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                             ),
                             const SizedBox(height: 4),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4.0,
+                              ),
                               child: Text(
                                 custom.name,
                                 style: const TextStyle(
@@ -2858,7 +1901,8 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
                                 context: context,
                                 isScrollControlled: true,
                                 useSafeArea: true,
-                                builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                                builder: (context) =>
+                                    KaliAngleDesigner(existingAngle: custom),
                               );
                             },
                           ),
@@ -2951,7 +1995,10 @@ class _AdvancedComboBuilderState extends State<AdvancedComboBuilder> {
       return name.contains(query) || t.contains(query);
     }).toList();
 
-    final results = _filterGlossaryForTraining(baseResults);
+    final results = _controller.filterGlossaryForTraining(
+      baseResults,
+      widget.trainingOriginalMove,
+    );
 
     if (results.isEmpty) {
       return const EmptyStateIllustration(titleKey: 'nothing');

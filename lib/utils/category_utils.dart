@@ -27,6 +27,8 @@ class CategoryUtils {
         return Icons.add_circle_outline;
       case 'chain':
         return Icons.arrow_forward;
+      case 'methods':
+        return Icons.bolt;
       default:
         return Icons.help_outline;
     }
@@ -59,6 +61,8 @@ class CategoryUtils {
         return Colors.deepPurple;
       case 'chain':
         return Colors.teal;
+      case 'methods':
+        return Colors.deepOrange;
       default:
         return Colors.grey;
     }

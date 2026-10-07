@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/series_provider.dart';
-import '../../../services/web_storage_service.dart';
-import '../../../models/series.dart';
-import '../../../models/move.dart';
-import '../../../models/custom_kali_angle.dart';
+import '../services/series_provider.dart';
+import '../services/web_storage_service.dart';
+import '../models/series.dart';
+import '../models/move.dart';
+import '../models/custom_kali_angle.dart';
 
 class CloudLibraryDialog extends StatefulWidget {
   final String? filterCategory;

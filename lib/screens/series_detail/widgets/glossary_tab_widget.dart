@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../glossary/glossary_ui_builder.dart';
-import '../state/picker_state.dart';
+import '../../../models/picker_state.dart';
 import 'move_display_widgets.dart';
 import 'package:provider/provider.dart';
 

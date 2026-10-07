@@ -15,7 +15,8 @@
           }
         ],
         "notes": "COUNTERS 1-4 (Jab-Cross): Shoulder Roll, Pari Nan Tek, Inside Wedge, Low Line Hit. Practice proper timing and structure.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 1-4 (Jab-Cross) : Shoulder Roll, Pari Nan Tek, Inside Wedge, Low Line Hit. Travaillez le timing et la structure corrects."
       },
       {
         "day_number": 2,
@@ -26,7 +27,8 @@
           }
         ],
         "notes": "COUNTERS 5-8 (Jab-Cross): Internal/External High Line Hits, Biu Ji entries. Focus on non-telegraphed ripostes.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 5-8 (Jab-Cross) : High Line Hits interne/externe, entr\u00e9es Biu Ji. Concentrez-vous sur des ripostes sans anticipation."
       },
       {
         "day_number": 3,
@@ -37,13 +39,15 @@
           }
         ],
         "notes": "COUNTERS 1-8 (Jab-Cross): Integration. Flow smoothly between different defensive responses.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 1-8 (Jab-Cross) : Int\u00e9gration. Encha\u00eenez fluidement entre les diff\u00e9rentes r\u00e9ponses d\u00e9fensives."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Mental review of the Jab-Cross counters.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. R\u00e9vision mentale des ripostes Jab-Cross."
       },
       {
         "day_number": 5,
@@ -54,7 +58,8 @@
           }
         ],
         "notes": "COUNTERS 1-4 (Jab-Hook): Cover Coude, Inside Wedge, Insinida, Bob Wave. Focus on closing the gap safely.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 1-4 (Jab-Hook) : Cover Coude, Inside Wedge, Insinida, Bob Wave. Concentrez-vous sur la fermeture s\u00fbre de la distance."
       },
       {
         "day_number": 6,
@@ -65,12 +70,15 @@
           }
         ],
         "notes": "COUNTERS 5-8 (Jab-Hook): Shoulder Stops, White Cover, Panatukan, Silat. Advanced defensive structures.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "RIPOSTES 5-8 (Jab-Hook) : Shoulder Stops, White Cover, Panatukan, Silat. Structures d\u00e9fensives avanc\u00e9es."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Ripostes D\u00e9butant - 6 Jours",
+    "description_fr": "R\u00e9ponses d\u00e9fensives fondamentales aux attaques Jab-Cross et Jab-Hook. Apprenez les 8 premi\u00e8res ripostes essentielles de chaque s\u00e9rie."
   }
 ]

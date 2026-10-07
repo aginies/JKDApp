@@ -51,6 +51,13 @@ class GlossaryDialog extends StatefulWidget {
 class _GlossaryDialogState extends State<GlossaryDialog> {
   String _glossarySearchQuery = '';
 
+  /// Open the media gallery, then rebuild so media icons refresh
+  /// (new photos/videos saved in the dialog become visible immediately).
+  Future<void> _openMediaGallery(String category, String moveName) async {
+    await widget.onShowMediaGallery(category, moveName);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -60,7 +67,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: DefaultTabController(
-        length: 10,
+        length: 11,
         child: Column(
           children: [
             Container(
@@ -211,6 +218,16 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                       ),
                       Tab(
                         text: LocalizationService.translate(
+                          'attack_methods',
+                          widget.lang,
+                        ),
+                        icon: Icon(
+                          CategoryUtils.getCategoryIcon('methods'),
+                          color: CategoryUtils.getCategoryColor('methods'),
+                        ),
+                      ),
+                      Tab(
+                        text: LocalizationService.translate(
                           'general',
                           widget.lang,
                         ),
@@ -239,6 +256,7 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                         _buildGlossaryList('kali'),
                         _buildGlossaryList('angles'),
                         _buildCustomAnglesTab(),
+                        _buildGlossaryList('methods'),
                         _buildGlossaryList('general'),
                         _buildGlossaryList('other'),
                       ],
@@ -330,7 +348,8 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                             context: context,
                             isScrollControlled: true,
                             useSafeArea: true,
-                            builder: (context) => KaliAngleDesigner(existingAngle: custom),
+                            builder: (context) =>
+                                KaliAngleDesigner(existingAngle: custom),
                           );
                         },
                       );
@@ -412,8 +431,8 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => widget.onShowMediaGallery(category, item['name']),
-        onDoubleTap: () => widget.onShowMediaGallery(category, item['name']),
+        onTap: () => _openMediaGallery(category, item['name']),
+        onDoubleTap: () => _openMediaGallery(category, item['name']),
         onLongPress: isCustom ? onDelete : null,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -498,30 +517,46 @@ class _GlossaryDialogState extends State<GlossaryDialog> {
                 ),
               ),
               if (galleryPath != null)
-                FutureBuilder<List<File>>(
-                  future: widget.mediaService.getImagesForMove(
-                    galleryPath,
-                    category,
-                    item['name'],
-                  ),
+                FutureBuilder<List<List<File>>>(
+                  future: Future.wait([
+                    widget.mediaService.getImagesForMove(
+                      galleryPath,
+                      category,
+                      item['name'],
+                    ),
+                    widget.mediaService.getVideosForMove(
+                      galleryPath,
+                      category,
+                      item['name'],
+                    ),
+                  ]),
                   builder: (context, snapshot) {
-                    final hasImages =
-                        snapshot.hasData && snapshot.data!.isNotEmpty;
-                    return Icon(
-                      Icons.image,
-                      color: hasImages ? themeColor : Colors.grey[300],
-                      size: 20,
+                    if (!snapshot.hasData) return const SizedBox.shrink();
+                    final hasImages = snapshot.data![0].isNotEmpty;
+                    final hasVideos = snapshot.data![1].isNotEmpty;
+                    if (!hasImages && !hasVideos) {
+                      return const SizedBox.shrink();
+                    }
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (hasImages) ...[
+                          Icon(Icons.image, color: themeColor, size: 20),
+                          if (hasVideos) const SizedBox(width: 6),
+                        ],
+                        if (hasVideos)
+                          Icon(Icons.videocam, color: themeColor, size: 20),
+                      ],
                     );
-                    },
-                    ),
-                    if (onEdit != null)
-                    IconButton(
-                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    onPressed: onEdit,
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-
+                  },
+                ),
+              if (onEdit != null)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                  onPressed: onEdit,
+                ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
             ],
           ),
         ),

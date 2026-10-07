@@ -208,7 +208,11 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                program.title.replaceAll(
+                LocalizationService.localizedContent(
+                  program.titleFr,
+                  program.title,
+                  lang,
+                ).replaceAll(
                   'Weeks',
                   LocalizationService.translate('weeks', lang),
                 ),
@@ -262,7 +266,11 @@ class _ProgramsListScreenState extends State<ProgramsListScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                program.description,
+                LocalizationService.localizedContent(
+                  program.descriptionFr,
+                  program.description,
+                  lang,
+                ),
                 style: theme.textTheme.bodyMedium,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,

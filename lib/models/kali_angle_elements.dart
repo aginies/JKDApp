@@ -5,7 +5,7 @@ abstract class DrawingElement {
   void paint(Canvas canvas, Paint paint, {bool isThumbnail = false});
   void paintAnimatedDot(Canvas canvas, Paint paint, double progress);
   Map<String, dynamic> toJson();
-  
+
   List<Offset> getControlPoints();
   DrawingElement updateControlPoint(int index, Offset newPoint);
 
@@ -41,10 +41,10 @@ class LineElement extends DrawingElement {
       hasArrow: hasArrow ?? this.hasArrow,
     );
   }
-  
+
   @override
   List<Offset> getControlPoints() => [start, end];
-  
+
   @override
   DrawingElement updateControlPoint(int index, Offset newPoint) {
     if (index == 0) return copyWith(start: newPoint);
@@ -120,10 +120,10 @@ class CurveElement extends DrawingElement {
       hasArrow: hasArrow ?? this.hasArrow,
     );
   }
-  
+
   @override
   List<Offset> getControlPoints() => [start, control, end];
-  
+
   @override
   DrawingElement updateControlPoint(int index, Offset newPoint) {
     if (index == 0) return copyWith(start: newPoint);
@@ -203,10 +203,13 @@ class CircleElement extends DrawingElement {
       radius: radius ?? this.radius,
     );
   }
-  
+
   @override
-  List<Offset> getControlPoints() => [center, Offset(center.dx + radius, center.dy)];
-  
+  List<Offset> getControlPoints() => [
+    center,
+    Offset(center.dx + radius, center.dy),
+  ];
+
   @override
   DrawingElement updateControlPoint(int index, Offset newPoint) {
     if (index == 0) return copyWith(center: newPoint);
@@ -270,14 +273,14 @@ class EllipseElement extends DrawingElement {
       radiusY: radiusY ?? this.radiusY,
     );
   }
-  
+
   @override
   List<Offset> getControlPoints() => [
-    center, 
+    center,
     Offset(center.dx + radiusX, center.dy),
-    Offset(center.dx, center.dy + radiusY)
+    Offset(center.dx, center.dy + radiusY),
   ];
-  
+
   @override
   DrawingElement updateControlPoint(int index, Offset newPoint) {
     if (index == 0) return copyWith(center: newPoint);
@@ -343,10 +346,10 @@ class PathElement extends DrawingElement {
       hasArrow: hasArrow ?? this.hasArrow,
     );
   }
-  
+
   @override
   List<Offset> getControlPoints() => points;
-  
+
   @override
   DrawingElement updateControlPoint(int index, Offset newPoint) {
     if (index >= 0 && index < points.length) {

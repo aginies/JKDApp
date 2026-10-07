@@ -10,8 +10,8 @@ import '../../../models/move.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/series_provider.dart';
 import '../widgets/move_display_widgets.dart';
-import '../state/picker_state.dart';
-import 'glossary_data_service.dart';
+import '../../../models/picker_state.dart';
+import '../../../services/glossary_data_service.dart';
 import 'glossary_picker_widgets.dart';
 
 // Service class for building glossary UI components

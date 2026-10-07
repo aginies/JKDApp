@@ -94,7 +94,13 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.program.title),
+        title: Text(
+          LocalizationService.localizedContent(
+            widget.program.titleFr,
+            widget.program.title,
+            lang,
+          ),
+        ),
         actions: [
           if (!widget.program.isSystem)
             IconButton(
@@ -224,7 +230,11 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          widget.program.description,
+                          LocalizationService.localizedContent(
+                            widget.program.descriptionFr,
+                            widget.program.description,
+                            lang,
+                          ),
                           style: theme.textTheme.bodyMedium,
                         ),
                       ],
@@ -428,6 +438,8 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
         'day_number': day.dayNumber,
         'series_ids': seriesTitles,
         'notes': day.notes ?? '',
+        if (day.notesFr != null && day.notesFr!.isNotEmpty)
+          'notes_fr': day.notesFr,
         'is_rest_day': day.isRestDay ? 1 : 0,
       };
     }).toList();
@@ -435,6 +447,9 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
     return {
       'title': widget.program.title,
       'description': widget.program.description,
+      if (widget.program.titleFr.isNotEmpty) 'title_fr': widget.program.titleFr,
+      if (widget.program.descriptionFr.isNotEmpty)
+        'description_fr': widget.program.descriptionFr,
       'difficulty_level': widget.program.difficultyLevel,
       'duration_days': widget.program.durationDays,
       'is_system': widget.program.isSystem ? 1 : 0,
@@ -648,9 +663,13 @@ class _DayCardState extends State<_DayCard> {
                 ),
             ],
           ),
-          subtitle: widget.day.notes != null
+          subtitle: (widget.day.notes ?? widget.day.notesFr) != null
               ? Text(
-                  widget.day.notes!,
+                  LocalizationService.localizedContent(
+                    widget.day.notesFr,
+                    widget.day.notes ?? '',
+                    widget.lang,
+                  ),
                   maxLines: _isExpanded ? null : 1,
                   overflow: _isExpanded ? null : TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall,

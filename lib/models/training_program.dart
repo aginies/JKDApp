@@ -4,6 +4,8 @@ class TrainingProgram {
   final int? id;
   final String title;
   final String description;
+  final String titleFr;
+  final String descriptionFr;
   final String difficultyLevel; // 'beginner', 'intermediate', 'advanced'
   final int durationDays;
   final bool isSystem;
@@ -14,6 +16,8 @@ class TrainingProgram {
     this.id,
     required this.title,
     this.description = '',
+    this.titleFr = '',
+    this.descriptionFr = '',
     this.difficultyLevel = 'beginner',
     required this.durationDays,
     this.isSystem = true,
@@ -26,6 +30,8 @@ class TrainingProgram {
       'id': id,
       'title': title,
       'description': description,
+      'title_fr': titleFr,
+      'description_fr': descriptionFr,
       'difficulty_level': difficultyLevel,
       'duration_days': durationDays,
       'is_system': isSystem ? 1 : 0,
@@ -41,6 +47,8 @@ class TrainingProgram {
       id: map['id'] as int?,
       title: map['title'] as String? ?? 'Untitled Program',
       description: map['description'] as String? ?? '',
+      titleFr: map['title_fr'] as String? ?? '',
+      descriptionFr: map['description_fr'] as String? ?? '',
       difficultyLevel: map['difficulty_level'] as String? ?? 'beginner',
       durationDays: map['duration_days'] as int? ?? 1,
       isSystem: (map['is_system'] as int? ?? 1) == 1,
@@ -55,6 +63,8 @@ class TrainingProgram {
     int? id,
     String? title,
     String? description,
+    String? titleFr,
+    String? descriptionFr,
     String? difficultyLevel,
     int? durationDays,
     bool? isSystem,
@@ -65,6 +75,8 @@ class TrainingProgram {
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      titleFr: titleFr ?? this.titleFr,
+      descriptionFr: descriptionFr ?? this.descriptionFr,
       difficultyLevel: difficultyLevel ?? this.difficultyLevel,
       durationDays: durationDays ?? this.durationDays,
       isSystem: isSystem ?? this.isSystem,

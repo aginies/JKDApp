@@ -12,7 +12,8 @@
           "Trapping 9 entr\u00e9es de base"
         ],
         "notes": "Foundation day. Master the 9 basic entries before advancing. Focus on structure and angles.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Journ\u00e9e de base. Ma\u00eetrisez les 9 entr\u00e9es de base avant d'avancer. Concentrez-vous sur la structure et les angles."
       },
       {
         "day_number": 2,
@@ -21,7 +22,8 @@
           "3 counts"
         ],
         "notes": "Transition from trapping to striking. Flow seamlessly between ranges.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Transition du trapping vers les frappes. Encha\u00eenez sans rupture entre les port\u00e9es."
       },
       {
         "day_number": 3,
@@ -30,13 +32,15 @@
           "Contre Jab Cross"
         ],
         "notes": "Defensive trapping. Trap the attack, then counter. Timing is everything.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Trapping d\u00e9fensif. Pi\u00e9gez l'attaque, puis ripostez. Le timing est tout."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest and practice sensitivity drills mentally. Visualize feeling your opponent's energy.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Repos et entra\u00eenement mental des exercices de sensibilit\u00e9. Visualisez la perception de l'\u00e9nergie de votre adversaire."
       },
       {
         "day_number": 5,
@@ -45,7 +49,8 @@
           "4 counts"
         ],
         "notes": "Longer combinations from trapping range. Maintain contact while striking.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Combinaisons plus longues depuis la port\u00e9e trapping. Maintenez le contact pendant les frappes."
       },
       {
         "day_number": 6,
@@ -54,12 +59,15 @@
           "Contre Jab Hook"
         ],
         "notes": "Counter hooks using trapping. Control the elbow, control the punch.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Ripostes en hook utilisant le trapping. Contr\u00f4lez le coude, contr\u00f4lez le coup."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "Trapping Intensif - 6 Jours",
+    "description_fr": "Programme interm\u00e9diaire ax\u00e9 sur la ma\u00eetrise du Chi Sao et des techniques de port\u00e9e trapping. D\u00e9veloppe la sensibilit\u00e9, le timing et le contr\u00f4le \u00e0 courte distance."
   }
 ]

@@ -15,7 +15,8 @@
           "Rock Shuffle"
         ],
         "notes": "Review all intermediate patterns. Ensure total control before adding Pendulum.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "R\u00e9vision de tous les sch\u00e9mas interm\u00e9diaires. Assurez un contr\u00f4le total avant d'ajouter le Pendulum."
       },
       {
         "day_number": 2,
@@ -23,7 +24,8 @@
           "Pendulum"
         ],
         "notes": "Introduction to Pendulum footwork. Master the weight shift and springy recoil.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Introduction au d\u00e9placement Pendulum. Ma\u00eetrisez le transfert de poids et le rebond \u00e9lastique."
       },
       {
         "day_number": 3,
@@ -31,13 +33,15 @@
           "Pendulum"
         ],
         "notes": "Pendulum for angle creation. Focus on moving offline immediately after the entry.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Pendulum pour la cr\u00e9ation d'angles. Concentrez-vous \u00e0 sortir de la ligne imm\u00e9diatement apr\u00e8s l'entr\u00e9e."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Pendulum is demanding on your ankles and agility.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. Le Pendulum est exigeant pour les chevilles et l'agilit\u00e9."
       },
       {
         "day_number": 5,
@@ -46,7 +50,8 @@
           "Push Shuffle"
         ],
         "notes": "Combining elite entry methods. Alternate between bursting and springy entries.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Combinaison des m\u00e9thodes d'entr\u00e9e de niveau \u00e9lite. Alternez entre entr\u00e9es en burst et entr\u00e9es \u00e9lastiques."
       },
       {
         "day_number": 6,
@@ -55,12 +60,15 @@
           "Rock Shuffle"
         ],
         "notes": "Rhythm and recoil. Use Rock Shuffle to setup Pendulum entries.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Rythme et rebond. Utilisez le Rock Shuffle pour pr\u00e9parer les entr\u00e9es Pendulum."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "D\u00e9placements Expert - 6 Jours",
+    "description_fr": "Le syst\u00e8me de mobilit\u00e9 JKD complet. Int\u00e9grez le d\u00e9placement Pendulum pour des entr\u00e9es, sorties et cr\u00e9ations d'angle de niveau \u00e9lite."
   }
 ]

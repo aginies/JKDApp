@@ -13,7 +13,8 @@
           "Slide and Step"
         ],
         "notes": "Warm up with basic patterns. Ensure your foundation is solid before adding speed.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "\u00c9chauffement avec les sch\u00e9mas de base. Assurez-vous que vos fondations sont solides avant d'ajouter de la vitesse."
       },
       {
         "day_number": 2,
@@ -21,7 +22,8 @@
           "Push Shuffle"
         ],
         "notes": "Introduction to Push Shuffle. Focus on the explosive push from the rear foot to close distance.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Introduction au Push Shuffle. Concentrez-vous sur le pouss\u00e9 explosif du pied arri\u00e8re pour r\u00e9duire la distance."
       },
       {
         "day_number": 3,
@@ -29,13 +31,15 @@
           "Rock Shuffle"
         ],
         "notes": "Introduction to Rock Shuffle. Develop a rhythmic weight shift to confuse opponents.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Introduction au Rock Shuffle. D\u00e9veloppez un transfert de poids rythmique pour d\u00e9sorienter vos adversaires."
       },
       {
         "day_number": 4,
         "series_ids": [],
         "notes": "Rest day. Your calves may be working harder now with the explosive movements.",
-        "is_rest_day": 1
+        "is_rest_day": 1,
+        "notes_fr": "Journ\u00e9e de repos. Vos mollets travaillent peut-\u00eatre plus fort avec les mouvements explosifs."
       },
       {
         "day_number": 5,
@@ -44,7 +48,8 @@
           "Rock Shuffle"
         ],
         "notes": "Transition between explosiveness and rhythm. Stay relaxed until the moment of the push.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Transition entre explosivit\u00e9 et rythme. Restez d\u00e9tendu jusqu'au moment du pouss\u00e9."
       },
       {
         "day_number": 6,
@@ -53,12 +58,15 @@
           "Push Shuffle"
         ],
         "notes": "Varying speed. Use Step and Slide for distance management and Push Shuffle for entry.",
-        "is_rest_day": 0
+        "is_rest_day": 0,
+        "notes_fr": "Vitesse variable. Utilisez Step and Slide pour la gestion de la distance et Push Shuffle pour l'entr\u00e9e."
       }
     ],
     "Author": "Antoine Gini\u00e8s",
     "Version": "1.9.1+1",
     "JKDApp": "ginies.org",
-    "Date": "2026-04-03"
+    "Date": "2026-04-03",
+    "title_fr": "D\u00e9placements Avanc\u00e9 - 6 Jours",
+    "description_fr": "\u00c9largissez votre mobilit\u00e9 avec Push Shuffle et Rock Shuffle. Apprenez les entr\u00e9es explosives et les transferts de poids rythmiques."
   }
 ]

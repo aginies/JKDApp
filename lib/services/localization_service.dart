@@ -37,6 +37,7 @@ class LocalizationService {
           'You have successfully reconstructed all moves in this session.',
       'general': 'General',
       'other': 'Other',
+      'attack_methods': '5 Ways of Attack',
       'left': 'Left',
       'right': 'Right',
       'front': 'Front',
@@ -48,6 +49,9 @@ class LocalizationService {
       'current_combo': 'CURRENT COMBO',
       'finish_combo': 'Finish Combo',
       'answer': 'Answer',
+      'simultaneous': 'Simultaneous',
+      'chain': 'Chain',
+      'delete_custom_angle': 'Delete Custom Angle?',
       'finish': 'Finish',
       'cancel': 'Cancel',
       'update_item': 'Update',
@@ -112,7 +116,21 @@ class LocalizationService {
       'select_folder': 'Select Folder',
       'no_images': 'No images found for this move.',
       'instructional_photos': 'Instructional Photos',
+      'photos_tab': 'Photos',
+      'videos_tab': 'Videos',
+      'no_videos': 'No videos found for this move.',
+      'pick_video': 'Select video',
+      'capture_video': 'Record Video',
+      'video_too_large': 'Video exceeds the 200 MB limit.',
+      'video_error': 'Could not load this video.',
+      'delete_image': 'Delete Image?',
+      'delete_image_confirm':
+          'Are you sure you want to delete this instructional photo?',
+      'delete_video': 'Delete Video?',
+      'delete_video_confirm':
+          'Are you sure you want to delete this instructional video?',
       'capture_photo': 'Take Photo',
+      'no_camera': 'No camera available on this device.',
       'processing': 'Processing image...',
       'clone': 'Clone',
       'cloned': 'cloned',
@@ -211,6 +229,8 @@ class LocalizationService {
       'export_json': 'Export JSON',
       'show_translation': 'Show Translation',
       'show_translation_desc': 'Display translation below each action',
+      'keep_screen_on': 'Keep Screen On',
+      'keep_screen_on_desc': 'Prevent screen from locking during training',
       'font_size': 'Font Size',
       'font_size_desc': 'Scale the overall application text size',
       'about': 'About',
@@ -233,6 +253,13 @@ class LocalizationService {
       'help_chain_desc': 'Moves in sequence (one after another).',
       'help_simultaneous_long_desc': 'Moves performed at the same time.',
       'help_answer_long_desc': 'Defensive response or counter-attack.',
+      'warmup': 'Warm Up',
+      'work': 'Work',
+      'rest': 'Rest',
+      'rounds': 'Rounds',
+      'exercises': 'Exercises',
+      'duration': 'Duration',
+      'start_warmup': 'Start Warm Up',
     },
     'fr': {
       'series_title': 'Titre de la série',
@@ -271,6 +298,7 @@ class LocalizationService {
           'Vous avez reconstruit avec succès tous les mouvements de cette session.',
       'general': 'Général',
       'other': 'Autre',
+      'attack_methods': '5 Manières d\'Attaquer',
       'left': 'Gauche',
       'right': 'Droite',
       'front': 'Avant',
@@ -282,6 +310,9 @@ class LocalizationService {
       'current_combo': 'COMBO ACTUEL',
       'finish_combo': 'Terminer le Combo',
       'answer': 'Contre',
+      'simultaneous': 'Simultané',
+      'chain': 'Chaîne',
+      'delete_custom_angle': 'Supprimer l\'angle personnalisé ?',
       'finish': 'Fin',
       'cancel': 'Cancel',
       'update_item': 'Mettre à jour',
@@ -342,7 +373,21 @@ class LocalizationService {
       'select_folder': 'Choisir un dossier',
       'no_images': 'Aucune image trouvée pour ce mouvement.',
       'instructional_photos': 'Photos pédagogiques',
+      'photos_tab': 'Photos',
+      'videos_tab': 'Vidéos',
+      'no_videos': 'Aucune vidéo trouvée pour ce mouvement.',
+      'pick_video': 'Sélectionner une vidéo',
+      'capture_video': 'Filmer',
+      'video_too_large': 'La vidéo dépasse la limite de 200 Mo.',
+      'video_error': 'Impossible de charger cette vidéo.',
+      'delete_image': 'Supprimer l\'image ?',
+      'delete_image_confirm':
+          'Voulez-vous vraiment supprimer cette photo pédagogique ?',
+      'delete_video': 'Supprimer la vidéo ?',
+      'delete_video_confirm':
+          'Voulez-vous vraiment supprimer cette vidéo pédagogique ?',
       'capture_photo': 'Prendre une photo',
+      'no_camera': 'Aucun appareil photo disponible sur cet appareil.',
       'processing': 'Traitement de l\'image...',
       'clone': 'Cloner',
       'cloned': 'copie',
@@ -447,6 +492,9 @@ class LocalizationService {
       'export_json': 'Exporter JSON',
       'show_translation': 'Afficher la Traduction',
       'show_translation_desc': 'Afficher la traduction sous chaque action',
+      'keep_screen_on': 'Garder l\'écran allumé',
+      'keep_screen_on_desc':
+          'Empêcher le verrouillage de l\'écran pendant l\'entraînement',
       'font_size': 'Taille de la Police',
       'font_size_desc': 'Ajuster la taille globale du texte de l\'application',
       'about': 'À propos',
@@ -469,10 +517,24 @@ class LocalizationService {
       'help_chain_desc': 'Mouvements en séquence (l\'un après l\'autre).',
       'help_simultaneous_long_desc': 'Mouvements effectués en même temps.',
       'help_answer_long_desc': 'Réponse défensive ou contre-attaque.',
+      'warmup': 'Échauffement',
+      'work': 'Travail',
+      'rest': 'Repos',
+      'rounds': 'Rounds',
+      'exercises': 'Exercices',
+      'duration': 'Durée',
+      'start_warmup': 'Démarrer l\'échauffement',
     },
   };
 
   static String translate(String key, String lang) {
     return _localizedValues[lang]?[key] ?? _localizedValues['en']?[key] ?? key;
+  }
+
+  /// Returns the French text when the UI language is French and a translation
+  /// is available, otherwise falls back to the English text.
+  static String localizedContent(String? fr, String en, String lang) {
+    if (lang == 'fr' && fr != null && fr.trim().isNotEmpty) return fr;
+    return en;
   }
 }
