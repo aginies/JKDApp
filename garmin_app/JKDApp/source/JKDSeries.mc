@@ -21,6 +21,32 @@ module JKDSeries {
 
     function getSeries() as $.Toybox.Lang.Array<Series> {
         return [
+            new Series("24 Coups de poings", [
+                new Combo("Jab L", []),
+                new Combo("Cross R", []),
+                new Combo("Body Hook R", []),
+                new Combo("Body Hook L", []),
+                new Combo("Uppercut R", []),
+                new Combo("Uppercut L", []),
+                new Combo("Hook R", []),
+                new Combo("Hook L", []),
+                new Combo("Body Jab L", []),
+                new Combo("Body Cross R", []),
+                new Combo("Swing R", []),
+                new Combo("Swing L", []),
+                new Combo("OverHead R", []),
+                new Combo("Uppercut L", []),
+                new Combo("OverHead L", []),
+                new Combo("Uppercut R", []),
+                new Combo("Qua Chuie / cross R", []),
+                new Combo("Qua Chuie / Jab L", []),
+                new Combo("Frappes Marteau R", []),
+                new Combo("Frappes Marteau L", []),
+                new Combo("overhead poing avant R", []),
+                new Combo("overhead poing arrière L", []),
+                new Combo("overhead poing arrière L", []),
+                new Combo("overhead poing avant R", [])
+            ]),
             new Series("3 counts", [
                 new Combo("Jab L + Cross R + Jik Tek L", []),
                 new Combo("Jab L + Cross R + Hou Jik Tek R", []),
@@ -227,6 +253,7 @@ module JKDSeries {
                 new Combo("Angle 11", [11]),
                 new Combo("Angle 12", [12]),
                 new Combo("Angle 13", [13]),
+                new Combo("Angle 13", [13]),
                 new Combo("Angle 14", [14]),
                 new Combo("Angle 15", [15]),
                 new Combo("Pic remontant vers la Gauche", [])
@@ -260,30 +287,6 @@ module JKDSeries {
                 new Combo("Low line Hit L -> Vertical Locking L -> Pak Sao R -> Jab L -> Vertical Locking R -> Pak Sao R -> Jab L -> Through Locking -> Bong Sao L -> Lop Sao R -> Gwa Chuie L", []),
                 new Combo("Low line Hit L -> Vertical Locking L -> Pak Sao R -> Jab L -> Vertical Locking L -> Pak Sao R -> Jab L -> Through Locking R -> Bong Sao L -> Lop Sao R -> Da L", []),
                 new Combo("Low line Hit L -> Vertical Locking L -> Pak Sao R -> Jab L -> Vertical Locking R -> Pak Sao R -> Jab L -> Through Locking R -> Bong Sao L -> Pak Sao L -> Lop Sao R -> Da L", [])
-            ]),
-            new Series("22 Coups de poings", [
-                new Combo("Jab L", []),
-                new Combo("Cross R", []),
-                new Combo("Body Hook R", []),
-                new Combo("Body Hook L", []),
-                new Combo("Uppercut R", []),
-                new Combo("Uppercut L", []),
-                new Combo("Hook R", []),
-                new Combo("Hook L", []),
-                new Combo("Body Jab L", []),
-                new Combo("Body Cross R", []),
-                new Combo("Swing R", []),
-                new Combo("Swing L", []),
-                new Combo("OverHead R", []),
-                new Combo("Uppercut L", []),
-                new Combo("OverHead L", []),
-                new Combo("Uppercut R", []),
-                new Combo("Qua Chuie / cross R", []),
-                new Combo("Qua Chuie / Jab L", []),
-                new Combo("Frappes Marteau R", []),
-                new Combo("Frappes Marteau L", []),
-                new Combo("overhead poing avant R", []),
-                new Combo("overhead poing arrière L", [])
             ]),
             new Series("Sinawali series", [
                 new Combo("Cob Cob -> Pay Pay -> Ikis -> H L H -> Dos Ikis -> H L (Through) -> Even Six Heaven -> Even Six Standard -> Even Six Earth -> Umbrella Heaven -> Umbrella Standard -> Umbrella Earth -> Backend Six Heaven -> Backend Six Standard -> Backend Six Earth -> Upword Six count -> Ordabis Motion -> Sang Kite", [])
