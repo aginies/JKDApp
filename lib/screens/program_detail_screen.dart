@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
+import '../utils/platform_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/training_program.dart';
@@ -122,32 +123,37 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
           PopupMenuButton(
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
-              PopupMenuItem(
-                onTap: () => Future.delayed(
-                  const Duration(milliseconds: 100),
-                  () => _shareJson(provider, lang),
+              // JSON sharing / saving are file-based: disabled on web.
+              if (!kIsWeb) ...[
+                PopupMenuItem(
+                  onTap: () => Future.delayed(
+                    const Duration(milliseconds: 100),
+                    () => _shareJson(provider, lang),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.share),
+                      const SizedBox(width: 12),
+                      Text(LocalizationService.translate('share_json', lang)),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.share),
-                    const SizedBox(width: 12),
-                    Text(LocalizationService.translate('share_json', lang)),
-                  ],
+                PopupMenuItem(
+                  onTap: () => Future.delayed(
+                    const Duration(milliseconds: 100),
+                    () => _saveJsonToFile(provider, lang),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.save),
+                      const SizedBox(width: 12),
+                      Text(
+                        LocalizationService.translate('save_to_device', lang),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                onTap: () => Future.delayed(
-                  const Duration(milliseconds: 100),
-                  () => _saveJsonToFile(provider, lang),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.save),
-                    const SizedBox(width: 12),
-                    Text(LocalizationService.translate('save_to_device', lang)),
-                  ],
-                ),
-              ),
+              ],
               if (_progress != null && _progress!.isActive)
                 PopupMenuItem(
                   onTap: () => _abandonProgram(context, provider, lang),
@@ -495,7 +501,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
       ).convert([programJson]);
 
       // Ask user to select a directory
-      final String? selectedDirectory = await FilePicker.platform
+      final String? selectedDirectory = await FilePicker
           .getDirectoryPath();
 
       if (selectedDirectory == null) {

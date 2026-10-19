@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/series.dart';
 import 'database_service.dart';
@@ -69,7 +69,7 @@ class ExportService {
       final String finalFileName =
           fileName ?? 'jkd_series_export_${_getTimestamp()}.json';
       final String? targetDir =
-          customDirectory ?? await FilePicker.platform.getDirectoryPath();
+          customDirectory ?? await FilePicker.getDirectoryPath();
       if (targetDir == null) return null;
 
       final File file = File(p.join(targetDir, finalFileName));
@@ -88,7 +88,7 @@ class ExportService {
         '  ',
       ).convert(items);
       final String? targetDir =
-          customDirectory ?? await FilePicker.platform.getDirectoryPath();
+          customDirectory ?? await FilePicker.getDirectoryPath();
       if (targetDir == null) return null;
 
       final String fileName = 'jkd_glossary_backup_${_getTimestamp()}.json';

@@ -1,6 +1,7 @@
 <?php
 require_once 'config.php';
 
+send_cors_headers();
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

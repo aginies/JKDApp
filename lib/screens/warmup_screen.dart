@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -125,6 +125,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _initTts() async {
+    // TTS is disabled on Linux only (spd-say is used there instead).
     if (Platform.isLinux) return;
     try {
       final lang = Provider.of<SeriesProvider>(context, listen: false).language;
@@ -140,14 +141,12 @@ class _WarmupScreenState extends State<WarmupScreen> {
         // background music un-ducks between lines of a long session.
         await _tts.autoStopSharedSession(false);
         if (Platform.isIOS) {
-          await _tts.setIosAudioCategory(
-            IosTextToSpeechAudioCategory.playback,
-            [
-              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-              IosTextToSpeechAudioCategoryOptions.duckOthers,
-              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-            ],
-          );
+          await _tts
+              .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+                IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+                IosTextToSpeechAudioCategoryOptions.duckOthers,
+                IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+              ]);
         } else if (Platform.isAndroid) {
           await _tts.setAudioAttributesForNavigation();
         }
@@ -260,7 +259,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
     // Record activity in usage statistics
     UsageStatisticsService().recordActivity('Warmup');
 
-    final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+    final keepScreenOn = Provider.of<SeriesProvider>(
+      context,
+      listen: false,
+    ).keepScreenOn;
     if (keepScreenOn) {
       WakelockPlus.enable();
     }
@@ -332,7 +334,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
         setState(() {
           _isRunning = false;
         });
-        await _speak(lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete');
+        await _speak(
+          lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete',
+        );
         AudioSessionService.releaseFocus();
         WakelockPlus.disable();
       }

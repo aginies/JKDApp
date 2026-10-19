@@ -33,7 +33,8 @@ function show_help() {
     echo "  build_windows     - Build release Windows (Windows only)"
     echo "  build_linux       - Build release Linux (standard bundle)"
     echo "  build_appimage    - Build Linux AppImage (requires appimage-builder)"
-    echo "  all               - Run full pipeline (Cleanup, Deps, Quality, Build APK)"
+    echo "  build_web         - Build release Web"
+    echo "  all               - Run full pipeline (Cleanup, Deps, Quality, Build APK, Build Web)"
     echo "  help              - Show this help message"
 }
 
@@ -141,6 +142,11 @@ function build_linux() {
     $FLUTTER_PATH build linux --release
 }
 
+function build_web() {
+    echo "[INFO] Building Release Web..."
+    $FLUTTER_PATH build web --release
+}
+
 function build_appimage() {
     echo "[INFO] Starting AppImage build process..."
     
@@ -194,6 +200,7 @@ function all() {
     update_deps
     quality_checks
     build_apk
+    build_web
 }
 
 if [ $# -eq 0 ]; then

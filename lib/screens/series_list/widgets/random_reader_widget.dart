@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:io';
+import '../../../utils/platform_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -69,7 +70,8 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
   }
 
   Future<void> _initTts() async {
-    if (Platform.isLinux) return;
+    // TTS is disabled on web and Linux (spd-say only).
+    if (kIsWeb || Platform.isLinux) return;
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     await _tts.setSpeechRate(provider.speechRate);
     await _tts.setVolume(1.0);
@@ -90,23 +92,21 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     if (Platform.isIOS || Platform.isAndroid) {
       await _tts.setSharedInstance(true);
       if (Platform.isIOS) {
-        await _tts.setIosAudioCategory(
-          IosTextToSpeechAudioCategory.playback,
-          [
-            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-            IosTextToSpeechAudioCategoryOptions.duckOthers,
-            IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-          ],
-        );
+        await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          IosTextToSpeechAudioCategoryOptions.duckOthers,
+          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        ]);
       } else if (Platform.isAndroid) {
         await _tts.setAudioAttributesForNavigation();
       }
     }
   }
+
   @override
   void dispose() {
     _timer?.cancel();
-    if (!Platform.isLinux) {
+    if (!kIsWeb && !Platform.isLinux) {
       _tts.stop();
     }
     // Only release if we own the session: an utterance that was stopped
@@ -134,7 +134,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
     setState(() {
       _isPaused = true;
       _timer?.cancel();
-      if (!Platform.isLinux) {
+      if (!kIsWeb && !Platform.isLinux) {
         _tts.stop();
       }
     });
@@ -148,7 +148,7 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       _timer?.cancel();
       _currentMoveDisplay = "";
       _currentSeriesTitle = "";
-      if (!Platform.isLinux) {
+      if (!kIsWeb && !Platform.isLinux) {
         _tts.stop();
       }
     });
@@ -188,7 +188,9 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       _currentSeriesTitle = targetSeries.title;
     });
 
-    if (Platform.isLinux) {
+    if (kIsWeb) {
+      // TTS is disabled on web: the title is displayed but not spoken.
+    } else if (Platform.isLinux) {
       await Process.run('spd-say', ['-l', 'en', '-w', targetSeries.title]);
     } else {
       await _tts.setLanguage('en-US');
@@ -270,7 +272,9 @@ class _RandomReaderWidgetState extends State<RandomReaderWidget> {
       _currentMoveDisplay = prefix + translatedName;
     });
 
-    if (Platform.isLinux) {
+    if (kIsWeb) {
+      // TTS is disabled on web: the move is displayed but not spoken.
+    } else if (Platform.isLinux) {
       try {
         await Process.run('spd-say', ['-l', widget.language, '-w', moveNumber]);
       } catch (e) {

@@ -1,18 +1,25 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart' show databaseFactory;
 import 'services/series_provider.dart';
 import 'services/audio_session_service.dart';
 import 'screens/splash_screen.dart';
+import 'utils/platform_io.dart';
+import 'utils/sqflite_shim.dart'
+    if (dart.library.js_interop) 'utils/sqflite_web.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await AudioSessionService.init();
 
-  if (Platform.isLinux || Platform.isWindows) {
-    sqfliteFfiInit();
+  // sqflite setup:
+  //  - web:            sqlite3 compiled to WASM, persisted in IndexedDB
+  //  - Linux/Windows:  sqlite3 via FFI
+  //  - iOS/Android/macOS: platform plugins (default factory)
+  if (kIsWeb || Platform.isLinux || Platform.isWindows) {
+    initSqfliteFfi();
     databaseFactory = databaseFactoryFfi;
   }
 

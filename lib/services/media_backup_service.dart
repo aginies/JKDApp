@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:archive/archive_io.dart';
 import 'package:intl/intl.dart';
@@ -49,7 +49,9 @@ class MediaBackupService {
       if (entity is Directory) {
         await _addDirectoryToZip(encoder, entity, entryPath);
       } else if (entity is File) {
-        encoder.addFile(entity, entryPath);
+        // dynamic: archive expects dart:io File; on web this path is
+        // unreachable (media backup is disabled).
+        encoder.addFile(entity as dynamic, entryPath);
       }
     }
   }
@@ -63,14 +65,18 @@ class MediaBackupService {
       final archive = ZipDecoder().decodeBytes(bytes);
 
       for (final file in archive) {
-        final filename = file.name;
+        final safeName = _safeZipEntryPath(file.name);
+        if (safeName == null) {
+          debugPrint('Restore: skipping unsafe zip entry: ${file.name}');
+          continue;
+        }
         if (file.isFile) {
           final data = file.content as List<int>;
-          final f = File(p.join(targetPath, filename));
+          final f = File(p.join(targetPath, safeName));
           await f.create(recursive: true);
           await f.writeAsBytes(data);
         } else {
-          await Directory(p.join(targetPath, filename)).create(recursive: true);
+          await Directory(p.join(targetPath, safeName)).create(recursive: true);
         }
       }
       return true;
@@ -78,5 +84,24 @@ class MediaBackupService {
       debugPrint('Restore error: $e');
       return false;
     }
+  }
+
+  /// Returns a safe, relative path for a zip entry, or `null` if the entry
+  /// would escape the restore directory (absolute path or `..` traversal).
+  static String? _safeZipEntryPath(String entryPath) {
+    final normalized = entryPath.replaceAll('\\', '/');
+    if (normalized.isEmpty ||
+        normalized.startsWith('/') ||
+        RegExp(r'^[A-Za-z]:').hasMatch(normalized)) {
+      return null;
+    }
+    final parts = normalized
+        .split('/')
+        .where((s) => s.isNotEmpty && s != '.')
+        .toList();
+    if (parts.isEmpty || parts.any((s) => s == '..')) {
+      return null;
+    }
+    return parts.join(p.separator);
   }
 }

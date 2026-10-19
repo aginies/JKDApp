@@ -15,6 +15,12 @@ analyzer:
   # `flutter analyze` only covers the main JKDApp.
   exclude:
     - wear_os_app/**
+    - build/**
+    - android/**
+    - windows/**
+    - macos/**
+    - linux/**
+    - web/**
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/series_provider.dart';
@@ -173,12 +174,14 @@ class _SeriesListScreenState extends State<SeriesListScreen>
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.mic_external_on, color: Colors.blueAccent),
-            onPressed: () =>
-                VoiceNotesDialog.show(context, _voiceNoteService, lang),
-            tooltip: LocalizationService.translate('voice_notes', lang),
-          ),
+          // Voice notes are file-based: disabled on web.
+          if (!kIsWeb)
+            IconButton(
+              icon: const Icon(Icons.mic_external_on, color: Colors.blueAccent),
+              onPressed: () =>
+                  VoiceNotesDialog.show(context, _voiceNoteService, lang),
+              tooltip: LocalizationService.translate('voice_notes', lang),
+            ),
           IconButton(
             icon: const Icon(Icons.menu_book, color: Colors.orangeAccent),
             onPressed: () => GlossaryDialog.show(

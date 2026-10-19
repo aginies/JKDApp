@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import '../../../utils/platform_io.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
@@ -53,6 +53,7 @@ class TrainingController {
   int get subIndex => _subIndex;
 
   Future<void> initTts({double speechRate = 0.50}) async {
+    // TTS is disabled on Linux only (spd-say is used there instead).
     if (Platform.isLinux) return;
     try {
       await _tts.setVolume(1.0);
@@ -226,7 +227,10 @@ class TrainingController {
     onIndexChanged(_currentIndex);
 
     if (context.mounted) {
-      final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+      final keepScreenOn = Provider.of<SeriesProvider>(
+        context,
+        listen: false,
+      ).keepScreenOn;
       if (keepScreenOn) {
         WakelockPlus.enable();
       }

@@ -1,14 +1,14 @@
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:share_plus/share_plus.dart';
 
 enum LogLevel { info, warn, error, debug }
 
 class LoggingService {
   static final List<String> _logs = [];
-  static const String appVersion = "2.6.1+1";
+  static const String appVersion = "3.0.0+1";
 
   /// Standard log (defaults to INFO)
   static void log(String message) {

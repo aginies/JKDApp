@@ -67,12 +67,14 @@ Cliquez sur une vignette pour l'agrandir.
 
 ## Stockage cloud web
 
-Le projet inclut un backend web PHP complet et une interface située dans le répertoire `/web` :
+Le projet inclut un backend web PHP complet et une interface située dans le répertoire `php_site/` :
 - **Dépôt central** : Une bibliothèque cloud pour découvrir et partager des séries d'entraînement JKD.
 - **Interface web** : Parcourez, recherchez et prévisualisez le contenu des séries dans n'importe quel navigateur web.
 - **API REST** : Intégration transparente avec l'application mobile pour des téléversements et téléchargements automatisés.
 - **Outils d'administration** : Outils intégrés de modération et de gestion de contenu.
-- **Journalisation & débogage** : Journalisation centralisée de toutes les requêtes API, téléversements et actions administratives dans `web/logs/app.log`.
+- **Journalisation & débogage** : Journalisation centralisée de toutes les requêtes API, téléversements et actions administratives dans `php_site/logs/app.log`.
+
+> **Configuration** : copiez `php_site/secrets.php.example` vers `php_site/secrets.php` et renseignez `APP_SECRET`, `TOKEN_SIGNING_KEY` et `ADMIN_PASS_HASH`. Fournissez `APP_SECRET` à l'application à la compilation (voir « Compilation »).
 
 ## Extensions montres connectées
 
@@ -96,7 +98,7 @@ S'intègre aux montres Garmin (Fenix, Forerunner, etc.) via le SDK Garmin :
 .
 ├── garmin_app/          # Code source Garmin ConnectIQ (Monkey C)
 ├── wear_os_app/         # Application Wear OS Flutter native
-├── web/                 # Backend PHP et interface web pour le stockage cloud
+├── php_site/           # Backend PHP et interface web pour le stockage cloud
 ├── lib/                 # Source principale de l'application mobile/bureau
 │   ├── models/          # Modèles de données (Move, JkdSeries)
 │   ├── services/        # Logique métier (DB, synchro Garmin, hachage)
@@ -151,7 +153,7 @@ Pour maintenir la qualité et la lisibilité du code, les principes d'organisati
 - **Séparation des responsabilités** : Le code UI doit résider dans `screens/`, tandis que la logique réutilisable doit être extraite dans `services/` ou des `mixins/` spécifiques aux classes.
 - **Modularité** : Les grands écrans doivent être découpés en widgets plus petits et ciblés situés dans des sous-dossiers (ex. : `lib/screens/series_detail/widgets/`).
 
-## Mises à jour récentes (v2.7.0+1)
+## Mises à jour récentes (v3.0.0+1)
 
 - **5 modes d'attaque** : Nouvelle catégorie et onglet du glossaire (SAA, IA/HIA, PIA, ABC, ABD) avec définitions en anglais et français.
 - **Média enrichi** : Enregistrement vidéo en direct, galerie média à onglets avec support vidéo, icônes photo/vidéo sur les éléments du glossaire.
@@ -166,8 +168,9 @@ Pour maintenir la qualité et la lisibilité du code, les principes d'organisati
 ### Compilation
 ```bash
 flutter pub get
-flutter run
+flutter run --dart-define=APP_SECRET=...
 ```
+> Le secret d'application (`APP_SECRET`) est injecté à la compilation et n'est plus codé en dur. Sans lui, l'envoi de séries vers la bibliothèque cloud échoue (401). La valeur doit correspondre à `APP_SECRET` dans `php_site/secrets.php`.
 
 ### Script de build et vérification
 `./build_and_verify.sh` encapsule le pipeline complet (exemples) :

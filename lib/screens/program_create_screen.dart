@@ -8,8 +8,8 @@ import '../services/database_service.dart';
 import '../services/localization_service.dart';
 import 'dart:convert';
 import 'package:share_plus/share_plus.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import '../utils/platform_io.dart';
+import '../utils/app_dirs.dart';
 
 class ProgramCreateScreen extends StatefulWidget {
   final TrainingProgram? program; // For editing existing program

@@ -46,6 +46,7 @@ app.*.map.json
 
 # Web secrets — never commit
 web/secrets.php
+php_site/secrets.php
 
 
 garmin_app/JKDApp/bin/

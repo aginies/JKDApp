@@ -104,7 +104,7 @@ mixin SeriesDetailDialogsMixin {
 
   Future<void> handleExportJson() async {
     if (series == null) return;
-    String? dir = await FilePicker.platform.getDirectoryPath();
+    String? dir = await FilePicker.getDirectoryPath();
     if (dir == null) return;
     final fileName = 'jkd-series-${StringUtils.slugify(series!.title)}.json';
     if (!context.mounted) return;

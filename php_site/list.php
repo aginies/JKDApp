@@ -1,6 +1,7 @@
 <?php
 require_once 'config.php';
 
+send_cors_headers();
 header('Content-Type: application/json');
 
 write_log("API: Fetching series list");

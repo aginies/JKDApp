@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
 
+send_cors_headers();
+
 // Set response headers
 header('Content-Type: application/json');
 
@@ -93,10 +95,18 @@ if (strpos($content_type, "application/json") !== false) {
         // Decode URL component (matches Flutter Uri.encodeComponent)
         // rawurldecode handles %20 correctly as space, matches encodeComponent
         $decoded = rawurldecode($value);
+        // Remove raw NUL bytes and other control characters.
+        $decoded = preg_replace('/[[:cntrl:]]/', '', $decoded);
         // Remove truly dangerous filename characters but allow accents (\x7f-\xff)
         $clean = preg_replace('/[<>:"\/\\\|?*]/', '', $decoded);
-        // Trim and limit length
-        return substr(trim($clean), 0, $maxlen);
+        // Trim, then reject empty results and leading dots (hidden files /
+        // directory obfuscation).
+        $clean = trim($clean);
+        if ($clean === '' || $clean[0] === '.') {
+            return $default;
+        }
+        // Limit length
+        return substr($clean, 0, $maxlen);
     }
 
     $username = sanitize_header($all_headers['x-username'] ?? null, 'anonymous', 64);

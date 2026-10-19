@@ -1,5 +1,6 @@
-import 'dart:io';
+import '../../../utils/platform_io.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../services/voice_parsing_service.dart';
@@ -24,7 +25,10 @@ class VoiceInputDialog {
       return null;
     }
 
-    if (await Permission.microphone.request() != PermissionStatus.granted) {
+    // On web the browser prompts for microphone access itself; the native
+    // permission dialog (permission_handler) does not exist.
+    if (!kIsWeb &&
+        await Permission.microphone.request() != PermissionStatus.granted) {
       return null;
     }
 

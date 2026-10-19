@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:archive/archive_io.dart';
 import 'package:intl/intl.dart';
 import 'database_service.dart';
@@ -12,6 +12,10 @@ class BackupService {
 
   static Future<String?> createGlobalBackup(String? galleryPath) async {
     try {
+      // Full backup zips the filesystem: not available on web.
+      if (kIsWeb) {
+        throw UnsupportedError('Backup is not available on web');
+      }
       final db = await DatabaseService().database;
       final tempDir = await getTemporaryDirectory();
 
@@ -86,8 +90,10 @@ class BackupService {
 
       final encoder = ZipFileEncoder();
       encoder.create(zipPath);
-      // addDirectory is reliable when called on a completed directory structure
-      encoder.addDirectory(workspaceDir, includeDirName: false);
+      // addDirectory is reliable when called on a completed directory
+      // structure. dynamic: archive expects dart:io Directory; on web this
+      // path is unreachable (backup is disabled and throws above).
+      encoder.addDirectory(workspaceDir as dynamic, includeDirName: false);
       encoder.close();
 
       // 5. Clean up workspace
@@ -118,15 +124,19 @@ class BackupService {
       final bytes = await File(zipPath).readAsBytes();
       final archive = ZipDecoder().decodeBytes(bytes);
       for (final file in archive) {
-        final filename = file.name;
+        final safeName = _safeZipEntryPath(file.name);
+        if (safeName == null) {
+          debugPrint('Restore: skipping unsafe zip entry: ${file.name}');
+          continue;
+        }
         if (file.isFile) {
           final data = file.content as List<int>;
-          final f = File(p.join(restoreDir.path, filename));
+          final f = File(p.join(restoreDir.path, safeName));
           await f.create(recursive: true);
           await f.writeAsBytes(data);
         } else {
           await Directory(
-            p.join(restoreDir.path, filename),
+            p.join(restoreDir.path, safeName),
           ).create(recursive: true);
         }
       }
@@ -202,6 +212,25 @@ class BackupService {
       debugPrint('Global restore error: $e');
       return false;
     }
+  }
+
+  /// Returns a safe, relative path for a zip entry, or `null` if the entry
+  /// would escape the restore directory (absolute path or `..` traversal).
+  static String? _safeZipEntryPath(String entryPath) {
+    final normalized = entryPath.replaceAll('\\', '/');
+    if (normalized.isEmpty ||
+        normalized.startsWith('/') ||
+        RegExp(r'^[A-Za-z]:').hasMatch(normalized)) {
+      return null;
+    }
+    final parts = normalized
+        .split('/')
+        .where((s) => s.isNotEmpty && s != '.')
+        .toList();
+    if (parts.isEmpty || parts.any((s) => s == '..')) {
+      return null;
+    }
+    return parts.join(p.separator);
   }
 
   static Future<void> _copyDirectory(

@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'dart:math' as math;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:path/path.dart' as p;
 import '../models/series.dart';
 import '../models/move.dart';
@@ -229,7 +230,9 @@ class SeriesProvider with ChangeNotifier {
     }
 
     // Voice
-    _voiceEnabled = !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
+    // Voice (TTS) is unavailable on Linux and on web.
+    _voiceEnabled =
+        !kIsWeb && !Platform.isLinux && (prefs['voice_enabled'] ?? '0') == '1';
 
     // Garmin coaching TTS
     _garminCoachingTtsEnabled =
@@ -344,7 +347,8 @@ class SeriesProvider with ChangeNotifier {
   }
 
   void setVoiceEnabled(bool enabled) async {
-    if (Platform.isLinux && enabled) return;
+    // Voice is not available on Linux or web.
+    if ((kIsWeb || Platform.isLinux) && enabled) return;
     _voiceEnabled = enabled;
     await _dbService.saveSetting('voice_enabled', enabled ? '1' : '0');
     notifyListeners();
