@@ -832,8 +832,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(provider.galleryPath ?? 'Not set'),
                   trailing: TextButton(
                     onPressed: () async {
-                      String? selectedDirectory = await FilePicker
-                          .getDirectoryPath();
+                      String? selectedDirectory =
+                          await FilePicker.getDirectoryPath();
                       if (selectedDirectory != null) {
                         provider.setGalleryPath(selectedDirectory);
                       }
@@ -910,8 +910,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(provider.projectPath ?? 'Not set'),
                   trailing: TextButton(
                     onPressed: () async {
-                      String? selectedDirectory = await FilePicker
-                          .getDirectoryPath();
+                      String? selectedDirectory =
+                          await FilePicker.getDirectoryPath();
                       if (selectedDirectory != null) {
                         provider.setProjectPath(selectedDirectory);
                       }
