@@ -114,7 +114,7 @@ To maintain code quality and manageability, the following organization principle
 - **Separation of Concerns**: UI code should reside in `screens/`, while reusable logic should be extracted to `services/` or class-specific `mixins/`.
 - **Modularity**: Large screens should be split into smaller, focused widgets located in sub-folders (e.g., `lib/screens/series_detail/widgets/`).
 
-## Recent Updates (v2.7.0+1)
+## Recent Updates (v3.0.0+1)
 
 - **5 Ways of Attack**: New glossary category and tab (SAA, IA/HIA, PIA, ABC, ABD) with English and French definitions.
 - **Enhanced Media**: Live video recording, tabbed media gallery with video support, photo/video icons on glossary items.
