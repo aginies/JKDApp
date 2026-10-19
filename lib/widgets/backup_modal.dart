@@ -1,10 +1,10 @@
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
+import '../utils/app_dirs.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 import '../services/series_provider.dart';
@@ -319,7 +319,7 @@ class _BackupModalState extends State<BackupModal> {
         ShareParams(files: [XFile(path)], text: 'JKD Full App Backup'),
       );
     } else {
-      String? saveDir = await FilePicker.platform.getDirectoryPath();
+      String? saveDir = await FilePicker.getDirectoryPath();
       if (saveDir != null) {
         final fileName = p.basename(path);
         final targetPath = p.join(saveDir, fileName);
@@ -334,12 +334,12 @@ class _BackupModalState extends State<BackupModal> {
   }
 
   Future<void> _handleGlobalRestore(SeriesProvider provider) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
 
-    if (result == null || result.files.single.path == null) return;
+    if (result.isEmpty || result.first.path == null) return;
 
     if (!mounted) return;
     final confirm = await showDialog<bool>(
@@ -367,7 +367,7 @@ class _BackupModalState extends State<BackupModal> {
     if (confirm == true) {
       _setLoading(true);
       final success = await BackupService.restoreGlobalBackup(
-        result.files.single.path!,
+        result.first.path!,
         provider.galleryPath,
       );
 
@@ -678,7 +678,7 @@ class _BackupModalState extends State<BackupModal> {
           ),
         );
       } else {
-        String? targetDir = await FilePicker.platform.getDirectoryPath();
+        String? targetDir = await FilePicker.getDirectoryPath();
         if (targetDir != null) {
           final file = File(p.join(targetDir, fileName));
           await file.writeAsString(jsonString);
@@ -696,12 +696,12 @@ class _BackupModalState extends State<BackupModal> {
   }
 
   Future<void> _handleTrainingRestore(SeriesProvider provider) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
 
-    if (result == null || result.files.single.path == null) return;
+    if (result.isEmpty || result.first.path == null) return;
 
     if (!mounted) return;
     final lang = provider.language;
@@ -733,7 +733,7 @@ class _BackupModalState extends State<BackupModal> {
 
     _setLoading(true);
     try {
-      final file = File(result.files.single.path!);
+      final file = File(result.first.path!);
       final content = await file.readAsString();
       final List<dynamic> data = json.decode(content);
 
@@ -797,7 +797,7 @@ class _BackupModalState extends State<BackupModal> {
         ShareParams(files: [XFile(path)], text: 'JKD Media Backup'),
       );
     } else {
-      String? saveDir = await FilePicker.platform.getDirectoryPath();
+      String? saveDir = await FilePicker.getDirectoryPath();
       if (saveDir != null) {
         final fileName = p.basename(path);
         final targetPath = p.join(saveDir, fileName);
@@ -814,16 +814,16 @@ class _BackupModalState extends State<BackupModal> {
   Future<void> _handleMediaRestore(SeriesProvider provider) async {
     final targetPath = provider.galleryPath;
     if (targetPath == null) return;
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
-    if (result == null || result.files.single.path == null) return;
+    if (result.isEmpty || result.first.path == null) return;
 
     _setLoading(true);
     final success = await MediaBackupService.restoreGalleryFromZip(
       targetPath,
-      result.files.single.path!,
+      result.first.path!,
     );
     if (success) {
       await provider.loadSeries(); // Refresh to show icons
@@ -868,7 +868,7 @@ class _BackupModalState extends State<BackupModal> {
           ),
         );
       } else {
-        String? targetDir = await FilePicker.platform.getDirectoryPath();
+        String? targetDir = await FilePicker.getDirectoryPath();
         if (targetDir != null) {
           final file = File(p.join(targetDir, fileName));
           await file.writeAsString(jsonString);
@@ -886,16 +886,16 @@ class _BackupModalState extends State<BackupModal> {
   }
 
   Future<void> _handleCustomAnglesRestore(SeriesProvider provider) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
 
-    if (result == null || result.files.single.path == null) return;
+    if (result.isEmpty || result.first.path == null) return;
 
     _setLoading(true);
     try {
-      final file = File(result.files.single.path!);
+      final file = File(result.first.path!);
       final content = await file.readAsString();
       final List<dynamic> jsonList = json.decode(content);
       final imported = jsonList

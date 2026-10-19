@@ -1,5 +1,6 @@
-import 'dart:io';
+import '../../../utils/platform_io.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -44,8 +45,8 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
     super.dispose();
   }
 
-  String get _lang => Provider.of<SeriesProvider>(context, listen: false)
-      .language;
+  String get _lang =>
+      Provider.of<SeriesProvider>(context, listen: false).language;
 
   /// Pick or record a video and store it, surfacing errors as snackbars.
   Future<void> _handleVideoPick({required bool capture}) async {
@@ -78,9 +79,7 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text(
-              LocalizationService.translate('no_camera', lang),
-            ),
+            content: Text(LocalizationService.translate('no_camera', lang)),
           ),
         );
       }
@@ -109,10 +108,7 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
               },
             ),
             IconButton(
-              icon: const Icon(
-                Icons.add_a_photo,
-                color: Colors.blueAccent,
-              ),
+              icon: const Icon(Icons.add_a_photo, color: Colors.blueAccent),
               tooltip: LocalizationService.translate('capture_photo', lang),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
@@ -143,10 +139,7 @@ class _MediaGalleryDialogState extends State<MediaGalleryDialog>
               onPressed: () => _handleVideoPick(capture: false),
             ),
             IconButton(
-              icon: const Icon(
-                Icons.video_stable,
-                color: Colors.blueAccent,
-              ),
+              icon: const Icon(Icons.video_stable, color: Colors.blueAccent),
               tooltip: LocalizationService.translate('capture_video', lang),
               onPressed: () => _handleVideoPick(capture: true),
             ),
@@ -224,14 +217,9 @@ class _PhotosTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang =
-        Provider.of<SeriesProvider>(context, listen: false).language;
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return FutureBuilder<List<File>>(
-      future: mediaService.getImagesForMove(
-        galleryPath,
-        category,
-        moveName,
-      ),
+      future: mediaService.getImagesForMove(galleryPath, category, moveName),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -243,12 +231,11 @@ class _PhotosTab extends StatelessWidget {
           );
         }
         return GridView.builder(
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
           itemCount: images.length,
           itemBuilder: (context, index) {
             final imageFile = images[index];
@@ -259,7 +246,17 @@ class _PhotosTab extends StatelessWidget {
                     onTap: () => showFullScreenImage(context, images, index),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(imageFile, fit: BoxFit.cover),
+                      // Image.file needs a real dart:io File (native only);
+                      // the gallery is unreachable on web anyway. The
+                      // dynamic cast keeps the web stub File from clashing
+                      // with Flutter's dart:io File parameter type.
+                      child: kIsWeb
+                          ? const Icon(
+                              Icons.photo,
+                              size: 48,
+                              color: Colors.grey,
+                            )
+                          : Image.file(imageFile as dynamic, fit: BoxFit.cover),
                     ),
                   ),
                 ),
@@ -267,10 +264,7 @@ class _PhotosTab extends StatelessWidget {
                   top: 4,
                   right: 4,
                   child: _DeleteButton(
-                    label: LocalizationService.translate(
-                      'delete_image',
-                      lang,
-                    ),
+                    label: LocalizationService.translate('delete_image', lang),
                     message: LocalizationService.translate(
                       'delete_image_confirm',
                       lang,
@@ -308,14 +302,9 @@ class _VideosTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang =
-        Provider.of<SeriesProvider>(context, listen: false).language;
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return FutureBuilder<List<File>>(
-      future: mediaService.getVideosForMove(
-        galleryPath,
-        category,
-        moveName,
-      ),
+      future: mediaService.getVideosForMove(galleryPath, category, moveName),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -327,12 +316,11 @@ class _VideosTab extends StatelessWidget {
           );
         }
         return GridView.builder(
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
           itemCount: videos.length,
           itemBuilder: (context, index) {
             final videoFile = videos[index];
@@ -348,7 +336,9 @@ class _VideosTab extends StatelessWidget {
                     child: Container(
                       margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -379,10 +369,7 @@ class _VideosTab extends StatelessWidget {
                   top: 4,
                   right: 4,
                   child: _DeleteButton(
-                    label: LocalizationService.translate(
-                      'delete_video',
-                      lang,
-                    ),
+                    label: LocalizationService.translate('delete_video', lang),
                     message: LocalizationService.translate(
                       'delete_video_confirm',
                       lang,
@@ -425,8 +412,7 @@ class _DeleteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang =
-        Provider.of<SeriesProvider>(context, listen: false).language;
+    final lang = Provider.of<SeriesProvider>(context, listen: false).language;
     return GestureDetector(
       onTap: () async {
         final confirmed = await showDialog<bool>(
@@ -466,11 +452,7 @@ class _DeleteButton extends StatelessWidget {
             ),
           ],
         ),
-        child: const Icon(
-          Icons.remove,
-          color: Colors.red,
-          size: 16,
-        ),
+        child: const Icon(Icons.remove, color: Colors.red, size: 16),
       ),
     );
   }

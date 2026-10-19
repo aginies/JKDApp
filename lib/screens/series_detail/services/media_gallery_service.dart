@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/series_provider.dart';
@@ -15,6 +16,21 @@ class MediaGalleryService {
   ) async {
     final provider = Provider.of<SeriesProvider>(context, listen: false);
     final lang = provider.language;
+
+    // The media gallery is file-based: disabled on web.
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            lang == 'fr'
+                ? 'Galerie média non disponible sur web'
+                : 'Media gallery not available on web',
+          ),
+        ),
+      );
+      return;
+    }
+
     final galleryPath = provider.galleryPath;
 
     if (galleryPath == null) {

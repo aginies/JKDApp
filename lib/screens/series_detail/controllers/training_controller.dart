@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:io';
+import '../../../utils/platform_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
@@ -53,7 +54,8 @@ class TrainingController {
   int get subIndex => _subIndex;
 
   Future<void> initTts({double speechRate = 0.50}) async {
-    if (Platform.isLinux) return;
+    // TTS is disabled on web and Linux (spd-say only).
+    if (kIsWeb || Platform.isLinux) return;
     try {
       await _tts.setVolume(1.0);
       await _tts.setSpeechRate(speechRate);
@@ -82,7 +84,7 @@ class TrainingController {
   }
 
   Future<void> setLanguage(String language) async {
-    if (Platform.isLinux) return;
+    if (kIsWeb || Platform.isLinux) return;
     try {
       if (language == 'fr') {
         await _tts.setLanguage('fr-FR');
@@ -116,7 +118,10 @@ class TrainingController {
       onSubIndexChanged(_subIndex);
 
       final line = lines[i];
-      if (Platform.isLinux) {
+      if (kIsWeb) {
+        // TTS is disabled on web: only the highlight and the delay below
+        // apply, so training mode still paces the user.
+      } else if (Platform.isLinux) {
         try {
           await Process.run('spd-say', ['-l', language, '-w', line.text]);
         } catch (e) {
@@ -140,6 +145,7 @@ class TrainingController {
   }
 
   Future<void> stopTts() async {
+    if (kIsWeb) return;
     if (Platform.isLinux) {
       try {
         await Process.run('spd-say', ['-S']);
@@ -170,7 +176,7 @@ class TrainingController {
     _language = language;
 
     await setLanguage(language);
-    if (!Platform.isLinux) {
+    if (!kIsWeb && !Platform.isLinux) {
       await _tts.setSpeechRate(speechRate);
     }
 
@@ -226,7 +232,10 @@ class TrainingController {
     onIndexChanged(_currentIndex);
 
     if (context.mounted) {
-      final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+      final keepScreenOn = Provider.of<SeriesProvider>(
+        context,
+        listen: false,
+      ).keepScreenOn;
       if (keepScreenOn) {
         WakelockPlus.enable();
       }
@@ -412,12 +421,12 @@ class TrainingController {
     AudioSessionService.releaseFocus();
     WakelockPlus.disable();
     // Fire-and-forget async stop, with platform check to avoid plugin errors
-    if (!Platform.isLinux) {
+    if (!kIsWeb && !Platform.isLinux) {
       _tts.stop().catchError((e) {
         debugPrint("TTS stop warning: $e");
         return null;
       });
-    } else {
+    } else if (Platform.isLinux) {
       // On Linux, try to stop spd-say
       try {
         Process.run('spd-say', ['-S']);

@@ -1,5 +1,6 @@
-import 'dart:io';
+import '../../../utils/platform_io.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Show full screen image viewer (page view when multiple images).
@@ -31,7 +32,20 @@ void showFullScreenImage(
                 itemBuilder: (context, index) {
                   return Center(
                     child: InteractiveViewer(
-                      child: Image.file(images[index], fit: BoxFit.contain),
+                      // Image.file needs a real dart:io File (native only);
+                      // the viewer is unreachable on web anyway. The dynamic
+                      // cast keeps the web stub File from clashing with
+                      // Flutter's dart:io File parameter type.
+                      child: kIsWeb
+                          ? const Icon(
+                              Icons.photo,
+                              size: 48,
+                              color: Colors.grey,
+                            )
+                          : Image.file(
+                              images[index] as dynamic,
+                              fit: BoxFit.contain,
+                            ),
                     ),
                   );
                 },
@@ -40,11 +54,7 @@ void showFullScreenImage(
                 top: 16,
                 right: 16,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 30,
-                  ),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),

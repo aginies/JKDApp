@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 

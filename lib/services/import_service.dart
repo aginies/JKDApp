@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -12,13 +12,13 @@ import 'series_provider.dart';
 class ImportService {
   static Future<bool> importSeries(SeriesProvider provider) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
 
-      if (result != null) {
-        File file = File(result.files.single.path!);
+      if (files.isNotEmpty && files.first.path != null) {
+        File file = File(files.first.path!);
         String content = await file.readAsString();
         List<dynamic> jsonData = json.decode(content);
 
@@ -77,13 +77,13 @@ class ImportService {
 
   static Future<bool> importGlossary(SeriesProvider provider) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
 
-      if (result != null && result.files.single.path != null) {
-        File file = File(result.files.single.path!);
+      if (files.isNotEmpty && files.first.path != null) {
+        File file = File(files.first.path!);
         String content = await file.readAsString();
         List<dynamic> jsonData = json.decode(content);
 

@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -125,7 +126,8 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _initTts() async {
-    if (Platform.isLinux) return;
+    // TTS is disabled on web and Linux (spd-say only).
+    if (kIsWeb || Platform.isLinux) return;
     try {
       final lang = Provider.of<SeriesProvider>(context, listen: false).language;
       await _tts.setLanguage(lang == 'fr' ? 'fr-FR' : 'en-US');
@@ -140,14 +142,12 @@ class _WarmupScreenState extends State<WarmupScreen> {
         // background music un-ducks between lines of a long session.
         await _tts.autoStopSharedSession(false);
         if (Platform.isIOS) {
-          await _tts.setIosAudioCategory(
-            IosTextToSpeechAudioCategory.playback,
-            [
-              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-              IosTextToSpeechAudioCategoryOptions.duckOthers,
-              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-            ],
-          );
+          await _tts
+              .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+                IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+                IosTextToSpeechAudioCategoryOptions.duckOthers,
+                IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+              ]);
         } else if (Platform.isAndroid) {
           await _tts.setAudioAttributesForNavigation();
         }
@@ -169,6 +169,7 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _stopTts() async {
+    if (kIsWeb) return;
     if (Platform.isLinux) {
       try {
         await Process.run('spd-say', ['-S']);
@@ -260,7 +261,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
     // Record activity in usage statistics
     UsageStatisticsService().recordActivity('Warmup');
 
-    final keepScreenOn = Provider.of<SeriesProvider>(context, listen: false).keepScreenOn;
+    final keepScreenOn = Provider.of<SeriesProvider>(
+      context,
+      listen: false,
+    ).keepScreenOn;
     if (keepScreenOn) {
       WakelockPlus.enable();
     }
@@ -332,7 +336,9 @@ class _WarmupScreenState extends State<WarmupScreen> {
         setState(() {
           _isRunning = false;
         });
-        await _speak(lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete');
+        await _speak(
+          lang == 'fr' ? 'Échauffement terminé' : 'Warm up complete',
+        );
         AudioSessionService.releaseFocus();
         WakelockPlus.disable();
       }
@@ -357,6 +363,10 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _speak(String text) async {
+    if (kIsWeb) {
+      // TTS is disabled on web: warmup text is displayed but not spoken.
+      return;
+    }
     if (Platform.isLinux) {
       try {
         final lang = Provider.of<SeriesProvider>(

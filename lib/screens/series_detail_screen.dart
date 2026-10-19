@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -570,31 +571,38 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen>
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
-                        PopupMenuItem(
-                          value: 'print',
-                          child: ListTile(
-                            leading: const Icon(Icons.print),
-                            title: Text(
-                              LocalizationService.translate(
-                                'export_to_pdf',
-                                lang,
+                        // PDF export and JSON sharing are file-based:
+                        // disabled on web.
+                        if (!kIsWeb) ...[
+                          PopupMenuItem(
+                            value: 'print',
+                            child: ListTile(
+                              leading: const Icon(Icons.print),
+                              title: Text(
+                                LocalizationService.translate(
+                                  'export_to_pdf',
+                                  lang,
+                                ),
                               ),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
                             ),
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
                           ),
-                        ),
-                        PopupMenuItem(
-                          value: 'share',
-                          child: ListTile(
-                            leading: const Icon(Icons.share),
-                            title: Text(
-                              LocalizationService.translate('share_json', lang),
+                          PopupMenuItem(
+                            value: 'share',
+                            child: ListTile(
+                              leading: const Icon(Icons.share),
+                              title: Text(
+                                LocalizationService.translate(
+                                  'share_json',
+                                  lang,
+                                ),
+                              ),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
                             ),
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
                           ),
-                        ),
+                        ],
                         PopupMenuItem(
                           value: 'cloud_upload',
                           child: ListTile(

@@ -1,4 +1,5 @@
-import 'dart:io';
+import '../utils/platform_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -359,15 +360,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => LoggingService.shareLogs(),
-                  icon: const Icon(Icons.share),
-                  label: Text(LocalizationService.translate('save_logs', lang)),
+              // Log sharing writes a file: disabled on web.
+              if (!kIsWeb) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => LoggingService.shareLogs(),
+                    icon: const Icon(Icons.share),
+                    label: Text(
+                      LocalizationService.translate('save_logs', lang),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         );
@@ -680,19 +686,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: Text(
                   LocalizationService.translate('voice_recognition', lang),
                 ),
-                subtitle: Platform.isLinux
+                subtitle: (Platform.isLinux || kIsWeb)
                     ? Text(
                         lang == 'fr'
-                            ? 'Non disponible sur Linux'
-                            : 'Not available on Linux',
+                            ? 'Non disponible sur Linux / web'
+                            : 'Not available on Linux / web',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,
                         ),
                       )
                     : null,
-                value: Platform.isLinux ? false : provider.voiceEnabled,
-                onChanged: Platform.isLinux
+                value: (Platform.isLinux || kIsWeb)
+                    ? false
+                    : provider.voiceEnabled,
+                onChanged: (Platform.isLinux || kIsWeb)
                     ? null
                     : (val) => provider.setVoiceEnabled(val),
               ),
@@ -731,120 +739,130 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(),
               // Garmin Watch Coaching Voice section
-              ListTile(
-                leading: Icon(
-                  Icons.watch,
-                  color: provider.garminConnected ? Colors.blue : Colors.grey,
-                ),
-                title: Text(lang == 'fr' ? 'Montre Garmin' : 'Garmin Watch'),
-                subtitle: Row(
-                  children: [
-                    Icon(
-                      provider.garminConnected
-                          ? Icons.bluetooth_connected
-                          : Icons.bluetooth_disabled,
-                      size: 14,
-                      color: provider.garminConnected
-                          ? Colors.blue
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      provider.garminConnected
-                          ? (lang == 'fr' ? 'Connectée' : 'Connected')
-                          : (lang == 'fr' ? 'Non connectée' : 'Not connected'),
-                      style: TextStyle(
+              // (BLE is not available on web: hidden there)
+              if (!kIsWeb) ...[
+                ListTile(
+                  leading: Icon(
+                    Icons.watch,
+                    color: provider.garminConnected ? Colors.blue : Colors.grey,
+                  ),
+                  title: Text(lang == 'fr' ? 'Montre Garmin' : 'Garmin Watch'),
+                  subtitle: Row(
+                    children: [
+                      Icon(
+                        provider.garminConnected
+                            ? Icons.bluetooth_connected
+                            : Icons.bluetooth_disabled,
+                        size: 14,
                         color: provider.garminConnected
                             ? Colors.blue
                             : Colors.grey,
-                        fontSize: 12,
                       ),
-                    ),
-                    if (provider.garminConnected &&
-                        provider.garminCoachingVoiceActive) ...[
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.record_voice_over,
-                        size: 14,
-                        color: Colors.green,
-                      ),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: 4),
                       Text(
-                        lang == 'fr' ? 'Coaching actif' : 'Coaching active',
-                        style: const TextStyle(
-                          color: Colors.green,
+                        provider.garminConnected
+                            ? (lang == 'fr' ? 'Connectée' : 'Connected')
+                            : (lang == 'fr'
+                                  ? 'Non connectée'
+                                  : 'Not connected'),
+                        style: TextStyle(
+                          color: provider.garminConnected
+                              ? Colors.blue
+                              : Colors.grey,
                           fontSize: 12,
                         ),
                       ),
+                      if (provider.garminConnected &&
+                          provider.garminCoachingVoiceActive) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.record_voice_over,
+                          size: 14,
+                          color: Colors.green,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          lang == 'fr' ? 'Coaching actif' : 'Coaching active',
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-              if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
-                ListTile(
-                  leading: const Icon(Icons.info_outline, color: Colors.grey),
-                  title: Text(
-                    lang == 'fr'
-                        ? 'Coaching vocal Garmin non disponible sur ce système'
-                        : 'Garmin coaching voice not available on this platform',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
-                )
-              else
-                SwitchListTile(
-                  secondary: const Icon(Icons.record_voice_over),
+                ),
+                if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
+                  ListTile(
+                    leading: const Icon(Icons.info_outline, color: Colors.grey),
+                    title: Text(
+                      lang == 'fr'
+                          ? 'Coaching vocal Garmin non disponible sur ce système'
+                          : 'Garmin coaching voice not available on this platform',
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  )
+                else
+                  SwitchListTile(
+                    secondary: const Icon(Icons.record_voice_over),
+                    title: Text(
+                      lang == 'fr'
+                          ? 'Accepter les messages de coaching'
+                          : 'Accept Watch Coaching Messages',
+                    ),
+                    subtitle: Text(
+                      lang == 'fr'
+                          ? 'Parler les combos envoyés par la montre via TTS'
+                          : 'Speak combos sent from the Garmin watch via TTS',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    value: provider.garminCoachingTtsEnabled,
+                    onChanged: (val) =>
+                        provider.setGarminCoachingTtsEnabled(val),
+                  ),
+              ],
+              const Divider(),
+              // Gallery path is only used by the media gallery (web: disabled)
+              if (!kIsWeb)
+                ListTile(
+                  leading: const Icon(Icons.folder_open),
+                  title: Text(
+                    LocalizationService.translate('gallery_path', lang),
+                  ),
+                  subtitle: Text(provider.galleryPath ?? 'Not set'),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      String? selectedDirectory = await FilePicker
+                          .getDirectoryPath();
+                      if (selectedDirectory != null) {
+                        provider.setGalleryPath(selectedDirectory);
+                      }
+                    },
+                    child: Text(
+                      LocalizationService.translate('select_folder', lang),
+                    ),
+                  ),
+                ),
+              const Divider(),
+              // Backup & Restore is file-based: disabled on web.
+              if (!kIsWeb)
+                ListTile(
+                  leading: const Icon(
+                    Icons.settings_backup_restore,
+                    color: Colors.purple,
+                  ),
                   title: Text(
                     lang == 'fr'
-                        ? 'Accepter les messages de coaching'
-                        : 'Accept Watch Coaching Messages',
+                        ? 'Sauvegarde & Restauration'
+                        : 'Backup & Restore',
                   ),
                   subtitle: Text(
                     lang == 'fr'
-                        ? 'Parler les combos envoyés par la montre via TTS'
-                        : 'Speak combos sent from the Garmin watch via TTS',
-                    style: const TextStyle(fontSize: 12),
+                        ? 'Gérer vos sauvegardes (Full, Series, Glossaire, Media)'
+                        : 'Manage your backups (Full, Series, Glossary, Media)',
                   ),
-                  value: provider.garminCoachingTtsEnabled,
-                  onChanged: (val) => provider.setGarminCoachingTtsEnabled(val),
+                  onTap: () => _showBackupRestoreModal(context),
                 ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.folder_open),
-                title: Text(
-                  LocalizationService.translate('gallery_path', lang),
-                ),
-                subtitle: Text(provider.galleryPath ?? 'Not set'),
-                trailing: TextButton(
-                  onPressed: () async {
-                    String? selectedDirectory = await FilePicker.platform
-                        .getDirectoryPath();
-                    if (selectedDirectory != null) {
-                      provider.setGalleryPath(selectedDirectory);
-                    }
-                  },
-                  child: Text(
-                    LocalizationService.translate('select_folder', lang),
-                  ),
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(
-                  Icons.settings_backup_restore,
-                  color: Colors.purple,
-                ),
-                title: Text(
-                  lang == 'fr'
-                      ? 'Sauvegarde & Restauration'
-                      : 'Backup & Restore',
-                ),
-                subtitle: Text(
-                  lang == 'fr'
-                      ? 'Gérer vos sauvegardes (Full, Series, Glossaire, Media)'
-                      : 'Manage your backups (Full, Series, Glossary, Media)',
-                ),
-                onTap: () => _showBackupRestoreModal(context),
-              ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.history_edu),
@@ -892,7 +910,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(provider.projectPath ?? 'Not set'),
                   trailing: TextButton(
                     onPressed: () async {
-                      String? selectedDirectory = await FilePicker.platform
+                      String? selectedDirectory = await FilePicker
                           .getDirectoryPath();
                       if (selectedDirectory != null) {
                         provider.setProjectPath(selectedDirectory);

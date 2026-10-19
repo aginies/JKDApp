@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../utils/platform_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -48,9 +48,11 @@ class MediaService {
       final List<FileSystemEntity> files = dir.listSync();
       return files
           .whereType<File>()
-          .where((f) =>
-              p.basename(f.path).startsWith(prefix) &&
-              kImageExtensions.contains(p.extension(f.path).toLowerCase()))
+          .where(
+            (f) =>
+                p.basename(f.path).startsWith(prefix) &&
+                kImageExtensions.contains(p.extension(f.path).toLowerCase()),
+          )
           .toList();
     } catch (e) {
       debugPrint('Error listing images: $e');
@@ -156,9 +158,11 @@ class MediaService {
       final List<FileSystemEntity> files = dir.listSync();
       return files
           .whereType<File>()
-          .where((f) =>
-              p.basename(f.path).startsWith(prefix) &&
-              p.extension(f.path).toLowerCase() == '.mp4')
+          .where(
+            (f) =>
+                p.basename(f.path).startsWith(prefix) &&
+                p.extension(f.path).toLowerCase() == '.mp4',
+          )
           .toList();
     } catch (e) {
       debugPrint('Error listing videos: $e');
@@ -175,19 +179,12 @@ class MediaService {
     String category,
     String moveName,
   ) async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-    );
-    final PlatformFile? picked = result?.files.first;
+    final files = await FilePicker.pickFiles(type: FileType.video);
+    final PlatformFile? picked = files.isEmpty ? null : files.first;
     final String? sourcePath = picked?.path;
     if (picked == null || sourcePath == null) return null;
 
-    return _saveVideo(
-      File(sourcePath),
-      baseGalleryPath,
-      category,
-      moveName,
-    );
+    return _saveVideo(File(sourcePath), baseGalleryPath, category, moveName);
   }
 
   /// Record a video with the device camera and store it for a move.
@@ -208,12 +205,7 @@ class MediaService {
     }
     if (video == null) return null;
 
-    return _saveVideo(
-      File(video.path),
-      baseGalleryPath,
-      category,
-      moveName,
-    );
+    return _saveVideo(File(video.path), baseGalleryPath, category, moveName);
   }
 
   /// Copy [source] into the move's gallery folder with the next

@@ -1,5 +1,6 @@
-import 'dart:io';
+import '../../../utils/platform_io.dart';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -29,7 +30,11 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
   }
 
   Future<void> _initialize() async {
-    final controller = VideoPlayerController.file(widget.videoFile);
+    // Video playback needs a real dart:io File (native only);
+    // the player is unreachable on web anyway. The dynamic cast keeps the
+    // web stub File from clashing with video_player's dart:io File type.
+    if (kIsWeb) return;
+    final controller = VideoPlayerController.file(widget.videoFile as dynamic);
     _controller = controller;
     try {
       await controller.initialize();
@@ -118,11 +123,7 @@ class _VideoPlayerDialogState extends State<VideoPlayerDialog> {
             top: MediaQuery.of(context).padding.top + 8,
             right: 8,
             child: IconButton(
-              icon: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 30,
-              ),
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
               onPressed: () => Navigator.pop(context),
             ),
           ),

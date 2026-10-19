@@ -28,8 +28,34 @@ function write_log($message, $level = 'INFO') {
     }
     $date = date('Y-m-d H:i:s');
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    // Neutralize CR/LF so user-derived data (e.g. URL-decoded header values)
+    // cannot forge additional log lines.
+    $message = str_replace(["\r", "\n"], ' ', (string)$message);
     $log_entry = "[$date] [$level] [$ip] $message" . PHP_EOL;
     file_put_contents(LOG_FILE, $log_entry, FILE_APPEND);
+}
+
+/**
+ * Send CORS headers so the Flutter web build (served from a different
+ * origin) can call the API endpoints.
+ *
+ * A wildcard origin is safe here: no cookies or credentials are involved,
+ * and the app secret / tokens travel in request headers (already public in
+ * the app binaries, so CORS grants no additional access).
+ *
+ * Also answers OPTIONS preflight requests, which the browser sends before
+ * any POST that uses custom headers (X-Token, X-App-Secret, ...).
+ */
+function send_cors_headers() {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, X-Token, X-App-Secret, X-USERNAME, X-FILENAME, X-CATEGORY');
+    header('Access-Control-Max-Age: 86400');
+
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+        http_response_code(204);
+        exit;
+    }
 }
 
 /**
@@ -55,7 +81,11 @@ function verify_token() {
     }
 
     [$ts, $hmac] = $parts;
-    if (!ctype_digit($ts) || (time() - (int)$ts) > TOKEN_TTL) {
+    $timestamp = (int) $ts;
+    $now       = time();
+    // Reject non-numeric, future-dated, or over-aged timestamps. The HMAC
+    // check below still prevents forgery; this is defense-in-depth.
+    if (!ctype_digit($ts) || $timestamp > $now || ($now - $timestamp) > TOKEN_TTL) {
         reject('Unauthorized: token expired');
     }
 

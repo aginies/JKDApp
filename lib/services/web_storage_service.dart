@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:http/io_client.dart';
+import 'package:http/http.dart' as http;
 import '../models/series.dart';
 import 'logging_service.dart';
 
@@ -10,18 +9,41 @@ class WebStorageService {
   static const String listUrl = '$_baseUrl/list.php';
   static const String downloadBaseUrl = '$_baseUrl/data/';
   static const String _tokenUrl = '$_baseUrl/token.php';
-  static const String _appSecret =
-      'iada9426bf7aa6e5aa52d00fda4f426f08eefe19cd9a0c3a6e7ca719f11eaffaf';
+
+  // Supplied at build time and never committed to git:
+  //   flutter build/run --dart-define=APP_SECRET=...
+  // It is a client-visible shared secret (extractable from shipped binaries);
+  // the real protection for uploads is the server-only TOKEN_SIGNING_KEY.
+  static const String _appSecret = String.fromEnvironment('APP_SECRET');
 
   // Token cache — static so it survives across service instances
   static String? _cachedToken;
   static DateTime? _tokenExpiresAt;
 
-  IOClient _buildClient() {
-    final httpClient = HttpClient()
-      ..badCertificateCallback =
-          ((X509Certificate cert, String host, int port) => true);
-    return IOClient(httpClient);
+  /// Plain HTTP client: works on native and web (XHR under the hood on web).
+  ///
+  /// The previous implementation bypassed TLS certificate validation
+  /// (badCertificateCallback). Browsers forbid that, and the server has a
+  /// valid certificate, so plain validation is used everywhere now.
+  http.Client _buildClient() => http.Client();
+
+  /// Sanitizes a user-controlled string for use as a filename component.
+  ///
+  /// Strips path separators, filesystem-reserved characters and control
+  /// characters (replaced by `_`) so the value can never escape the upload
+  /// directory or forge log lines — defense in depth on top of the
+  /// server-side sanitization in api.php.
+  static String _safeFilenamePart(String value, {int maxLength = 128}) {
+    final String cleaned = value
+        .replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        // Leading dots would create hidden files on the server.
+        .replaceAll(RegExp(r'^\.+'), '_');
+    final String truncated = cleaned.length > maxLength
+        ? cleaned.substring(0, maxLength)
+        : cleaned;
+    return truncated.isEmpty ? 'untitled' : truncated;
   }
 
   /// Returns a valid token, fetching a new one from token.php if needed.
@@ -134,7 +156,7 @@ class WebStorageService {
         throw Exception('Series is too large to upload (max 100KB)');
       }
 
-      final String filename = '${series.title}.json';
+      final String filename = '${_safeFilenamePart(series.title)}.json';
       final String token = await _getToken();
 
       LoggingService.info(
@@ -198,7 +220,7 @@ class WebStorageService {
       }
 
       final String filename =
-          'custom_angles_${username.replaceAll(' ', '_')}.json';
+          'custom_angles_${_safeFilenamePart(username, maxLength: 64)}.json';
       final String token = await _getToken();
 
       LoggingService.info(
