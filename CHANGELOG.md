@@ -5,6 +5,18 @@ All notable changes to the JKD App are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+- Fixed zip-slip path traversal when restoring backup and media ZIP archives (archive entry names are now validated before extraction).
+- Removed the hardcoded app secret from the Flutter client; it is now injected at build time via `--dart-define=APP_SECRET=...`.
+- Added `php_site/secrets.php` to `.gitignore` and rotated `APP_SECRET`, `TOKEN_SIGNING_KEY`, and the admin password.
+- Hardened upload filename sanitization (NUL/control characters and leading dots) and token validation (future-dated timestamps are now rejected).
+
+### Changed
+- Moved the PHP web backend from `web/` to `php_site/`.
+- Upgraded `file_picker` 10→13, `permission_handler` 12→13, `record` 6→7, `share_plus` 12→13, `video_player` →2.14, and other dependencies; migrated the `file_picker` API (`FilePickerResult` → `List<PlatformFile>`, static `FilePicker.*`).
+
 ## [2.8.1] - 2026-10-07
 
 ### Fixed

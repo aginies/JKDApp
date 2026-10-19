@@ -28,12 +28,14 @@ A comprehensive Flutter application for managing Jeet Kune Do training series, t
 
 ## Web Cloud Storage
 
-The project includes a full PHP-based web backend and interface located in the `/web` directory:
+The project includes a full PHP-based web backend and interface located in the `php_site/` directory:
 - **Central Repository**: A cloud-based library for discovering and sharing JKD training series.
 - **Web Interface**: Browse, search, and preview series content directly in any web browser.
 - **REST API**: Seamless integration with the mobile app for automated uploads and downloads.
 - **Admin Tools**: Built-in moderation and content management tools.
-- **Logging & Debugging**: Centralized logging of all API requests, uploads, and administrative actions in `web/logs/app.log`.
+- **Logging & Debugging**: Centralized logging of all API requests, uploads, and administrative actions in `php_site/logs/app.log`.
+
+> **Configuration**: copy `php_site/secrets.php.example` to `php_site/secrets.php` and set `APP_SECRET`, `TOKEN_SIGNING_KEY`, and `ADMIN_PASS_HASH`. Pass `APP_SECRET` to the app at build time (see *Building*).
 
 ## Wearable Extensions
 
@@ -57,7 +59,7 @@ Integrates with Garmin watches (Fenix, Forerunner, etc.) via the Garmin SDK:
 .
 ├── garmin_app/          # Garmin ConnectIQ source code (Monkey C)
 ├── wear_os_app/         # Native Wear OS Flutter application
-├── web/                 # PHP Backend and Web Interface for Cloud Storage
+├── php_site/           # PHP Backend and Web Interface for Cloud Storage
 ├── lib/                 # Main Mobile/Desktop application source
 │   ├── models/          # Data models (Move, JkdSeries)
 │   ├── services/        # Business logic (DB, Garmin Sync, Hashing)
@@ -127,8 +129,9 @@ To maintain code quality and manageability, the following organization principle
 ### Building
 ```bash
 flutter pub get
-flutter run
+flutter run --dart-define=APP_SECRET=...
 ```
+> The app secret (`APP_SECRET`) is injected at build time and is no longer hard-coded. Without it, uploading series to the cloud library fails (401). The value must match `APP_SECRET` in `php_site/secrets.php`.
 
 ### Build & Verify Script
 `./build_and_verify.sh` wraps the full pipeline (examples):

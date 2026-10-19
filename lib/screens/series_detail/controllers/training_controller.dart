@@ -1,6 +1,5 @@
 import 'dart:async';
 import '../../../utils/platform_io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../models/move.dart';
@@ -54,8 +53,8 @@ class TrainingController {
   int get subIndex => _subIndex;
 
   Future<void> initTts({double speechRate = 0.50}) async {
-    // TTS is disabled on web and Linux (spd-say only).
-    if (kIsWeb || Platform.isLinux) return;
+    // TTS is disabled on Linux only (spd-say is used there instead).
+    if (Platform.isLinux) return;
     try {
       await _tts.setVolume(1.0);
       await _tts.setSpeechRate(speechRate);
@@ -84,7 +83,7 @@ class TrainingController {
   }
 
   Future<void> setLanguage(String language) async {
-    if (kIsWeb || Platform.isLinux) return;
+    if (Platform.isLinux) return;
     try {
       if (language == 'fr') {
         await _tts.setLanguage('fr-FR');
@@ -118,10 +117,7 @@ class TrainingController {
       onSubIndexChanged(_subIndex);
 
       final line = lines[i];
-      if (kIsWeb) {
-        // TTS is disabled on web: only the highlight and the delay below
-        // apply, so training mode still paces the user.
-      } else if (Platform.isLinux) {
+      if (Platform.isLinux) {
         try {
           await Process.run('spd-say', ['-l', language, '-w', line.text]);
         } catch (e) {
@@ -145,7 +141,6 @@ class TrainingController {
   }
 
   Future<void> stopTts() async {
-    if (kIsWeb) return;
     if (Platform.isLinux) {
       try {
         await Process.run('spd-say', ['-S']);
@@ -176,7 +171,7 @@ class TrainingController {
     _language = language;
 
     await setLanguage(language);
-    if (!kIsWeb && !Platform.isLinux) {
+    if (!Platform.isLinux) {
       await _tts.setSpeechRate(speechRate);
     }
 
@@ -421,12 +416,12 @@ class TrainingController {
     AudioSessionService.releaseFocus();
     WakelockPlus.disable();
     // Fire-and-forget async stop, with platform check to avoid plugin errors
-    if (!kIsWeb && !Platform.isLinux) {
+    if (!Platform.isLinux) {
       _tts.stop().catchError((e) {
         debugPrint("TTS stop warning: $e");
         return null;
       });
-    } else if (Platform.isLinux) {
+    } else {
       // On Linux, try to stop spd-say
       try {
         Process.run('spd-say', ['-S']);

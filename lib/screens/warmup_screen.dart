@@ -1,7 +1,6 @@
 import 'dart:async';
 import '../utils/platform_io.dart';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -126,8 +125,8 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _initTts() async {
-    // TTS is disabled on web and Linux (spd-say only).
-    if (kIsWeb || Platform.isLinux) return;
+    // TTS is disabled on Linux only (spd-say is used there instead).
+    if (Platform.isLinux) return;
     try {
       final lang = Provider.of<SeriesProvider>(context, listen: false).language;
       await _tts.setLanguage(lang == 'fr' ? 'fr-FR' : 'en-US');
@@ -169,7 +168,6 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _stopTts() async {
-    if (kIsWeb) return;
     if (Platform.isLinux) {
       try {
         await Process.run('spd-say', ['-S']);
@@ -363,10 +361,6 @@ class _WarmupScreenState extends State<WarmupScreen> {
   }
 
   Future<void> _speak(String text) async {
-    if (kIsWeb) {
-      // TTS is disabled on web: warmup text is displayed but not spoken.
-      return;
-    }
     if (Platform.isLinux) {
       try {
         final lang = Provider.of<SeriesProvider>(
