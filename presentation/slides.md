@@ -30,7 +30,7 @@ style: |
 
 Consulter · Composer · S'entraîner · Partager
 
-Android / Wear OS / Garmin / Windows / macOS / Linux / Web
+Android / Windows / macOS / Linux / Web / Garmin / Wear OS
 
 Version 3.0.0
 
@@ -53,14 +53,16 @@ Octobre 2026
 
 ## Une application perso
 
-> **Une application perso pour arrêter de prendre des notes illisibles**
+> **Avoir une référence fiable**
 
 | Étape | Ce que l'app apporte |
 |---|---|
 | **Consulter** | Glossaire bilingue, recherche, photos / vidéos |
 | **Composer** | Éditeur de combos visuel, sous-numérotation, ripostes, angles Kali, etc. |
-| **S'entraîner** | TTS + minuteur + boucle, programmes multi-jours, échauffement |
+| **Enregistrement Audio** | Rapidement enregistrer une séquence en audio |
 | **Partager** | Export PDF, sauvegarde ZIP, bibliothèque cloud |
+| **S'entraîner** | TTS + minuteur + boucle, programmes multi-jours, échauffement |
+| **Multi Plateforme** | Disponible partout, support tactile |
 
 ---
 
@@ -171,14 +173,15 @@ Séries : liste classique ou vue « carte », catégories, filtres et recherche 
 
 <!-- _class: split -->
 
-## La bibliothèque cloud (web)
+## La bibliothèque cloud et l'App web
 
 ![height:360](img/cloud.png)
 
-- Backend **PHP + API REST** intégré
 - **Déposer / télécharger** des séries communautaires depuis l'app
-- Interface web : parcourir, chercher, prévisualiser sans installer
+- **Cloud série** parcourir, chercher, prévisualiser sans installer
 - **Modération** côté admin + journalisation centralisée des requêtes
+- **Série** peut être: Officielle / Perso / Cloud
+- **Application Web** sur une page web, donc tout le temps accessible
 
 ---
 
@@ -217,9 +220,10 @@ Distribution actuellement limitée (Moi, Will et Yann)
 
 - L'app est un **mémo** : un jab, « c'est technique à faire », ce n'est pas juste un « nom »
 - L'application n'a **aucune valeur sans les cours**
-- Le glossaire est techniquement disponible partout (utilisé pour corriger la syntaxe), même s'il n'est pas catégorisé
+- Le glossaire est techniquement disponible partout (utilisé pour corriger la syntaxe), même s'il n'est pas catégorisé ailleurs
 - Les séries **sont exportées des cours** (donc de mes notes…)
 
+> Décision à prendre:
 - Contenu de la bibliothèque : **possibilité d'accès restreint via auth** (à implémenter)
 - À qui distribuer l'application ? **Avancés ? Sélection d'élèves ? Instructeurs ?**
 - Idées ou fonctions à implémenter ?
