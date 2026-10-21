@@ -20,12 +20,10 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </FilesMatch>
 
 # Protect application logs and log directory
+RewriteRule ^logs(/|$) - [F,L]
 <FilesMatch "\.log$">
     Require all denied
 </FilesMatch>
-<Directory "logs">
-    Require all denied
-</Directory>
 
 # token.php: POST and OPTIONS (for CORS preflight) only
 <Files "token.php">

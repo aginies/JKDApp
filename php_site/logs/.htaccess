@@ -1,0 +1,2 @@
+# Deny all direct access to the logs directory
+Require all denied

@@ -60,6 +60,9 @@ function write_log($message, $level = 'INFO') {
         @mkdir($log_dir, 0700, true);
         if (file_exists($log_dir)) {
             @chmod($log_dir, 0700);
+            if (!file_exists($log_dir . '/.htaccess')) {
+                @file_put_contents($log_dir . '/.htaccess', "Require all denied\n");
+            }
         }
     }
     $date = date('Y-m-d H:i:s');
