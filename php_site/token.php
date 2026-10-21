@@ -13,12 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Rate limiting: max 10 token requests per IP per hour
 $rate_limit_max    = 10;
 $rate_limit_window = 3600;
-$client_ip         = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$rate_file         = sys_get_temp_dir() . '/jkdapp_tkrl_' . md5($client_ip) . '.json';
+$client_ip         = get_client_ip();
+$rate_file         = get_rate_limit_file('tkrl', $client_ip);
 $now               = time();
 $state             = ['count' => 0, 'window_start' => $now];
 
-$fh = fopen($rate_file, 'c+');
+$fh = @fopen($rate_file, 'c+');
 if ($fh && flock($fh, LOCK_EX)) {
     $raw = stream_get_contents($fh);
     if ($raw) {
@@ -40,6 +40,17 @@ if ($state['count'] > $rate_limit_max) {
     http_response_code(429);
     header('Retry-After: ' . $retry_after);
     echo json_encode(['error' => 'Too many requests. Please try again later.']);
+    exit;
+}
+
+// Ensure server secrets are configured
+if (!defined('APP_SECRET') || !defined('TOKEN_SIGNING_KEY') || 
+    APP_SECRET === 'REPLACE_WITH_LONG_RANDOM_KEY' || 
+    TOKEN_SIGNING_KEY === 'REPLACE_WITH_ANOTHER_LONG_RANDOM_KEY' ||
+    empty(APP_SECRET) || empty(TOKEN_SIGNING_KEY)) {
+    write_log('Server misconfiguration: APP_SECRET or TOKEN_SIGNING_KEY not set', 'ERROR');
+    http_response_code(500);
+    echo json_encode(['error' => 'Server configuration error']);
     exit;
 }
 

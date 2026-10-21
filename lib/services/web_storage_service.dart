@@ -29,17 +29,16 @@ class WebStorageService {
 
   /// Sanitizes a user-controlled string for use as a filename component.
   ///
-  /// Strips path separators, filesystem-reserved characters and control
-  /// characters (replaced by `_`) so the value can never escape the upload
-  /// directory or forge log lines — defense in depth on top of the
-  /// server-side sanitization in api.php.
+  /// Strips path separators, filesystem-reserved characters, control
+  /// characters, and dots (replaced by `_`) so the value can never escape the
+  /// upload directory, create secondary script extensions, or forge log lines
+  /// — defense in depth on top of the server-side sanitization in api.php.
   static String _safeFilenamePart(String value, {int maxLength = 128}) {
     final String cleaned = value
-        .replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'[\x00-\x1f\x7f<>:"/\\|?*.]'), '_')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim()
-        // Leading dots would create hidden files on the server.
-        .replaceAll(RegExp(r'^\.+'), '_');
+        .replaceAll(RegExp(r'^_+'), '');
     final String truncated = cleaned.length > maxLength
         ? cleaned.substring(0, maxLength)
         : cleaned;

@@ -1,0 +1,61 @@
+# Web server configuration for Flutter Web & WebAssembly (WASM)
+
+# 1. Correct MIME types for WebAssembly, Service Workers, and Web manifests
+AddType application/wasm .wasm
+AddType application/javascript .js
+AddType application/json .json
+AddType image/svg+xml .svg
+
+# 2. Enforce HTTPS
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# 3. Security Headers and Cross-Origin Isolation for WASM Multithreading & SharedArrayBuffer
+<IfModule mod_headers.c>
+    # Cross-Origin Isolation (enables SharedArrayBuffer & high-performance SQLite WASM)
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Cross-Origin-Embedder-Policy "credentialless"
+
+    # Core Security Headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Content Security Policy (CSP):
+    # - 'wasm-unsafe-eval' allows sqlite3.wasm & Flutter WasmGC compilation
+    # - worker-src 'self' blob: allows sqflite_sw.js and dynamic web workers
+    # - img-src and font-src allow canvas rasterization and web fonts
+    # - connect-src allows API communication with backend storage
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://jkd.guibo.com; style-src 'self' 'unsafe-inline'"
+
+    # 4. Service Worker and Bootstrap Cache Busting
+    # Prevent caching of service worker and bootstrap loader to ensure prompt updates
+    <FilesMatch "(sqflite_sw\.js|flutter_bootstrap\.js|flutter_service_worker\.js|manifest\.json)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Long-term cache for version-hashed or static assets
+    <FilesMatch "\.(wasm|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# 5. SPA Routing (Single Page Application fallback to index.html)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+</IfModule>
+
+# 6. Block access to hidden files and version control
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

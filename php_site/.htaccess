@@ -11,38 +11,42 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline'"
 </IfModule>
 
-# Protect server-side only files
-<FilesMatch "^(config|secrets)\.php$">
+# Protect server-side config, secrets, and any backup/editor variants
+<FilesMatch "^(config|secrets)">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(bak|old|orig|save|swp|~)$">
     Require all denied
 </FilesMatch>
 
-# token.php: POST only (app fetches tokens), block browser GET
+# Protect application logs and log directory
+<FilesMatch "\.log$">
+    Require all denied
+</FilesMatch>
+<Directory "logs">
+    Require all denied
+</Directory>
+
+# token.php: POST and OPTIONS (for CORS preflight) only
 <Files "token.php">
-    <Limit GET>
+    <LimitExcept POST OPTIONS>
         Require all denied
-    </Limit>
-    <Limit POST>
-        Require all granted
-    </Limit>
+    </LimitExcept>
 </Files>
 
-# Protect the API from direct browser access (GET)
-# While still allowing the Flutter app to POST to it
+# api.php: POST and OPTIONS (for CORS preflight) only
 <Files "api.php">
-    <Limit GET>
+    <LimitExcept POST OPTIONS>
         Require all denied
-    </Limit>
-    <Limit POST>
-        Require all granted
-    </Limit>
+    </LimitExcept>
 </Files>
 
 # Ensure public access to the main pages
-<FilesMatch "^(index|admin|preview)\.php$">
+<FilesMatch "^(index|admin|preview|downloads|privacy|list)\.php$">
     Require all granted
 </FilesMatch>
 
-# Explicitly deny access to hidden files
+# Explicitly deny access to hidden files and directories
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>

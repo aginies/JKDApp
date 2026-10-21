@@ -14,8 +14,12 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Logout logic
-if (isset($_GET['logout'])) {
+// Logout logic (POST with CSRF protection)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) {
+        http_response_code(403);
+        die('Invalid CSRF token.');
+    }
     write_log("Admin Logout");
     session_unset();
     session_destroy();
@@ -42,16 +46,17 @@ if (isset($_POST['delete_file']) && isset($_SESSION['loggedin'])) {
 // Login logic — brute-force protection: max 5 attempts per 15 minutes per IP
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
-    $user      = $_POST['username'];
-    $pass      = $_POST['password'];
+    $user      = $_POST['username'] ?? '';
+    $pass      = $_POST['password'] ?? '';
     $now       = time();
     $bf_max    = 5;
     $bf_window = 900; // 15 minutes
-    $bf_file   = sys_get_temp_dir() . '/jkdapp_bf_' . md5($_SERVER['REMOTE_ADDR'] ?? '') . '.json';
+    $client_ip = get_client_ip();
+    $bf_file   = get_rate_limit_file('bf', $client_ip);
     $bf_state  = ['count' => 0, 'window_start' => $now];
     $locked    = false;
 
-    $fh = fopen($bf_file, 'c+');
+    $fh = @fopen($bf_file, 'c+');
     if ($fh && flock($fh, LOCK_EX)) {
         $raw = stream_get_contents($fh);
         if ($raw) {
@@ -77,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         } else {
             $bf_state['count']++;
             $error = "Nom d'utilisateur ou mot de passe incorrect.";
-            write_log("Admin Login Failed for user: $user", 'WARN');
+            $safe_log_user = substr(preg_replace('/[^\w\-]/', '', (string)$user), 0, 32);
+            write_log("Admin Login Failed for user: $safe_log_user", 'WARN');
         }
     }
 
@@ -188,7 +194,10 @@ if (is_dir(UPLOAD_DIR)) {
     <div class="container">
         <div class="nav">
             <h2>Gestion du Stockage JKDApp</h2>
-            <a href="?logout" class="logout-link">Déconnexion</a>
+            <form method="POST" action="admin.php" style="margin: 0; display: inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="submit" name="logout" class="logout-link" style="background: none; border: none; cursor: pointer; font-size: 1rem; color: #e74c3c; text-decoration: underline; padding: 0;">Déconnexion</button>
+            </form>
         </div>
 
         <?php if (isset($message)): ?>

@@ -144,7 +144,11 @@ function build_linux() {
 
 function build_web() {
     echo "[INFO] Building Release Web..."
-    $FLUTTER_PATH build web --release
+    local DART_DEFINES=""
+    if [ -n "$APP_SECRET" ]; then
+        DART_DEFINES="--dart-define=APP_SECRET=$APP_SECRET"
+    fi
+    $FLUTTER_PATH build web --release $DART_DEFINES
 }
 
 function build_appimage() {

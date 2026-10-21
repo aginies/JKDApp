@@ -7,8 +7,9 @@ send_cors_headers();
 header('Content-Type: application/json');
 
 // Only allow POST requests for uploads
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    write_log("Invalid request method: " . $_SERVER['REQUEST_METHOD'], 'WARN');
+$method = $_SERVER['REQUEST_METHOD'] ?? '';
+if ($method !== 'POST') {
+    write_log("Invalid request method: " . ($method ?: 'CLI/Empty'), 'WARN');
     http_response_code(405);
     echo json_encode(['error' => 'Method Not Allowed. Use POST.']);
     exit;
@@ -22,12 +23,12 @@ write_log("API: Processing upload attempt");
 // Rate limiting: max 30 uploads per IP per hour (locked read+write to avoid race)
 $rate_limit_max    = 30;
 $rate_limit_window = 3600; // seconds
-$client_ip         = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$rate_file         = sys_get_temp_dir() . '/jkdapp_rl_' . md5($client_ip) . '.json';
+$client_ip         = get_client_ip();
+$rate_file         = get_rate_limit_file('rl', $client_ip);
 $now               = time();
 $state             = ['count' => 0, 'window_start' => $now];
 
-$fh = fopen($rate_file, 'c+');
+$fh = @fopen($rate_file, 'c+');
 if ($fh && flock($fh, LOCK_EX)) {
     $raw = stream_get_contents($fh);
     if ($raw) {
@@ -53,6 +54,58 @@ if ($state['count'] > $rate_limit_max) {
     exit;
 }
 
+/**
+ * Decode and sanitize header values while allowing accented characters.
+ */
+function sanitize_header($value, $default, $maxlen) {
+    if (!isset($value)) return $default;
+    // Decode URL component (matches Flutter Uri.encodeComponent)
+    $decoded = rawurldecode($value);
+    // Remove raw NUL bytes and other control characters.
+    $decoded = preg_replace('/[[:cntrl:]]/', '', $decoded);
+    // Remove truly dangerous filename characters but allow accents (\x7f-\xff)
+    $clean = preg_replace('/[<>:"\/\\\|?*]/', '', $decoded);
+    // Trim, then reject empty results and leading dots
+    $clean = trim($clean);
+    if ($clean === '' || $clean[0] === '.') {
+        return $default;
+    }
+    return substr($clean, 0, $maxlen);
+}
+
+/**
+ * Validate that the decoded JSON payload matches expected JKDApp series or custom angle structure.
+ */
+function validate_series_payload($decoded, string $category): bool {
+    if (!is_array($decoded)) {
+        return false;
+    }
+    if ($category === 'Custom Angles') {
+        foreach ($decoded as $item) {
+            if (!is_array($item)) return false;
+        }
+        return true;
+    }
+    // Single series: must have 'title' string
+    if (isset($decoded['title']) && is_string($decoded['title']) && trim($decoded['title']) !== '') {
+        return true;
+    }
+    // Array of series: list where each item has 'title' string
+    $is_list = function_exists('array_is_list') 
+        ? array_is_list($decoded) 
+        : (empty($decoded) || array_keys($decoded) === range(0, count($decoded) - 1));
+
+    if (!empty($decoded) && $is_list) {
+        foreach ($decoded as $series) {
+            if (!is_array($series) || !isset($series['title']) || !is_string($series['title']) || trim($series['title']) === '') {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 // Handle JSON upload
 $content_type = isset($_SERVER["CONTENT_TYPE"]) ? $_SERVER["CONTENT_TYPE"] : '';
 
@@ -76,7 +129,7 @@ if (strpos($content_type, "application/json") !== false) {
     }
     
     // Validate JSON structure
-    $decoded = json_decode($json_data);
+    $decoded = json_decode($json_data, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         write_log("Invalid JSON: " . json_last_error_msg(), 'ERROR');
         http_response_code(400);
@@ -86,42 +139,36 @@ if (strpos($content_type, "application/json") !== false) {
     
     // Extract username and filename from headers (case-insensitive)
     $all_headers = array_change_key_case(getallheaders(), CASE_LOWER);
-    
-    /**
-     * Decode and sanitize header values while allowing accented characters.
-     */
-    function sanitize_header($value, $default, $maxlen) {
-        if (!isset($value)) return $default;
-        // Decode URL component (matches Flutter Uri.encodeComponent)
-        // rawurldecode handles %20 correctly as space, matches encodeComponent
-        $decoded = rawurldecode($value);
-        // Remove raw NUL bytes and other control characters.
-        $decoded = preg_replace('/[[:cntrl:]]/', '', $decoded);
-        // Remove truly dangerous filename characters but allow accents (\x7f-\xff)
-        $clean = preg_replace('/[<>:"\/\\\|?*]/', '', $decoded);
-        // Trim, then reject empty results and leading dots (hidden files /
-        // directory obfuscation).
-        $clean = trim($clean);
-        if ($clean === '' || $clean[0] === '.') {
-            return $default;
-        }
-        // Limit length
-        return substr($clean, 0, $maxlen);
-    }
 
     $username = sanitize_header($all_headers['x-username'] ?? null, 'anonymous', 64);
     $category = sanitize_header($all_headers['x-category'] ?? null, 'Uncategorized', 64);
     $filename = sanitize_header($all_headers['x-filename'] ?? null, 'series_' . date('Ymd_His') . '.json', 128);
-    
-    // Ensure filename ends with .json
-    if (pathinfo($filename, PATHINFO_EXTENSION) !== 'json') {
-        $filename .= '.json';
+
+    // Validate payload against expected schema
+    if (!validate_series_payload($decoded, $category)) {
+        write_log("Rejected upload: Invalid series/angle structure", 'WARN');
+        http_response_code(422);
+        echo json_encode(['error' => 'Invalid series payload structure: missing required title or invalid format']);
+        exit;
     }
+    
+    // Prevent multi-extension execution: strip all dots and special chars from filename base
+    $raw_name_part = pathinfo($filename, PATHINFO_FILENAME);
+    $clean_base = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $raw_name_part);
+    $clean_base = trim(preg_replace('/_+/', '_', $clean_base), '_');
+    if ($clean_base === '') {
+        $clean_base = 'series_' . date('Ymd_His');
+    }
+    $base_filename = $clean_base . '.json';
 
     // Prefix filename with username and category for triage: category---username---filename.json
-    $safe_username = str_replace('---', '-', $username);
-    $safe_category = str_replace('---', '-', $category);
-    $base_filename = str_replace('---', '-', $filename);
+    $safe_username = preg_replace('/[^a-zA-Z0-9_\- \x7f-\xff]/', '_', $username);
+    $safe_username = str_replace('---', '-', trim($safe_username));
+    if ($safe_username === '') $safe_username = 'anonymous';
+
+    $safe_category = preg_replace('/[^a-zA-Z0-9_\- \x7f-\xff]/', '_', $category);
+    $safe_category = str_replace('---', '-', trim($safe_category));
+    if ($safe_category === '') $safe_category = 'Uncategorized';
     
     // Create directory if not exists
     if (!is_dir(UPLOAD_DIR)) {

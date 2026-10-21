@@ -2,6 +2,7 @@ import http.server
 import socketserver
 import os
 import socket
+import html
 from datetime import datetime
 
 # Configuration
@@ -66,6 +67,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return f"{size:.1f} TB"
 
     def format_html(self, files):
+        items = []
+        for f in files:
+            esc_name = html.escape(f["name"])
+            esc_date = html.escape(f["date"])
+            esc_size = html.escape(f["size"])
+            esc_url = html.escape(f["url"])
+            items.append(f'''
+        <div class="file-item">
+            <div class="file-info">
+                <div class="file-name">{esc_name}</div>
+                <div class="file-date">📅 Available since: {esc_date}</div>
+            </div>
+            <div class="file-meta">
+                <span class="file-size">{esc_size}</span>
+                <a href="{esc_url}" class="download-btn">⬇ DL</a>
+            </div>
+        </div>''')
+
+        items_html = "".join(items) if items else '<div class="empty">No APK files available</div>'
+
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,24 +176,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 <body>
     <h1>📱 JKDApp APK Downloads</h1>
     <div class="file-list">
-        {
-            "".join(
-                f'''
-        <div class="file-item">
-            <div class="file-info">
-                <div class="file-name">{f["name"]}</div>
-                <div class="file-date">📅 Available since: {f["date"]}</div>
-            </div>
-            <div class="file-meta">
-                <span class="file-size">{f["size"]}</span>
-                <a href="{f["url"]}" class="download-btn">⬇ DL</a>
-            </div>
-        </div>'''
-                for f in files
-            )
-            if files
-            else '<div class="empty">No APK files available</div>'
-        }
+        {items_html}
     </div>
 </body>
 </html>"""

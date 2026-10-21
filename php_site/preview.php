@@ -21,13 +21,30 @@ if ($data === null) {
     die('JSON invalide.');
 }
 
-// Normalize: handle both single-series object and array of series
-$series_list = isset($data['title']) ? [$data] : array_values($data);
+// Normalize: handle both single-series object and array of series defensively
+$series_list = [];
+if (is_array($data)) {
+    if (isset($data['title'])) {
+        $series_list = [$data];
+    } else {
+        foreach ($data as $item) {
+            if (is_array($item)) {
+                $series_list[] = $item;
+            }
+        }
+    }
+}
+
+if (empty($series_list)) {
+    http_response_code(400);
+    die('Format de série invalide ou vide.');
+}
 
 // Recursively decode nested move JSON strings and translations
 function decode_moves(array $raw): array {
     $result = [];
     foreach ($raw as $m) {
+        if (!is_array($m)) continue;
         foreach (['sub_moves_json', 'chain_json', 'counter_sub_moves_json', 'counter_chain_json'] as $key) {
             if (!empty($m[$key]) && is_string($m[$key])) {
                 $nested    = json_decode($m[$key], true);
@@ -49,9 +66,9 @@ function decode_moves(array $raw): array {
 }
 
 foreach ($series_list as &$s) {
-    if (!empty($s['moves']) && is_array($s['moves'])) {
+    if (is_array($s) && !empty($s['moves']) && is_array($s['moves'])) {
         $s['moves'] = decode_moves($s['moves']);
-    } else {
+    } elseif (is_array($s)) {
         $s['moves'] = [];
     }
 }
@@ -115,16 +132,16 @@ function level_symbol(string $level): string {
 
 function render_badges(array $m, bool $is_counter = false): string {
     $prefix  = $is_counter ? 'counter_' : '';
-    $side    = $m[$prefix . 'side']           ?? '';
-    $level   = $m[$prefix . 'level']          ?? '';
-    $special = $m[$prefix . 'special_action'] ?? '';
+    $side    = is_string($m[$prefix . 'side'] ?? null) ? $m[$prefix . 'side'] : '';
+    $level   = is_string($m[$prefix . 'level'] ?? null) ? $m[$prefix . 'level'] : '';
+    $special = is_string($m[$prefix . 'special_action'] ?? null) ? $m[$prefix . 'special_action'] : '';
     $feint   = !empty($m[$prefix . 'is_feint']);
     $reps    = (int)($m['repetitions']        ?? 1);
     $html    = '';
 
-    if ($side)    $html .= '<span class="badge-side" style="background:' . side_color($side) . '">' . htmlspecialchars($side) . '</span>';
-    if ($level)   $html .= '<span class="badge-level">' . level_symbol($level) . ' ' . htmlspecialchars($level) . '</span>';
-    if ($special) $html .= '<span class="badge-special">' . htmlspecialchars($special) . '</span>';
+    if ($side)    $html .= '<span class="badge-side" style="background:' . side_color($side) . '">' . htmlspecialchars($side, ENT_QUOTES, 'UTF-8') . '</span>';
+    if ($level)   $html .= '<span class="badge-level">' . level_symbol($level) . ' ' . htmlspecialchars($level, ENT_QUOTES, 'UTF-8') . '</span>';
+    if ($special) $html .= '<span class="badge-special">' . htmlspecialchars($special, ENT_QUOTES, 'UTF-8') . '</span>';
     if ($feint)   $html .= '<span class="badge-feint">Feint</span>';
     if (!$is_counter && $reps > 1) $html .= '<span class="badge-rep">×' . $reps . '</span>';
 
@@ -132,10 +149,10 @@ function render_badges(array $m, bool $is_counter = false): string {
 }
 
 function render_simple_move(array $m, bool $is_sub = false): string {
-    $cat   = $m['category'] ?? 'other';
+    $cat   = is_string($m['category'] ?? null) ? $m['category'] : 'other';
     $color = cat_color($cat);
     $icon  = cat_icon($cat);
-    $name  = htmlspecialchars($m['name'] ?? '');
+    $name  = htmlspecialchars((string)($m['name'] ?? ''), ENT_QUOTES, 'UTF-8');
 
     return '<span class="move-cat-icon" style="background:' . $color . '">' . $icon . '</span>'
          . '<span class="move-name">' . $name . '</span>'
@@ -143,12 +160,12 @@ function render_simple_move(array $m, bool $is_sub = false): string {
 }
 
 function render_move(array $m, string $num_label = ''): string {
-    $cat           = $m['category'] ?? 'other';
-    $sub_moves     = $m['sub_moves_json']         ?? [];
-    $chain         = $m['chain_json']             ?? [];
-    $counter_name  = $m['counter_name']           ?? '';
-    $counter_sub   = $m['counter_sub_moves_json'] ?? [];
-    $counter_chain = $m['counter_chain_json']     ?? [];
+    $cat           = is_string($m['category'] ?? null) ? $m['category'] : 'other';
+    $sub_moves     = is_array($m['sub_moves_json'] ?? null) ? $m['sub_moves_json'] : [];
+    $chain         = is_array($m['chain_json'] ?? null) ? $m['chain_json'] : [];
+    $counter_name  = is_string($m['counter_name'] ?? null) ? $m['counter_name'] : '';
+    $counter_sub   = is_array($m['counter_sub_moves_json'] ?? null) ? $m['counter_sub_moves_json'] : [];
+    $counter_chain = is_array($m['counter_chain_json'] ?? null) ? $m['counter_chain_json'] : [];
     $is_combo      = !empty($sub_moves);
     $is_chain      = !empty($chain);
     $has_counter   = !empty($counter_name) || !empty($counter_sub) || !empty($counter_chain);
@@ -160,7 +177,7 @@ function render_move(array $m, string $num_label = ''): string {
 
     // Number circle
     if ($num_label !== '') {
-        $html .= '<div class="move-num">' . htmlspecialchars($num_label) . '</div>';
+        $html .= '<div class="move-num">' . htmlspecialchars($num_label, ENT_QUOTES, 'UTF-8') . '</div>';
     } else {
         $html .= '<div class="move-num-empty"></div>';
     }
@@ -175,29 +192,30 @@ function render_move(array $m, string $num_label = ''): string {
         // Header: icon + move name (the overall defence/combo label) + top-level badges
         $html .= '<div class="move-main">';
         $html .= '<span class="move-cat-icon" style="background:' . cat_color($cat) . '">' . cat_icon($cat) . '</span>';
-        $html .= '<span class="move-name">' . htmlspecialchars($m['name'] ?? '') . '</span>';
+        $html .= '<span class="move-name">' . htmlspecialchars((string)($m['name'] ?? ''), ENT_QUOTES, 'UTF-8') . '</span>';
         $html .= render_badges($m);
         $html .= '</div>';
 
         // Each item: attack row + its counter row (if present)
         $html .= '<div class="combo-moves">';
         foreach ($items as $i => $item) {
+            if (!is_array($item)) continue;
             if ($i > 0) $html .= '<div class="combo-sep">' . $sep . '</div>';
             $html .= '<div class="combo-item">';
             $html .= '<div class="move-main">' . render_simple_move($item) . '</div>';
 
-            $sc_name = $item['counter_name'] ?? '';
+            $sc_name = is_string($item['counter_name'] ?? null) ? $item['counter_name'] : '';
             if (!empty($sc_name)) {
-                $sc_cat   = $item['counter_category'] ?? '';
+                $sc_cat   = is_string($item['counter_category'] ?? null) ? $item['counter_category'] : '';
                 $sc_color = $sc_cat ? cat_color($sc_cat) : '#e74c3c';
                 $sc_icon  = $sc_cat ? cat_icon($sc_cat)  : '🛡';
                 $html .= '<div class="sub-counter">';
                 $html .= '<span class="counter-arrow">↩</span>';
                 $html .= '<span class="move-cat-icon" style="background:' . $sc_color . '">' . $sc_icon . '</span>';
-                $html .= '<span class="move-name">' . htmlspecialchars($sc_name) . '</span>';
-                if (!empty($item['counter_side']))           $html .= '<span class="badge-side" style="background:' . side_color($item['counter_side']) . '">' . htmlspecialchars($item['counter_side']) . '</span>';
-                if (!empty($item['counter_level']))          $html .= '<span class="badge-level">' . level_symbol($item['counter_level']) . ' ' . htmlspecialchars($item['counter_level']) . '</span>';
-                if (!empty($item['counter_special_action'])) $html .= '<span class="badge-special">' . htmlspecialchars($item['counter_special_action']) . '</span>';
+                $html .= '<span class="move-name">' . htmlspecialchars($sc_name, ENT_QUOTES, 'UTF-8') . '</span>';
+                if (!empty($item['counter_side']) && is_string($item['counter_side']))           $html .= '<span class="badge-side" style="background:' . side_color($item['counter_side']) . '">' . htmlspecialchars($item['counter_side'], ENT_QUOTES, 'UTF-8') . '</span>';
+                if (!empty($item['counter_level']) && is_string($item['counter_level']))          $html .= '<span class="badge-level">' . level_symbol($item['counter_level']) . ' ' . htmlspecialchars($item['counter_level'], ENT_QUOTES, 'UTF-8') . '</span>';
+                if (!empty($item['counter_special_action']) && is_string($item['counter_special_action'])) $html .= '<span class="badge-special">' . htmlspecialchars($item['counter_special_action'], ENT_QUOTES, 'UTF-8') . '</span>';
                 $html .= '</div>'; // sub-counter
             }
             $html .= '</div>'; // combo-item
@@ -209,7 +227,7 @@ function render_move(array $m, string $num_label = ''): string {
 
     // ── Counter ──
     if ($has_counter) {
-        $counter_cat   = $m['counter_category'] ?? '';
+        $counter_cat   = is_string($m['counter_category'] ?? null) ? $m['counter_category'] : '';
         $counter_color = $counter_cat ? cat_color($counter_cat) : '#e74c3c';
         $counter_icon  = $counter_cat ? cat_icon($counter_cat)  : '🛡';
 
@@ -219,17 +237,19 @@ function render_move(array $m, string $num_label = ''): string {
 
         if (!empty($counter_sub)) {
             foreach ($counter_sub as $i => $csub) {
+                if (!is_array($csub)) continue;
                 if ($i > 0) $html .= '<span class="move-sep">+</span>';
                 $html .= render_simple_move($csub, true);
             }
         } elseif (!empty($counter_chain)) {
             foreach ($counter_chain as $i => $clink) {
+                if (!is_array($clink)) continue;
                 if ($i > 0) $html .= '<span class="move-sep chain-sep">→</span>';
                 $html .= render_simple_move($clink, true);
             }
         } else {
             $html .= '<span class="move-cat-icon" style="background:' . $counter_color . '">' . $counter_icon . '</span>';
-            $html .= '<span class="move-name">' . htmlspecialchars($m['counter_name'] ?? '') . '</span>';
+            $html .= '<span class="move-name">' . htmlspecialchars($counter_name, ENT_QUOTES, 'UTF-8') . '</span>';
             $html .= render_badges($m, true);
         }
 
