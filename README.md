@@ -153,7 +153,11 @@ Pour maintenir la qualité et la lisibilité du code, les principes d'organisati
 - **Séparation des responsabilités** : Le code UI doit résider dans `screens/`, tandis que la logique réutilisable doit être extraite dans `services/` ou des `mixins/` spécifiques aux classes.
 - **Modularité** : Les grands écrans doivent être découpés en widgets plus petits et ciblés situés dans des sous-dossiers (ex. : `lib/screens/series_detail/widgets/`).
 
-## Mises à jour récentes (v3.0.0+1)
+## Mises à jour récentes (v3.1.0+1)
+
+- **Durcissement sécurité web** : accès aux journaux et aux sauvegardes bloqué côté Apache, schéma JSON strict dans `api.php`, déconnexion admin en POST + jeton CSRF, échappement HTML dans `share_http.py`, et `web/.htaccess` (COOP/COEP + CSP) pour le build WASM.
+- **Correctif HTTP 500** : le bloc `<Directory>`, interdit en `.htaccess`, est remplacé par une `RewriteRule`.
+- **Support de présentation** : `presentation/slides.md` et ses scripts d'export PDF/HTML.
 
 - **5 modes d'attaque** : Nouvelle catégorie et onglet du glossaire (SAA, IA/HIA, PIA, ABC, ABD) avec définitions en anglais et français.
 - **Média enrichi** : Enregistrement vidéo en direct, galerie média à onglets avec support vidéo, icônes photo/vidéo sur les éléments du glossaire.
