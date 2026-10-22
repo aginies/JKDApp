@@ -10,29 +10,73 @@ require_once __DIR__ . '/secrets.php';
 // Token lifetime in seconds
 define('TOKEN_TTL', 3600);
 
-// Max file size allowed (in bytes) - 100KB
-define('MAX_FILE_SIZE', 100 * 1024);
+// Max file size allowed (in bytes) - 300KB (allows series and custom angles)
+define('MAX_FILE_SIZE', 300 * 1024);
 
 // Allowed file extensions
 define('ALLOWED_EXTENSIONS', ['json']);
+
+// Private runtime cache directory for rate limiting (not world-writable /tmp)
+define('CACHE_DIR', __DIR__ . '/data/.cache/');
 
 // Logging configuration
 define('LOG_FILE', __DIR__ . '/logs/app.log');
 
 /**
- * Log a message to the application log file.
+ * Resolve client IP address safely, checking trusted reverse proxy headers if configured.
+ */
+function get_client_ip(): string {
+    if (defined('TRUST_PROXY') && TRUST_PROXY && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $candidate = trim($ips[0]);
+        if (filter_var($candidate, FILTER_VALIDATE_IP)) {
+            return $candidate;
+        }
+    }
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
+}
+
+/**
+ * Get a secure path for rate limiting / runtime state files.
+ * Stored in a private, non-world-writable directory instead of /tmp.
+ */
+function get_rate_limit_file(string $prefix, string $identifier): string {
+    if (!is_dir(CACHE_DIR)) {
+        @mkdir(CACHE_DIR, 0700, true);
+        if (file_exists(CACHE_DIR)) {
+            @chmod(CACHE_DIR, 0700);
+        }
+    }
+    return CACHE_DIR . $prefix . '_' . hash('sha256', $identifier) . '.json';
+}
+
+/**
+ * Log a message to the application log file with restrictive permissions.
  */
 function write_log($message, $level = 'INFO') {
-    if (!is_dir(__DIR__ . '/logs')) {
-        mkdir(__DIR__ . '/logs', 0755, true);
+    $log_dir = __DIR__ . '/logs';
+    if (!is_dir($log_dir)) {
+        @mkdir($log_dir, 0700, true);
+        if (file_exists($log_dir)) {
+            @chmod($log_dir, 0700);
+            if (!file_exists($log_dir . '/.htaccess')) {
+                @file_put_contents($log_dir . '/.htaccess', "Require all denied\n");
+            }
+        }
     }
     $date = date('Y-m-d H:i:s');
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    // Neutralize CR/LF so user-derived data (e.g. URL-decoded header values)
-    // cannot forge additional log lines.
+    $ip = get_client_ip();
+    // Neutralize CR/LF so user-derived data cannot forge additional log lines.
     $message = str_replace(["\r", "\n"], ' ', (string)$message);
+    if (strlen($message) > 1024) {
+        $message = substr($message, 0, 1024) . '... [truncated]';
+    }
     $log_entry = "[$date] [$level] [$ip] $message" . PHP_EOL;
-    file_put_contents(LOG_FILE, $log_entry, FILE_APPEND);
+    file_put_contents(LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+    if (file_exists(LOG_FILE)) {
+        @chmod(LOG_FILE, 0600);
+    }
 }
 
 /**

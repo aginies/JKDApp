@@ -5,6 +5,27 @@ All notable changes to the JKD App are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-10-22
+
+### Security
+- Blocked public access to the PHP application logs and backup files in the Apache config, with an additional deny-all `php_site/logs/.htaccess` for defence in depth.
+- Moved rate-limiting and brute-force state out of `/tmp` into a private cache directory.
+- Sanitized uploaded filenames against multi-extension execution (e.g. `payload.php.json`).
+- Added strict JSON schema validation in `api.php` and safe type handling in `preview.php`.
+- Admin logout now requires POST with a CSRF token, and failed-login log lines are sanitized.
+- Escaped HTML in `share_http.py` to prevent stored/reflected XSS.
+- Added `web/.htaccess` for the WASM build: WASM MIME types, COOP/COEP cross-origin isolation, and a Content-Security-Policy.
+- `WebStorageService._safeFilenamePart` now also strips dots, so a client-supplied name cannot forge secondary script extensions.
+
+### Fixed
+- `<Directory>` is not permitted in an `.htaccess` context and caused an HTTP 500; replaced with `RewriteRule ^logs(/|$) - [F,L]`.
+
+### Added
+- Presentation deck `presentation/slides.md` with `build_slides.sh` and `build_slides_html.sh` exporters.
+
+### Changed
+- The `build_web` target in `build_and_verify.sh` now forwards `--dart-define=APP_SECRET=...` when the environment variable is set.
+
 ## [3.0.0] - 2026-10-19
 
 ### Security

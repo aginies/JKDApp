@@ -1,17 +1,28 @@
 # Secure the data directory
-# Prevent directory listing
-Options -Indexes
+Options -Indexes -ExecCGI
 
-# Allow access to JSON files for public download
+# Deny access to hidden files and internal cache directory
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Serve all files as static default-handler (no script execution engine)
+<FilesMatch "\.">
+    SetHandler default-handler
+</FilesMatch>
+
+# Explicitly deny execution or serving of any script types
+<FilesMatch "\.(php|phtml|php[0-9]|phps|phar|inc|cgi|pl|py|sh)">
+    Require all denied
+</FilesMatch>
+
+# Allow access only to JSON files for public download
 <Files "*.json">
     Require all granted
 </Files>
 
-# Ensure PHP scripts cannot be executed if uploaded
-<Files "*.php">
-    Require all denied
-</Files>
-
 RemoveHandler .php .phtml .php3
 RemoveType .php .phtml .php3
-php_flag engine off
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
